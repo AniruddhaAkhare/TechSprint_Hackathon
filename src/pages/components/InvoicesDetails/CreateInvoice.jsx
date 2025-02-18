@@ -111,7 +111,7 @@ const CreateInvoice = () => {
 
     return (
         <div className="ml-80 p-4">
-            <button onClick={()=>{navigate(-1)}}>Back</button>
+            <button onClick={()=>{navigate(-1)}} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Back</button>
             <h1>Create Invoice</h1>
             <form onSubmit={handleSubmit}>
                 <div>
