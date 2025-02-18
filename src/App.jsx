@@ -37,6 +37,14 @@ import UpdateInvoice from './pages/components/InvoicesDetails/UpdateInvoice.jsx'
 import Welcome from './pages/Welcome.jsx';
 import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
+import AddPerformance from './pages/AddPerformance.jsx';
+import MockTestSessions from './pages/MockTestSessions.jsx';
+import CreateMockTest from './pages/CreateMockTest.jsx';
+import CreateExaminationRemarks from './pages/CreateExaminationRemarks.jsx';
+import CreateAttendenceRemarks from './pages/CreateAttendenceRemarks.jsx';
+import CreateFeesRemarks from './pages/CreateFeesRemarks.jsx';
+import AttendanceRemarks from './pages/AttendanceRemarks.jsx';
+import FeesRemarks from './pages/FeesRemarks.jsx';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -87,6 +95,16 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
+            <Route path="/performance" element={<AddPerformance/>}></Route>
+            <Route path="/mocktestsessions" element={<MockTestSessions />} />
+            <Route path="/createMockTest" element={<CreateMockTest />} />
+            <Route path="/createExaminationremark" element={<CreateExaminationRemarks/>}></Route>
+            <Route path="/createattendenceremark" element={<CreateAttendenceRemarks/>}/>
+            <Route path="/createfeesremark" element={<CreateFeesRemarks/>}/>
+            <Route path="/attendenceremark" element={<AttendanceRemarks/>}/>
+            <Route path="/feesremark" element={<FeesRemarks/>}/>
+
+
           </Routes>
         </div>
       </BrowserRouter>

@@ -110,7 +110,7 @@ const CreateInvoice = () => {
     };
 
     return (
-        <div className="create-invoice">
+        <div className="ml-80 p-4">
             <button onClick={()=>{navigate(-1)}}>Back</button>
             <h1>Create Invoice</h1>
             <form onSubmit={handleSubmit}>
@@ -193,11 +193,11 @@ const CreateInvoice = () => {
                             value={item.total}
                             readOnly
                         />
-                        <button type="button" onClick={() => handleRemoveItem(index)}>Remove</button>
+                        <button type="button" onClick={() => handleRemoveItem(index)} className='btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Remove</button>
                     </div>
                 ))}
-                <button type="button" onClick={handleAddItem}>Add Item</button>
-                <button type="submit">Submit Invoice</button>
+                <button type="button" onClick={handleAddItem} className='btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Add Item</button>
+                <button type="submit" className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Submit Invoice</button>
             </form>
         </div>
     );

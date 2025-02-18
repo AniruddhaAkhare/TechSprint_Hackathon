@@ -43,7 +43,6 @@ export default function EditStudent() {
 
     const navigate = useNavigate();
 
-    // Fetch student data when the component mounts
     useEffect(() => {
         const fetchStudent = async () => {
             try {
@@ -79,7 +78,6 @@ export default function EditStudent() {
         fetchStudent();
     }, [studentId, navigate]);
 
-    // Handle input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -146,7 +144,6 @@ export default function EditStudent() {
     };
 
 
-    // Add Course
     const addCourse = () => {
         setStudent(prevState => ({
             ...prevState,
@@ -204,11 +201,9 @@ export default function EditStudent() {
         }));
     };
 
-    // Handle student updates
     const handleUpdate = async (e) => {
         e.preventDefault();
 
-        // Validate mandatory fields
         if (!student.first_name || !student.last_name || !student.email || !student.phone) {
             alert("Please fill necessary fields.");
             return;
@@ -241,7 +236,6 @@ export default function EditStudent() {
         }
     };
 
-    // Handle student deletion
     const handleDelete = async () => {
         const confirmed = window.confirm("Are you sure you want to delete this student?");
         if (confirmed) {
@@ -258,28 +252,25 @@ export default function EditStudent() {
 
     return (
         <div className="flex-col w-screen ml-80 p-4">
-            <button onClick={() => navigate(-1)}>Back</button>
-            <h1>Edit Student</h1>
+            <button onClick={() => navigate(-1)} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Back</button>
+            <h1>Edit Student</h1><br/>
             <form onSubmit={handleUpdate}>
 
-                {/* Personal Details */}
                 <input type="text" name="first_name" value={student.first_name} onChange={handleChange} placeholder="First Name" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="last_name" value={student.last_name} onChange={handleChange} placeholder="Last Name" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="email" name="email" value={student.email} onChange={handleChange} placeholder="Email" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="phone" value={student.phone} onChange={handleChange} placeholder="Phone" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
 
 
-                {/* Residential Address */}
                 <h2>Residential Address</h2>
                 <input type="text" name="address.street" value={student.address.street} onChange={handleChange} placeholder="Street" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="address.area" value={student.address.area} onChange={handleChange} placeholder="Area" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="address.city" value={student.address.city} onChange={handleChange} placeholder="City" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="address.state" value={student.address.state} onChange={handleChange} placeholder="State" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="address.zip" value={student.address.zip} onChange={handleChange} placeholder="Zip Code" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="address.country" value={student.address.country} onChange={handleChange} placeholder="Country" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" name="address.country" value={student.address.country} onChange={handleChange} placeholder="Country" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" /><br/>
 
 
-                {/* Billing Address */}
                 <h2>Billing Address</h2>
                 <input type="text" name="billingAddress.street" value={student.billingAddress.street} onChange={handleChange} placeholder="Street" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="billingAddress.area" value={student.billingAddress.area} onChange={handleChange} placeholder="Area" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -287,16 +278,14 @@ export default function EditStudent() {
                 <input type="text" name="billingAddress.state" value={student.billingAddress.state} onChange={handleChange} placeholder="State" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="billingAddress.zip" value={student.billingAddress.zip} onChange={handleChange} placeholder="Zip Code" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="billingAddress.country" value={student.billingAddress.country} onChange={handleChange} placeholder="Country" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="billingAddress.gstNo" value={student.billingAddress.gstNo} onChange={handleChange} placeholder="GST Number" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" name="billingAddress.gstNo" value={student.billingAddress.gstNo} onChange={handleChange} placeholder="GST Number" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" /><br/>
 
 
-                {/* DOB and Admission Date */}
                 <h2>Date Of Birth</h2>
-                <input type="date" name="date_of_birth" value={student.date_of_birth} onChange={handleChange} placeholder="Date of Birth" />
+                <input type="date" name="date_of_birth" value={student.date_of_birth} onChange={handleChange} placeholder="Date of Birth" /><br/>
                 <h2>Admission Date</h2>
-                <input type="date" name="admission_date" value={student.admission_date} onChange={handleChange} placeholder="Admission Date" />
+                <input type="date" name="admission_date" value={student.admission_date} onChange={handleChange} placeholder="Admission Date" /><br/>
 
-                {/* Course Details */}
                 <div>
                     <h2>Course Details</h2>
                     {student.courseDetails.map((course, index) => (
@@ -323,15 +312,14 @@ export default function EditStudent() {
                                 <option value="Online">Online</option>
                                 <option value="Offline">Offline</option>
                             </select>
-                            <button type="button" onClick={() => removeCourse(index)}>
+                            <button type="button" onClick={() => removeCourse(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
                                 <FontAwesomeIcon icon={faXmark} />
                             </button>
                         </div>
                     ))}
-                    <button type="button" onClick={addCourse}>Add Course</button>
-                </div>
+                    <button type="button" onClick={addCourse} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Course</button>
+                </div><br/>
 
-                {/* Status of Student */}
                 <div>
                     <h2>Status of Student</h2>
                     <select name="status" value={student.status} onChange={handleChange}>
@@ -341,7 +329,7 @@ export default function EditStudent() {
                         <option value="inactive">Inactive</option>
                         <option value="completed">Completed</option>
                     </select>
-                </div>
+                </div><br/>
 
                 <div>
                     <h2>Educational Details</h2>
@@ -359,13 +347,13 @@ export default function EditStudent() {
                             <input name={`educationDetails.${index}.grade`} type="text" placeholder="Grade" value={edu.grade} onChange={handleChange} />
                             <input name={`educationDetails.${index}.passingyr`} type="number" placeholder="Passing Year" value={edu.passingyr} onChange={handleChange} />
 
-                            <button type="button" onClick={() => deleteEducation(index)} className="delete-button">
+                            <button type="button" onClick={() => deleteEducation(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
                                 <FontAwesomeIcon icon={faXmark} />
                             </button>
                         </div>
                     ))}
-                    <button type="button" onClick={addEducation}>Add Education</button>
-                </div>
+                    <button type="button" onClick={addEducation} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Education</button>
+                </div><br/>
 
                 <div>
                     <h2>Experience Details</h2>
@@ -375,13 +363,13 @@ export default function EditStudent() {
                             <input name={`experienceDetails.${index}.designation`} type="text" placeholder="Designation" value={exp.designation} onChange={handleChange} />
                             <input name={`experienceDetails.${index}.salary`} type="text" placeholder="Salary" value={exp.salary} onChange={handleChange} />
                             <input name={`experienceDetails.${index}.description`} type="text" placeholder="Description" value={exp.description} onChange={handleChange} />
-                            <button type="button" onClick={() => deleteExperience(index)} className="delete-button">
+                            <button type="button" onClick={() => deleteExperience(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
                                 <FontAwesomeIcon icon={faXmark} />
                             </button>
                         </div>
                     ))}
-                    <button type="button" onClick={addExperience}>Add Experience</button>
-                </div>
+                    <button type="button" onClick={addExperience} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Experience</button>
+                </div><br/>
 
                 <div>
                     <h2>Installment Details</h2>
@@ -405,13 +393,13 @@ export default function EditStudent() {
                                 <option value="s3">status3</option>
                             </select>
                             <input name={`installmentDetails.${index}.remark`} type="text" placeholder="Remark" value={installment.remark} onChange={handleChange} />
-                            <button type="button" onClick={() => deleteInstallment(index)} className="delete-button">
+                            <button type="button" onClick={() => deleteInstallment(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
                                 <FontAwesomeIcon icon={faXmark} />
                             </button>
                         </div>
                     ))}
-                    <button type="button" onClick={addInstallment}>Add Installment</button>
-                </div>
+                    <button type="button" onClick={addInstallment} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Installment</button>
+                </div><br/>
 
 
 
@@ -423,15 +411,12 @@ export default function EditStudent() {
                         <option value="placement">Placement</option>
                         <option value="career_switch">Career Switch</option>
                     </select>
-                </div>
+                </div><br/>
 
-                {/* Submit and Delete Buttons */}
-                <button type="submit">Update Student</button>
-                <button type="button" onClick={handleDelete}>Delete Student</button>
+                <button type="submit" className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Update Student</button>
+                <button type="button" onClick={handleDelete} className="ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Delete Student</button>
             </form>
         </div>
     );
 };
 
-// export default EditStudent;
-//

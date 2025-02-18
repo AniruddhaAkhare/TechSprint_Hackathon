@@ -111,8 +111,8 @@ export default function Courses() {
                                 <td>{index + 1}</td>
                                 <td>{course.name}</td>
                                 <td>
-                                    <button onClick={() => handleEditClick(course)}>Edit</button>
-                                    <button onClick={() => deleteCourse(course.id)} className="ml-2">Delete</button>
+                                    <button onClick={() => handleEditClick(course)} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Edit</button>
+                                    <button onClick={() => deleteCourse(course.id)} className="ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Delete</button>
                                 </td>
                             </tr>
                         ))}

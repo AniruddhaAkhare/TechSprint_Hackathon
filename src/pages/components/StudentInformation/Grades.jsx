@@ -80,7 +80,7 @@ export default function  Grades ({ studentId })  {
                     onChange={(e) => setNewGrade({ ...newGrade, max_marks: e.target.value })}
                     required
                 />
-                <button type="submit">Add Grade</button>
+                <button type="submit" className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Add Grade</button>
             </form>
             <table className='table-data table'>
                 <thead className='table-secondary'>
@@ -102,8 +102,8 @@ export default function  Grades ({ studentId })  {
                                 <td>{grade.max_marks}</td>
                                 <td>{grade.student_id}</td>
                                 <td>
-                                    <button onClick={() => updateGrade(grade.id)}>Edit</button>
-                                    <button onClick={() => deleteGrade(grade.id)}>Delete</button>
+                                    <button onClick={() => updateGrade(grade.id)} className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Edit</button>
+                                    <button onClick={() => deleteGrade(grade.id)} className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Delete</button>
                                 </td>
                             </tr>
                         ))}

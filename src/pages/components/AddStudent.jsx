@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { db } from "./firebase";
-import './Profile.css'; 
+import './Profile.css'; // Ensure you have relevant styles defined
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
-export default function  AddStudent({isOpen, toggleSidebar, student}) {
+export default function  AddStudent() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
@@ -39,44 +39,6 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
         setAdmissionDate(today);
     }, []);
 
-    useEffect(() => {
-            if (student) {
-                setFirstName(student.first_namename);
-                setLastName(student.last_name);
-                setEmail(student.email);
-                setPhone(student.phone);
-                //setAddress(student.residential_address);
-                //setCopyAddress(student.billing_address);
-                setStatus(student.status);
-                setDateOfBirth(student.date_of_birth);
-                setAdmissionDate(student.admission_date);
-                setCourseDetails(student.course_details);
-                setEducationDetails(student.education_details);
-                setInstallmentDetails(student.installment_details);
-                setExperienceDetails(student.experience_details);
-                setGoal(student.goal);
-
-            }else{
-                setFirstName("");
-                setLastName("");
-                setEmail("");
-                setPhone("");
-                //setAddress("");
-                //setCopyAddress("");
-                setStatus("");
-                setDateOfBirth("");
-                setAdmissionDate("");
-                setCourseDetails("");
-                setEducationDetails("");
-                setInstallmentDetails("");
-                setExperienceDetails("");
-                setGoal("");
-            }
-        }, [student]);
-
-        const studentCollectionRef = collection(db, "student");
-
-
     const handleAddStudent = async (e) => {
         e.preventDefault();
         if (!firstName || !lastName || !email || !phone) {
@@ -85,14 +47,13 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
         }
 
         try {
-            if(!student){
             const studentDocRef = await addDoc(collection(db, 'student'), {
                 first_name: firstName,
                 last_name: lastName,
                 email,
                 phone,
-                //residential_address: address,
-                //billing_address: billingAddress,
+                residential_address: address,
+                billing_address: billingAddress,
                 goal,
                 status,
                 date_of_birth: Timestamp.fromDate(new Date(dateOfBirth)),
@@ -104,27 +65,7 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
             });
 
             alert("Student added successfully!");
-            navigate("/studentdetails");
-        }else{
-            const studentDocRef = await updateDoc(studentCollectionRef.doc(student.id), {
-                first_name: firstName,
-                last_name: lastName,
-                email,
-                phone,
-                //residential_address: address,
-                //billing_address: billingAddress,
-                goal,
-                status,
-                date_of_birth: Timestamp.fromDate(new Date(dateOfBirth)),
-                admission_date: Timestamp.fromDate(new Date(admissionDate)),
-                course_details: courseDetails,
-                education_details: educationDetails,
-                installment_details: installmentDetails,
-                experience_details: experienceDetails
-            });
-        }
-        alert("Course successfully added!");
-            toggleSidebar(); 
+            navigate("/admin/studentdetails");
         } catch (error) {
             console.error("Error adding student:", error);
             alert("Error adding student. Please try again.");
@@ -135,8 +76,8 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
         setCopyAddress(isChecked);
         if (isChecked) {
             setBillingAddress({
-                ...address, // Make sure to copy the address correctly
-                gstNo: billingAddress.gstNo // Preserve any existing GST number
+                ...address, 
+                gstNo: billingAddress.gstNo 
             });
         } else {
             setBillingAddress({ street: "", area: "", city: "", state: "", zip: "", country: "", gstNo: "" });
@@ -204,26 +145,23 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
     };
 
     return (
-        <div className="add-student-form">
-            <button className="back-button" onClick={toggleSidebar}>Back</button>
-            <h1>{student ? "Edit Student" : "Add Student"}</h1>
-            <form className="student-form overflow-y-auto" onSubmit={handleAddStudent}>
+        <div className="flex-col w-screen ml-80 p-4">
+            <button className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200" onClick={() => navigate("/studentdetails")}>Back</button>
+            <h1>Add Student</h1>
+            <form className="student-form" onSubmit={handleAddStudent}>
 
-                {/* Personal Details */}
                 <div className="form-group">
                     <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
                     <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
                     <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                     <input type="text" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-                </div>
+                </div><br/>
 
-                {/* DOB and Admission Date */}
                 <div className="form-group">
                     <h3>Date of Birth</h3>
                     <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
-                </div>
+                </div><br/>
 
-                {/* Residential Address */}
                 <div className="form-group">
                     <h3>Residential Address</h3>
                     <input type="text" placeholder="Street" value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })}/>
@@ -232,9 +170,8 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
                     <input type="text" placeholder="State" value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} />
                     <input type="text" placeholder="Zip Code" value={address.zip} onChange={(e) => setAddress({ ...address, zip: e.target.value })} />
                     <input type="text" placeholder="Country" value={address.country} onChange={(e) => setAddress({ ...address, country: e.target.value })} />
-                </div>
+                </div><br/>
 
-                {/* Billing Address */}
                 <div className="form-group">
                     <h3>Billing Address</h3>
                     <label> <input type="checkbox" checked={copyAddress} onChange={(e) => handleCopyAddress(e.target.checked)} />Same as Residential Address </label>
@@ -247,9 +184,8 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
                     <input type="text" placeholder="Zip Code" value={billingAddress.zip} onChange={(e) => setBillingAddress({ ...billingAddress, zip: e.target.value })} />
                     <input type="text" placeholder="Country" value={billingAddress.country} onChange={(e) => setBillingAddress({ ...billingAddress, country: e.target.value })} />
                     <input type="text" placeholder="GST No." value={billingAddress.gstNo} onChange={(e) => setBillingAddress({ ...billingAddress, gstNo: e.target.value })} />
-                </div>
+                </div><br/>
 
-                {/* Educational Details */}
                 <div>
                     <h3>Educational Details</h3>
                     {educationDetails.map((edu, index) => (
@@ -265,15 +201,14 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
                             <input type="text" placeholder="Specialization" value={edu.specialization} onChange={(e) => handleEducationChange(index, 'specialization', e.target.value)} />
                             <input type="text" placeholder="Grade" value={edu.grade} onChange={(e) => handleEducationChange(index, 'grade', e.target.value)} />
                             <input type="number" placeholder="Passing Year" value={edu.passingyr} onChange={(e) => handleEducationChange(index, 'passingyr', e.target.value)} />
-                            <button type="button" onClick={() => deleteEducation(index)} className="delete-button">
+                            <button type="button" onClick={() => deleteEducation(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
                                 <FontAwesomeIcon icon={faXmark} />
                             </button>
                         </div>
                     ))}
-                    <button type="button" onClick={addEducation}>Add Education</button>
-                </div>
+                    <button type="button" onClick={addEducation} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Education</button>
+                </div><br/>
 
-                {/* Experience Details */}
                 <div>
                     <h3>Experience Details</h3>
                     {experienceDetails.map((experience, index) => (
@@ -282,15 +217,14 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
                             <input type="text" placeholder="Designation" value={experience.designation} onChange={(e) => handleExperienceChange(index, 'designation', e.target.value)} />
                             <input type="text" placeholder="Salary" value={experience.salary} onChange={(e) => handleExperienceChange(index, 'salary', e.target.value)}/>
                             <input type="text" placeholder="Description" value={experience.description} onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}/>
-                            <button type="button" onClick={() => deleteExperience(index)} className="delete-button">
+                            <button type="button" onClick={() => deleteExperience(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
                                 <FontAwesomeIcon icon={faXmark} />
                             </button>
                         </div>
                     ))}
-                    <button type="button" onClick={addExperience}>Add Experience</button>
-                </div>
+                    <button type="button" onClick={addExperience} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Experience</button>
+                </div><br/>
 
-                {/* Course Details */}
                 <div>
                     <h3>Course Details</h3>
                     {courseDetails.map((course, index) => (
@@ -317,17 +251,14 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
                                 <option value="Online">Online</option>
                                 <option value="Offline">Offline</option>
                             </select>
-                            <button type="button" onClick={() => deleteCourse(index)} className="delete-button">
+                            <button type="button" onClick={() => deleteCourse(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
                                 <FontAwesomeIcon icon={faXmark} />
                             </button>
                         </div>
                     ))}
-                    <button type="button" onClick={addCourse}>Add Course</button>
-                </div>
+                    <button type="button" onClick={addCourse} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Course</button>
+                </div><br/>
 
-
-
-                {/* Status of Student */}
                 <div className="form-group">
                     <h3>Status of Student</h3>
                     <select value={status} onChange={(e) => setStatus(e.target.value)} required>
@@ -337,14 +268,13 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
                         <option value="inactive">Inactive</option>
                         <option value="completed">Completed</option>
                     </select>
-                </div>
+                </div><br/>
 
                 <div>
                     <h3>Admission Date</h3>
                     <input type="date" value={admissionDate} onChange={(e) => setAdmissionDate(e.target.value)} />
-                </div>
+                </div><br/>
 
-                {/* Student Goal */}
                 <div>
                     <h3>Enrollment Goals</h3>
                     <select value={goal} onChange={(e) => setGoal(e.target.value)}>
@@ -353,9 +283,8 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
                         <option value="placement">Placement</option>
                         <option value="career_switch">Career Switch</option>
                     </select>
-                </div>
+                </div><br/>
 
-                {/* Installment Details */}
                 <div>
                     <h3>Installment Details</h3>
                     {installmentDetails.map((installment, index) => (
@@ -363,17 +292,17 @@ export default function  AddStudent({isOpen, toggleSidebar, student}) {
                             <input type="number" placeholder="No. of Installments" value={installment.number} onChange={(e) => handleInstallmentChange(index, 'number', e.target.value)} />
                             <input type="date" placeholder="Due Date" value={installment.dueDate} onChange={(e) => handleInstallmentChange(index, 'dueDate', e.target.value)} />
                             <input type="number" placeholder="Amount" value={installment.dueAmount} onChange={(e) => handleInstallmentChange(index, 'dueAmount', e.target.value)} />
-                            <button type="button" onClick={() => deleteInstallment(index)} className="delete-button">
+                            <button type="button" onClick={() => deleteInstallment(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
                                 <FontAwesomeIcon icon={faXmark} />
                             </button>
                         </div>
                     ))}
-                    <button type="button" onClick={addInstallment}>Add Installment</button>
-                </div>
+                    <button type="button" onClick={addInstallment} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Installment</button>
+                </div><br/>
 
                 
 
-                <button type="submit" className="submit-button">Add Student</button>
+                <button type="submit" className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Student</button>
             </form>
         </div>
     );

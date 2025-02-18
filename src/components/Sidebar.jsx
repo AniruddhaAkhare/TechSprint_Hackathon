@@ -156,6 +156,12 @@ export default function Sidebar() {
                     </ListItemPrefix>
                     Invoices
                 </ListItem>
+                <ListItem onClick={() => navigate('/performance')}>
+                    <ListItemPrefix>
+                        <Cog6ToothIcon className="h-5 w-5" />
+                    </ListItemPrefix>
+                    Add Performance
+                </ListItem>
                 <ListItem onClick={() => { navigate('#') }}>
                     <ListItemPrefix>
                         <Cog6ToothIcon className="h-5 w-5" />

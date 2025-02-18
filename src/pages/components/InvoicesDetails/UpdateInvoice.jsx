@@ -120,8 +120,8 @@ export default function UpdateInvoice() {
     };
 
     return (
-        <div className="update-invoice">
-            <button onClick={() => { navigate(-1); }}>Back</button>
+        <div className="ml-80 p-4">
+            <button onClick={() => { navigate(-1); }} className='btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Back</button>
             <h1>Update Invoice</h1>
             <form onSubmit={handleSubmit}>
                 <div>
@@ -193,11 +193,11 @@ export default function UpdateInvoice() {
                             value={item.total}
                             readOnly
                         />
-                        <button type="button" onClick={() => handleRemoveItem(index)}>Remove</button>
+                        <button type="button" onClick={() => handleRemoveItem(index)} className='btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Remove</button>
                     </div>
                 ))}
-                <button type="button" onClick={handleAddItem}>Add Item</button>
-                <button type="submit">Update Invoice</button>
+                <button type="button" onClick={handleAddItem} className='btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Add Item</button>
+                <button type="submit" className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Update Invoice</button>
             </form>
         </div>
     );

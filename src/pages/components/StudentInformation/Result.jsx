@@ -83,7 +83,7 @@ export default function  Result ({ studentId })  {
                     onChange={(e) => setNewResults({ ...newResults, max_marks: e.target.value })}
                     required
                 />
-                <button type="submit">Add Result</button>
+                <button type="submit" className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Add Result</button>
             </form>
 
             <table className='table-data table'>
@@ -106,8 +106,8 @@ export default function  Result ({ studentId })  {
                                 <td>{result.max_marks}</td>
                                 <td>{result.student_id}</td>
                                 <td>
-                                    <button onClick={() => { updateResults(result.id) }}>Edit</button>
-                                    <button onClick={() => { deleteResults(result.id) }}>Delete</button>
+                                    <button onClick={() => { updateResults(result.id) }} className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Edit</button>
+                                    <button onClick={() => { deleteResults(result.id) }} className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Delete</button>
                                 </td>
                             </tr>
                         ))}

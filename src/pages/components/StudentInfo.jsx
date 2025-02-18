@@ -77,9 +77,11 @@ export default function  StudentInfo ()  {
             <div>
                 <div>
                     <div>
-                        <button onClick={() => navigate("/studentdetails")}>Back</button>
+                        <button onClick={() => navigate("/studentdetails")} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Back</button>
                         <div>
-                            <h3>{student.first_name} {student.last_name}</h3>
+                            <b className="size-6">
+                            {student.first_name} {student.last_name}
+                            </b>
                             <p>{student.email}</p>
                         </div>
                     </div>
@@ -96,11 +98,11 @@ export default function  StudentInfo ()  {
                     </div>
                 </div>
                 <div style={{ display: "flex" }}>
-                    <button className="enrollment" style={{color:"black", background: "none", border: "none", ...getButtonStyle(1) }} onClick={() => handleFormSelection(1)}>Profile</button>
-                    <button className="addmission" style={{color:"black", background: "none", border: "none", ...getButtonStyle(2) }} onClick={() => handleFormSelection(2)}>Enrollment</button>
-                    <button className="payments" style={{color:"black", background: "none", border: "none", ...getButtonStyle(3) }} onClick={() => handleFormSelection(3)}>Fees</button>
-                    <button className="exams" style={{color:"black", background: "none", border: "none", ...getButtonStyle(4) }} onClick={() => handleFormSelection(4)}>Grades</button>
-                    <button className="certificates" style={{color:"black", background: "none", border: "none", ...getButtonStyle(5) }} onClick={() => handleFormSelection(5)}>Result</button>
+                    <button className="enrollment" style={{color:"black", background: "none", border: "none", ...getButtonStyle(1) }} onClick={() => handleFormSelection(1)}>Profile</button>&emsp;
+                    <button className="addmission" style={{color:"black", background: "none", border: "none", ...getButtonStyle(2) }} onClick={() => handleFormSelection(2)}>Enrollment</button>&emsp;
+                    <button className="payments" style={{color:"black", background: "none", border: "none", ...getButtonStyle(3) }} onClick={() => handleFormSelection(3)}>Fees</button>&emsp;
+                    <button className="exams" style={{color:"black", background: "none", border: "none", ...getButtonStyle(4) }} onClick={() => handleFormSelection(4)}>Grades</button>&emsp;
+                    <button className="certificates" style={{color:"black", background: "none", border: "none", ...getButtonStyle(5) }} onClick={() => handleFormSelection(5)}>Result</button>&emsp;
                     <button className="activity" style={{color:"black", background: "none", border: "none", ...getButtonStyle(6) }} onClick={() => handleFormSelection(6)}>Attendence</button>
                 </div>
 

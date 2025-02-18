@@ -170,8 +170,8 @@ export default function  StudentProfile  () {
 
             {/* Action buttons */}
             <div>
-                <button onClick={()=>{navigate(`/studentdetails/updatestudent/${studentId}`);}}>Edit</button>
-                <button onClick={() => navigate('/studentdetails')}>Back</button>
+                <button onClick={()=>{navigate(`/studentdetails/updatestudent/${studentId}`);}} className='btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Edit</button>
+                <button onClick={() => navigate('/studentdetails')} className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Back</button>
             </div>
         </div>
     );

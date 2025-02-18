@@ -130,7 +130,7 @@ const Curriculum = () => {
                                 <td >{curriculum.name}</td>
                                 <td >{curriculum.sections || "-"}</td>
                                 <td >
-                                    <button onClick={() => setIsAddSectionModalOpen(true)} className="text-white">Edit</button>
+                                    <button onClick={() => setIsAddSectionModalOpen(true)} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Edit</button>
                                 </td>
                             </tr>
                         ))}

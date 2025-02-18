@@ -118,8 +118,8 @@ export default function Batches() {
                                 <td>{index + 1}</td>
                                 <td>{batch.name}</td>
                                 <td>
-                                    <button onClick={() => handleEditClick(batch)}>Edit</button>
-                                    <button onClick={() => deleteBatch(batch.id)} className="ml-2">Delete</button>
+                                    <button onClick={() => handleEditClick(batch)} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Edit</button>
+                                    <button onClick={() => deleteBatch(batch.id)} className="ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Delete</button>
                                 </td>
                             </tr>
                         ))}

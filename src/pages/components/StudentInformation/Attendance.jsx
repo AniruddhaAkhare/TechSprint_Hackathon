@@ -47,14 +47,14 @@ export default function  Attendance ({studentId}) {
 
     const uploadToFirestore = async (data) => {
         try {
-            const attendanceCollection = collection(db, 'attendance'); // Change 'attendance' to your collection name
+            const attendanceCollection = collection(db, 'attendance'); 
             await Promise.all(data.map(async (record) => {
                 await addDoc(attendanceCollection, {
-                    batch_id: { path: record.batch_id }, // Firestore Reference format
-                    date: record.date, // Store the timestamp directly
+                    batch_id: { path: record.batch_id }, 
+                    date: record.date, 
                     status: record.status,
-                    student_id: { path: record.student_id }, // Firestore Reference format
-                    subject_id: { path: record.subject_id } // Firestore Reference format
+                    student_id: { path: record.student_id }, 
+                    subject_id: { path: record.subject_id } 
                 });
             }));
             alert('Attendance data uploaded successfully!');
@@ -71,15 +71,15 @@ export default function  Attendance ({studentId}) {
     };
 
     useEffect(() => {
-        fetchAttendanceData(); // Fetch existing data on component mount
+        fetchAttendanceData(); 
     }, []);
 
     return (
         <div className="attendance-component">            
-            <a href="./AttendenceSheet.xlsx" download>Download Attendance Template</a> {/* Adjust the link to your template location */}
+            <a href="./AttendenceSheet.xlsx" download>Download Attendance Template</a> 
             
             <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} />
-            <button onClick={handleFileUpload}>Upload Attendance</button>
+            <button onClick={handleFileUpload} className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Upload Attendance</button>
 
             <h2>Attendance Data</h2>
             <table className='table-data table'>
