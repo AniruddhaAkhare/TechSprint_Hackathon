@@ -72,7 +72,6 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
         <>
             <div className={`fixed top-0 right-0 h-full bg-white w-2/5 shadow-lg transform transition-transform Capacity-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'} p-4 overflow-y-auto`}>
                 <button type="button" className="close-button" onClick={toggleSidebar}>
-                    {/* <FaTimes /> */}
                     Back
                 </button>
 
@@ -103,7 +102,6 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
                             <button type="submit" >
                                 {batch ? "Update" : "Create"}
                             </button>
-                            {/* <button type="button" className="btn btn-secondary btn-sm" onClick={toggleSidebar}><FaTimes />Cancel</button> */}
                         </div>
                     </div>
                 </form>

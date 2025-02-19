@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../firebase'; // Ensure you have the correct path to your Firebase config
+import { db } from '../firebase';
 
 export default function  Grades ({ studentId })  {
     const [grades, setGrades] = useState([]);
@@ -15,7 +15,7 @@ export default function  Grades ({ studentId })  {
             const gradesCollection = collection(db, 'Grades');
             const snapshot = await getDocs(gradesCollection);
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            console.log(data); // Log the fetched grades to see their structure
+            console.log(data);
             setGrades(data);
         } catch (error) {
             console.error("Error fetching grades: ", error);
@@ -27,7 +27,7 @@ export default function  Grades ({ studentId })  {
         try {
             await addDoc(collection(db, 'Grades'), newGrade);
             setNewGrade({ grade: '', marks_obtained: '', max_marks: '', student_id: studentId });
-            fetchGrades(); // Refresh the list
+            fetchGrades();
         } catch (error) {
             console.error("Error adding grade: ", error);
         }
@@ -37,7 +37,7 @@ export default function  Grades ({ studentId })  {
         const gradeRef = doc(db, 'Grades', id);
         try {
             await updateDoc(gradeRef, newGrade);
-            fetchGrades(); // Refresh the list
+            fetchGrades();
         } catch (error) {
             console.error("Error updating grade: ", error);
         }
@@ -49,7 +49,7 @@ export default function  Grades ({ studentId })  {
 
         try {
             await deleteDoc(doc(db, 'Grades', id));
-            fetchGrades(); // Refresh the list
+            fetchGrades();
         } catch (error) {
             console.error("Error deleting grade: ", error);
         }
@@ -94,7 +94,7 @@ export default function  Grades ({ studentId })  {
                 </thead>
                 <tbody>
                     {grades
-                        .filter(grade => grade.student_id === studentId) // Filter based on student_id
+                        .filter(grade => grade.student_id === studentId) 
                         .map(grade => (
                             <tr key={grade.id}>
                                 <td>{grade.grade}</td>
@@ -112,5 +112,3 @@ export default function  Grades ({ studentId })  {
         </div>
     );
 };
-
-// export default Grades;

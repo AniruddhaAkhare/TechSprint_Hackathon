@@ -19,7 +19,6 @@ const CreateInvoice = () => {
             setInvoiceDate(today);
     }, []);
 
-    // Fetch students from the database
     useEffect(() => {
         const fetchStudents = async () => {
             try {
@@ -42,15 +41,13 @@ const CreateInvoice = () => {
     const handleStudentChange = (e) => {
         const studentId = e.target.value;
         setSelectedStudent(studentId);
-        
-        // Find the selected student in the students array
+
         const student = students.find(student => student.id === studentId);
-        
-        // If a student is found, set the billing address; otherwise, clear it
+     
         if (student) {
             setBillingAddress(student.billing_address.area +" "+ student.billing_address.street +" "+ student.billing_address.city +" "+ student.billing_address.state +" "+ student.billing_address.country +" " + student.billing_address.zip); // Assuming 'billingAddress' is a field in student doc
         } else {
-            setBillingAddress('');  // Clear if no student is selected
+            setBillingAddress('');  
         }
     };
 
@@ -83,7 +80,7 @@ const CreateInvoice = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const invoiceData = {
-            subject: subject, // Replace with your way of handling subject
+            subject: subject,
             invoice_date: invoiceDate,
             due_date: dueDate,
             student_id: selectedStudent,
@@ -95,7 +92,6 @@ const CreateInvoice = () => {
         try {
             await addDoc(collection(db, 'invoices'), invoiceData);
             alert("Invoice created successfully!");
-            // Reset the form after successful submission
             setSelectedStudent('');
             setInvoiceDate('');
             setDueDate('');

@@ -9,10 +9,9 @@ export default function  Enrollments ({ studentId })  {
 
     useEffect(() => {
         const fetchEnrollments = async () => {
-            // Reset data and states on each fetch
             setIsLoading(true);
             setError(null);
-            setEnrollmentData([]); // Clear enrollment data each time fetch starts
+            setEnrollmentData([]); 
 
             try {
                 const studentRef = doc(db, "student", studentId);
@@ -20,15 +19,13 @@ export default function  Enrollments ({ studentId })  {
 
                 if (studentSnap.exists()) {
                     const data = studentSnap.data();
-                    // Check if course_details is present and formatted correctly
                     if (data.course_details && Array.isArray(data.course_details)) {
-                        // Format the courses into the desired table structure
                         const formattedCourses = data.course_details.map((course, index) => ({
                             srNo: index + 1,
-                            courseName: course.courseName, // Ensure this field exists in Firestore
-                            batch: course.batch, // Ensure this field exists in Firestore
-                            branch: course.branch, // Ensure this field exists in Firestore
-                            mode: course.mode // Ensure this field exists in Firestore
+                            courseName: course.courseName, 
+                            batch: course.batch, 
+                            branch: course.branch, 
+                            mode: course.mode 
                         }));
                         setEnrollmentData(formattedCourses);
                     } else {
@@ -46,7 +43,7 @@ export default function  Enrollments ({ studentId })  {
         };
 
         fetchEnrollments();
-    }, [studentId]); // Re-run the effect whenever studentId changes
+    }, [studentId]); 
 
     if (isLoading) {
         return <p>Loading...</p>;
@@ -90,5 +87,3 @@ export default function  Enrollments ({ studentId })  {
         </div>
     );
 };
-
-// export default Enrollments;

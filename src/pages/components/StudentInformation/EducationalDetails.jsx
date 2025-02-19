@@ -69,5 +69,3 @@ export default function  EducationalDetails ()  {
         </div>
     );
 };
-
-// export default EducationalDetails;

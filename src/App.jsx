@@ -45,6 +45,7 @@ import CreateAttendenceRemarks from './pages/CreateAttendenceRemarks.jsx';
 import CreateFeesRemarks from './pages/CreateFeesRemarks.jsx';
 import AttendanceRemarks from './pages/AttendanceRemarks.jsx';
 import FeesRemarks from './pages/FeesRemarks.jsx';
+import InstructorProfile from './pages/MyProfile.jsx';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -105,8 +106,7 @@ export default function App() {
             <Route path="/createExaminationRemarks" element={<CreateExaminationRemarks/>}/>
             <Route path="/attendenceremark" element={<AttendanceRemarks/>}/>
             <Route path="/feesremark" element={<FeesRemarks/>}/>
-
-
+            <Route path="/instructor-profile/:id" element={<InstructorProfile/>}/>
           </Routes>
           {/* </div> */}
         </div>

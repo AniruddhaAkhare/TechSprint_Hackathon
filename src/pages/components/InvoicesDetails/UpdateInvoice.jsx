@@ -202,5 +202,3 @@ export default function UpdateInvoice() {
         </div>
     );
 };
-
-// export default UpdateInvoice;

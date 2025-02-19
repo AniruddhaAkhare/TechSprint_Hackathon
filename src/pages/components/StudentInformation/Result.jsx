@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../firebase'; // Ensure you have the correct path to your Firebase config
+import { db } from '../firebase';
 
 export default function  Result ({ studentId })  {
     const [results, setResults] = useState([]);
@@ -18,7 +18,7 @@ export default function  Result ({ studentId })  {
             setResults(data);
         } catch (error) {
             console.error("Error fetching results: ", error);
-            alert("Failed to fetch results. Please try again later."); // Improved error handling for UI feedback
+            alert("Failed to fetch results. Please try again later.");
         }
     };
 
@@ -26,11 +26,11 @@ export default function  Result ({ studentId })  {
         e.preventDefault();
         try {
             await addDoc(collection(db, 'results'), newResults);
-            setNewResults({ result: '', marks_obtained: '', max_marks: '', student_id: studentId }); // Reset fields
-            fetchResults(); // Refresh the list
+            setNewResults({ result: '', marks_obtained: '', max_marks: '', student_id: studentId }); 
+            fetchResults();
         } catch (error) {
             console.error("Error adding results: ", error);
-            alert("Failed to add result. Please try again."); // Improved error handling for UI feedback
+            alert("Failed to add result. Please try again."); 
         }
     };
 
@@ -38,10 +38,10 @@ export default function  Result ({ studentId })  {
         const resultsRef = doc(db, 'results', id);
         try {
             await updateDoc(resultsRef, newResults);
-            fetchResults(); // Refresh the list
+            fetchResults(); 
         } catch (error) {
             console.error("Error updating results: ", error);
-            alert("Failed to update result. Please try again."); // Improved error handling for UI feedback
+            alert("Failed to update result. Please try again."); 
         }
     };
 
@@ -51,10 +51,10 @@ export default function  Result ({ studentId })  {
 
         try {
             await deleteDoc(doc(db, 'results', id));
-            fetchResults(); // Refresh the list
+            fetchResults();
         } catch (error) {
             console.error("Error deleting results: ", error);
-            alert("Failed to delete result. Please try again."); // Improved error handling for UI feedback
+            alert("Failed to delete result. Please try again."); 
         }
     };
 
@@ -98,7 +98,7 @@ export default function  Result ({ studentId })  {
                 </thead>
                 <tbody>
                     {results
-                        .filter(result => result.student_id === studentId) // Filter based on student_id
+                        .filter(result => result.student_id === studentId) 
                         .map(result => (
                             <tr key={result.id}>
                                 <td>{result.result}</td>
@@ -116,5 +116,3 @@ export default function  Result ({ studentId })  {
         </div>
     );
 };
-
-// export default Result;

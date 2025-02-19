@@ -103,54 +103,41 @@ table {
 
 /* Table header styling */
 thead {
-    background-color: #007bff; /* Bootstrap primary color */
-    color: white; /* White text for header */
+    background-color: #007bff; 
+    color: white; 
 }
 
-/* Table cells styling */
 th, td {
-    padding: 12px 15px; /* Inner padding */
-    text-align: left; /* Left alignment for cells */
-    border: 1px solid #ddd; /* Light gray border */
+    padding: 12px 15px; 
+    text-align: left; 
+    border: 1px solid #ddd; 
 }
 
-/* Alternate row coloring for better readability */
 tbody tr:nth-child(even) {
-    background-color: #f9f9f9; /* Very light gray for even rows */
+    background-color: #f9f9f9; 
 }
 
-/* Highlight row on hover */
 tbody tr:hover {
-    background-color: #e1f5fe; /* Light blue on hover */
+    background-color: #e1f5fe; 
 }
 
-/* Message styling */
 td[colspan="16"] {
-    text-align: center; /* Center the no students found message */
-    font-weight: bold; /* Bold text */
-    color: #999; /* Gray color for message */
-    padding: 20px; /* Extra padding for the message */
+    text-align: center; 
+    font-weight: bold; 
+    color: #999; 
+    padding: 20px; 
 }
 
-/* Responsive design to handle smaller screen widths */
 @media (max-width: 768px) {
     table {
-        font-size: 14px; /* Slightly smaller font size on smaller screens */
+        font-size: 14px; 
     }
 
     button {
-        font-size: 14px; /* Smaller button font size */
-        padding: 8px 12px; /* Adjust padding */
+        font-size: 14px; 
+        padding: 8px 12px; 
     }
 }
-
-
-
-
-/* add students */
-
-
-
 
 .add-student-form {
     max-width: 600px;

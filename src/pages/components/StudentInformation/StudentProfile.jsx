@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase'; // Adjust path based on your structure
-import '../Profile.css'; // Import the CSS for styling
+import { db } from '../firebase';
+import '../Profile.css';
 import EditStudent from '../EditStudent';
 
 export default function  StudentProfile  () {
-    const { studentId } = useParams(); // Correctly get the student's ID from the URL
+    const { studentId } = useParams();
     const [student, setStudent] = useState(null);
     const navigate = useNavigate();
 
-    // Fetch the student data when the component mounts
     useEffect(() => {
         console.log("Fetching student data for ID:", studentId);
 
@@ -167,8 +166,6 @@ export default function  StudentProfile  () {
                 <p>No experience.</p>
             )}
 
-
-            {/* Action buttons */}
             <div>
                 <button onClick={()=>{navigate(`/studentdetails/updatestudent/${studentId}`);}} className='btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Edit</button>
                 <button onClick={() => navigate('/studentdetails')} className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Back</button>
@@ -176,5 +173,3 @@ export default function  StudentProfile  () {
         </div>
     );
 };
-
-// export default StudentProfile;

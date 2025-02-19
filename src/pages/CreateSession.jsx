@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { setDoc, doc } from 'firebase/firestore';
 import { db } from "../config/firebase.js";
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
 
 const SelectControl = ({ options, ...props }) => (
   <SelectContainer>
@@ -53,12 +53,13 @@ const CreateSession = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="ml-[20rem] p-4 p-6 bg-gray-100 min-h-screen">
       <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
         <button
           type="button"
           className="text-blue-500 underline mb-4"
-          onClick={() => history.goBack()}
+          class="text-white bg-primary"
+          onClick={() => navigate(-1)}
         >
           Back
         </button>
@@ -236,4 +237,4 @@ const CreateSession = () => {
   );
 };
 
-export default CreateSession; 
+export default CreateSession;

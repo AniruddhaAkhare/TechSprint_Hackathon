@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { db } from '../firebase';  // Your Firebase config
-import { collection, addDoc, getDocs } from 'firebase/firestore'; // Import required Firestore functions
+import { db } from '../firebase'; 
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 
 export default function  Attendance ({studentId}) {
     const [attendanceData, setAttendanceData] = useState([]);
@@ -23,22 +23,19 @@ export default function  Attendance ({studentId}) {
             const workbook = XLSX.read(binaryStr, { type: 'binary' });
             const sheetName = workbook.SheetNames[0];
 
-            // Assuming the first sheet contains your attendance data
             const worksheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
             const formattedData = jsonData.slice(1).map(row => ({
-                batch_id: row[0].trim(), // Adjust column index for batch_id
-                date: new Date(row[1].trim()), // Convert to JavaScript Date object
-                status: row[2].trim(), // Adjust column index for status
-                student_id: row[3].trim(), // Adjust column index for student_id
-                subject_id: row[4].trim() // Adjust column index for subject_id
+                batch_id: row[0].trim(), 
+                date: new Date(row[1].trim()),
+                status: row[2].trim(), 
+                student_id: row[3].trim(), 
+                subject_id: row[4].trim() 
             }));
 
-            // Set to state for displaying
             setAttendanceData(formattedData);
-            
-            // Transfer data to Firestore
+
             await uploadToFirestore(formattedData);
         };
 
@@ -107,5 +104,3 @@ export default function  Attendance ({studentId}) {
         </div>
     );
 };
-
-// export default Attendance;

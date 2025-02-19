@@ -1,34 +1,48 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../config/firebase";
 
-// Create the authentication context
 const AuthContext = createContext();
 
-// Provide authentication state and functions
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(
     localStorage.getItem("token") ? true : false
   );
+  const [instructorData, setInstructorData] = useState(null);
 
-  // Function to log in
-  const login = (token) => {
+  const login = async (token, email) => {
     localStorage.setItem("token", token); // Store token
     setIsAuthenticated(true);
+
+    try {
+      const docRef = doc(db, "Instructors", email);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setInstructorData(docSnap.data());
+      }
+    } catch (error) {
+      console.error("Error fetching instructor data:", error);
+    }
   };
 
-  // Function to log out
   const logout = () => {
     localStorage.removeItem("token"); // Remove token
     setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      login, 
+      logout,
+      instructorData 
+    }}>
+
       {children}
     </AuthContext.Provider>
   );
 }
 
-// Custom hook to use authentication context
 export function useAuth() {
   return useContext(AuthContext);
 }

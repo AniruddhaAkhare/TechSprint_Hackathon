@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
-import { db } from "./firebase"; // Adjust path as needed
-import './Profile.css'; // Import CSS for styling
+import { db } from "./firebase";
+import './Profile.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Timestamp } from "firebase/firestore";
@@ -400,8 +400,6 @@ export default function EditStudent() {
                     ))}
                     <button type="button" onClick={addInstallment} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Installment</button>
                 </div><br/>
-
-
 
                 <div>
                     <h2>Enrollment Goals</h2>

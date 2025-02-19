@@ -10,7 +10,6 @@ export default function  Fees ()  {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch invoices
                 const invoicesRef = collection(db, 'invoices');
                 const invoicesSnapshot = await getDocs(invoicesRef);
                 const invoicesList = invoicesSnapshot.docs.map(doc => ({
@@ -18,8 +17,7 @@ export default function  Fees ()  {
                     ...doc.data(),
                 }));
                 setInvoices(invoicesList);
-                
-                // Fetch students
+
                 const studentsRef = collection(db, 'students');
                 const studentsSnapshot = await getDocs(studentsRef);
                 const studentsList = studentsSnapshot.docs.map(doc => ({
@@ -35,7 +33,6 @@ export default function  Fees ()  {
         fetchData();
     }, []);
 
-    // Combine invoices with student names
     const combinedData = invoices.map(invoice => {
         const student = students.find(s => s.id === invoice.student_id);
         return {
@@ -46,7 +43,7 @@ export default function  Fees ()  {
 
     const calculateGrandTotal = (items) => {
         return items.reduce((total, item) => {
-            return total + (item.total || 0); // Ensure item.total exists, otherwise add 0
+            return total + (item.total || 0); 
         }, 0);
     };
 
@@ -86,5 +83,3 @@ export default function  Fees ()  {
         </div>
     );
 };
-
-// export default Fees;
