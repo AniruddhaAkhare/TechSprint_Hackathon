@@ -62,6 +62,7 @@ export default function App() {
       <BrowserRouter>
         <div style={{ display: 'flex' }}>
           {user && <Sidebar />}
+          {/* <div className="flex-grow ml-64">  */}
           <Routes>
             <Route path="/studentdetails" element={<StudentDetails />} />
             <Route path="/studentdetails/addstudent" element={<AddStudent />} />
@@ -95,17 +96,19 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
-            <Route path="/performance" element={<AddPerformance/>}></Route>
+            <Route path="/addPerformance" element={<AddPerformance/>}/>
             <Route path="/mocktestsessions" element={<MockTestSessions />} />
             <Route path="/createMockTest" element={<CreateMockTest />} />
-            <Route path="/createExaminationremark" element={<CreateExaminationRemarks/>}></Route>
-            <Route path="/createattendenceremark" element={<CreateAttendenceRemarks/>}/>
-            <Route path="/createfeesremark" element={<CreateFeesRemarks/>}/>
+            <Route path="/createExaminationremark" element={<CreateExaminationRemarks/>}/>
+            <Route path="/createAttendanceRemarks" element={<CreateAttendenceRemarks/>}/>
+            <Route path="/createFeesRemarks" element={<CreateFeesRemarks/>}/>
+            <Route path="/createExaminationRemarks" element={<CreateExaminationRemarks/>}/>
             <Route path="/attendenceremark" element={<AttendanceRemarks/>}/>
             <Route path="/feesremark" element={<FeesRemarks/>}/>
 
 
           </Routes>
+          {/* </div> */}
         </div>
       </BrowserRouter>
     </AuthProvider>

@@ -1,77 +1,105 @@
-import React from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import React, { useState } from 'react';
+import { setDoc, doc } from 'firebase/firestore';
+import { db } from "../config/firebase.js"; // Correct path
+import { auth } from '../config/firebase.js';
 
-export default function ScheduleUI() {
-    const navigate = useNavigate(); // Initialize navigate
+export default function RegisterForm() {
+    const [f_name, setFirstName] = useState('');
+    const [l_name, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [specialization, setSpecialization] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!f_name || !email || !phone || !password || !phone || !l_name) {
+            console.error("All fields are required.");
+            return;
+        }
+
+        try {
+            const adminCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const admin = adminCredential.user;
+
+            console.log("Admin registered:", admin);
+
+            if (admin) {
+                await setDoc(doc(db, "Instructor", admin.uid), {
+                    f_name: f_name,
+                    l_name: l_name,
+                    email: admin.email,
+                    phone: phone,
+                    specialization: specialization
+                });
+                console.log("Admin data stored in Firestore.");
+            }
+            alert("Admin registered successfully");
+            window.location.href = "/";
+            console.log("Admin registered successfully");
+
+        } catch (err) {
+            alert("Admin already registered")
+            console.log("Admin already registered");
+        }
+    };
 
     return (
-        <div className="flex h-screen ml-80 p-4">
-            {/* Sidebar */}
-            <div className="w-1/4 bg-gray-900 text-white flex flex-col p-4">
-                <div className="mb-4 text-lg font-bold">Fireblaze</div>
-                <button 
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded mb-4"
-                    onClick={() => navigate('/createSession')} // Navigate to CreateSession
-                >
-                    + Schedule session
-                </button>
-                <button className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded mb-6">
-                    Back to home
-                </button>
-
-                <div className="text-sm font-semibold mb-4">February 2025</div>
-                <div className="grid grid-cols-7 gap-1">
-                    {Array.from({ length: 28 }, (_, i) => (
-                        <div
-                            key={i}
-                            className={`p-2 text-center rounded ${i + 1 === 5 ? "bg-blue-600 text-white" : "hover:bg-gray-700"}`}>
-                            {i + 1}
-                        </div>
-                    ))}
-                </div>
-
-                <select className="mt-6 bg-gray-800 text-white p-2 rounded w-full">
-                    <option>Select Trainers</option>
-                </select>
-            </div>
-
-            {/* Main Calendar */}
-            <div className="flex-1 bg-white">
-                <div className="flex justify-between items-center p-4 border-b">
-                    <div className="text-lg font-bold">Feb 2 - 8, 2025</div>
-                    <div className="space-x-2">
-                        <button className="bg-gray-100 px-4 py-2 rounded hover:bg-gray-200">Today</button>
-                        <button className="bg-gray-100 px-4 py-2 rounded hover:bg-gray-200">List</button>
-                        <button className="bg-gray-100 px-4 py-2 rounded hover:bg-gray-200">Day</button>
-                        <button className="bg-gray-100 px-4 py-2 rounded hover:bg-gray-200">Week</button>
-                        <button className="bg-gray-100 px-4 py-2 rounded hover:bg-gray-200">Month</button>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-7 border-t">
-                    {["Sun 2/2", "Mon 2/3", "Tue 2/4", "Wed 2/5", "Thu 2/6", "Fri 2/7", "Sat 2/8"].map((day, index) => (
-                        <div
-                            key={index}
-                            className="border-r last:border-r-0 border-gray-300 py-4 text-center font-medium"
-                        >
-                            {day}
-                        </div>
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-7 h-[calc(100%-100px)]">
-                    {Array.from({ length: 7 }, (_, dayIndex) => (
-                        <div
-                            key={dayIndex}
-                            className={`border-r last:border-r-0 border-gray-300`}
-                        >
-                            {dayIndex === 3 && (
-                                <div className="bg-yellow-200 h-40 border-t border-red-500"></div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </div>
+        <div className='h-screen flex items-center justify-center min-h-screen bg-gray-100 w-screen'>
+            <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md w-96">
+                <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
+                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <input
+                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    type="text"
+                    value={f_name}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <input
+                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    type="text"
+                    value={l_name}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input
+                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                <input
+                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    type="text"
+                    value={specialization}
+                    onChange={(e) => setSpecialization(e.target.value)}
+                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input
+                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+                <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition duration-200">Register</button>
+                <p className="mt-4 text-center text-sm text-gray-600">Already have an account? <a href="/login" className="text-blue-500 hover:underline">Login here</a></p>
+            </form>
         </div>
     );
-};
+}

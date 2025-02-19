@@ -4,7 +4,7 @@ import { collection, getDocs, addDoc } from "firebase/firestore";
 import CreateCurriculum from "./CreateCurriculum";
 import AddSectionModal from "./AddSectionalModel"; // Import AddSectionModal
 import { useNavigate } from "react-router-dom";
-import SearchBar from "./components/Searchbar";
+import SearchBar from "./components/SearchBar";
 
 const Curriculum = () => {
     const [curriculums, setCurriculums] = useState([]);

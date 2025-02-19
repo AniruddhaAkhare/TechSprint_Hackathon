@@ -3,7 +3,7 @@ import React from 'react';
 import CreateBatch from "./components/CreateBatch";
 import { db } from '../config/firebase';
 import { getDocs, collection, deleteDoc, doc } from 'firebase/firestore';
-import SearchBar from "./components/Searchbar";
+import SearchBar from "./components/SearchBar.jsx";
 
 export default function Batches() {
     const [currentBatch, setCurrentBatch] = useState(null);

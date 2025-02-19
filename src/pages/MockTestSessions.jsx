@@ -38,7 +38,7 @@ export default function MockTestSession() {
     };
 
     return (
-        <div>
+        <div className="ml-[20rem] p-4">
             <h1>Mock Test Sessions</h1>
             {student ? (
                 <p>Mock tests for: <strong>{student.first_name}</strong></p>

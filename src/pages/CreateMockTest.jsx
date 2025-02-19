@@ -75,7 +75,7 @@ export default function CreateMockTest() {
     };
 
     return (
-        <div>
+        <div className="ml-[20rem] p-4">
             <h1>Create Mock Test</h1>
             {student ? (
                 <p>Adding mock test for: <strong>{student.first_name}</strong></p>
