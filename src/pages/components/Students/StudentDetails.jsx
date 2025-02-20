@@ -754,10 +754,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { collection, getDocs, doc, writeBatch, arrayUnion, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, writeBatch, arrayUnion, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input } from "@material-tailwind/react";
 
 export default function StudentDetails() {
     const { adminId } = useParams();
@@ -767,6 +768,10 @@ export default function StudentDetails() {
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState([]);
     const navigate = useNavigate();
+
+    
+    const [openDelete, setOpenDelete] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
 
     useEffect(() => {
         fetchStudents();
@@ -803,6 +808,19 @@ export default function StudentDetails() {
             console.error("Error updating status:", error);
             toast.error("Failed to update status");
         }
+    };
+
+    const deleteStudent = async () => {
+        // console.log("delete ");
+        if (deleteId) {
+            try {
+                await deleteDoc(doc(db, "student", deleteId));
+                fetchStudents();
+            } catch (err) {
+                console.error("Error deleting student:", err);
+            }
+        }
+        setOpenDelete(false);
     };
 
     // const handleBulkEnrollment = async () => {
@@ -1021,10 +1039,21 @@ export default function StudentDetails() {
                                     </select>
                                 </td>
 
-
+                                <Dialog open={openDelete} handler={() => setOpenDelete(false)}>
+                                    <DialogHeader>Confirm Deletion</DialogHeader>
+                                    <DialogBody>Are you sure you want to delete this instructor? This action cannot be undone.</DialogBody>
+                                    <DialogFooter>
+                                        <Button variant="text" color="gray" onClick={() => setOpenDelete(false)}>Cancel</Button>
+                                        <Button variant="filled" color="red" onClick={deleteStudent}>Yes, Delete</Button>
+                                    </DialogFooter>
+                                </Dialog>
                                 <td>
-                                    <button className="bg-red-500 text-white px-3 py-1">Delete</button>
+                                <div className="flex items-center space-x-2">
+                                            <button onClick={() => { setDeleteId(student.id); setOpenDelete(true); }} className="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600">
+                                                Delete
+                                            </button>
                                     <button onClick={() => navigate(`/studentdetails/updatestudent/${student.id}`)} className="bg-blue-500 text-white px-3 py-1">Update</button>
+                                </div>
                                 </td>
                             </tr>
                         ))}
