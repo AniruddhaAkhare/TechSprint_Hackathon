@@ -229,7 +229,7 @@ export default function EditStudent() {
             });
 
             alert("Student updated successfully!");
-            navigate("/admin/studentdetails");
+            navigate("/studentdetails");
         } catch (error) {
             console.error("Error updating student:", error);
             alert("Error updating student. Please try again.");
@@ -242,7 +242,7 @@ export default function EditStudent() {
             try {
                 await deleteDoc(doc(db, "student", studentId));
                 alert("Student deleted successfully!");
-                navigate("/admin/studentdetails");
+                navigate("/studentdetails");
             } catch (error) {
                 console.error("Error deleting student:", error);
                 alert("Error deleting student. Please try again.");
