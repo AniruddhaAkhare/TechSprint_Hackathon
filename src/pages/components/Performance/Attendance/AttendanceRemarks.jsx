@@ -7,8 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 
 export default function AttendanceRemarks() {
     const location = useLocation();
-    const navigate = useNavigate();  // ✅ Initialize navigate
-
+    const navigate = useNavigate();  
     const student = location.state?.student;
     const [attendanceRemarks, setAttendanceRemarks] = useState([]);
 

@@ -3,7 +3,7 @@ import React from "react";
 export default function InstructorProfile () {
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      {/* Header Section */}
+
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="w-16 h-16 rounded-full bg-purple-500 text-white flex items-center justify-center text-3xl font-bold mr-4">
@@ -31,7 +31,7 @@ export default function InstructorProfile () {
         </div>
       </div>
 
-      {/* Tabs Section */}
+
       <div className="border-b border-gray-200 mb-6">
         <ul className="flex space-x-4">
           <li className="text-gray-700 pb-2 border-b-2 border-transparent hover:border-blue-500 cursor-pointer">
@@ -43,7 +43,7 @@ export default function InstructorProfile () {
         </ul>
       </div>
 
-      {/* Profile Form */}
+     
       <form>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div>
@@ -190,5 +190,3 @@ export default function InstructorProfile () {
     </div>
   );
 };
-
-// export default InstructorProfile;

@@ -15,14 +15,20 @@ import Batches from './pages/components/CourseDelivery/Batch/Batches.jsx';
 import CreateBatch from './pages/components/CourseDelivery/Batch/CreateBatch.jsx';
 
 import Courses from './pages/components/CourseDelivery/Course/Courses.jsx';
-import CreateCourse from './pages/components/CourseDelivery/Course/CreateCourses.jsx';
+import CreateCourses from './pages/components/CourseDelivery/Course/CreateCourses.jsx';
+import EditCourse from './pages/components/CourseDelivery/Course/EditCourse.jsx';
+import IndividualCourseBatch from './pages/components/CourseDelivery/Course/IndividualCourseBatch.jsx';
+import Curriculum from './pages/components/CourseDelivery/Curriculum/Curriculum.jsx';
 
 import Sessions from './pages/components/CourseDelivery/Session/Sessions.jsx';
 import CreateSession from './pages/components/CourseDelivery/Session/CreateSession.jsx';
 
+import Subjects from './pages/components/CourseDelivery/Subjects/Subjects.jsx';
+import CreateSubjects from './pages/components/CourseDelivery/Subjects/CreateSubjects.jsx';
+
 import Instructor from './pages/components/Instructors/Instructor.jsx';
 
-import Feedback from './pages/components/Feedback/Feedback.jsx';
+import Feedback from './pages/components/CourseDelivery/Feedback/Feedback.jsx';
 
 import StudentDetails from './pages/components/Students/StudentDetails.jsx';
 import AddStudent from './pages/components/Students/AddStudent.jsx';
@@ -43,8 +49,13 @@ import FeesRemarks from './pages/components/Performance/Fees/FeesRemarks.jsx';
 
 import Profile from './pages/components/Profile.jsx';
 
+
+import Centers from './pages/components/Settings/Centers.jsx'
+
 import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
+import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/IndividualCourseStudnets.jsx';
+import IndividualCourseCurriculum from './pages/components/CourseDelivery/Course/IndividualCourseCurriculum.jsx';
 
 export default function App() {
 
@@ -73,15 +84,25 @@ export default function App() {
             <Route path="/register" element={<RegisterForm />} />
 
             <Route path="/courses" element={<Courses />} />
-            <Route path="/createCourse" element={<CreateCourse />} />
+            {/* <Route path="/create-course" element={<CreateCourses />} /> */}
+            <Route path="/createCourses" element={<CreateCourses />} />
+            <Route path="/editCourse/:id" element={<EditCourse />} />
+            {/* <Route path="/courses/:courseId/curriculum" element={<Curriculum />} />
+            <Route path="/editCourse/:id" element={<EditCourse />} /> */}
+            <Route path="/courses/:id/curriculum" element={<IndividualCourseCurriculum />} />
+            <Route path="/courses/:id/learners" element={<IndividualCourseStudnets />} />
+            <Route path="/courses/:id/batches" element={<IndividualCourseBatch />} />
 
-            <Route path="/batches" element={<Batches />} />
+            <Route path='/batches' element={<Batches />} />
             <Route path="/createBatch" element={<CreateBatch />} />
 
             <Route path='/sessions' element={<Sessions />} />
             <Route path="/createSession" element={<CreateSession />} />
 
             <Route path="/instructor" element={<Instructor />} />
+
+            <Route path='/curriculum' element={<Curriculum />} />
+            <Route path="/createCurriculum" element={<CreateSubjects />} />
 
             <Route path="/studentdetails" element={<StudentDetails />} />
             <Route path="/studentdetails/addstudent" element={<AddStudent />} />
@@ -102,6 +123,8 @@ export default function App() {
 
             <Route path="/createFeesRemarks" element={<CreateFeesRemarks />} />
             <Route path="/feesremark" element={<FeesRemarks />} />
+
+            <Route path='/centers' element={<Centers />} />
 
           </Routes>
         </div>

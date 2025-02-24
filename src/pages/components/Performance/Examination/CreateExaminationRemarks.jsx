@@ -17,7 +17,6 @@ export default function CreateExaminationRemarks() {
 
     const [examinationRemarks, setExaminationRemarks] = useState([]);
 
-    // Fetch existing mock tests of the student
     useEffect(() => {
         if (student?.id) {
             fetchExaminationRemarks();
@@ -103,7 +102,6 @@ export default function CreateExaminationRemarks() {
                 <button type="submit">Add Examination remarks</button>
             </form>
 
-            {/* Display existing mock tests */}
             <h2>Examination remark History</h2>
             {examinationRemarks.length > 0 ? (
                 <ul>

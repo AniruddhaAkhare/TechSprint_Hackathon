@@ -5,8 +5,7 @@ import { useLocation } from 'react-router-dom';
 
 export default function CreateMockTest() {
     const location = useLocation();
-    const student = location.state?.student; // Get selected student from state
-
+    const student = location.state?.student; 
     const [testDetails, setTestDetails] = useState({
         subcategory: '',
         rating: '',
@@ -17,7 +16,6 @@ export default function CreateMockTest() {
 
     const [mockTests, setMockTests] = useState([]);
 
-    // Fetch existing mock tests of the student
     useEffect(() => {
         if (student?.id) {
             fetchMockTests();
@@ -63,11 +61,11 @@ export default function CreateMockTest() {
         try {
             const studentRef = doc(db, "student", student.id);
             await updateDoc(studentRef, {
-                mockTests: arrayUnion(newMockTest) // Append to the mockTests array
+                mockTests: arrayUnion(newMockTest) 
             });
 
             alert("Mock test added successfully!");
-            setMockTests([...mockTests, newMockTest]); // Update local state
+            setMockTests([...mockTests, newMockTest]); 
         } catch (error) {
             console.error("Error adding mock test:", error);
             alert("Failed to add mock test. See console for details.");
@@ -102,14 +100,13 @@ export default function CreateMockTest() {
                 <button type="submit">Add Mock Test</button>
             </form>
 
-            {/* Display existing mock tests */}
+           
             <h2>Mock Test History</h2>
             {mockTests.length > 0 ? (
                 <ul>
                     {mockTests.map((mock, index) => (
                         <li key={index}>
                             <strong>{mock.subcategory}</strong> - Rating: {mock.rating} - Remarks: {mock.remarks} - Date: {mock.date} - Admin: {mock.admin}
-                            {/* <strong>{mock.subcategory}</strong> - Score: {mock.score} - Date: {mock.date} */}
                         </li>
                     ))}
                 </ul>

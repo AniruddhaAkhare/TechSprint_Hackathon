@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import emailService from '../../../services/emailService'; // Import the email service
+import emailService from '../../../../services/emailService'; // Import the email service
 
 
 const formFieldTemplates = {

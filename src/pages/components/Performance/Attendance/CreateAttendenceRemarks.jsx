@@ -16,9 +16,8 @@ export default function CreateAttendenceRemarks() {
     });
 
     const [attendanceRemarks, setAttendanceRemarks] = useState([]);
-    const [searchTerm, setSearchTerm] = useState(""); // State for search term
-
-    // Fetch existing mock tests of the student
+    const [searchTerm, setSearchTerm] = useState(""); 
+    
     useEffect(() => {
         if (student?.id) {
             fetchAttendanceRemarks();

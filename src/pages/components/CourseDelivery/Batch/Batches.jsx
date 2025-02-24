@@ -1,28 +1,29 @@
 import { useState, useEffect } from "react";
 import React from 'react';
-import CreateBatch from "./CreateBatch";
-import { db } from '../../../../config/firebase.js'
-import { getDocs, collection, deleteDoc, doc } from 'firebase/firestore';
-import SearchBar from '../../../components/SearchBar.jsx'
-import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input } from "@material-tailwind/react";
+import { useParams } from 'react-router-dom';
+import CreateBatch from './CreateBatch.jsx';
+import { getDocs, collection } from 'firebase/firestore';
+import { deleteBatch, updateBatch } from '../../../../utils/batchOperations';
+import { db } from '../../../../config/firebase.js';
+import SearchBar from '../../../components/SearchBar.jsx';
+import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 
 export default function Batches() {
+    const { courseId } = useParams();
     const [currentBatch, setCurrentBatch] = useState(null);
     const [batches, setBatches] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
-    const BatchCollectionRef = collection(db, "Batch");
     const [isOpen, setIsOpen] = useState(false);
-
-
     const [openDelete, setOpenDelete] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    const toggleSidebar = () => {
-        setIsOpen(prev => !prev);
-    }
+    const BatchCollectionRef = collection(db, "Batch");
 
-    const handleSearch = async (e) => {
+    const toggleSidebar = () => setIsOpen(prev => !prev);
+
+    const handleSearch = (e) => {
         if (e) e.preventDefault();
         if (!searchTerm.trim()) {
             setSearchResults([]);
@@ -35,27 +36,28 @@ export default function Batches() {
     };
 
     useEffect(() => {
-        if (searchTerm) {
-            handleSearch();
-        } else {
-            setSearchResults([]);
-        }
+        handleSearch();
     }, [searchTerm]);
 
-
     const fetchBatches = async () => {
-        const snapshot = await getDocs(BatchCollectionRef);
-        const batchData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-        }));
-        setBatches(batchData);
-    }
+        setLoading(true);
+        try {
+            const snapshot = await getDocs(BatchCollectionRef);
+            const batchData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            setBatches(batchData);
+        } catch (error) {
+            console.error('Error fetching batches:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         fetchBatches();
-    }, []);
-
+    }, [courseId]);
 
     const handleCreateBatchClick = () => {
         setCurrentBatch(null);
@@ -73,52 +75,43 @@ export default function Batches() {
         fetchBatches();
     };
 
-    // const deleteBatch = async (id) => {
-    //     const batchDoc = doc(db, "Batch", id);
-    //     await deleteDoc(batchDoc);
-    //     alert("Batch deleted successfully");
-    //     fetchBatches();
-    // };
-
-    const deleteBatch = async () => {
-        // console.log("delete ");
-        if (deleteId) {
-            try {
-                await deleteDoc(doc(db, "Batch", deleteId));
-                fetchBatches();
-            } catch (err) {
-                console.error("Error deleting Batches:", err);
-            }
+    const handleDeleteBatch = async () => {
+        if (!deleteId) return;
+        try {
+            await deleteBatch(deleteId);
+            fetchBatches();
+            alert('Batch deleted successfully!');
+        } catch (err) {
+            console.error("Error deleting batch:", err);
+            alert('Failed to delete batch. Please try again.');
+        } finally {
+            setOpenDelete(false);
+            setDeleteId(null);
         }
-        setOpenDelete(false);
     };
 
     return (
         <div className="flex-col w-screen ml-80 p-4">
-            <div className="justify-between items-center p-4 mb-4">
-                <div className="flex-1">
-                    <h1 className="text-2xl font-semibold">Batches</h1>
-                </div>
-                <div>
-                    <button
-                        type="button"
-                        className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
-                        onClick={handleCreateBatchClick}
-                    >
-                        + Create Batch
-                    </button>
-                </div>
+            <div className="justify-between items-center p-4 mb-4 flex">
+                <h1 className="text-2xl font-semibold">Batches</h1>
+                <button
+                    type="button"
+                    className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
+                    onClick={handleCreateBatchClick}
+                >
+                    + Create Batch
+                </button>
             </div>
 
-            <CreateBatch isOpen={isOpen} toggleSidebar={handleClose} batch={currentBatch} />
+            <CreateBatch
+                isOpen={isOpen}
+                toggleSidebar={handleClose}
+                batch={currentBatch}
+                courseId={courseId}
+            />
 
-            <div className="justify-between items-center p-4 mt-4">
-                <SearchBar
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    handleSearch={handleSearch}
-                />
-
+            <div className="p-4 mt-4">
+                <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} handleSearch={handleSearch} />
             </div>
 
             <div className="sec-3">
@@ -131,43 +124,51 @@ export default function Batches() {
                         </tr>
                     </thead>
                     <tbody>
-                        {(searchResults.length > 0 ? searchResults : batches).map((batch, index) => (
-                            <tr key={batch.id}>
-                                <td>{index + 1}</td>
-                                <td>{batch.name}</td>
-                                {/* <td>
-                                    <button onClick={() => handleEditClick(batch)} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Edit</button>
-                                    <button onClick={() => deleteBatch(batch.id)} className="ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Delete</button>
-                                </td> */}
-
-                                <Dialog open={openDelete} handler={() => setOpenDelete(false)}>
-                                    <DialogHeader>Confirm Deletion</DialogHeader>
-                                    <DialogBody>Are you sure you want to delete this instructor? This action cannot be undone.</DialogBody>
-                                    <DialogFooter>
-                                        <Button variant="text" color="gray" onClick={() => setOpenDelete(false)}>Cancel</Button>
-                                        <Button variant="filled" color="red" onClick={deleteBatch}>Yes, Delete</Button>
-                                    </DialogFooter>
-                                </Dialog>
-
-                                {/* <td> */}
+                        {loading ? (
+                            <tr>
+                                <td colSpan="3" className="text-center py-4">Loading...</td>
+                            </tr>
+                        ) : batches.length > 0 ? (
+                            (searchResults.length > 0 ? searchResults : batches).map((batch, index) => (
+                                <tr key={batch.id}>
+                                    <td>{index + 1}</td>
+                                    <td>{batch.name}</td>
                                     <td>
                                         <div className="flex items-center space-x-2">
-                                            <button onClick={() => { setDeleteId(batch.id); setOpenDelete(true); }} className="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600">
+                                            <button
+                                                onClick={() => { setDeleteId(batch.id); setOpenDelete(true); }}
+                                                className="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600"
+                                            >
                                                 Delete
                                             </button>
-                                            <button onClick={() => handleEditClick(batch)} className="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600">
+                                            <button
+                                                onClick={() => handleEditClick(batch)}
+                                                className="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600"
+                                            >
                                                 Update
                                             </button>
                                         </div>
                                     </td>
-
-                                {/* </td> */}
-
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="3" className="text-center py-4">No batches found</td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </table>
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={openDelete} handler={() => setOpenDelete(false)}>
+                <DialogHeader>Confirm Deletion</DialogHeader>
+                <DialogBody>Are you sure you want to delete this batch? This action cannot be undone.</DialogBody>
+                <DialogFooter>
+                    <Button variant="text" color="gray" onClick={() => setOpenDelete(false)}>Cancel</Button>
+                    <Button variant="filled" color="red" onClick={handleDeleteBatch}>Yes, Delete</Button>
+                </DialogFooter>
+            </Dialog>
         </div>
     );
 }

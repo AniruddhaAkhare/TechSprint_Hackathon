@@ -8,9 +8,14 @@ import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input } from "@
 export default function Courses() {
     const [currentCourse, setCurrentCourse] = useState(null);
     const [courses, setCourses] = useState([]);
+
+    const [subjects, setSubjects] = useState([]);
+
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
+
     const CourseCollectionRef = collection(db, "Course");
+    const SubjectCollectionRef = collection(db, "Subject");
     const [isOpen, setIsOpen] = useState(false);
 
 
@@ -70,19 +75,12 @@ export default function Courses() {
         fetchCourses();
     };
 
-    // const deleteCourse = async (id) => {
-    //     const courseDoc = doc(db, "Course", id);
-    //     await deleteDoc(courseDoc);
-    //     alert("Course deleted successfully");
-    //     fetchCourses();
-    // };
-
     const deleteCourse = async () => {
         // console.log("delete ");
         if (deleteId) {
             try {
                 await deleteDoc(doc(db, "Course", deleteId));
-                fetchBatches();
+                fetchCourses();
             } catch (err) {
                 console.error("Error deleting courses:", err);
             }
@@ -156,3 +154,4 @@ export default function Courses() {
         </div>
     );
 }
+

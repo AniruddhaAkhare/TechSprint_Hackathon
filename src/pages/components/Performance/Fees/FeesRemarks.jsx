@@ -7,8 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 
 export default function FeesRemarks() {
     const location = useLocation();
-    const navigate = useNavigate();  // ✅ Initialize navigate
-
+    const navigate = useNavigate();  
     const student = location.state?.student;
     const [feesRemarks, setFeesRemarks] = useState([]);
 
@@ -34,7 +33,6 @@ export default function FeesRemarks() {
         }
     };
 
-    // ✅ Fix: Define the function properly
     const handleCreateFeesRemarks = () => {
         navigate("/createFeesRemarks", { state: { student } });  // ✅ Navigate to CreateMockTest with student data
     };

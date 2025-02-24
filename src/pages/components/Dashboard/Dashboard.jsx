@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getFirestore, collection, onSnapshot } from 'firebase/firestore';
 import './Dashboard.css';
+import Centers from '../Settings/Centers';
 
 const Dashboard = () => {
   const db = getFirestore();
@@ -10,6 +11,7 @@ const Dashboard = () => {
     student: [], // lowercase "s"
     Course: [],
     Instructor: [],
+    Centers:[],
   });
 
   const getStudentStatusCounts = (students) => {
@@ -86,12 +88,26 @@ const Dashboard = () => {
       (err) => setError(err.message)
     );
 
+    const unsubscribeCenter = onSnapshot(
+      collection(db, 'Centers'),
+      
+      (snapshot) => {
+        setData((prev) => ({
+          ...prev,
+          Centers: snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+        }));
+        setLoading(false);
+      },
+      (err) => setError(err.message)
+    );
+
     return () => {
       unsubscribeBatch();
       unsubscribeStudentStatus();
       unsubscribeStudent();
       unsubscribeCourse();
       unsubscribeInstructor();
+      unsubscribeCenter();
     };
   }, [db]);
 
@@ -150,6 +166,18 @@ const Dashboard = () => {
           <ul>
             {data.Instructor.map((instructor) => (
               <li key={instructor.id}>{instructor.f_name || 'Unnamed Instructor'}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="metric-card">
+          <h3>Centers</h3>
+          <p>Total: {data.Centers.length}</p>
+
+          
+          <ul>
+            {data.Centers.map((center) => (
+              <li key={center.id}>{center.name || 'Unnamed Instructor'}</li>
             ))}
           </ul>
         </div>

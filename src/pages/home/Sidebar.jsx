@@ -21,7 +21,6 @@ import {
     Cog6ToothIcon,
     PresentationChartBarIcon,
     ChevronRightIcon
-
 } from "@heroicons/react/24/solid";
 
 export default function Sidebar() {
@@ -29,7 +28,10 @@ export default function Sidebar() {
     const [user, setUser] = useState(null);
     const [instructorData, setInstructorData] = useState(null);
     const firestore = getFirestore();
-    const [open, setOpen] = useState(0);
+    const [openCourseDelivery, setOpenCourseDelivery] = useState(false);
+    const [openUsers, setOpenUsers] = useState(false);
+    const [openSettings, setOpenSettings] = useState(false);
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
             if (authUser) {
@@ -46,14 +48,12 @@ export default function Sidebar() {
 
     const fetchInstructorData = async (email) => {
         try {
-            console.log("Fetching instructor data for:", email); // Debugging log
             const instructorRef = collection(firestore, "Instructor");
             const q = query(instructorRef, where("email", "==", email));
             const querySnapshot = await getDocs(q);
 
             if (!querySnapshot.empty) {
                 const instructor = querySnapshot.docs[0].data(); // Get first matching instructor
-                console.log("Instructor Data:", instructor); // Debugging log
                 setInstructorData(instructor);
             } else {
                 console.log("Instructor details not found for this email.");
@@ -62,7 +62,6 @@ export default function Sidebar() {
             console.error("Error fetching instructor data:", error);
         }
     };
-
 
     const getUserInitials = () => {
         if (instructorData?.f_name && instructorData?.l_name) {
@@ -84,16 +83,13 @@ export default function Sidebar() {
         <div className="fixed h-screen max-w-[20rem] p-4 shadow-xl shadow-blue-gray-900/5 bg-gray-900 text-white w-full overflow-y-auto">
             <div className="mb-2 p-4">
                 <div className="flex items-center mb-6" onClick={() => navigate("/")} style={{ cursor: 'pointer' }}>
-                   
-                    <div className="bg-gray-700 rounded-full h-10 w-10 flex items-center justify-center" >
+                    <div className="bg-gray-700 rounded-full h-10 w-10 flex items-center justify-center">
                         <img src="../../fireblaze.jpg" alt="F" />
                     </div>
-
-
                     <Typography variant='h3' className="ml-3 text-xl font-semibold">Fireblaze</Typography>
                 </div>
             </div>
-            
+
             <List>
                 <ListItem onClick={() => navigate('/dashboard')}>
                     <ListItemPrefix>
@@ -102,9 +98,13 @@ export default function Sidebar() {
                     Dashboard
                 </ListItem>
 
-                <Accordion open={open === 1}>
-                    <ListItem className="p-0" selected={open === 1}>
-                        <AccordionHeader onClick={() => setOpen(open === 1 ? 0 : 1)} className="border-b-0 p-3">
+                <Accordion open={openCourseDelivery}>
+                    <ListItem className="p-0" selected={openCourseDelivery}>
+                        <AccordionHeader onClick={() => {
+                            setOpenCourseDelivery(!openCourseDelivery);
+                            setOpenUsers(false);
+                            setOpenSettings(false);
+                        }} className="border-b-0 p-3">
                             <ListItemPrefix>
                                 <PresentationChartBarIcon className="h-5 w-5" />
                             </ListItemPrefix>
@@ -133,36 +133,82 @@ export default function Sidebar() {
                                 </ListItemPrefix>
                                 Sessions
                             </ListItem>
+                            <ListItem onClick={() => navigate('/curriculum')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Curriculum
+                            </ListItem>
+                            <ListItem onClick={() => navigate('/addPerformance')}>
+                                <ListItemPrefix>
+                                    <PresentationChartBarIcon className="h-5 w-5" />
+                                </ListItemPrefix>
+                                Add Performance
+                            </ListItem>
                         </List>
                     </AccordionBody>
                 </Accordion>
 
-                <hr className="my-2 border-blue-gray-50" />
+                <Accordion open={openUsers}>
+                    <ListItem className="p-0" selected={openUsers}>
+                        <AccordionHeader onClick={() => {
+                            setOpenUsers(!openUsers);
+                            setOpenCourseDelivery(false);
+                            setOpenSettings(false);
+                        }} className="border-b-0 p-3">
+                            <ListItemPrefix>
+                                <PresentationChartBarIcon className="h-5 w-5" />
+                            </ListItemPrefix>
+                            <Typography color="blue-gray" className="mr-auto font-normal">
+                                Users
+                            </Typography>
+                        </AccordionHeader>
+                    </ListItem>
+                    <AccordionBody className="py-1">
+                        <List className="p-0 text-white">
+                            <ListItem onClick={() => navigate('/studentdetails')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Learners
+                            </ListItem>
+                            <ListItem onClick={() => navigate('/instructor')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Admin & staff
+                            </ListItem>
+                        </List>
+                    </AccordionBody>
+                </Accordion>
 
-                <ListItem onClick={() => navigate('/instructor')}>
-                    <ListItemPrefix>
-                        <InboxIcon className="h-5 w-5" />
-                    </ListItemPrefix>
-                    Instructor
-                </ListItem>
-                <ListItem onClick={() => navigate('/feedback')}>
-                    <ListItemPrefix>
-                        <PresentationChartBarIcon className="h-5 w-5" />
-                    </ListItemPrefix>
-                    Feedback Forms
-                </ListItem>
-                <ListItem onClick={() => navigate('/studentdetails')}>
-                    <ListItemPrefix>
-                        <PresentationChartBarIcon className="h-5 w-5" />
-                    </ListItemPrefix>
-                    Students
-                </ListItem>
-                <ListItem onClick={() => navigate('/addPerformance')}>
-                    <ListItemPrefix>
-                        <PresentationChartBarIcon className="h-5 w-5" />
-                    </ListItemPrefix>
-                    Add Performance
-                </ListItem>
+                <Accordion open={openSettings}>
+                    <ListItem className="p-0" selected={openSettings}>
+                        <AccordionHeader onClick={() => {
+                            setOpenSettings(!openSettings);
+                            setOpenCourseDelivery(false);
+                            setOpenUsers(false);
+                        }} className="border-b-0 p-3">
+                            <ListItemPrefix>
+                                <PresentationChartBarIcon className="h-5 w-5" />
+                            </ListItemPrefix>
+                            <Typography color="blue-gray" className="mr-auto font-normal">
+                                Settings
+                            </Typography>
+                        </AccordionHeader>
+                    </ListItem>
+                    <AccordionBody className="py-1">
+                        <List className="p-0 text-white">
+                            <ListItem onClick={() => navigate('/centers')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Add centers
+                            </ListItem>
+                        </List>
+                    </AccordionBody>
+                </Accordion>
+
                 <ListItem onClick={handleSignOut}>
                     <ListItemPrefix>
                         <PowerIcon className="h-5 w-5" />
@@ -170,14 +216,12 @@ export default function Sidebar() {
                     Log Out
                 </ListItem>
             </List>
-            {/* Bottom Section for Instructor Info */}
+
             <div className="absolute bottom-5 left-4 w-full">
                 <div className="bg-gray-800 p-4 rounded-lg flex items-center cursor-pointer" onClick={() => navigate(`/my-profile/${user?.uid}`)}>
-
                     <div className="bg-purple-600 text-white rounded-full h-12 w-12 flex items-center justify-center text-lg font-bold">
                         {getUserInitials()}
                     </div>
-
                     <div className="ml-3">
                         <p className="font-semibold">
                             {instructorData ? `${instructorData.f_name} ${instructorData.l_name}` : "User"}

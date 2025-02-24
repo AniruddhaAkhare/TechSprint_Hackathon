@@ -7,8 +7,7 @@ import { useLocation } from 'react-router-dom';
 
 export default function CreateFeesRemarks() {
     const location = useLocation();
-    const student = location.state?.student; // Get selected student from state
-
+    const student = location.state?.student; 
     const [testDetails, setTestDetails] = useState({
         subcategory: '',
         remarks: '',
@@ -18,7 +17,6 @@ export default function CreateFeesRemarks() {
 
     const [feesRemarks, setFeesRemarks] = useState([]);
 
-    // Fetch existing mock tests of the student
     useEffect(() => {
         if (student?.id) {
             fetchFeesRemarks();
@@ -102,7 +100,6 @@ export default function CreateFeesRemarks() {
                 <button type="submit">Add Fees remarks</button>
             </form>
 
-            {/* Display existing mock tests */}
             <h2>Fees remark History</h2>
             {feesRemarks.length > 0 ? (
                 <ul>

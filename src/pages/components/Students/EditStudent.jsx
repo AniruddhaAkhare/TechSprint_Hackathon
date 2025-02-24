@@ -77,13 +77,14 @@ export default function EditStudent() {
 
         fetchStudent();
     }, [studentId, navigate]);
+ 
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
+    
         if (name.includes("billingAddress")) {
             const field = name.split(".")[1];
-            setStudent(prevState => ({
+            setStudent((prevState) => ({
                 ...prevState,
                 billingAddress: {
                     ...prevState.billingAddress,
@@ -92,7 +93,7 @@ export default function EditStudent() {
             }));
         } else if (name.includes("address")) {
             const field = name.split(".")[1];
-            setStudent(prevState => ({
+            setStudent((prevState) => ({
                 ...prevState,
                 address: {
                     ...prevState.address,
@@ -100,43 +101,35 @@ export default function EditStudent() {
                 },
             }));
         } else if (name.includes("courseDetails")) {
-            const index = name.split('.')[1];
-            const fieldName = name.split('.')[2];
-            const updatedCourses = [...student.courseDetails];
-            updatedCourses[index][fieldName] = value;
-            setStudent(prevState => ({
-                ...prevState,
-                courseDetails: updatedCourses,
-            }));
+            const [base, index, fieldName] = name.split(".");
+            setStudent((prevState) => {
+                const updatedCourses = [...prevState.courseDetails];
+                updatedCourses[index][fieldName] = value;
+                return { ...prevState, courseDetails: updatedCourses };
+            });
         } else if (name.includes("educationDetails")) {
-            const index = name.split('.')[1];
-            const fieldName = name.split('.')[2];
-            const updatedEducation = [...student.educationDetails];
-            updatedEducation[index][fieldName] = value; // Update the specific field for that education detail
-            setStudent(prevState => ({
-                ...prevState,
-                educationalDetails: updatedEducation,
-            }));
+            const [base, index, fieldName] = name.split(".");
+            setStudent((prevState) => {
+                const updatedEducation = [...prevState.educationDetails];
+                updatedEducation[index][fieldName] = value;
+                return { ...prevState, educationDetails: updatedEducation };
+            });
         } else if (name.includes("experienceDetails")) {
-            const index = name.split('.')[1];
-            const fieldName = name.split('.')[2];
-            const updatedExperience = [...student.experienceDetails];
-            updatedExperience[index][fieldName] = value; // Update the specific field for that experience detail
-            setStudent(prevState => ({
-                ...prevState,
-                experienceDetails: updatedExperience,
-            }));
+            const [base, index, fieldName] = name.split(".");
+            setStudent((prevState) => {
+                const updatedExperience = [...prevState.experienceDetails];
+                updatedExperience[index][fieldName] = value;
+                return { ...prevState, experienceDetails: updatedExperience };
+            });
         } else if (name.includes("installmentDetails")) {
-            const index = name.split('.')[1];
-            const fieldName = name.split('.')[2];
-            const updatedInstallments = [...student.installmentDetails];
-            updatedInstallments[index][fieldName] = value; // Update the specific field for that installment detail
-            setStudent(prevState => ({
-                ...prevState,
-                installmentDetails: updatedInstallments,
-            }));
+            const [base, index, fieldName] = name.split(".");
+            setStudent((prevState) => {
+                const updatedInstallments = [...prevState.installmentDetails];
+                updatedInstallments[index][fieldName] = value;
+                return { ...prevState, installmentDetails: updatedInstallments };
+            });
         } else {
-            setStudent(prevState => ({
+            setStudent((prevState) => ({
                 ...prevState,
                 [name]: value,
             }));
@@ -253,7 +246,7 @@ export default function EditStudent() {
     return (
         <div className="flex-col w-screen ml-80 p-4">
             <button onClick={() => navigate(-1)} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Back</button>
-            <h1>Edit Student</h1><br/>
+            <h1>Edit Student</h1><br />
             <form onSubmit={handleUpdate}>
 
                 <input type="text" name="first_name" value={student.first_name} onChange={handleChange} placeholder="First Name" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -268,7 +261,7 @@ export default function EditStudent() {
                 <input type="text" name="address.city" value={student.address.city} onChange={handleChange} placeholder="City" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="address.state" value={student.address.state} onChange={handleChange} placeholder="State" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="address.zip" value={student.address.zip} onChange={handleChange} placeholder="Zip Code" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="address.country" value={student.address.country} onChange={handleChange} placeholder="Country" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" /><br/>
+                <input type="text" name="address.country" value={student.address.country} onChange={handleChange} placeholder="Country" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" /><br />
 
 
                 <h2>Billing Address</h2>
@@ -278,18 +271,27 @@ export default function EditStudent() {
                 <input type="text" name="billingAddress.state" value={student.billingAddress.state} onChange={handleChange} placeholder="State" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="billingAddress.zip" value={student.billingAddress.zip} onChange={handleChange} placeholder="Zip Code" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="billingAddress.country" value={student.billingAddress.country} onChange={handleChange} placeholder="Country" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="billingAddress.gstNo" value={student.billingAddress.gstNo} onChange={handleChange} placeholder="GST Number" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" /><br/>
+                <input type="text" name="billingAddress.gstNo" value={student.billingAddress.gstNo} onChange={handleChange} placeholder="GST Number" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" /><br />
 
 
                 <h2>Date Of Birth</h2>
-                <input type="date" name="date_of_birth" value={student.date_of_birth} onChange={handleChange} placeholder="Date of Birth" /><br/>
+                <input type="date" name="date_of_birth" value={student.date_of_birth} onChange={handleChange} placeholder="Date of Birth" /><br />
                 <h2>Admission Date</h2>
-                <input type="date" name="admission_date" value={student.admission_date} onChange={handleChange} placeholder="Admission Date" /><br/>
+                <input type="date" name="admission_date" value={student.admission_date} onChange={handleChange} placeholder="Admission Date" /><br />
 
+                {/* <div>
+                    <h2>Course Details</h2> */}
+
+                {/* {student.experienceDetails.map((exp, index) => (
+                    {student.courseDetails.map((course => (
+                        <div key={course.id}>{course.name}</div>
+                    ))} */}
                 <div>
                     <h2>Course Details</h2>
-                    {student.courseDetails.map((course, index) => (
+                    {Array.isArray(student.courseDetails) && student.courseDetails.map((course, index) => (
                         <div key={index} className="course-group">
+                            {/* {student.courseDetails.map((course, index) => (
+                        <div key={index} className="course-group"> */}
                             <select name={`courseDetails.${index}.courseName`} value={course.courseName} onChange={handleChange}>
                                 <option value="">Select Course</option>
                                 <option value="Full Stack Development (MERN)">Full Stack Development (MERN)</option>
@@ -317,8 +319,9 @@ export default function EditStudent() {
                             </button>
                         </div>
                     ))}
-                    <button type="button" onClick={addCourse} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Course</button>
-                </div><br/>
+                     <button type="button" onClick={addCourse} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Course</button>
+                    {/* <button type="button" onClick={addCourse} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Course</button> */}
+                </div><br />
 
                 <div>
                     <h2>Status of Student</h2>
@@ -329,7 +332,7 @@ export default function EditStudent() {
                         <option value="inactive">Inactive</option>
                         <option value="completed">Completed</option>
                     </select>
-                </div><br/>
+                </div><br />
 
                 <div>
                     <h2>Educational Details</h2>
@@ -353,7 +356,7 @@ export default function EditStudent() {
                         </div>
                     ))}
                     <button type="button" onClick={addEducation} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Education</button>
-                </div><br/>
+                </div><br />
 
                 <div>
                     <h2>Experience Details</h2>
@@ -369,7 +372,7 @@ export default function EditStudent() {
                         </div>
                     ))}
                     <button type="button" onClick={addExperience} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Experience</button>
-                </div><br/>
+                </div><br />
 
                 <div>
                     <h2>Installment Details</h2>
@@ -399,7 +402,7 @@ export default function EditStudent() {
                         </div>
                     ))}
                     <button type="button" onClick={addInstallment} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Installment</button>
-                </div><br/>
+                </div><br />
 
                 <div>
                     <h2>Enrollment Goals</h2>
@@ -409,7 +412,7 @@ export default function EditStudent() {
                         <option value="placement">Placement</option>
                         <option value="career_switch">Career Switch</option>
                     </select>
-                </div><br/>
+                </div><br />
 
                 <button type="submit" className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Update Student</button>
                 <button type="button" onClick={handleDelete} className="ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Delete Student</button>

@@ -5,7 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 
 export default function MockTestSession() {
     const location = useLocation();
-    const navigate = useNavigate();  // ✅ Initialize navigate
+    const navigate = useNavigate();  
 
     const student = location.state?.student;
     const [mockTests, setMockTests] = useState([]);
@@ -32,7 +32,6 @@ export default function MockTestSession() {
         }
     };
 
-    // ✅ Fix: Define the function properly
     const handleCreateMockClick = () => {
         navigate("/createMockTest", { state: { student } });  // ✅ Navigate to CreateMockTest with student data
     };
