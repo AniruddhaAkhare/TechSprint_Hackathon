@@ -2,7 +2,7 @@ import React from 'react';
 import { useEffect, useState } from 'react';
 import { getAuth } from 'firebase/auth';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-
+import axios from 'axios';
 
 import Sidebar from './pages/home/Sidebar.jsx'
 import LoginForm from './pages/home/LoginForm.jsx';
@@ -19,16 +19,18 @@ import CreateCourses from './pages/components/CourseDelivery/Course/CreateCourse
 import EditCourse from './pages/components/CourseDelivery/Course/EditCourse.jsx';
 import IndividualCourseBatch from './pages/components/CourseDelivery/Course/IndividualCourseBatch.jsx';
 import Curriculum from './pages/components/CourseDelivery/Curriculum/Curriculum.jsx';
+import NotesPage from './pages/components/CourseDelivery/Curriculum/NotesPages.jsx';
 
 import Sessions from './pages/components/CourseDelivery/Session/Sessions.jsx';
 import CreateSession from './pages/components/CourseDelivery/Session/CreateSession.jsx';
+import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession';
 
 import Subjects from './pages/components/CourseDelivery/Subjects/Subjects.jsx';
 import CreateSubjects from './pages/components/CourseDelivery/Subjects/CreateSubjects.jsx';
 
 import Instructor from './pages/components/Instructors/Instructor.jsx';
 
-import Feedback from './pages/components/CourseDelivery/Feedback/Feedback.jsx';
+import Feedback from './pages/components/CourseDelivery/Curriculum/Feedback.jsx';
 
 import StudentDetails from './pages/components/Students/StudentDetails.jsx';
 import AddStudent from './pages/components/Students/AddStudent.jsx';
@@ -49,14 +51,12 @@ import FeesRemarks from './pages/components/Performance/Fees/FeesRemarks.jsx';
 
 import Profile from './pages/components/Profile.jsx';
 
-
 import Centers from './pages/components/Settings/Centers.jsx'
 
 import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
 import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/IndividualCourseStudnets.jsx';
 import IndividualCourseCurriculum from './pages/components/CourseDelivery/Course/IndividualCourseCurriculum.jsx';
-
 export default function App() {
 
   const [user, setUser] = useState(null);
@@ -89,20 +89,23 @@ export default function App() {
             <Route path="/editCourse/:id" element={<EditCourse />} />
             {/* <Route path="/courses/:courseId/curriculum" element={<Curriculum />} />
             <Route path="/editCourse/:id" element={<EditCourse />} /> */}
-            <Route path="/courses/:id/curriculum" element={<IndividualCourseCurriculum />} />
-            <Route path="/courses/:id/learners" element={<IndividualCourseStudnets />} />
-            <Route path="/courses/:id/batches" element={<IndividualCourseBatch />} />
+            <Route path="/courses/:courseId/curriculum" element={<IndividualCourseCurriculum />} />
+            <Route path="/courses/:courseId/learners" element={<IndividualCourseStudnets />} />
+            <Route path="/courses/:courseId/batches" element={<IndividualCourseBatch />} />
 
             <Route path='/batches' element={<Batches />} />
             <Route path="/createBatch" element={<CreateBatch />} />
 
             <Route path='/sessions' element={<Sessions />} />
             <Route path="/createSession" element={<CreateSession />} />
+            <Route path="/zoom-session" element={<ZoomSession />} />
 
             <Route path="/instructor" element={<Instructor />} />
 
             <Route path='/curriculum' element={<Curriculum />} />
-            <Route path="/createCurriculum" element={<CreateSubjects />} />
+            {/* <Route path="/createCurriculum" element={<CreateSubjects />} /> */}
+            <Route path="/notes/:curriculumId/:sectionId" element={<NotesPage />} />
+
 
             <Route path="/studentdetails" element={<StudentDetails />} />
             <Route path="/studentdetails/addstudent" element={<AddStudent />} />

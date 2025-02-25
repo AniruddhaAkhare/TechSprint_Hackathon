@@ -7,15 +7,6 @@ const EditCourseNavbar = () => {
   const location = useLocation();
   const { id } = useParams();
 
-
-  // const tabs = [
-  //   { name: "Details", path: `/editCourse/${id}` },
-  //   { name: "Curriculum", path: `/courses/${id}/curriculum` },
-  //   { name: "Batches", path: `/courses/${id}/batches` },
-  //   { name: "Pricing and Publishing", path: "/pricing" },
-  //   { name: "Learners", path: "/learners" },
-  // ];
-
   const tabs = [
     { name: "Details", path: `/editCourse/${id}` },
     { name: "Curriculum", path: `/courses/${id}/curriculum` }, 

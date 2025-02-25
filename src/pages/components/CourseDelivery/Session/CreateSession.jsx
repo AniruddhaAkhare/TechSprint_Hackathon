@@ -3,6 +3,7 @@ import { db } from "../../../../config/firebase.js";
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import getZoomAccessToken from "../../../../utils/getZoomAccessToken";
 
 const CreateSession = ({ isOpen, toggleSidebar, session }) => {
     const [sessionName, setSessionName] = useState('');
@@ -11,6 +12,7 @@ const CreateSession = ({ isOpen, toggleSidebar, session }) => {
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [instructors, setInstructors] = useState([]);
+    const [students, setStudents] = useState([]);
     const [mode, setMode] = useState('');
     const [generateLink, setGenerateLink] = useState('');
     const [sessionLink, setSessionLink] = useState('');
@@ -26,7 +28,11 @@ const CreateSession = ({ isOpen, toggleSidebar, session }) => {
     const [curriculums, setCurriculums] = useState([]);
     // const [generateLink, setGenerateLink] = useState(false);
     const [allowWithoutLogin, setAllowWithoutLogin] = useState(false);
-    
+
+
+    const [selectedStudents, setSelectedStudents] = useState([]);
+    const [selectedInstructors, setSelectedInstructors] = useState([]);
+
 
     useEffect(() => {
         const fetchInstructors = async () => {
@@ -36,6 +42,14 @@ const CreateSession = ({ isOpen, toggleSidebar, session }) => {
         };
 
         fetchInstructors();
+
+        const fetchStudents = async () => {
+            const snapshot = await getDocs(collection(db, "student")); // Fetch instructors from Firestore
+            const studentData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setStudents(studentData); // Set the instructors state
+        };
+
+        fetchStudents();
 
         const fetchCurriculum = async () => {
             const snapshot = await getDocs(collection(db, "Curriculum")); // Fetch instructors from Firestore
@@ -51,35 +65,94 @@ const CreateSession = ({ isOpen, toggleSidebar, session }) => {
             setBatches(batchData); // Set the batches state
         };
 
-        // fetchSubjects(); // Call the function to fetch subjects
         fetchBatches(); // Call the function to fetch batches
     }, []);
 
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
 
-        try {
-            const sessionData = {
-                name: sessionName,
-                curriculumID,
-                // batchID,
-                batchID: selectedBatches,
-                date,
-                startTime,
-                endTime,
-                instructors,
-                sessionType, // Include session type in session data
-            };
-            await addDoc(collection(db, "Sessions"), sessionData);
-            console.log("Session created successfully", sessionData);
-            toggleSidebar();
-        } catch (error) {
-            console.error("Error creating session:", error);
-        }
+    const handleInstructorSelection = (instructor) => {
+        setSelectedInstructors(prev =>
+            prev.includes(instructor) ? prev.filter(i => i !== instructor) : [...prev, instructor]
+        );
     };
 
+    const handleStudentSelection = (student) => {
+        setSelectedStudents(prev =>
+            prev.includes(student) ? prev.filter(s => s !== student) : [...prev, student]
+        );
+    };
+
+
+    const createZoomMeeting = async () => {
+        const accessToken = await getZoomAccessToken();
+      
+        if (!accessToken) {
+          console.error("Failed to obtain access token");
+          return;
+        }
+      
+        try {
+          const response = await axios.post(
+            "https://api.zoom.us/v2/users/me/meetings",
+            {
+              topic: "My Zoom Meeting",
+              type: 2, // 2 for scheduled meeting, 1 for instant meeting
+              duration: 30,
+              timezone: "UTC",
+              agenda: "Discuss project",
+              settings: {
+                host_video: true,
+                participant_video: true,
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+      
+          console.log("Meeting created:", response.data);
+          return response.data;
+        } catch (error) {
+          console.error("Error creating Zoom meeting:", error.response.data);
+        }
+      };
+   
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+    
+        let zoomLink = "";
+        if (meetingPlatform === "Zoom") {
+            zoomLink = await createZoomMeeting();
+        }
+    
+        const sessionData = {
+            name: sessionName,
+            curriculumID,
+            batchID: selectedBatches,
+            date,
+            startTime,
+            endTime,
+            instructors: instructors.map(i => i.email),
+            students: students.map(s => s.email),
+            sessionType,
+            meetingPlatform,
+            sessionLink: zoomLink,  // Store the Zoom link
+        };
+    
+        await addDoc(collection(db, "Sessions"), sessionData);
+        console.log("Session created successfully", sessionData);
+    
+        if (meetingPlatform === "Zoom" && zoomLink) {
+            window.open(zoomLink, "_blank");  // Open Zoom meeting in new tab
+        } else {
+            toggleSidebar();
+        }
+    };
+   
     return (
         <div className={`fixed top-0 right-0 h-full bg-white w-2/5 shadow-lg transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'} p-4 overflow-y-auto`}>
             <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
@@ -134,34 +207,6 @@ const CreateSession = ({ isOpen, toggleSidebar, session }) => {
                 </select>
 
 
-                {/* <div className="mb-6">
-                    <label className="block text-gray-700">Select Batches</label>
-                    <select
-                        multiple
-                        value={selectedBatches}
-                        onChange={(e) => setSelectedBatches([...e.target.selectedOptions].map(option => option.value))}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                    >
-                        {batches.map(batch => (
-                            <option key={batch.id} value={batch.id}>{batch.name}</option>
-                        ))}
-                    </select>
-                </div> */}
-
-                {/* <div className="mb-6">
-                    <label htmlFor="instructor" className="block text-gray-700">Instructor</label>
-                    <select
-                        id="instructor"
-                        value={instructor}
-                        onChange={(e) => setInstructor(e.target.value)}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                    >
-                        <option value="">Select an Instructor</option>
-                        <option value="instructor1">Instructor 1</option>
-                        <option value="instructor2">Instructor 2</option>
-                    </select>
-                </div> */}
-
                 <div className="mb-6 subfields">
                     <label className="form-label">Instructor</label>
                     {instructors.map(instructor => (
@@ -171,12 +216,35 @@ const CreateSession = ({ isOpen, toggleSidebar, session }) => {
                                 type="checkbox"
                                 value={instructor.id}
                                 id={`instructor-${instructor.id}`}
+                                onChange={() => handleInstructorSelection(instructor)}
+                                checked={selectedInstructors.includes(instructor)}
                             />
                             <label className="form-check-label" htmlFor={`instructor-${instructor.id}`}>
-                                {instructor.f_name} {/* Assuming instructor has a name field */}
+                                {instructor.f_name} {/* Assuming 'f_name' is the instructor's first name */}
                             </label>
                         </div>
                     ))}
+                </div>
+
+
+                <div className="mb-6 subfields">
+                    <label className="form-label">Students</label>
+                    {students.map(student => (
+                        <div key={student.id} className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                value={student.id}
+                                id={`student-${student.id}`}
+                                onChange={() => handleStudentSelection(student)}
+                                checked={selectedStudents.includes(student)}
+                            />
+                            <label className="form-check-label" htmlFor={`student-${student.id}`}>
+                                {student.first_name} {/* Assuming 'first_name' is the student's first name */}
+                            </label>
+                        </div>
+                    ))}
+
                 </div>
 
 
@@ -256,9 +324,13 @@ const CreateSession = ({ isOpen, toggleSidebar, session }) => {
                     <label className="block text-gray-700">Meeting Platform</label>
                     <select
                         value={meetingPlatform}
-                        onChange={(e) => setMeetingPlatform(e.target.value)}
+                        onChange={(e) => {
+                            console.log("Meeting platform selected:", e.target.value); // Debugging
+                            setMeetingPlatform(e.target.value);
+                        }}
                         className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     >
+                        <option value="">Select a platform</option> {/* Ensure there's an empty option */}
                         <option value="Zoom">Zoom Meetings</option>
                         <option value="Google">Google Meet</option>
                         <option value="Teams">Microsoft Teams</option>

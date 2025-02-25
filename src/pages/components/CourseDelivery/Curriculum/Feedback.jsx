@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import emailService from '../../../../services/emailService'; // Import the email service
-
+import './Feedback.css';
 
 const formFieldTemplates = {
   shortAnswer: {
@@ -137,19 +137,20 @@ export default function Feedback() {
         <div className="grid grid-cols-3 gap-4">
           <button
             onClick={() => addField("shortAnswer")}
-            className="p-4 bg-gray-200 rounded hover:bg-gray-300"
+            className="p-4 bg-gray-200 rounded hover:bg-gray-300 shortanswer"
+
           >
             Short Answer
           </button>
           <button
             onClick={() => addField("longAnswer")}
-            className="p-4 bg-gray-200 rounded hover:bg-gray-300"
+            className="p-4 bg-gray-200 rounded hover:bg-gray-300 longanswer"
           >
             Long Answer
           </button>
           <button
             onClick={() => addField("starRating")}
-            className="p-4 bg-gray-200 rounded hover:bg-gray-300"
+            className="p-4 bg-gray-200 rounded hover:bg-gray-300 starrating"
           >
             Star Rating
           </button>

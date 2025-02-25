@@ -1,76 +1,122 @@
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../../../config/firebase";
+import { getDocs, collection, doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "../../../../config/firebase.js";
+import EditCourseNavbar from "./EditCourseNavbar.jsx";
+import SearchBar from "../../../components/SearchBar.jsx";
 
-const IndividualCourseCurriculum = () => {
-  const { id } = useParams();
-  const [curriculumName, setCurriculumName] = useState("");
+export default function IndividualCourseStudnets() {
+    const params = useParams();
+    console.log("useParams:", params);
+    const { courseId } = useParams();
+    
+    const [allCurriculum, setAllCurriculum] = useState([]);
+    const [selectedCurriculum, setSelectedCurriculum] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const CurriculumCollectionRef = collection(db, "curriculum");
 
-  useEffect(() => {
+    useEffect(() => {
+        if (!courseId) return; // Early return if courseId is undefined
 
-  const fetchCurriculumNames = async (curriculumIds) => {
-    try {
-        if (!Array.isArray(curriculumIds) || curriculumIds.length === 0) {
-            console.error("Invalid curriculum IDs:", curriculumIds);
+        const fetchCourseCurriculums = async () => {
+            try {
+                const courseRef = doc(db, "Course", courseId);
+                const docSnap = await getDoc(courseRef);
+                if (docSnap.exists()) {
+                    const courseData = docSnap.data();
+                    setSelectedCurriculum(courseData.curriculum || []);
+                }
+            } catch (error) {
+                console.error("Error fetching course:", error);
+            }
+        };
+
+        fetchCourseCurriculums();
+    }, [courseId]);
+
+    useEffect(() => {
+        const fetchCourseCurriculums = async () => {
+            try {
+                const snapshot = await getDocs(CurriculumCollectionRef);
+                const curriculumData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+                setAllCurriculum(curriculumData);
+            } catch (error) {
+                console.error("Error fetching curriculum:", error);
+            }
+        };
+
+        fetchCourseCurriculums();
+    }, []); // Removed courseId from dependency array
+
+    const handleCurriculumChange = (curriculumId) => {
+        setSelectedCurriculum(prev =>
+            prev.includes(curriculumId)
+                ? prev.filter(id => id !== curriculumId)
+                : [...prev, curriculumId]
+        );
+    };
+
+    const handleSave = async () => {
+        if (!courseId) {
+            console.error("Error: courseId is undefined.");
             return;
         }
 
-        const curriculumNames = await Promise.all(curriculumIds.map(async (curriculumId) => {
-            const curriculumRef = doc(db, "Curriculum", curriculumId);
-            const curriculumSnap = await getDoc(curriculumRef);
+        if (!Array.isArray(selectedCurriculum)) {
+            console.error("Error: selected curriculums is not an array.", selectedCurriculum);
+            return;
+        }
 
-            return curriculumSnap.exists() ? curriculumSnap.data().name : "Unknown Curriculum";
-        }));
+        try {
+            const courseRef = doc(db, "Course", courseId);
+            await updateDoc(courseRef, { curriculum: selectedCurriculum });
+            alert("Curriculum updated successfully!");
+        } catch (error) {
+            console.error("Error updating course:", error);
+        }
+    };
 
-        setCurriculumName(curriculumNames.join(", ")); // Join names with a comma
-    } catch (error) {
-        console.error("Error fetching curriculum names:", error);
-    }
-};
+    return (
+        <div className="flex-col w-screen ml-80 p-4">
+            <div className="justify-between items-center p-4 mb-4">
+                <EditCourseNavbar />
+                <div className="flex-1">
+                    <h1 className="text-2xl font-semibold">Curriculum</h1>
+                </div>
+            </div>
 
+            <div className="justify-between items-center p-4 mt-4">
+                <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+            </div>
 
+            <h3 className="text-xl font-semibold mt-4">Assign Curriculum:</h3>
+            <div className="grid grid-cols-2 gap-4">
+                {allCurriculum.map(curriculum => (
+                    <label key={curriculum.id} className="flex items-center space-x-2">
+                        <input
+                            type="checkbox"
+                            checked={selectedCurriculum.includes(curriculum.id)}
+                            onChange={() => handleCurriculumChange(curriculum.id)}
+                        />
+                        <span>{curriculum.name}</span>
+                    </label>
+                ))}
+            </div>
 
-const fetchCourse = async () => {
-  try {
-      const courseRef = doc(db, "Course", id);
-      const docSnap = await getDoc(courseRef);
+            <div className="mt-4">
+                <button
+                    type="button"
+                    className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
+                    onClick={handleSave}
+                >
+                    Save Curriculum
+                </button>
+            </div>
+        </div>
+    );
+}
 
-      if (docSnap.exists()) {
-          const data = docSnap.data();
-          setCourseData(prev => ({
-              ...prev,
-              ...data,
-              subjects: data.subjects || [],
-              centers: data.centers || []
-          }));
-
-          if (Array.isArray(data.curriculum) && data.curriculum.length > 0) {
-              fetchCurriculumNames(data.curriculum);
-          }
-      } else {
-          console.log("No such course!");
-      }
-  } catch (error) {
-      console.error("Error fetching course:", error);
-  }
-};
-
-    if (id) {
-      fetchCourse();
-    }
-  }, [id]);
-
-  return (
-    <div className="flex-col w-screen ml-80 p-4">
-      <h2 className="text-xl font-semibold">Curriculum</h2>
-      {curriculumName ? (
-        <p>{curriculumName}</p>
-      ) : (
-        <p>No curriculum available.</p>
-      )}
-    </div>
-  );
-};
-
-export default IndividualCourseCurriculum;

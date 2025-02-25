@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { db } from "../../../../config/firebase";
 import { collection, addDoc } from "firebase/firestore";
+import Feedback from "./Feedback";
+import VideoPage from "./Videos";
 
-const AddSectionModal = ({ curriculumId, onClose }) => {
+export default function AddSectionalModal ({ curriculumId, onClose }) {
   const [sectionName, setSectionName] = useState("");
   const [sectionDescription, setSectionDescription] = useState("");
   const [isPrerequisite, setIsPrerequisite] = useState(false);
@@ -31,6 +33,7 @@ const AddSectionModal = ({ curriculumId, onClose }) => {
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg w-[400px]">
+
         <div className="px-6 py-4 border-b">
           <h2 className="text-xl font-semibold">Add New Section</h2>
         </div>
@@ -111,4 +114,4 @@ const AddSectionModal = ({ curriculumId, onClose }) => {
   );
 };
 
-export default AddSectionModal;
+// export default AddSectionModal;

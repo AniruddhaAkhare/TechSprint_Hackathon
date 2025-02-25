@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 
-const CreateCurriculum = ({ isOpen, onClose, onSubmit, courseId }) => {
+const CreateCurriculum = ({ isOpen, onClose, onSubmit }) => {
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -12,16 +12,16 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, courseId }) => {
 
     const handleSubmit = () => {
         if (!name.trim()) return alert("Curriculum name is required!");
-        if (!courseId) return alert("Course ID is required!");
+        // if (!courseId) return alert("Course ID is required!");
         const totalWatchTime = totalDuration * multiplier;
         onSubmit({ 
             name, 
             viewDuration, 
             totalWatchTime,
-            courseId 
+             
         });
         onClose();
-        navigate(`/courses/${courseId}/curriculum`);
+        navigate(`/curriculum`);
 
     };
 
