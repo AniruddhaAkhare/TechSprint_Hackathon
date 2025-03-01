@@ -2,23 +2,21 @@ import React, { useState, useEffect, useRef } from "react";
 import { db, storage } from "../../../../config/firebase";
 import { collection, getDocs, addDoc, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { useNavigate } from "react-router-dom";
-import SearchBar from "../../SearchBar";
 import CreateCurriculum from "./CreateCurriculum";
+import SearchBar from "../../SearchBar";
+import { useNavigate } from "react-router-dom";
 import AddMCQModal from "./AddMCQModal.jsx";
+import AddSectionalModal from './AddSectionalModel.jsx';
 import ParentComponent from './ParentComponent.jsx';
-// import AddSectionalModal from './AddSectionalModel.jsx';
-
 const Curriculum = () => {
     const [curriculums, setCurriculums] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAddSectionModalOpen, setIsAddSectionModalOpen] = useState(false);
+    const [isMCQModalOpen, setIsMCQModalOpen] = useState(false);
     const [selectedCurriculumId, setSelectedCurriculumId] = useState(null);
     const [selectedSection, setSelectedSection] = useState(null);
     const [sectionOptionsOpen, setSectionOptionsOpen] = useState(false);
     const fileInputRef = useRef(null);
-    // const [isAddSectionModalOpen, setIsAddSectionModalOpen] = useState(false);
-    const [isMCQModalOpen, setIsMCQModalOpen] = useState(false);
-
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -37,15 +35,16 @@ const Curriculum = () => {
                         const sectionData = sectionDoc.data();
                         const mcqsSnapshot = await getDocs(collection(db, "curriculum", doc.id, "sections", sectionDoc.id, "mcqs"));
                         const mcqs = mcqsSnapshot.docs.map(mcqDoc => ({ id: mcqDoc.id, ...mcqDoc.data() }));
-                        return { id: sectionDoc.id, name: sectionData.name };
+                        return { id: sectionDoc.id, name: sectionData.name, mcqs };
                     }));
 
                     return { id: doc.id, name: data.name, sections };
                 })
             );
+
             setCurriculums(curriculumData);
         } catch (error) {
-            console.error("Error fetching curriculums:", error);
+            console.error("Error fetching curriculums with sections:", error);
         }
     };
 
@@ -79,33 +78,23 @@ const Curriculum = () => {
     };
 
 
-    const handleAddCurriculum = async (curriculumData) => {
-        try {
-            await addDoc(collection(db, "curriculum"), curriculumData);
-            fetchCurriculums(); // Refresh list
-            setIsModalOpen(false);
-        } catch (error) {
-            console.error("Error adding curriculum:", error);
-        }
-    };
 
     return (
         <div className="flex-col w-screen ml-80 p-4">
             <h1 className="text-2xl font-semibold">Curriculum</h1>
-            <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-blue-500 text-white rounded">
+            {/* <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-blue-500 text-white rounded">+ Add Curriculum</button> */}
+            <button onClick={() => navigate("/createCurriculum")} className="px-4 py-2 bg-blue-500 text-white rounded">
                 + Add Curriculum
             </button>
             <SearchBar />
 
             <table className="mt-4">
-                <thead>
-                    <tr><th>Curriculum Name</th><th>Sections</th><th>Actions</th></tr>
-                </thead>
+                <thead><tr><th>Curriculum Name</th><th>Sections</th><th>Actions</th></tr></thead>
                 <tbody>
                     {curriculums.map(curriculum => (
                         <tr key={curriculum.id}>
                             <td>{curriculum.name}</td>
-                            <td>
+                            <td className="curriculumSection">
                                 {curriculum.sections.map(section => (
                                     <button key={section.id} onClick={() => {
                                         setSelectedSection(section);
@@ -116,6 +105,7 @@ const Curriculum = () => {
                                     </button>
                                 ))}
                             </td>
+
                             <td>
                                 <button
                                     onClick={() => navigate(`/courses/:courseId/curriculum/curriculumEditor/${curriculum.id}`)}
@@ -123,12 +113,25 @@ const Curriculum = () => {
                                 >
                                     Edit
                                 </button>
+
+
+
+
+                                {/* <button
+                                    onClick={() => {
+                                        setIsAddSectionModalOpen(true);
+                                        setSelectedCurriculumId(curriculum.id); // Set the selected curriculum
+                                    }}
+                                    className="text-white-500 underline"
+                                >
+                                    Edit
+                                    {/* {curriculum.name} */}
+                                {/* </button>  */}
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
-
 
 
             {sectionOptionsOpen && selectedSection && (
@@ -155,8 +158,13 @@ const Curriculum = () => {
                 </div>
             )}
 
+
+
+
+
             <ParentComponent selectedSection={selectedSection} selectedCurriculumId={selectedCurriculumId} />
             <CreateCurriculum isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleAddCurriculum} />
+
 
             {
                 isMCQModalOpen && sectionOptionsOpen && selectedSection && (
@@ -172,7 +180,7 @@ const Curriculum = () => {
             }
 
             <input type="file" ref={fileInputRef} hidden onChange={handleFileChange} />
-        </div>
+        </div >
     );
 };
 

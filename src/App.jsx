@@ -19,7 +19,9 @@ import CreateCourses from './pages/components/CourseDelivery/Course/CreateCourse
 import EditCourse from './pages/components/CourseDelivery/Course/EditCourse.jsx';
 import IndividualCourseBatch from './pages/components/CourseDelivery/Course/IndividualCourseBatch.jsx';
 import Curriculum from './pages/components/CourseDelivery/Curriculum/Curriculum.jsx';
+import CurriculumEditor from './pages/components/CourseDelivery/Curriculum/CurriculumEditor.jsx'
 import NotesPage from './pages/components/CourseDelivery/Curriculum/NotesPages.jsx';
+import CreateCurriculum from './pages/components/CourseDelivery/Curriculum/CreateCurriculum.jsx';
 
 import Sessions from './pages/components/CourseDelivery/Session/Sessions.jsx';
 import CreateSession from './pages/components/CourseDelivery/Session/CreateSession.jsx';
@@ -90,6 +92,9 @@ export default function App() {
             {/* <Route path="/courses/:courseId/curriculum" element={<Curriculum />} />
             <Route path="/editCourse/:id" element={<EditCourse />} /> */}
             <Route path="/courses/:courseId/curriculum" element={<IndividualCourseCurriculum />} />
+
+            <Route path="/createCurriculum" element={<CreateCurriculum />} />
+            <Route path="/courses/:courseId/curriculum/curriculumEditor/:curriculumId" element={<CurriculumEditor />} />
             <Route path="/courses/:courseId/learners" element={<IndividualCourseStudnets />} />
             <Route path="/courses/:courseId/batches" element={<IndividualCourseBatch />} />
 

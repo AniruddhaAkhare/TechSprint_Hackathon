@@ -134,7 +134,7 @@ export default function  AddStudent() {
     };
 
     const handleExperienceChange = (index, field, value) => {
-        const newExperienceDetails = [...courseDetails];
+        const newExperienceDetails = [...experienceDetails];
         newExperienceDetails[index][field] = value;
         setExperienceDetails(newExperienceDetails);
     };
