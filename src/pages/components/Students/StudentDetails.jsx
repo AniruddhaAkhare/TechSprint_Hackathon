@@ -15,7 +15,6 @@ export default function StudentDetails() {
     const [selectedCourse, setSelectedCourse] = useState([]);
     const navigate = useNavigate();
 
-
     const [openDelete, setOpenDelete] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
 

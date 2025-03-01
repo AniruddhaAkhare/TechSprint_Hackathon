@@ -288,6 +288,9 @@ export default function EditStudent() {
                     ))} */}
                 <div>
                     <h2>Course Details</h2>
+
+
+                    
                     {Array.isArray(student.courseDetails) && student.courseDetails.map((course, index) => (
                         <div key={index} className="course-group">
                             {/* {student.courseDetails.map((course, index) => (
