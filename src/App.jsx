@@ -53,7 +53,9 @@ import FeesRemarks from './pages/components/Performance/Fees/FeesRemarks.jsx';
 
 import Profile from './pages/components/Profile.jsx';
 
-import Centers from './pages/components/Settings/Centers.jsx'
+import Centers from './pages/components/Settings/Centers.jsx';
+
+import InstallmentReport from './reports/InstallmentReport.jsx';
 
 import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
@@ -131,6 +133,10 @@ export default function App() {
 
             <Route path="/createFeesRemarks" element={<CreateFeesRemarks />} />
             <Route path="/feesremark" element={<FeesRemarks />} />
+
+
+            <Route path='/reports' element={<InstallmentReport />} />
+
 
             <Route path='/centers' element={<Centers />} />
 

@@ -376,7 +376,7 @@ export default function AddStudent() {
             alert("Please fill all required fields.");
             return;
         }
-
+    
         try {
             const studentDocRef = await addDoc(collection(db, 'student'), {
                 first_name: firstName,
@@ -393,17 +393,15 @@ export default function AddStudent() {
                 education_details: educationDetails,
                 experience_details: experienceDetails
             });
-
+    
             const studentId = studentDocRef.id;
-
-            // Add installments to the 'installments' collection
+    
+            // Add installments to the student's 'installments' subcollection
+            const installmentsRef = collection(db, 'student', studentId, 'installments');
             for (const installmentData of installmentDetails) {
-                await addDoc(collection(db, "installments"), {
-                    ...installmentData,
-                    studentId: studentId
-                });
+                await addDoc(installmentsRef, installmentData);
             }
-
+    
             alert("Student added successfully!");
             navigate("/studentdetails");
         } catch (error) {
@@ -411,6 +409,48 @@ export default function AddStudent() {
             alert("Error adding student. Please try again.");
         }
     };
+
+    // const handleAddStudent = async (e) => {
+    //     e.preventDefault();
+    //     if (!firstName || !lastName || !email || !phone) {
+    //         alert("Please fill all required fields.");
+    //         return;
+    //     }
+
+    //     try {
+    //         const studentDocRef = await addDoc(collection(db, 'student'), {
+    //             first_name: firstName,
+    //             last_name: lastName,
+    //             email,
+    //             phone,
+    //             residential_address: address,
+    //             billing_address: billingAddress,
+    //             goal,
+    //             status,
+    //             date_of_birth: Timestamp.fromDate(new Date(dateOfBirth)),
+    //             admission_date: Timestamp.fromDate(new Date(admissionDate)),
+    //             course_details: courseDetails,
+    //             education_details: educationDetails,
+    //             experience_details: experienceDetails
+    //         });
+
+    //         const studentId = studentDocRef.id;
+
+    //         // Add installments to the 'installments' collection
+    //         for (const installmentData of installmentDetails) {
+    //             await addDoc(collection(db, "installments"), {
+    //                 ...installmentData,
+    //                 studentId: studentId
+    //             });
+    //         }
+
+    //         alert("Student added successfully!");
+    //         navigate("/studentdetails");
+    //     } catch (error) {
+    //         console.error("Error adding student:", error);
+    //         alert("Error adding student. Please try again.");
+    //     }
+    // };
 
     const handleCopyAddress = (isChecked) => {
         setCopyAddress(isChecked);

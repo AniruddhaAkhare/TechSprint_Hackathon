@@ -182,6 +182,13 @@ export default function Sidebar() {
                     </AccordionBody>
                 </Accordion>
 
+                <ListItem onClick={() => navigate('/reports')}>
+                    <ListItemPrefix>
+                        <InboxIcon className="h-5 w-5" />
+                    </ListItemPrefix>
+                    Reports
+                </ListItem>
+
                 <Accordion open={openSettings}>
                     <ListItem className="p-0" selected={openSettings}>
                         <AccordionHeader onClick={() => {
