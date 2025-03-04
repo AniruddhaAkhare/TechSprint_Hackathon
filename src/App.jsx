@@ -57,6 +57,8 @@ import Centers from './pages/components/Settings/Centers.jsx';
 
 import InstallmentReport from './reports/InstallmentReport.jsx';
 
+import Role from './pages/components/UsersAndRoles.jsx/Roles.jsx';
+
 import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
 import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/IndividualCourseStudnets.jsx';
@@ -139,6 +141,8 @@ export default function App() {
 
 
             <Route path='/centers' element={<Centers />} />
+
+            <Route path='/roles' element={<Role/>}/>
 
           </Routes>
         </div>

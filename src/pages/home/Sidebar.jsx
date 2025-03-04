@@ -29,6 +29,7 @@ export default function Sidebar() {
     const [instructorData, setInstructorData] = useState(null);
     const firestore = getFirestore();
     const [openCourseDelivery, setOpenCourseDelivery] = useState(false);
+    const [openRoles, setOpenRoles] = useState(false);
     const [openUsers, setOpenUsers] = useState(false);
     const [openSettings, setOpenSettings] = useState(false);
 
@@ -153,6 +154,7 @@ export default function Sidebar() {
                     <ListItem className="p-0" selected={openUsers}>
                         <AccordionHeader onClick={() => {
                             setOpenUsers(!openUsers);
+                            setOpenRoles(false);
                             setOpenCourseDelivery(false);
                             setOpenSettings(false);
                         }} className="border-b-0 p-3">
@@ -189,11 +191,14 @@ export default function Sidebar() {
                     Reports
                 </ListItem>
 
+
+
                 <Accordion open={openSettings}>
                     <ListItem className="p-0" selected={openSettings}>
                         <AccordionHeader onClick={() => {
                             setOpenSettings(!openSettings);
                             setOpenCourseDelivery(false);
+                            setOpenRoles(false);
                             setOpenUsers(false);
                         }} className="border-b-0 p-3">
                             <ListItemPrefix>
@@ -211,6 +216,47 @@ export default function Sidebar() {
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                 </ListItemPrefix>
                                 Add centers
+                            </ListItem>
+                        </List>
+                    </AccordionBody>
+                </Accordion>
+
+
+                <Accordion open={openRoles}>
+                    <ListItem className="p-0" selected={openRoles}>
+                        <AccordionHeader onClick={() => {
+                            setOpenRoles(!openRoles);
+                            setOpenCourseDelivery(false);
+                            setOpenUsers(false);
+                            setOpenSettings(false);
+                        }} className="border-b-0 p-3">
+                            <ListItemPrefix>
+                                <PresentationChartBarIcon className="h-5 w-5" />
+                            </ListItemPrefix>
+                            <Typography color="blue-gray" className="mr-auto font-normal">
+                                Users & Roles
+                            </Typography>
+                        </AccordionHeader>
+                    </ListItem>
+                    <AccordionBody className="py-1">
+                        <List className="p-0 text-white">
+                            <ListItem onClick={() => navigate('/users')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Users
+                            </ListItem>
+                            <ListItem onClick={() => navigate('/roles')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Roles
+                            </ListItem>
+                            <ListItem onClick={() => navigate('/preferences')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Preferences
                             </ListItem>
                         </List>
                     </AccordionBody>

@@ -227,9 +227,9 @@ export default function InstallmentReport() {
                             );
                         })}
                         <tr className="bg-gray-100">
-                            <td colSpan="2" className="px-4 py-2 font-bold text-right">Total:</td>
+                            <td colSpan="3" className="px-4 py-2 font-bold text-right">Total:</td>
                             <td className="px-4 py-2 font-bold text-center">₹{totalAmount}</td>
-                            <td colSpan="3"></td>
+                            <td colSpan="4"></td>
                         </tr>
                     </tbody>
                 </table>

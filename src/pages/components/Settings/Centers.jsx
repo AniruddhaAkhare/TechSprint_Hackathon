@@ -16,11 +16,26 @@ export default function Centers() {
     const fetchCenters = async () => {
         try {
             const snapshot = await getDocs(collection(db, "Centers"));
-            setCenters(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const centersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+            // Sort centers based on createdAt timestamp (ascending order)
+            centersList.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+    
+            setCenters(centersList);
         } catch (error) {
             console.error("Error fetching centers:", error);
         }
     };
+    
+
+    // const fetchCenters = async () => {
+    //     try {
+    //         const snapshot = await getDocs(collection(db, "Centers"));
+    //         setCenters(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    //     } catch (error) {
+    //         console.error("Error fetching centers:", error);
+    //     }
+    // };
 
     useEffect(() => {
         fetchCenters();
