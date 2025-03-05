@@ -281,7 +281,7 @@ export default function Sidebar() {
                         </p>
                         {instructorData?.specialization && (
                             <p className="text-xs text-gray-400">
-                                {instructorData.specialization}
+                                {instructorData.role}
                             </p>
                         )}
                     </div>

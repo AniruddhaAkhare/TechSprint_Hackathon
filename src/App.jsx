@@ -14,7 +14,8 @@ import Dashboard from './pages/components/Dashboard/Dashboard.jsx'
 import Batches from './pages/components/CourseDelivery/Batch/Batches.jsx';
 import CreateBatch from './pages/components/CourseDelivery/Batch/CreateBatch.jsx';
 
-import Courses from './pages/components/CourseDelivery/Course/Courses.jsx';
+import Courses from "/src/pages/components/CourseDelivery/Course/Courses.jsx";
+
 import CreateCourses from './pages/components/CourseDelivery/Course/CreateCourses.jsx';
 import EditCourse from './pages/components/CourseDelivery/Course/EditCourse.jsx';
 import IndividualCourseBatch from './pages/components/CourseDelivery/Course/IndividualCourseBatch.jsx';
@@ -57,7 +58,12 @@ import Centers from './pages/components/Settings/Centers.jsx';
 
 import InstallmentReport from './reports/InstallmentReport.jsx';
 
-import Role from './pages/components/UsersAndRoles.jsx/Roles.jsx';
+
+import Invoices from '../src/pages/components/Invoices/Invoices.jsx'
+import CreateInvoice from '../src/pages/components/Invoices/CreateInvoice.jsx';
+import UpdateInvoice from '../src/pages/components/Invoices/UpdateInvoice.jsx';
+// import Role from './src/pages/components/UsersAndRoles/Roles.jsx';
+import Role from './pages/components/UsersAndRoles.jsx/Roles.jsx'
 
 import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
@@ -142,8 +148,12 @@ export default function App() {
 
             <Route path='/centers' element={<Centers />} />
 
-            <Route path='/roles' element={<Role/>}/>
+            <Route path='/roles' element={<Role />} />
 
+
+            <Route path='/invoices' element={<Invoices />} />
+            <Route path='/invoices/createInvoice' element={<CreateInvoice />} />
+            <Route path='/invoices/updateInvoice/:id' element={<UpdateInvoice />} />
           </Routes>
         </div>
       </BrowserRouter>

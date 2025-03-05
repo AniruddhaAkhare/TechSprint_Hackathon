@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { db } from '../../../config/firebase';
 import { getDocs, collection, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input, Select, Option } from "@material-tailwind/react";
+import { onSnapshot } from "firebase/firestore";
 
 export default function Instructor() {
     const [instructorList, setInstructorList] = useState([]);
@@ -75,7 +76,32 @@ export default function Instructor() {
         getInstructorList();
         getCentersList();
         getRolesList();
+    
+        // Listen for role updates
+        const unsubscribe = onSnapshot(roleCollectionRef, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "modified") {
+                    const updatedRole = change.doc.data();
+                    updateInstructorRole(updatedRole.id, updatedRole.name);
+                }
+            });
+        });
+    
+        return () => unsubscribe(); // Cleanup listener on unmount
     }, []);
+
+    
+    const updateInstructorRole = async (instructorId, newRole) => {
+        try {
+            await updateDoc(doc(db, "Instructor", instructorId), {
+                role: newRole
+            });
+            console.log(`Instructor ${instructorId} role updated to ${newRole}`);
+            getInstructorList();
+        } catch (error) {
+            console.error("Error updating instructor role:", error);
+        }
+    };
 
     // Add Instructor
     const handleOpenAddInstructor = () => setOpenAddInstructor(true);
