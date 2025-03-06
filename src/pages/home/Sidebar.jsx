@@ -140,6 +140,12 @@ export default function Sidebar() {
                                 </ListItemPrefix>
                                 Curriculum
                             </ListItem>
+                            <ListItem onClick={() => navigate('/assignment')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Assignment
+                            </ListItem>
                             <ListItem onClick={() => navigate('/addPerformance')}>
                                 <ListItemPrefix>
                                     <PresentationChartBarIcon className="h-5 w-5" />
@@ -191,6 +197,13 @@ export default function Sidebar() {
                     Reports
                 </ListItem>
 
+
+                <ListItem onClick={() => navigate('/invoices')}>
+                    <ListItemPrefix>
+                        <InboxIcon className="h-5 w-5" />
+                    </ListItemPrefix>
+                    Invoices
+                </ListItem>
 
 
                 <Accordion open={openSettings}>

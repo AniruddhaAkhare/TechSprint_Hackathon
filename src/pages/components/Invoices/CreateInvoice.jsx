@@ -730,7 +730,7 @@
 
 import React, { useState, useEffect } from "react";
 import Button from "../../../components/ui/Button";
-import { Input } from "../../../components/ui/Input";
+import Input  from "../../../components/ui/Input";
 import Select from "../../../components/ui/Select";
 import { Calendar } from "../../../components/ui/Calendar";
 import { db } from "../../../config/firebase";

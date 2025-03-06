@@ -1,4 +1,4 @@
-export const Input = ({ type = "text", placeholder, ...props }) => {
+export default function Input  ({ type = "text", placeholder, ...props })  {
     return (
       <input
         type={type}

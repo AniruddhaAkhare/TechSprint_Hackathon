@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../../../config/firebase"
-// import './Profile.css'; 
+
 
 export default function Invoices() {
     const navigate = useNavigate();
@@ -30,17 +30,13 @@ export default function Invoices() {
                 setStudentsMap(studentsMap); 
                 const invoicesRef = collection(db, "invoices");
                 const querySnapshot = await getDocs(invoicesRef);
-                // const invoicesList = querySnapshot.docs.map(doc => ({
-                //     id: doc.id,
-                //     ...doc.data(),
-                // }));
 
                 const invoicesList = querySnapshot.docs.map(doc => {
                     const invoiceData = doc.data();
                     return {
                         id: doc.id,
                         ...invoiceData,
-                        items: Array.isArray(invoiceData.items) ? invoiceData.items : [], // Ensure items is always an array
+                        items: Array.isArray(invoiceData.items) ? invoiceData.items : [],
                     };
                 });
 
@@ -57,9 +53,6 @@ export default function Invoices() {
 
         fetchInvoicesAndStudents();
     }, []);
-
-  
-    
 
     const onDelete = async (invoiceId) => {
         const confirmDelete = window.confirm("Are you sure you want to delete this invoice?");
@@ -149,6 +142,10 @@ export default function Invoices() {
                                         </button>
                                         <button className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
                                             Send mail
+                                        </button>
+
+                                        <button className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
+                                            Download
                                         </button>
                                     </td>
                                 </tr>
