@@ -1,0 +1,129 @@
+.courses-list-container {
+    font-family: sans-serif;
+    padding: 20px;
+    background-color: #f9f9f9;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .title {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  
+  .published {
+    background-color: #e0f7fa;
+    color: #0097a7;
+    padding: 5px 10px;
+    border-radius: 15px;
+    margin-left: 10px;
+    font-size: 0.8em;
+  }
+  
+  .new-course-button {
+    background-color: #1976d2;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .filter-search {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .filter {
+    display: flex;
+    align-items: center;
+  }
+  
+  .filter-select {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .search {
+    flex-grow: 1;
+    margin-left: 20px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px 10px;
+  }
+  
+  .search-input {
+    border: none;
+    flex-grow: 1;
+    outline: none;
+  }
+  
+  .courses-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .courses-table th,
+  .courses-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .courses-table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+  }
+  
+  .course-name {
+    display: flex;
+    align-items: center;
+  }
+  
+  .course-icon {
+    margin-right: 10px;
+    font-size: 1.2em;
+  }
+  
+  .actions {
+    text-align: right;
+  }
+  
+  .actions-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    align-items: center;
+  }
+  
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+  }
+  
+  .page-select,
+  .items-per-page {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }

@@ -3,6 +3,9 @@ import {getAuth} from "firebase/auth";
 import { getStorage } from "firebase/storage"; // Import 
 import { getFirestore } from "firebase/firestore";
 
+import { getAnalytics } from "firebase/analytics";
+
+
 const firebaseConfig = {
   apiKey: "AIzaSyCr7lMF1rd-VeEArjy0dklqR08hzoqxFZI",
   authDomain: "fireblaze-ignite.firebaseapp.com",
@@ -18,6 +21,9 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 
+
+
+const analytics = getAnalytics(app);
 
 
 const db = getFirestore(app);
@@ -91,3 +97,6 @@ export const addSession = async (batchId, subjectId, date, startTime, endTime, f
     faculty: facultyId,
   });
 };
+
+
+export {analytics}

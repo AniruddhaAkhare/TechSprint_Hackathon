@@ -73,6 +73,12 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
 import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/IndividualCourseStudnets.jsx';
 import IndividualCourseCurriculum from './pages/components/CourseDelivery/Course/IndividualCourseCurriculum.jsx';
+
+
+
+import HeaderContent from './apps/Header/HeaderContainer.jsx';
+import Navigation from './apps/Navigation/NavigationContainer.jsx';
+
 export default function App() {
 
   const [user, setUser] = useState(null);
@@ -92,7 +98,10 @@ export default function App() {
           {user && <Sidebar />}
           <Routes>
 
+
             <Route path="/" element={user ? <Profile /> : <Welcome />} />
+<Route path='/header' element={<HeaderContent/>}/>
+<Route path='/navigation' element={<Navigation />} />
 
             <Route path="/dashboard" element={<Dashboard />} />
 

@@ -178,7 +178,7 @@ import { useState, useEffect } from 'react';
 import { db } from '../../../../config/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 
-export default function AssignmentsList() {
+export default function Assignments() {
     const [assignments, setAssignments] = useState([]);
     const [permissions, setPermissions] = useState({});
 

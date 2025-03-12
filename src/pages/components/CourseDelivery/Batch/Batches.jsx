@@ -202,7 +202,8 @@ import { deleteBatch } from '../../../../utils/batchOperations';
 import { db } from '../../../../config/firebase.js';
 import SearchBar from '../../../components/SearchBar.jsx';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
-import {fetchUserPermissions}  from "../../../../utils/fetchUserPermissions.js"; // Function to fetch permissions
+import { fetchUserPermissions } from "../../../../utils/fetchUserPermissions.js"; // Function to fetch permissions
+import { auth } from "../../../../config/firebase"; // Ensure Firebase auth import
 
 export default function Batches() {
     const { courseId } = useParams();
@@ -215,20 +216,55 @@ export default function Batches() {
     const [deleteId, setDeleteId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [permissions, setPermissions] = useState({}); // Store role-based permissions
-
+    const [currentUserId, setCurrentUserId] = useState(null);
     const BatchCollectionRef = collection(db, "Batch");
 
     // Fetch user permissions on mount
     useEffect(() => {
         const loadPermissions = async () => {
-            const userId = localStorage.getItem("userId"); // Assuming you store userId in localStorage
-            if (!userId) return;
-
-            const perms = await fetchUserPermissions(userId);
-            setPermissions(perms || {});
+            if (!currentUserId) {
+                console.error("currentUserId is undefined");
+                return;
+            }
+    
+            try {
+                const perms = await fetchUserPermissions(currentUserId);
+                console.log("User Permissions:", perms);
+                setPermissions(perms);
+            } catch (error) {
+                console.error("Error fetching permissions:", error);
+            }
         };
+    
         loadPermissions();
+    }, [currentUserId]);
+
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log("Logged-in user:", user.uid);
+                setCurrentUserId(user.uid);
+            } else {
+                console.warn("No user logged in");
+                setCurrentUserId(null);
+            }
+        });
+    
+        return () => unsubscribe();
     }, []);
+    
+    // useEffect(() => {
+    //     const loadPermissions = async () => {
+    //         const userId = localStorage.getItem("userId"); // Assuming you store userId in localStorage
+    //         if (!userId) return;
+
+    //         const perms = await fetchUserPermissions(userId);
+    //         console.log("User permissions: ", perms);
+    //         setPermissions(perms || {});
+    //     };
+    //     loadPermissions();
+    // }, []);
 
     const handleSearch = (e) => {
         if (e) e.preventDefault();
@@ -280,10 +316,26 @@ export default function Batches() {
             alert("You are not authorized to update batches.");
             return;
         }
+        console.log("Editing Batch:", batch);
         setCurrentBatch(batch);
         setIsOpen(true);
     };
 
+
+    const handleUpdateBatch = async (batchId, updatedData) => {
+        try {
+            console.log("Updating Batch ID:", batchId);
+            console.log("Updated Data:", updatedData);
+    
+            await updateBatch(batchId, updatedData);
+            fetchBatches(); // Refresh the list
+            alert("Batch updated successfully!");
+        } catch (error) {
+            console.error("Error updating batch:", error);
+            alert("Failed to update batch.");
+        }
+    };
+    
     const handleDeleteBatch = async () => {
         if (!permissions?.Batch?.Delete) {
             alert("You are not authorized to delete batches.");
@@ -360,17 +412,24 @@ export default function Batches() {
                                                         alert("You are not authorized to delete batches.");
                                                     }
                                                 }}
-                                                className={`px-4 py-1 rounded-lg transition ${
-                                                    permissions?.Batch?.Delete 
-                                                        ? "bg-red-500 text-white hover:bg-red-600"
-                                                        : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                                                }`}
+                                                className={`px-4 py-1 rounded-lg transition ${permissions?.Batch?.Delete
+                                                    ? "bg-red-500 text-white hover:bg-red-600"
+                                                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                                                    }`}
                                                 disabled={!permissions?.Batch?.Delete}
                                             >
                                                 Delete
                                             </button>
 
-                                            <button
+                                            <Button
+                                                disabled={!permissions?.Batch?.Update}
+                                                onClick={() => handleEditClick(batch)}
+                                            >
+                                                Update
+                                            </Button>
+
+
+                                            {/* <button 
                                                 onClick={() => handleEditClick(batch)}
                                                 className={`px-4 py-1 rounded-lg transition ${
                                                     permissions?.Batch?.Update 
@@ -380,7 +439,7 @@ export default function Batches() {
                                                 disabled={!permissions?.Batch?.Update}
                                             >
                                                 Update
-                                            </button>
+                                            </button> */}
                                         </div>
                                     </td>
                                 </tr>
