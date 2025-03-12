@@ -3345,3 +3345,39 @@ const Roles = () => {
 };
 
 export default Roles;
+
+
+rules_version = '2';
+
+service cloud.firestore {
+
+  match /databases/{database}/documents {
+
+    match /{document=**} {
+
+      allow read, write: if true;
+
+    }
+
+  }
+
+}
+
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /roles/{roleId} {
+      allow read: if true;
+      allow write: if request.auth.uid == "adminUID"; // Only admin can edit roles.
+    }
+    match /Instructor/{instructorId} {
+      allow read: if true;
+      allow update: if request.resource.data.role is string; // Ensure role is a string.
+    }
+    match /Batches/{batchId} {
+      allow update: if get(/databases/$(database)/documents/Instructor/$(request.auth.uid)).data.role in get(/databases/$(database)/documents/roles/$(get(/databases/$(database)/documents/Instructor/$(request.auth.uid)).data.role)).data.permissions;
+      allow read : if true;
+    }
+  }
+}
