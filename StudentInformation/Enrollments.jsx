@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../firebase'; // Adjust the path as necessary
+import { db } from '../src/config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 export default function  Enrollments ({ studentId })  {

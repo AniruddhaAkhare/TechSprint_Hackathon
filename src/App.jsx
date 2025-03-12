@@ -73,11 +73,16 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
 import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/IndividualCourseStudnets.jsx';
 import IndividualCourseCurriculum from './pages/components/CourseDelivery/Course/IndividualCourseCurriculum.jsx';
+<<<<<<< HEAD
 
 
 
 import HeaderContent from './apps/Header/HeaderContainer.jsx';
 import Navigation from './apps/Navigation/NavigationContainer.jsx';
+=======
+import FeeTemplate from './pages/components/FeeTemplate/FeeTemplate.jsx';
+import StudentInfo from '../StudentInformation/StudentInfo.jsx';
+>>>>>>> 493740373697cd186c8b5143992d246d79dc1067
 
 export default function App() {
 
@@ -138,6 +143,7 @@ export default function App() {
             <Route path="/studentdetails" element={<StudentDetails />} />
             <Route path="/studentdetails/addstudent" element={<AddStudent />} />
             <Route path="/studentdetails/updatestudent/:studentId" element={<EditStudent />} />
+            <Route path="/studentdetails/:studentId" element={<StudentInfo/>}/>
 
             <Route path="/feedback" element={<Feedback />} />
 
@@ -161,7 +167,12 @@ export default function App() {
 
             <Route path='/centers' element={<Centers />} />
 
+<<<<<<< HEAD
+            <Route path='/roles' element={<Role/>}/>
+            <Route path='/fee-template' element={<FeeTemplate/>}/>
+=======
             <Route path='/roles' element={<Role />} />
+>>>>>>> 6669f544538eaf1b5b6998be355d37e83ecd59db
 
 
             <Route path='/invoices' element={<Invoices />} />

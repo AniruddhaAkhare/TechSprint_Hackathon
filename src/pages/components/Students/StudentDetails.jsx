@@ -48,7 +48,7 @@ export default function StudentDetails() {
                 status: newStatus
             });
             toast.success(`Status updated to ${newStatus}`);
-            fetchStudents(); // Refresh the list
+            fetchStudents(); 
         } catch (error) {
             console.error("Error updating status:", error);
             toast.error("Failed to update status");
@@ -56,7 +56,6 @@ export default function StudentDetails() {
     };
 
     const deleteStudent = async () => {
-        // console.log("delete ");
         if (deleteId) {
             try {
                 await deleteDoc(doc(db, "student", deleteId));
@@ -82,7 +81,6 @@ export default function StudentDetails() {
             let studentsSkipped = 0;
             let enrollmentsCreated = 0;
 
-            // Create a map of course details for quick lookup
             const courseMap = new Map(course.map(c => [c.id, c]));
 
             for (const studentId of selectedStudents) {
@@ -92,10 +90,8 @@ export default function StudentDetails() {
 
                 if (!student) continue;
 
-                // Get existing course IDs from Firestore (ensuring we don't duplicate enrollments)
                 const existingCourses = student.course_details?.map(c => c.courseId) || [];
 
-                // Filter out courses the student is already enrolled in
                 const newCourseIds = selectedCourse.filter(courseId => !existingCourses.includes(courseId));
 
                 if (newCourseIds.length === 0) {
@@ -103,7 +99,6 @@ export default function StudentDetails() {
                     continue;
                 }
 
-                // Prepare course details for student document update
                 const newCourseDetails = newCourseIds.map(courseId => {
                     const courseDetails = courseMap.get(courseId);
                     return {
@@ -113,20 +108,18 @@ export default function StudentDetails() {
                     };
                 });
 
-                // **Ensure course_details is properly updated**
                 const updatedCourseDetails = [...(student.course_details || []), ...newCourseDetails];
 
                 batch.update(studentRef, {
                     course_details: updatedCourseDetails
                 });
 
-                // **Create enrollment records**
                 for (const courseId of newCourseIds) {
                     const enrollmentRef = doc(collection(db, "enrollment"));
                     const courseDetails = courseMap.get(courseId);
 
                     batch.set(enrollmentRef, {
-                        enrollmentId: enrollmentRef.id, // Store unique ID
+                        enrollmentId: enrollmentRef.id, 
                         studentId,
                         studentName: `${student.first_name} ${student.last_name}`,
                         studentEmail: student.email,
@@ -148,7 +141,6 @@ export default function StudentDetails() {
             }
             toast.success(`Created ${enrollmentsCreated} enrollment records for ${selectedStudents.length - studentsSkipped} students.`);
 
-            // **Reset selections**
             setSelectedStudents([]);
             setSelectedCourse([]);
         } catch (error) {
@@ -189,17 +181,17 @@ export default function StudentDetails() {
                     </thead>
                     <tbody>
                         {students.map(student => (
-                            <tr key={student.id}>
+                            <tr key={student.id} >
                                 <td>
                                     <input type="checkbox" onChange={() => handleStudentSelect(student.id)} />
                                 </td>
-                                <td>{student.first_name}</td>
-                                <td>{student.last_name}</td>
-                                <td>{student.email}</td>
+                                <td onClick={()=>{navigate(`/studentdetails/${student.id}`)}}>{student.first_name}</td>
+                                <td onClick={()=>{navigate(`/studentdetails/${student.id}`)}}>{student.last_name}</td>
+                                <td onClick={()=>{navigate(`/studentdetails/${student.id}`)}}>{student.email}</td>
 
                                 <td>
                                     <select
-                                        value={student.status || 'enquiry'}
+                                        value={student.status ? student?.status : 'enrolled'}
                                         onChange={(e) => handleStatusChange(student.id, e.target.value)}
                                         className="p-1 border rounded"
                                     >
