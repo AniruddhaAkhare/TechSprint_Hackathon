@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import '../Profile.css';
-import EditStudent from '../Students/EditStudent';
+import { db } from '../src/config/firebase';
+import './Profile.css';
+import EditStudent from '../src/pages/components/Students/EditStudent';
 
-export default function  StudentProfile  () {
+export default function StudentProfile() {
     const { studentId } = useParams();
     const [student, setStudent] = useState(null);
     const navigate = useNavigate();
@@ -39,11 +39,19 @@ export default function  StudentProfile  () {
             <p><strong>Student Goal:</strong> {student.goal}</p>
 
             <p><strong>Residential Address</strong></p>
-            <p>{student.residential_address.street}, {student.residential_address.area}, {student.residential_address.city}, {student.residential_address.state}, {student.residential_address.country} - {student.residential_address.zip}</p>
+            <p>
+                {student.residential_address ? 
+                    `${student.residential_address.street}, ${student.residential_address.area}, ${student.residential_address.city}, ${student.residential_address.state}, ${student.residential_address.country} - ${student.residential_address.zip}` 
+                    : "Address not available"}
+            </p>
 
             <p><strong>Billing Address</strong></p>
-            <p>{student.billing_address.street}, {student.billing_address.area}, {student.billing_address.city}, {student.billing_address.state}, {student.billing_address.country} - {student.billing_address.zip}</p>
-            <p><strong>GST No:</strong> {student.billing_address.gstNo}</p>
+            <p>
+                {student.billing_address ? 
+                    `${student.billing_address.street}, ${student.billing_address.area}, ${student.billing_address.city}, ${student.billing_address.state}, ${student.billing_address.country} - ${student.billing_address.zip}` 
+                    : "Address not available"}
+            </p>
+            <p><strong>GST No:</strong> {student.billing_address ? student.billing_address.gstNo : "N/A"}</p>
 
             <p><strong>Course Details</strong></p>
             {student.course_details && student.course_details.length > 0 ? (
@@ -130,7 +138,6 @@ export default function  StudentProfile  () {
             ) : (
                 <p>No experience.</p>
             )}
-
 
             <p><strong>Installment Details</strong></p>
             {student.installment_details && student.installment_details.length > 0 ? (

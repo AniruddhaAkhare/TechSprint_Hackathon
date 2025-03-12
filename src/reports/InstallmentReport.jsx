@@ -57,8 +57,8 @@ export default function InstallmentReport() {
     };
 
       const filterInstallments = () => {
-        console.log("filterInstallments called with filter:", filter); // Check filter value
-        console.log("Installments before filter:", installments); // Check raw data
+        console.log("filterInstallments called with filter:", filter); 
+        console.log("Installments before filter:", installments); 
 
         const now = new Date();
         let startDate, endDate;
@@ -148,7 +148,6 @@ export default function InstallmentReport() {
                     </thead>
                     <tbody>
                         {filteredInstallments.map((installment) => {
-                            // ... (your installment mapping logic)
                             const dueDate = installment.dueDate instanceof Timestamp
                                 ? installment.dueDate.toDate()
                                 : new Date(installment.dueDate);
@@ -201,7 +200,7 @@ export default function InstallmentReport() {
                                             type="text"
                                             value={installment.receivedBy || ""}
                                             onChange={(e) => handleUpdate(
-                                                installment, // Corrected: Use 'installment' here
+                                                installment, 
                                                 "receivedBy",
                                                 e.target.value
                                             )}

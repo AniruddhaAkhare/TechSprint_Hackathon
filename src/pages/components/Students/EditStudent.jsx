@@ -6,6 +6,9 @@ import './profile.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Timestamp } from "firebase/firestore";
+import { getDocs } from "firebase/firestore";
+
+import { collection } from "firebase/firestore";
 
 export default function EditStudent() {
     const { studentId } = useParams();
@@ -39,9 +42,14 @@ export default function EditStudent() {
         educationDetails: [],
         installmentDetails: [],
         experienceDetails: [],
+        fees:[]
     });
 
     const navigate = useNavigate();
+    const [feeTemplates, setFeeTemplates] = useState([]);
+    const [formData, setFormData] = useState({});
+
+    const [selectedTemplate, setSelectedTemplate] = useState(null);
 
     useEffect(() => {
         const fetchStudent = async () => {
@@ -57,14 +65,30 @@ export default function EditStudent() {
                         phone: data.phone,
                         status: data.status,
                         goal: data.goal,
-                        address: data.residential_address,
-                        billingAddress: data.billing_address,
-                        date_of_birth: data.date_of_birth.toDate().toISOString().split("T")[0],
-                        admission_date: data.admission_date.toDate().toISOString().split("T")[0],
+                        address: data.residential_address || {
+                            street: "",
+                            area: "",
+                            city: "",
+                            state: "",
+                            zip: "",
+                            country: "",
+                        },
+                        billingAddress: data.billing_address || {
+                            street: "",
+                            area: "",
+                            city: "",
+                            state: "",
+                            zip: "",
+                            country: "",
+                            gstNo: ""
+                        },
+                        date_of_birth: data.date_of_birth ? data.date_of_birth.toDate().toISOString().split("T")[0] : "",
+                        admission_date: data.admission_date ? data.admission_date.toDate().toISOString().split("T")[0] : "",
                         courseDetails: data.course_details || [],
                         educationDetails: data.education_details || [],
                         installmentDetails: data.installment_details || [],
                         experienceDetails: data.experience_details || [],
+                        formData: data.fees || [],
                     });
                 } else {
                     alert("Student not found.");
@@ -77,11 +101,10 @@ export default function EditStudent() {
 
         fetchStudent();
     }, [studentId, navigate]);
- 
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-    
+
         if (name.includes("billingAddress")) {
             const field = name.split(".")[1];
             setStudent((prevState) => ({
@@ -136,7 +159,6 @@ export default function EditStudent() {
         }
     };
 
-
     const addCourse = () => {
         setStudent(prevState => ({
             ...prevState,
@@ -165,7 +187,6 @@ export default function EditStudent() {
         }));
     };
 
-    // Remove Course
     const removeCourse = (index) => {
         setStudent(prevState => ({
             ...prevState,
@@ -194,6 +215,24 @@ export default function EditStudent() {
         }));
     };
 
+    const fetchFeeTemplates = async () => {
+        try {
+            const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
+            if (templateSnapshot.empty) {
+                alert("No fee templates found.");
+                return;
+            }
+
+            setFeeTemplates(templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } catch (error) {
+            console.error("Error in fetching payment type:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchFeeTemplates();
+    }, []);
+
     const handleUpdate = async (e) => {
         e.preventDefault();
 
@@ -219,7 +258,9 @@ export default function EditStudent() {
                 education_details: student.educationDetails,
                 installment_details: student.installmentDetails,
                 experienceDetails: student.experienceDetails,
+                fees: formData, 
             });
+
 
             alert("Student updated successfully!");
             navigate("/studentdetails");
@@ -243,6 +284,55 @@ export default function EditStudent() {
         }
     };
 
+    const handleTemplateChange = (e) => {
+        console.log("Template selected:", e.target.value);
+
+        const templateId = e.target.value;
+        const template = feeTemplates.find(t => t.id === templateId);
+        setSelectedTemplate(template);
+        renderTemplateFields();
+        console.log("SelectedTemplate:", selectedTemplate);
+        if (template) {
+            const initialFormData = {};
+            template.fields.forEach(field => {
+                initialFormData[field.fieldName] = '';
+            });
+            setFormData(initialFormData);
+            renderTemplateFields();
+        } else {
+            setFormData({});
+        }
+
+    };
+
+    const renderTemplateFields = () => {
+        if (!selectedTemplate) return null;
+        return selectedTemplate.fields.map((field, index) => (
+            <div key={index} className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">{field.fieldName}:</label>
+                <input
+                    type={field.fieldType}
+                    value={formData[field.fieldName] || ''}
+                    onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
+                    required
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+        ));
+    };
+
+    const handleInputChange = (fieldName, value) => {
+        setFormData({ ...formData, [fieldName]: value });
+        setStudent((prevState) => ({
+            ...prevState,
+            fees: {
+                ...prevState.fees,
+                [fieldName]: value,
+            },
+        }));
+    };
+
+
     return (
         <div className="flex-col w-screen ml-80 p-4">
             <button onClick={() => navigate(-1)} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Back</button>
@@ -254,7 +344,6 @@ export default function EditStudent() {
                 <input type="email" name="email" value={student.email} onChange={handleChange} placeholder="Email" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="phone" value={student.phone} onChange={handleChange} placeholder="Phone" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
 
-
                 <h2>Residential Address</h2>
                 <input type="text" name="address.street" value={student.address.street} onChange={handleChange} placeholder="Street" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="address.area" value={student.address.area} onChange={handleChange} placeholder="Area" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -262,7 +351,6 @@ export default function EditStudent() {
                 <input type="text" name="address.state" value={student.address.state} onChange={handleChange} placeholder="State" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="address.zip" value={student.address.zip} onChange={handleChange} placeholder="Zip Code" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="address.country" value={student.address.country} onChange={handleChange} placeholder="Country" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" /><br />
-
 
                 <h2>Billing Address</h2>
                 <input type="text" name="billingAddress.street" value={student.billingAddress.street} onChange={handleChange} placeholder="Street" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -273,28 +361,15 @@ export default function EditStudent() {
                 <input type="text" name="billingAddress.country" value={student.billingAddress.country} onChange={handleChange} placeholder="Country" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" name="billingAddress.gstNo" value={student.billingAddress.gstNo} onChange={handleChange} placeholder="GST Number" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" /><br />
 
-
                 <h2>Date Of Birth</h2>
                 <input type="date" name="date_of_birth" value={student.date_of_birth} onChange={handleChange} placeholder="Date of Birth" /><br />
                 <h2>Admission Date</h2>
                 <input type="date" name="admission_date" value={student.admission_date} onChange={handleChange} placeholder="Admission Date" /><br />
 
-                {/* <div>
-                    <h2>Course Details</h2> */}
-
-                {/* {student.experienceDetails.map((exp, index) => (
-                    {student.courseDetails.map((course => (
-                        <div key={course.id}>{course.name}</div>
-                    ))} */}
                 <div>
                     <h2>Course Details</h2>
-
-
-                    
                     {Array.isArray(student.courseDetails) && student.courseDetails.map((course, index) => (
                         <div key={index} className="course-group">
-                            {/* {student.courseDetails.map((course, index) => (
-                        <div key={index} className="course-group"> */}
                             <select name={`courseDetails.${index}.courseName`} value={course.courseName} onChange={handleChange}>
                                 <option value="">Select Course</option>
                                 <option value="Full Stack Development (MERN)">Full Stack Development (MERN)</option>
@@ -322,8 +397,7 @@ export default function EditStudent() {
                             </button>
                         </div>
                     ))}
-                     <button type="button" onClick={addCourse} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Course</button>
-                    {/* <button type="button" onClick={addCourse} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Course</button> */}
+                    <button type="button" onClick={addCourse} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Course</button>
                 </div><br />
 
                 <div>
@@ -336,6 +410,23 @@ export default function EditStudent() {
                         <option value="completed">Completed</option>
                     </select>
                 </div><br />
+
+                <div>
+                    <h2>Payment Type</h2>
+                    <select name="payment-type" value={student.paymentType} onChange={handleTemplateChange}>
+                        <option value="">--Select a Type--</option>
+                        {feeTemplates.map((template) => (
+                            <option key={template.id} value={template.id}>{template.templateName}</option>
+                        ))}
+                    </select>
+                </div><br />
+
+                {selectedTemplate && (
+                    <div className="mt-4 bg-gray-50 p-4 rounded-md">
+                        <h3 className="text-lg font-semibold">Fill Fee Details:</h3>
+                        {renderTemplateFields()}
+                    </div>
+                )}
 
                 <div>
                     <h2>Educational Details</h2>
@@ -404,7 +495,14 @@ export default function EditStudent() {
                             </button>
                         </div>
                     ))}
+                    
                     <button type="button" onClick={addInstallment} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Installment</button>
+                    <h4>Add Discount</h4>
+                    <input></input> %Rup<br/>
+                    <button>Apply Discount</button>
+                    <h4>Fees Summary</h4>
+                    Total: <input type="number" disabled/>
+
                 </div><br />
 
                 <div>
@@ -423,4 +521,3 @@ export default function EditStudent() {
         </div>
     );
 };
-

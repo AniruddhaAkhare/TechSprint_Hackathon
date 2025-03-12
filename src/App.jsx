@@ -63,6 +63,9 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
 import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/IndividualCourseStudnets.jsx';
 import IndividualCourseCurriculum from './pages/components/CourseDelivery/Course/IndividualCourseCurriculum.jsx';
+import FeeTemplate from './pages/components/FeeTemplate/FeeTemplate.jsx';
+import StudentInfo from '../StudentInformation/StudentInfo.jsx';
+
 export default function App() {
 
   const [user, setUser] = useState(null);
@@ -119,6 +122,7 @@ export default function App() {
             <Route path="/studentdetails" element={<StudentDetails />} />
             <Route path="/studentdetails/addstudent" element={<AddStudent />} />
             <Route path="/studentdetails/updatestudent/:studentId" element={<EditStudent />} />
+            <Route path="/studentdetails/:studentId" element={<StudentInfo/>}/>
 
             <Route path="/feedback" element={<Feedback />} />
 
@@ -143,6 +147,7 @@ export default function App() {
             <Route path='/centers' element={<Centers />} />
 
             <Route path='/roles' element={<Role/>}/>
+            <Route path='/fee-template' element={<FeeTemplate/>}/>
 
           </Routes>
         </div>
