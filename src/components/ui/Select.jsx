@@ -9,6 +9,11 @@
 //   };
   
 
+export function SelectItem({ value, children }) {
+  return <option value={value}>{children}</option>;
+}
+
+
 export default function Select ({ options = [], ...props }) {
     return (
       <select className="w-full p-2 border rounded-md focus:outline-blue-500" {...props}>

@@ -493,10 +493,35 @@
 // export default CreateCourses;
 
 
-import React from 'react';
+import React, {useState} from 'react';
 import './CreateCourses.css'; // Create CSS file for this form
 
-const CreateCourses = ({ onClose }) => {
+const CreateCourses = ({ onClose, onCreateCourse}) => {
+
+  const [courseName, setCourseName] = useState('');
+  const [description, setDescription] = useState('');
+  const [prettyName, setPrettyName] = useState('');
+  const [courseType, setCourseType] = useState('online');
+
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const courseData = {
+      courseName,
+      description,
+      prettyName,
+      courseType,
+      // Add other relevant data you want to save
+    };
+    onCreateCourse(courseData);
+    // Reset form fields if needed
+    setCourseName('');
+    setDescription('');
+    setPrettyName('');
+    setCourseType('online');
+  };
+
+
   return (
     <div className="create-course-form-overlay">
       <div className="create-course-form">
@@ -507,7 +532,7 @@ const CreateCourses = ({ onClose }) => {
           </button>
         </div>
 
-        <div className="form-content">
+        <form onSubmit={handleSubmit} className="form-content">
           <div className="thumbnail-upload">
             <div className="upload-area">
               <span role="img" aria-label="upload icon">
@@ -523,7 +548,13 @@ const CreateCourses = ({ onClose }) => {
 
           <div className="form-group">
             <label htmlFor="courseName">Course name</label>
-            <input type="text" id="courseName" placeholder="Enter course name" />
+            <input
+              type="text"
+              id="courseName"
+              placeholder="Enter course name"
+              value={courseName}
+              onChange={(e) => setCourseName(e.target.value)}
+            />
             <span className="char-count">0/100</span>
           </div>
 
@@ -532,6 +563,8 @@ const CreateCourses = ({ onClose }) => {
             <textarea
               id="description"
               placeholder="A short description of your course"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             ></textarea>
             <span className="char-count">0/400</span>
           </div>
@@ -542,6 +575,8 @@ const CreateCourses = ({ onClose }) => {
               type="text"
               id="prettyName"
               placeholder="Enter short course name"
+              value={prettyName}
+              onChange={(e) => setPrettyName(e.target.value)}
             />
             <span className="char-count">0/50</span>
           </div>
@@ -550,12 +585,29 @@ const CreateCourses = ({ onClose }) => {
             <label>Course Type</label>
             <div className="course-type-options">
               <div className="option">
-                <input type="radio" id="online" name="courseType" />
+                <input
+                  type="radio"
+                  id="online"
+                  name="courseType"
+                  value="online"
+                  checked={courseType === 'online'}
+                  onChange={(e) => setCourseType(e.target.value)}
+                />
                 <label htmlFor="online">Online only</label>
-                <p>Select this if this package is intended only for online coaching.</p>
+                <p>
+                  Select this if this package is intended only for online
+                  coaching.
+                </p>
               </div>
               <div className="option">
-                <input type="radio" id="classroom" name="courseType" />
+                <input
+                  type="radio"
+                  id="classroom"
+                  name="courseType"
+                  value="classroom"
+                  checked={courseType === 'classroom'}
+                  onChange={(e) => setCourseType(e.target.value)}
+                />
                 <label htmlFor="classroom">Classroom Program</label>
                 <p>
                   Select this if the learners can enrol in this package for
@@ -564,13 +616,15 @@ const CreateCourses = ({ onClose }) => {
               </div>
             </div>
           </div>
-        </div>
+        </form>
 
         <div className="form-footer">
           <button className="cancel-button" onClick={onClose}>
             Cancel
           </button>
-          <button className="create-button">Create Course</button>
+          <button className="create-button" onClick={handleSubmit}>
+            Create Course
+          </button>
         </div>
       </div>
     </div>

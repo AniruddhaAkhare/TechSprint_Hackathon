@@ -1,4 +1,4 @@
-.create-course-form-overlay {
+.create-batch-form-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -11,7 +11,7 @@
     z-index: 1000;
   }
   
-  .create-course-form {
+  .create-batch-form {
     background-color: white;
     width: 400px;
     max-width: 90%;
@@ -49,27 +49,6 @@
     flex-grow: 1;
   }
   
-  .thumbnail-upload {
-    border: 2px dashed #ccc;
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  .upload-area {
-    cursor: pointer;
-  }
-  
-  .upload-area span {
-    font-size: 2em;
-  }
-  
-  .upload-info {
-    font-size: 0.8em;
-    color: #888;
-  }
-  
   .form-group {
     margin-bottom: 20px;
   }
@@ -81,36 +60,11 @@
   }
   
   .form-group input,
-  .form-group textarea {
+  .form-group select {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
-    resize: vertical;
-  }
-  
-  .form-group input {
-    height: 40px;
-  }
-  
-  .char-count {
-    font-size: 0.8em;
-    color: #888;
-    display: block;
-    text-align: right;
-    margin-top: 5px;
-  }
-  
-  .course-type-options {
-    display: flex;
-    justify-content: space-between;
-  }
-  
-  .course-type-options .option {
-    width: 48%;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 10px;
   }
   
   .form-footer {
