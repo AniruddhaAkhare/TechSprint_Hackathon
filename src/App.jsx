@@ -60,7 +60,6 @@ import Centers from './pages/components/Settings/Centers.jsx';
 
 import InstallmentReport from './reports/InstallmentReport.jsx';
 
-
 import Invoices from '../src/pages/components/Invoices/Invoices.jsx'
 import CreateInvoice from '../src/pages/components/Invoices/CreateInvoice.jsx';
 import UpdateInvoice from '../src/pages/components/Invoices/UpdateInvoice.jsx';
@@ -68,7 +67,7 @@ import UpdateInvoice from '../src/pages/components/Invoices/UpdateInvoice.jsx';
 import Role from './pages/components/UsersAndRoles.jsx/Roles.jsx'
 
 
-import Assignment from './pages/components/CourseDelivery/Assignment/Assignment.jsx';
+import Assignments from './pages/components/CourseDelivery/Assignment/Assignment.jsx';
 import CreateAssignment from './pages/components/CourseDelivery/Assignment/CreateAssignment.jsx';
 
 import { onAuthStateChanged } from 'firebase/auth';
@@ -76,10 +75,16 @@ import { AuthProvider } from './context/AuthContext';
 import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/IndividualCourseStudnets.jsx';
 import IndividualCourseCurriculum from './pages/components/CourseDelivery/Course/IndividualCourseCurriculum.jsx';
 
-
+import StudentInfo from '../StudentInformation/StudentInfo.jsx';
 
 import HeaderContent from './apps/Header/HeaderContainer.jsx';
 import Navigation from './apps/Navigation/NavigationContainer.jsx';
+import FeeTemplate from './pages/components/FeeTemplate/FeeTemplate.jsx';
+
+
+
+// import {ZoomSession} from './pages/components/CourseDelivery/Session/ZoomSession';
+
 
 export default function App() {
 
@@ -93,17 +98,21 @@ export default function App() {
     return () => unsubscribe();
   }, [auth]);
 
+
+  useEffect(() => {
+    console.log("Current User in App:", user);
+  }, [user]);
+  
+
   return (
     <AuthProvider>
       <BrowserRouter>
         <div style={{ display: 'flex' }}>
           {user && <Sidebar />}
           <Routes>
-
-
             <Route path="/" element={user ? <Profile /> : <Welcome />} />
-<Route path='/header' element={<HeaderContent/>}/>
-<Route path='/navigation' element={<Navigation />} />
+            <Route path='/header' element={<HeaderContent />} />
+            <Route path='/navigation' element={<Navigation />} />
 
             <Route path="/dashboard" element={<Dashboard />} />
 
@@ -126,10 +135,10 @@ export default function App() {
             <Route path='/batches' element={<Batches />} />
             <Route path="/createBatch" element={<CreateBatch />} />
 
-<Route path='/calendar' element={<Calendar/>}/>
+            <Route path='/calendar' element={<Calendar />} />
             <Route path='/sessions' element={<Sessions />} />
             <Route path="/createSession" element={<CreateSession />} />
-            <Route path="/zoom-session" element={<ZoomSession />} />
+            {/* <Route path="/zoom-session" element={<ZoomSession />} /> */}
 
             <Route path="/instructor" element={<Instructor />} />
 
@@ -141,6 +150,7 @@ export default function App() {
             <Route path="/studentdetails" element={<StudentDetails />} />
             <Route path="/studentdetails/addstudent" element={<AddStudent />} />
             <Route path="/studentdetails/updatestudent/:studentId" element={<EditStudent />} />
+            <Route path="/studentdetails/:studentId" element={<StudentInfo/>}/>
 
             <Route path="/feedback" element={<Feedback />} />
 
@@ -173,8 +183,14 @@ export default function App() {
 
 
 
-            <Route path='/assignment' element={<Assignment />} />
+            <Route path='/assignment' element={<Assignments />} />
             <Route path='/createAssignment' element={<CreateAssignment />} />
+
+            <Route path='/fee-template' element={<FeeTemplate/>}/>
+
+
+
+            <Route path='/zoom' element={<ZoomSession />} />
           </Routes>
         </div>
       </BrowserRouter>

@@ -1,164 +1,244 @@
-import React, { useState, useEffect, useRef } from 'react';
-import './Courses.css';
-import CreateCourses from './CreateCourses';
+import { useState, useEffect } from "react";
 import { db } from '../../../../config/firebase';
-import { collection, onSnapshot, doc, addDoc , deleteDoc } from 'firebase/firestore';
+import { getDocs, collection, deleteDoc, doc } from 'firebase/firestore';
+import CreateCourses from "./CreateCourses";
+import SearchBar from "../../SearchBar";
+import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input } from "@material-tailwind/react";
 
-const Courses = () => {
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [courses, setCourses] = useState([]);
-  const [dropdownOpen, setDropdownOpen] = useState(null); // Track which dropdown is open
-  const dropdownRef = useRef(null);
+export default function Courses() {
+    const [currentCourse, setCurrentCourse] = useState(null);
+    const [courses, setCourses] = useState([]);
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'Course'), (snapshot) => {
-      const courseList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setCourses(courseList);
-    });
+    const [subjects, setSubjects] = useState([]);
 
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(null);
-      }
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+
+    const CourseCollectionRef = collection(db, "Course");
+    const SubjectCollectionRef = collection(db, "Subject");
+    const [isOpen, setIsOpen] = useState(false);
+
+
+    const [openDelete, setOpenDelete] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
+
+    const toggleSidebar = () => {
+        setIsOpen(prev => !prev);
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      unsubscribe();
-      document.removeEventListener('mousedown', handleClickOutside);
+    const handleSearch = (e) => {
+        if (e) e.preventDefault();
+        if (!searchTerm.trim()) {
+            setSearchResults([]);
+            return;
+        }
+        const results = courses.filter(course =>
+            course.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setSearchResults(results);
     };
-  }, []);
 
-  const handleNewCourseClick = () => {
-    setIsFormOpen(true);
-  };
+    useEffect(() => {
+        if (searchTerm) {
+            handleSearch();
+        } else {
+            setSearchResults([]);
+        }
+    }, [searchTerm]);
 
-  const handleCloseForm = () => {
-    setIsFormOpen(false);
-  };
+    const fetchCourses = async () => {
+        const snapshot = await getDocs(CourseCollectionRef);
+        const courseData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+        setCourses(courseData);
+    };
 
-  const handleCreateCourse = async (courseData) => {
-    try {
-      await addDoc(collection(db, 'Course'), courseData);
-      setIsFormOpen(false);
-      alert('Course created successfully!');
-    } catch (error) {
-      console.error('Error creating course:', error);
-      alert('Error creating course. Please try again.');
-    }
-  };
+    useEffect(() => {
+        fetchCourses();
+    }, []);
 
-  const toggleDropdown = (courseId) => {
-    setDropdownOpen(dropdownOpen === courseId ? null : courseId);
-  };
+    const handleCreateCourseClick = () => {
+        setCurrentCourse(null);
+        toggleSidebar();
+    };
 
-  const handleDeleteCourse = async (courseId) => {
-    if (window.confirm('Are you sure you want to delete this course?')) {
-      try {
-        await deleteDoc(doc(db, 'Course', courseId));
-        alert('Course deleted successfully!');
-      } catch (error) {
-        console.error('Error deleting course:', error);
-        alert('Error deleting course. Please try again.');
-      }
-    }
-  };
+    const handleEditClick = (course) => {
+        setCurrentCourse(course);
+        setIsOpen(true);
+    };
 
-  return (
-    <div className="flex-col w-screen ml-80 p-4 courses-list-container">
-      <div className="header">
-        <div className="title">
-          Courses <span className="published">{courses.length} PUBLISHED</span>
-        </div>
-        <button className="new-course-button" onClick={handleNewCourseClick}>
-          + New Course
-        </button>
-      </div>
+    const handleClose = () => {
+        setIsOpen(false);
+        setCurrentCourse(null);
+        fetchCourses();
+    };
 
-      <div className="filter-search">
-        <div className="filter">
-          Courses
-          <select className="filter-select">
-            <option value="all">All</option>
-          </select>
-        </div>
-        <div className="search">
-          <input type="text" placeholder="Search" className="search-input" />
-        </div>
-      </div>
+    const deleteCourse = async () => {
+        // console.log("delete ");
+        if (deleteId) {
+            try {
+                await deleteDoc(doc(db, "Course", deleteId));
+                fetchCourses();
+            } catch (err) {
+                console.error("Error deleting courses:", err);
+            }
+        }
+        setOpenDelete(false);
+    };
 
-      <table className="courses-table">
-        <thead>
-          <tr>
-            <th>Sr.</th>
-            <th>Course name</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {courses.map((course, index) => (
-            <tr key={course.id}>
-              <td>{index + 1}</td>
-              <td>
-                <div className="course-name">
-                  <div className="course-icon">
-                    <span role="img" aria-label="course icon">
-                      📒
-                    </span>
-                  </div>
-                  <span>{course.courseName}</span>
+    return (
+        <div className="flex-col w-screen ml-80 p-4">
+            <div className="justify-between items-center p-4 mb-4">
+                <div className="flex-1">
+                    <h1 className="text-2xl font-semibold">Courses</h1>
                 </div>
-              </td>
-              <td>
-                <div className="actions" ref={dropdownRef}>
-                  <button
-                    className="actions-button"
-                    onClick={() => toggleDropdown(course.id)}
-                  >
-                    ...
-                  </button>
-                  {dropdownOpen === course.id && (
-                    <div className="dropdown">
-                      <button className="dropdown-item">Edit</button>
-                      <button className="dropdown-item">Reorder</button>
-                      <button
-                        className="dropdown-item archive"
-                        onClick={() => handleDeleteCourse(course.id)}
-                      >
-                        Archive
-                      </button>
-                    </div>
-                  )}
+                <div>
+                    <button type="button"
+                        className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
+                        onClick={handleCreateCourseClick}>
+                        + Create Course
+                    </button>
                 </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            </div>
 
-      <div className="pagination">
-        <div className="pagination-info">
-          {`1-${courses.length} of ${courses.length} items`}
+            <CreateCourses isOpen={isOpen} toggleSidebar={handleClose} course={currentCourse} />
+
+            <div className="justify-between items-center p-4 mt-4">
+                <SearchBar
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    handleSearch={handleSearch}
+                />
+            </div>
+
+            <div className="sec-3">
+                <table className="data-table table">
+                    <thead className="table-secondary">
+                        <tr>
+                            <th>Sr No</th>
+                            <th>Course Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {(searchResults.length > 0 ? searchResults : courses).map((course, index) => (
+                            <tr key={course.id}>
+                                <td>{index + 1}</td>
+                                <td>{course.courseName}</td>
+
+                                <Dialog open={openDelete} handler={() => setOpenDelete(false)}>
+                                    <DialogHeader>Confirm Deletion</DialogHeader>
+                                    <DialogBody>Are you sure you want to delete this instructor? This action cannot be undone.</DialogBody>
+                                    <DialogFooter>
+                                        <Button variant="text" color="gray" onClick={() => setOpenDelete(false)}>Cancel</Button>
+                                        <Button variant="filled" color="red" onClick={deleteCourse}>Yes, Delete</Button>
+                                    </DialogFooter>
+                                </Dialog>
+                                <td>
+                                        <div className="flex items-center space-x-2">
+                                            <button onClick={() => { setDeleteId(course.id); setOpenDelete(true); }} className="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600">
+                                                Delete
+                                            </button>
+                                            <button onClick={() => handleEditClick(course)} className="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600">
+                                                Update
+                                            </button>
+                                        </div>
+                                    </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div className="pagination-controls">
-          <select className="page-select">
-            <option value="1">1</option>
-          </select>
-          <select className="items-per-page">
-            <option value="50">50/page</option>
-          </select>
-        </div>
-      </div>
+    );
+}
 
-      {isFormOpen && (
-        <CreateCourses onClose={handleCloseForm} onCreateCourse={handleCreateCourse} />
-      )}
-    </div>
-  );
-};
 
-export default Courses;
+// import React, {useState, useState} from 'react';
+// import './Courses.css'; // Import the CSS file for styling
+// import CreateCourses from './CreateCourses';
+
+
+// const Courses= () => {
+//     const [isFormOpen, setIsFormOpen] = useState(false);
+
+//     const handleNewCourseClick=()=>{
+//         setIsFormOpen(true);
+//     }
+
+//     const handleCloseForm = () =>{
+//         setIsFormOpen(false);
+//     }
+
+//   return (
+//     <div className="flex-col w-screen ml-80 p-4 courses-list-container">
+//     {/* <div className=""> */}
+//       <div className="header">
+//         <div className="title">
+//           Courses <span className="published">1 PUBLISHED</span>
+//         </div>
+//         <button className="new-course-button" onClick={handleNewCourseClick}> + New Course</button>
+//       </div>
+
+//       <div className="filter-search">
+//         <div className="filter">
+//           Courses
+//           <select className="filter-select">
+//             <option value="01">01</option>
+//           </select>
+//         </div>
+//         <div className="search">
+//           <input type="text" placeholder="Search" className="search-input" />
+//         </div>
+//       </div>
+
+//       <table className="courses-table">
+//         <thead>
+//           <tr>
+//             <th>Sr.</th>
+//             <th>Course name</th>
+//             <th>Actions</th>
+//           </tr>
+//         </thead>
+//         <tbody>
+//           <tr>
+//             <td>01</td>
+//             <td>
+//               <div className="course-name">
+//                 <div className="course-icon">
+//                   {/* You can replace this with an actual icon */}
+//                   <span role="img" aria-label="course icon">📒</span> 
+//                 </div>
+//                 <span>MySQL</span>
+//               </div>
+//             </td>
+//             <td>
+//               <div className="actions">
+//                 {/* Add your actions here, like edit, delete, etc. */}
+//                 <button className="actions-button">...</button>
+//               </div>
+//             </td>
+//           </tr>
+//         </tbody>
+//       </table>
+
+//       <div className="pagination">
+//         <div className="pagination-info">1-1 of 1 items</div>
+//         <div className="pagination-controls">
+//           <select className="page-select">
+//             <option value="1">1</option>
+//           </select>
+//           <select className="items-per-page">
+//             <option value="50">50/page</option>
+//           </select>
+//         </div>
+//       </div>
+
+//       {isFormOpen && <CreateCourses onClose={handleCloseForm}/>}
+//     </div>
+//   );
+// };
+
+// export default Courses;

@@ -221,7 +221,7 @@ export default function StudentDetails() {
             <div>
                 {course.map(course => (
                     <label key={course.id} className="block">
-                        <input type="checkbox" onChange={() => handleCourseSelect(course.id)} /> {course.name}
+                        <input type="checkbox" onChange={() => handleCourseSelect(course.id)} /> {course.courseName}
                     </label>
                 ))}
             </div>
