@@ -1,0 +1,93 @@
+.create-session-container {
+    width: 100%;
+    padding: 20px;
+    font-family: sans-serif;
+    background-color: #f7f7f7; /* Light background */
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .header h1 {
+    font-size: 1.8em;
+    margin: 0;
+  }
+  
+  .header-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+  
+  .view-calendar {
+    background-color: #e0e0e0;
+    color: #333;
+  }
+  
+  .save-session {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .description {
+    color: #666;
+    margin-bottom: 20px;
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  .form-section {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  label {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  input[type="text"],
+  input[type="date"],
+  input[type="time"],
+  select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+  
+  .session-type-buttons button {
+    padding: 10px 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    /* background-color: white; */
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  
+  .session-type-buttons button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+  }
+  
+  .session-timings {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .select-batches {
+    /* background-color: #e0e0e0; */
+    border: none;
+    border-radius: 5px;
+  }

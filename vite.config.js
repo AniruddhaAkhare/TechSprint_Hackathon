@@ -11,6 +11,16 @@ export default defineConfig({
       // '@': path.resolve(__dirname, 'src'), // Ensure this exists
     },
   },
+  server:{
+    hmr:{
+      clientPort:5173,
+      protocol: 'ws',
+      host:'localhost'
+    },
+    watch:{
+      usePolling: true
+    }
+  }
 })
 
 

@@ -128,7 +128,7 @@ export default function Sidebar() {
                                 </ListItemPrefix>
                                 Batches
                             </ListItem>
-                            <ListItem onClick={() => navigate('/sessions')}>
+                            <ListItem onClick={() => navigate('/calendar')}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                 </ListItemPrefix>

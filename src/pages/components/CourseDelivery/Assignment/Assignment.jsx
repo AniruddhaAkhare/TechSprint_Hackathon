@@ -177,10 +177,26 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../../../config/firebase';
 import { collection, getDocs } from 'firebase/firestore';
+import Button from '../../../../components/ui/Button';
 
 export default function Assignments() {
     const [assignments, setAssignments] = useState([]);
     const [permissions, setPermissions] = useState({});
+
+    const handleDelete = async () => {
+        if (!deleteId) return;
+        try {
+            await deleteBatch(deleteId);
+            fetchBatches();
+            alert('Batch deleted successfully!');
+        } catch (err) {
+            console.error("Error deleting batch:", err);
+            alert('Failed to delete batch. Please try again.');
+        } finally {
+            setOpenDelete(false);
+            setDeleteId(null);
+        }
+    };
 
 
     useEffect(() => {
@@ -218,6 +234,8 @@ export default function Assignments() {
         fetchAssignments();
     }, []);
 
+    
+  
     return (
         <div className="container ml-80 p-4">
         {/* // <div className="p-6"> */}

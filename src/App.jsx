@@ -24,6 +24,8 @@ import CurriculumEditor from './pages/components/CourseDelivery/Curriculum/Curri
 import NotesPage from './pages/components/CourseDelivery/Curriculum/NotesPages.jsx';
 import CreateCurriculum from './pages/components/CourseDelivery/Curriculum/CreateCurriculum.jsx';
 
+
+import Calendar from './pages/components/CourseDelivery/Session/Calendar.jsx';
 import Sessions from './pages/components/CourseDelivery/Session/Sessions.jsx';
 import CreateSession from './pages/components/CourseDelivery/Session/CreateSession.jsx';
 import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession';
@@ -58,27 +60,39 @@ import Centers from './pages/components/Settings/Centers.jsx';
 
 import InstallmentReport from './reports/InstallmentReport.jsx';
 
-
 import Invoices from '../src/pages/components/Invoices/Invoices.jsx'
 import CreateInvoice from '../src/pages/components/Invoices/CreateInvoice.jsx';
 import UpdateInvoice from '../src/pages/components/Invoices/UpdateInvoice.jsx';
 import Role from './pages/components/UsersAndRoles.jsx/Roles.jsx'
 
 
-import Assignment from './pages/components/CourseDelivery/Assignment/Assignment.jsx';
+import Assignments from './pages/components/CourseDelivery/Assignment/Assignment.jsx';
 import CreateAssignment from './pages/components/CourseDelivery/Assignment/CreateAssignment.jsx';
 
 import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
 import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/IndividualCourseStudnets.jsx';
 import IndividualCourseCurriculum from './pages/components/CourseDelivery/Course/IndividualCourseCurriculum.jsx';
+<<<<<<< HEAD
 
+=======
+>>>>>>> c4a9abb96afb578fbf84baa5e4f5265cc4544fc6
 
+import StudentInfo from '../StudentInformation/StudentInfo.jsx';
 
 import HeaderContent from './apps/Header/HeaderContainer.jsx';
 import Navigation from './apps/Navigation/NavigationContainer.jsx';
 import FeeTemplate from './pages/components/FeeTemplate/FeeTemplate.jsx';
+<<<<<<< HEAD
 import StudentInfo from './StudentInformation/StudentInfo.jsx'
+=======
+
+
+
+// import {ZoomSession} from './pages/components/CourseDelivery/Session/ZoomSession';
+
+
+>>>>>>> c4a9abb96afb578fbf84baa5e4f5265cc4544fc6
 export default function App() {
 
   const [user, setUser] = useState(null);
@@ -91,14 +105,18 @@ export default function App() {
     return () => unsubscribe();
   }, [auth]);
 
+
+  useEffect(() => {
+    console.log("Current User in App:", user);
+  }, [user]);
+  
+
   return (
     <AuthProvider>
       <BrowserRouter>
         <div style={{ display: 'flex' }}>
           {user && <Sidebar />}
           <Routes>
-
-
             <Route path="/" element={user ? <Profile /> : <Welcome />} />
             <Route path='/header' element={<HeaderContent />} />
             <Route path='/navigation' element={<Navigation />} />
@@ -124,9 +142,10 @@ export default function App() {
             <Route path='/batches' element={<Batches />} />
             <Route path="/createBatch" element={<CreateBatch />} />
 
+            <Route path='/calendar' element={<Calendar />} />
             <Route path='/sessions' element={<Sessions />} />
             <Route path="/createSession" element={<CreateSession />} />
-            <Route path="/zoom-session" element={<ZoomSession />} />
+            {/* <Route path="/zoom-session" element={<ZoomSession />} /> */}
 
             <Route path="/instructor" element={<Instructor />} />
 
@@ -163,8 +182,11 @@ export default function App() {
             <Route path='/centers' element={<Centers />} />
 
             <Route path='/roles' element={<Role />} />
+<<<<<<< HEAD
             <Route path='/fee-template' element={<FeeTemplate />} />
             <Route path='/roles' element={<Role />} />
+=======
+>>>>>>> c4a9abb96afb578fbf84baa5e4f5265cc4544fc6
 
 
             <Route path='/invoices' element={<Invoices />} />
@@ -173,8 +195,14 @@ export default function App() {
 
 
 
-            <Route path='/assignment' element={<Assignment />} />
+            <Route path='/assignment' element={<Assignments />} />
             <Route path='/createAssignment' element={<CreateAssignment />} />
+
+            <Route path='/fee-template' element={<FeeTemplate/>}/>
+
+
+
+            <Route path='/zoom' element={<ZoomSession />} />
           </Routes>
         </div>
       </BrowserRouter>

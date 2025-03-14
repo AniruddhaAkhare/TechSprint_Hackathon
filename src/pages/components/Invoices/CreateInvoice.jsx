@@ -856,7 +856,8 @@ export default function CreateInvoice() {
   };
 
   return (
-    <div className="p-6 bg-white shadow-md rounded-md max-w-4xl mx-auto">
+    <div className="p-6 bg-white rounded shadow-md w-full max-w-4xl mx-auto">
+    {/* // <div className="p-6 bg-white shadow-md rounded-md max-w-4xl mx-auto"> */}
       <h2 className="text-xl font-bold">New Invoice</h2>
       
       {/* Invoice Fields */}

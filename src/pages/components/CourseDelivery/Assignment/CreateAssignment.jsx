@@ -102,6 +102,7 @@ export default function CreateAssignment() {
     };
 
     return (
+        // <div className="container ml-80 p-6">
         <div className="container ml-80 p-4">
         {/* // <div className={`fixed top-0 right-0 h-full bg-white w-2/5 shadow-lg transform transition-transform duration-300`}> */}
             {/* <div className="p-6 bg-white shadow-md rounded-md max-w-3xl mx-auto"> */}
