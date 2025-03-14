@@ -157,7 +157,6 @@
 
 
 import React, {useState} from 'react';
-import './Courses.css'; // Import the CSS file for styling
 import CreateCourses from './CreateCourses';
 
 const Courses= () => {

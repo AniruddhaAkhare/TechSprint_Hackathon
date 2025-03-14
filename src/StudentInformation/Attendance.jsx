@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { db } from '../src/config/firebase';
+import { db } from '../config/firebase';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 
 export default function  Attendance ({studentId}) {

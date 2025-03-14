@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { db } from "../src/config/firebase";
+import { db } from "../config/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import Enrollments from "./Enrollments";
 import Fees from "./Fees";

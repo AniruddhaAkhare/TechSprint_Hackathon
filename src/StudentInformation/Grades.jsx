@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../src/config/firebase';
+import { db } from '../config/firebase';
 
 export default function  Grades ({ studentId })  {
     const [grades, setGrades] = useState([]);

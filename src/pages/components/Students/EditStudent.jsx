@@ -56,6 +56,8 @@ export default function EditStudent() {
             try {
                 const studentRef = doc(db, "student", studentId);
                 const studentSnap = await getDoc(studentRef);
+                await fetchFeeTemplates(); 
+
                 if (studentSnap.exists()) {
                     const data = studentSnap.data();
                     setStudent({
@@ -215,7 +217,9 @@ export default function EditStudent() {
         }));
     };
 
-    const fetchFeeTemplates = async () => {
+    useEffect(() => {
+        const fetchFeeTemplates = async () => {
+
         try {
             const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
             if (templateSnapshot.empty) {
@@ -229,9 +233,9 @@ export default function EditStudent() {
         }
     };
 
-    useEffect(() => {
-        fetchFeeTemplates();
-    }, []);
+        fetchFeeTemplates(); 
+    }, [studentId, navigate]);
+
 
     const handleUpdate = async (e) => {
         e.preventDefault();

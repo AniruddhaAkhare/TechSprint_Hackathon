@@ -85,7 +85,7 @@ export default function Sidebar() {
             <div className="mb-2 p-4">
                 <div className="flex items-center mb-6" onClick={() => navigate("/")} style={{ cursor: 'pointer' }}>
                     <div className="bg-gray-700 rounded-full h-10 w-10 flex items-center justify-center">
-                        <img src="../../fireblaze.jpg" alt="F" />
+                        <img src="/img/fireblaze.jpg" alt="F" />
                     </div>
                     <Typography variant='h3' className="ml-3 text-xl font-semibold">Fireblaze</Typography>
                 </div>

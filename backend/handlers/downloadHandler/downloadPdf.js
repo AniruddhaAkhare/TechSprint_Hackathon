@@ -10,7 +10,6 @@ module.exports = downloadPdf = async (req, res, { directory, id }) => {
         _id: id,
       }).exec();
 
-      // Throw error if no result
       if (!result) {
         throw { name: 'ValidationError' };
       }

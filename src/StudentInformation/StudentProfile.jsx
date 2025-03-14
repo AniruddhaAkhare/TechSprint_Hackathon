@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../src/config/firebase';
+import { db } from '../config/firebase';
 import './Profile.css';
-import EditStudent from '../src/pages/components/Students/EditStudent';
+import EditStudent from '../pages/components/Students/EditStudent';
 
 export default function StudentProfile() {
     const { studentId } = useParams();

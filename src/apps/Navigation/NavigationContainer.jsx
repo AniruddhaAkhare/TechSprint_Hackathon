@@ -66,7 +66,7 @@ function Sidebar({ collapsible, isMobile = false, userRole }) {
       key: 'dashboard',
       icon: <DashboardOutlined />,
       label: <Link to={'/'}>{translate('dashboard')}</Link>,
-      roles: ['admin', 'user'] // Allowed roles
+      roles: ['admin', 'user'] 
     },
     {
       key: 'customer',
@@ -112,9 +112,8 @@ function Sidebar({ collapsible, isMobile = false, userRole }) {
         label: <Link to={'/about'}>{translate('about')}</Link>,
         icon: <ReconciliationOutlined />,
       },
-  ].filter(item => !item.roles || item.roles.includes(userRole)); // Filter based on role
+  ].filter(item => !item.roles || item.roles.includes(userRole)); 
 
-  // ... rest of your existing Sidebar code
 
   useEffect(() => {
     if (location)

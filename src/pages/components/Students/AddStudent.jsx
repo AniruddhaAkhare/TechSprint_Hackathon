@@ -126,20 +126,17 @@ export default function AddStudent() {
             let overdue = 0;
 
             installmentDetails.forEach((installment) => {
-                // Safely retrieve amounts with a fallback to 0
                 const amtPaid = installment.paidAmount || 0;
                 const amtDue = installment.dueAmount || 0;
 
-                // Accumulate the total paid amount
                 paidAmt += amtPaid;
 
-                // Convert dueDate to a Date object and compare
                 const dueDate = new Date(installment.dueDate).toISOString().split("T")[0];
 
                 if (dueDate > today && installmentDetails.paidAmount===0) {
-                    outstanding += amtDue; // Amount due in the future
+                    outstanding += amtDue; 
                 } else if(dueDate <= today && installmentDetails.paidAmount===0) {
-                    overdue += amtDue; // Amount due in the past
+                    overdue += amtDue; 
                 }
             });
 
