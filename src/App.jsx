@@ -73,26 +73,20 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
 import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/IndividualCourseStudnets.jsx';
 import IndividualCourseCurriculum from './pages/components/CourseDelivery/Course/IndividualCourseCurriculum.jsx';
-<<<<<<< HEAD
 
-=======
->>>>>>> c4a9abb96afb578fbf84baa5e4f5265cc4544fc6
 
-import StudentInfo from '../StudentInformation/StudentInfo.jsx';
+// import StudentInfo from '../StudentInformation/StudentInfo.jsx';
 
 import HeaderContent from './apps/Header/HeaderContainer.jsx';
 import Navigation from './apps/Navigation/NavigationContainer.jsx';
 import FeeTemplate from './pages/components/FeeTemplate/FeeTemplate.jsx';
-<<<<<<< HEAD
 import StudentInfo from './StudentInformation/StudentInfo.jsx'
-=======
 
 
 
 // import {ZoomSession} from './pages/components/CourseDelivery/Session/ZoomSession';
 
 
->>>>>>> c4a9abb96afb578fbf84baa5e4f5265cc4544fc6
 export default function App() {
 
   const [user, setUser] = useState(null);
@@ -182,11 +176,8 @@ export default function App() {
             <Route path='/centers' element={<Centers />} />
 
             <Route path='/roles' element={<Role />} />
-<<<<<<< HEAD
             <Route path='/fee-template' element={<FeeTemplate />} />
             <Route path='/roles' element={<Role />} />
-=======
->>>>>>> c4a9abb96afb578fbf84baa5e4f5265cc4544fc6
 
 
             <Route path='/invoices' element={<Invoices />} />
