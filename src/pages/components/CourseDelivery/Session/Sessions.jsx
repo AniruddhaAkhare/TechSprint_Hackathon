@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from '../../../../config/firebase.js'
-import { getDocs, collection, deleteDoc, doc } from 'firebase/firestore';
+import { getDocs, collection, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import CreateSession from "./CreateSession.jsx";
 import SearchBar from '../../../../pages/components/SearchBar.jsx'
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input } from "@material-tailwind/react";
@@ -42,6 +42,7 @@ export default function Sessions() {
     }, [searchTerm]);
 
     const fetchSessions = async () => {
+        const q = query(BatchCollectionRef, orderBy('createdAt', 'desc')); // Add order by createdAt
         const snapshot = await getDocs(SessionCollectionRef);
         const sessionData = snapshot.docs.map(doc => ({
             id: doc.id,

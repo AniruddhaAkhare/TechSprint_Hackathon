@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from '../../../../config/firebase';
-import { getDocs, collection, deleteDoc, doc } from 'firebase/firestore';
+import { getDocs, collection, deleteDoc, doc, query, orderBy} from 'firebase/firestore';
 import CreateCourses from "./CreateCourses";
 import SearchBar from "../../SearchBar";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input } from "@material-tailwind/react";
@@ -47,6 +47,7 @@ export default function Courses() {
     }, [searchTerm]);
 
     const fetchCourses = async () => {
+        const q = query(CourseCollectionRef, orderBy('createdAt', 'asc'));
         const snapshot = await getDocs(CourseCollectionRef);
         const courseData = snapshot.docs.map(doc => ({
             id: doc.id,

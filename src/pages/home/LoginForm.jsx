@@ -378,32 +378,8 @@ export default function LoginForm() {
         <div className="flex items-center justify-center min-h-screen bg-gray-100 w-screen">
             <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
                 <h2 className="text-2xl font-semibold text-center text-gray-700 mb-6">Login</h2>
-                {/* <Form onSubmitCapture={handleSubmit}>
-                    <Form.Item
-                        label="Email"
-                        name="email"
-                        rules={[
-                            { required: true, message: 'Please enter your email!' },
-                            { type: 'email', message: 'Enter a valid email!' },
-                        ]}
-                    >
-                        <Input
-                            prefix={<UserOutlined className="site-form-item-icon" />}
-                            placeholder="admin@demo.com"
-                            type="email"
-                            size="large"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </Form.Item> */}
-
-                {/* // <div className="h-screen flex items-center justify-center w-screen">
-        // <div className="bg-blue-500 text-white p-5 rounded"> */}
-
-
-                <div className="login-container h-screen flex items-center justify-center w-screen">
-                    <Form className="login-form" onSubmitCapture={handleSubmit}>
+                {/* <div className="login-container h-screen flex items-center justify-center w-screen"> */}
+                <Form className="login-form" onSubmitCapture={handleSubmit}>
                         <h2 className="login-title">Login</h2>
 
                         <Form.Item
@@ -455,7 +431,7 @@ export default function LoginForm() {
                         </Form.Item>
                     </Form>
                 </div>
-            </div>
+            {/* </div> */}
         </div>
     );
 }

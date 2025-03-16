@@ -11,9 +11,8 @@ const Roles = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
-//   const { userRole, loading } = useUserRole();  
 
-  // Fetch roles and count assigned users dynamically
+
   const fetchRolesWithUserCount = async () => {
     try {
       const rolesSnapshot = await getDocs(collection(db, "roles"));
@@ -21,11 +20,11 @@ const Roles = () => {
 
       // Fetch all instructors
       const instructorsSnapshot = await getDocs(collection(db, "Instructor"));
-      const instructors = instructorsSnapshot.docs.map(doc => doc.data());
+      const instructors = instructorsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Count how many instructors are assigned to each role
       for (let role of rolesList) {
-        const assignedCount = instructors.filter(instructor => instructor.role === role.name).length;
+        const assignedCount = instructors.filter(instructor => instructor.roleId === role.id).length; // Use roleId
 
         // Update Firestore if count has changed
         if (role.usersAssigned !== assignedCount) {
@@ -118,7 +117,13 @@ const Roles = () => {
       </table>
 
       {/* Modal for Create/Edit Role */}
-      <CreateRoleModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} fetchRoles={fetchRolesWithUserCount} selectedRole={selectedRole} />
+      {/* <CreateRoleModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} fetchRoles={fetchRolesWithUserCount} selectedRole={selectedRole} /> */}
+      <CreateRoleModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        fetchRoles={fetchRolesWithUserCount}
+        roleToEdit={selectedRole}  // Ensure this prop name matches
+      />
     </div>
   );
 };
