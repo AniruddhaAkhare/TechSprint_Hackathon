@@ -1,1677 +1,442 @@
+import React, { useState, useEffect } from "react";
+import { db } from "../../../../config/firebase";
+import { getDocs, collection, addDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
+// import { serverTimestamp } from "firebase/firestore";
 
-// // // // import React, { useState, useEffect } from 'react';
-// // // // import { db } from '../../../../config/firebase';
-// // // // import { getDocs, collection, addDoc, updateDoc, doc } from 'firebase/firestore';
-// // // // import { useNavigate } from "react-router-dom";
+const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
+    const navigate = useNavigate();
 
-// // // // const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
-// // // //     const navigate = useNavigate();
-// // // //     const [batchName, setBatchName] = useState('');
-// // // //     const [batchDuration, setBatchDuration] = useState('');
-// // // //     const [curriculums, setCurriculums] = useState([]);
-// // // //     const [allBatchManager, setAllBatchManager] = useState([]);
-// // // //     const [batchManager, setBatchManager] = useState([]);
-// // // //     const [allBatchFaculty, setAllBatchFaculty] = useState([]);
-// // // //     const [batchFaculty, setBatchFaculty] = useState([]);
-// // // //     const [students, setStudents] = useState([]);
-// // // //     const [centers, setCenters] = useState([]);
-// // // //     const [loading, setLoading] = useState(true);
+    // State variables
+    const [batchName, setBatchName] = useState("");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
 
-// // // //     const [selectedBatchManagers, setSelectedBatchManagers] = useState([]);
-// // // //     const [selectedBatchFaculty, setSelectedBatchFaculty] = useState([]);
-// // // //     const [selectedCurriculums, setSelectedCurriculums] = useState([]);
-// // // //     const [selectedCenters, setSelectedCenters] = useState([]);
-// // // //     const [selectedStudents, setSelectedStudents] = useState([]);
+    const [centers, setCenters] = useState([]);
+    const [selectedCenters, setSelectedCenters] = useState("");
+    const [availableCenters, setAvailableCenters] = useState([]);
 
-// // // //     useEffect(() => {
-// // // //         const fetchData = async () => {
-// // // //             const fetchCollection = async (collectionName, setter) => {
-// // // //                 const snapshot = await getDocs(collection(db, collectionName));
-// // // //                 setter(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-// // // //             };
 
-// // // //             await fetchCollection("Instructor", setAllBatchFaculty);
-// // // //             await fetchCollection("Instructor", setBatchManager);
-// // // //             await fetchCollection("Curriculum", setCurriculums);
-// // // //             await fetchCollection("student", setStudents);
-// // // //             await fetchCollection("Centers", setCenters);
-// // // //             setLoading(false);
-// // // //         };
+    const [course, setCourse] = useState([]);
+    const [selectedCourse, setSelectedCourse] = useState("");
+    const [availableCourse, setAvailableCourse] = useState([]);
 
-// // // //         fetchData();
+    const [curriculum, setCurriculum] = useState([]);
+    const [selectedCurriculum, setSelectedCurriculum] = useState("");
+    const [availableCurriculum, setAvailableCurriculum] = useState([]);
 
-// // // //         if (batch) {
-// // // //             setBatchName(batch.name);
-// // // //             setBatchDuration(batch.duration);
-// // // //             setSelectedBatchManagers(batch.managers || []);
-// // // //             setSelectedBatchFaculty(batch.faculty || []);
-// // // //             setSelectedCurriculums(batch.curriculums || []);
-// // // //             setSelectedCenters(batch.centers || []);
-// // // //             setSelectedStudents(batch.students || []);
-// // // //         }
-// // // //     }, [batch]);
+    const [batchManager, setBatchManager] = useState([]);
+    const [selectedBatchManager, setSelectedBatchManager] = useState("");
+    const [availableBatchManager, setAvailableBatchManager] = useState([]);
 
-// // // //     useEffect(() => {
-// // // //         filterFacultyByCenter();
-// // // //     }, [selectedCenters, allBatchFaculty]);
+    const [additionalBatchManager, setAdditionalBatchManager] = useState([]);
+    const [selectedAdditionalBatchManager, setSelectedAdditionalBatchManager] = useState("");
+    const [availableAdditionalBatchManager, setAvailableAdditionalBatchManager] = useState([]);
 
-// // // //     const filterFacultyByCenter = () => {
-// // // //         if (selectedCenters.length === 0) {
-// // // //             setBatchFaculty(allBatchFaculty);
-// // // //             return;
-// // // //         }
 
-// // // //         const filteredFaculty = allBatchFaculty.filter(faculty => {
-// // // //             return selectedCenters.some(centerId => {
-// // // //                 const center = centers.find(c => c.id === centerId);
-// // // //                 return center && faculty.center === center.name;
-// // // //             });
-// // // //         });
-// // // //         setBatchFaculty(filteredFaculty);
-// // // //     };
+    const [batchFaculty, setBatchFaculty] = useState([]);
+    const [selectedBatchFaculty, setSelectedBatchFaculty] = useState("");
+    const [availableBatchFaculty, setAvailableBatchFaculty] = useState([]);
 
 
 
-// // // //     useEffect(() => {
-// // // //         filterManagerByCenter();
-// // // //     }, [selectedCenters, allBatchManager]);
+    useEffect(() => {
+        const fetchData = async () => {
 
-// // // //     const filterManagerByCenter = () => {
-// // // //         if (selectedCenters.length === 0) {
-// // // //             setBatchManager(allBatchManager);
-// // // //             return;
-// // // //         }
+            const centerSnapshot = await getDocs(collection(db, "Centers"));
+            const centersList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            setCenters(centersList);
+            setAvailableCenters(centersList);
 
-// // // //         const filteredManager = allBatchManager.filter(manager => {
-// // // //             return selectedCenters.some(centerId => {
-// // // //                 const center = centers.find(c => c.id === centerId);
-// // // //                 return center && manager.center === center.name;
-// // // //             });
-// // // //         });
-// // // //         setBatchManager(filteredManager);
-// // // //     };
 
-// // // //     const handleSelection = (id, setter, selected) => {
-// // // //         setter(prev => prev.includes(id) ? prev.filter(itemId => itemId !== id) : [...prev, id]);
-// // // //     };
+            const courseSnapshot = await getDocs(collection(db, "Course"));
+            const coursesList = courseSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            setCourse(coursesList);
+            setAvailableCourse(coursesList);
 
-// // // //     const handleStudentSelection = (studentId) => {
-// // // //         setSelectedStudents(prev =>
-// // // //             prev.includes(studentId) ? prev.filter(id => id !== studentId) : [...prev, studentId]
-// // // //         );
-// // // //     };
+            const curriculumSnapshot = await getDocs(collection(db, "curriculum"));
+            const curriculumList = curriculumSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            setCurriculum(curriculumList);
+            setAvailableCurriculum(curriculumList);
 
-// // // //     const addSelectedStudentsToBatch = () => {
-// // // //         alert("Students added to batch!");
-// // // //     };
+            const batchManagerSnapshot = await getDocs(collection(db, "Instructor"));
+            const batchManagersList = batchManagerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            setBatchManager(batchManagersList);
+            setAvailableBatchManager(batchManagersList);
 
-// // // //     const onSubmitBatch = async (e) => {
-// // // //         e.preventDefault();
-// // // //         if (!batchName.trim() || !batchDuration.trim()) {
-// // // //             alert("Please fill in all required fields");
-// // // //             return;
-// // // //         }
+            const additionalBatchManagerSnapshot = await getDocs(collection(db, "Instructor"));
+            const additionalBatchManagersList = additionalBatchManagerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            setAdditionalBatchManager(additionalBatchManagersList);
+            setAvailableAdditionalBatchManager(additionalBatchManagersList);
 
-// // // //         try {
-// // // //             let batchId;
-// // // //             const batchData = {
-// // // //                 name: batchName,
-// // // //                 duration: batchDuration,
-// // // //                 managers: selectedBatchManagers,
-// // // //                 faculty: selectedBatchFaculty,
-// // // //                 curriculums: selectedCurriculums,
-// // // //                 students: selectedStudents,
-// // // //                 centers: selectedCenters
-// // // //             };
+            const batchFacultySnapshot = await getDocs(collection(db, "Instructor"));
+            const batchFacultyList = batchFacultySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            setBatchFaculty(batchFacultyList);
+            setAvailableBatchFaculty(batchFacultyList);
 
-// // // //             if (batch) {
-// // // //                 const batchDoc = doc(db, "Batch", batch.id);
-// // // //                 await updateDoc(batchDoc, batchData);
-// // // //                 batchId = batch.id;
-// // // //             } else {
-// // // //                 const docRef = await addDoc(collection(db, "Batch"), batchData);
-// // // //                 batchId = docRef.id;
-// // // //             }
+        };
+        fetchData();
+    }, []);
 
-// // // //             alert("Batch successfully saved!");
-// // // //             setBatchName("");
-// // // //             setBatchDuration("");
-// // // //             setSelectedBatchManagers([]);
-// // // //             setSelectedBatchFaculty([]);
-// // // //             setSelectedCurriculums([]);
-// // // //             setSelectedCenters([]);
-// // // //             setSelectedStudents([]);
-// // // //             toggleSidebar();
-// // // //             navigate(`/batches`);
-// // // //         } catch (err) {
-// // // //             console.error("Error adding document:", err);
-// // // //             alert(`Error adding batch: ${err.message}`);
-// // // //         }
-// // // //     };
+    useEffect(() => {
+        if (batch) {
+            setBatchName(batch.batchName);
+            setStartDate(batch.startDate);
+            setEndDate(batch.endDate);
 
-// // // //     return (
-// // // //         <div className={`fixed top-0 right-0 h-full bg-white w-2/5 shadow-lg transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'} p-4 overflow-y-auto`}>
-// // // //             <button type="button" className="close-button" onClick={toggleSidebar}>Back</button>
-// // // //             <h1>{batch ? "Edit Batch" : "Create Batch"}</h1>
-// // // //             <form onSubmit={onSubmitBatch}>
-// // // //                 {/* ... (rest of your form) ... */}
-// // // //                 <div className="mb-3">
-// // // //                     <label>Batch Name</label>
-// // // //                     <input type="text" value={batchName} onChange={(e) => setBatchName(e.target.value)} required />
-// // // //                 </div>
-// // // //                 <div className="mb-3">
-// // // //                     <label>Batch Duration</label>
-// // // //                     <input type="text" value={batchDuration} onChange={(e) => setBatchDuration(e.target.value)} required />
-// // // //                 </div>
+            setSelectedCenters(batch.centers || []);
+            setAvailableCenters(centers.filter((c) => !batch.centers.includes(c.id)));
 
-// // // //                 <div className="mb-3">
-// // // //                     <label>Select Curriculum</label>
-// // // //                     {curriculums.map(curriculum => (<div key={curriculum.id}>
-// // // //                         <input type="checkbox" checked={selectedCurriculums.includes(curriculum.id)} onChange={() => handleSelection(curriculum.id, setSelectedCurriculums, selectedCurriculums)} />
-// // // //                         {curriculum.name}
-// // // //                     </div>))}
-// // // //                 </div>
+            setSelectedCourse(batch.course || []);
+            setAvailableCourse(course.filter((c) => !batch.course.includes(c.id)));
 
-// // // //                 <div className="mb-3">
-// // // //                     <label>Select Center</label>
-// // // //                     {centers.map(center => (
-// // // //                         <div key={center.id}>
-// // // //                             <input type="checkbox" checked={selectedCenters.includes(center.id)} onChange={() => handleSelection(center.id, setSelectedCenters, selectedCenters)} />
-// // // //                             {center.name}
-// // // //                         </div>
-// // // //                     ))}
-// // // //                 </div>
+            setSelectedCurriculum(batch.curriculum || []);
+            setAvailableCurriculum(curriculum.filter((c) => !batch.curriculum.includes(c.id)));
 
-// // // //                 {/* ... (other form fields) ... */}
+            setSelectedBatchFaculty(batch.batchFaculty || []);
+            setAvailableBatchFaculty(batchFaculty.filter((c) => !batch.batchFaculty.includes(c.id)));
 
-// // // //                 <div className="mb-3">
-// // // //                     <label>Batch Manager</label>
-// // // //                     {batchManager.map(instructor => (
-// // // //                         <div key={instructor.id}>
-// // // //                             <input type="checkbox" checked={selectedBatchManagers.includes(instructor.id)} onChange={() => handleSelection(instructor.id, setSelectedBatchManagers, selectedBatchManagers)} />
-// // // //                             {instructor.f_name} {instructor.l_name}
-// // // //                         </div>))}
-// // // //                 </div>
+            setSelectedAdditionalBatchManager(batch.additionalBatchManager || []);
+            setAvailableAdditionalBatchManager(additionalBatchManager.filter((c) => !batch.additionalBatchManager.includes(c.id)));
 
-// // // //                 <div className="mb-3">
-// // // //                     <label>Batch Faculty</label>
-// // // //                     {batchFaculty.map(instructor => (
-// // // //                         <div key={instructor.id}>
-// // // //                             <input type="checkbox" checked={selectedBatchFaculty.includes(instructor.id)} onChange={() => handleSelection(instructor.id, setSelectedBatchFaculty, selectedBatchFaculty)} />
-// // // //                             {instructor.f_name}
-// // // //                         </div>
-// // // //                     ))}
-// // // //                 </div>
+            setSelectedBatchFaculty(batch.batchFaculty || []);
+            setAvailableBatchFaculty(batchFaculty.filter((c) => !batch.batchFaculty.includes(c.id)));
 
-// // // //                 {/* ... (rest of your form) ... */}
+        }
+    }, [batch, course, curriculum, centers]);
 
-// // // //                 <div className="mb-3">
-// // // //                     <label>Add Students</label>
-// // // //                     <table className="table">
-// // // //                         <thead>
-// // // //                             <tr>
-// // // //                                 <th>Sr No</th>
-// // // //                                 <th>Student Name</th>
-// // // //                                 <th>Enrollment Date</th>
-// // // //                                 <th>Course Name</th>
-// // // //                                 <th>Select</th>
-// // // //                             </tr>
-// // // //                         </thead>
-
-
-// // // //                         <tbody>
-// // // //                             {loading ? (
-// // // //                                 <tr>
-// // // //                                     <td colSpan="5" className="text-center py-4">Loading...</td>
-// // // //                                 </tr>
-// // // //                             ) : students.length > 0 ? (
-// // // //                                 students.flatMap((student, index) =>
-// // // //                                     (student.course_details || [{}]).map((course, courseIndex) => (
-// // // //                                         <tr key={`${student.id || index}-${courseIndex}`}>
-// // // //                                             <td>{index + 1}</td>
-// // // //                                             <td>{student.first_name} {student.last_name}</td>
-// // // //                                             <td>{student.enrollment_date || "N/A"}</td>
-// // // //                                             <td>{course.courseName || "No Course Assigned"}</td>
-// // // //                                             <td>
-// // // //                                                 <input
-// // // //                                                     type="checkbox"
-// // // //                                                     checked={selectedStudents.includes(student.id)}
-// // // //                                                     onChange={() => handleStudentSelection(student.id)}
-// // // //                                                 />
-// // // //                                             </td>
-// // // //                                         </tr>
-// // // //                                     ))
-// // // //                                 )
-// // // //                             ) : (
-// // // //                                 <tr>
-// // // //                                     <td colSpan="5" className="text-center py-4">No students found</td>
-// // // //                                 </tr>
-// // // //                             )}
-// // // //                         </tbody>
-
-// // // //                     </table>
-// // // //                     <button
-// // // //                         type="button"
-// // // //                         className="bg-green-500 text-white px-4 py-2 rounded-lg mt-3"
-// // // //                         onClick={addSelectedStudentsToBatch}
-// // // //                     >
-// // // //                         Add Students
-// // // //                     </button>
-// // // //                 </div>
-
-// // // //                 <button type="submit">{batch ? "Update" : "Create"}</button>
-// // // //             </form>
-// // // //         </div>
-// // // //     );
-// // // // };
-
-// // // // export default CreateBatches;
-
-
-
-
-
-// // // import React, { useState, useEffect } from 'react';
-// // // import { db } from '../../../../config/firebase';
-// // // import { getDocs, collection, addDoc, updateDoc, doc } from 'firebase/firestore';
-// // // import { useNavigate } from "react-router-dom";
-
-// // // const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
-// // //     const navigate = useNavigate();
-// // //     const [batchName, setBatchName] = useState('');
-// // //     const [batchDuration, setBatchDuration] = useState('');
-// // //     const [curriculums, setCurriculums] = useState([]);
-// // //     const [allBatchManager, setAllBatchManager] = useState([]);
-// // //     const [batchManager, setBatchManager] = useState([]);
-// // //     const [allBatchFaculty, setAllBatchFaculty] = useState([]);
-// // //     const [batchFaculty, setBatchFaculty] = useState([]);
-// // //     const [allStudents, setAllStudents] = useState([]); // Store all students
-// // //     const [students, setStudents] = useState([]); // Store filtered students
-// // //     const [centers, setCenters] = useState([]);
-// // //     const [loading, setLoading] = useState(true);
-
-// // //     const [selectedBatchManagers, setSelectedBatchManagers] = useState([]);
-// // //     const [selectedBatchFaculty, setSelectedBatchFaculty] = useState([]);
-// // //     const [selectedCurriculums, setSelectedCurriculums] = useState([]);
-// // //     const [selectedCenters, setSelectedCenters] = useState([]);
-// // //     const [selectedStudents, setSelectedStudents] = useState([]);
-
-// // //     useEffect(() => {
-// // //         const fetchData = async () => {
-// // //             const fetchCollection = async (collectionName, setter) => {
-// // //                 const snapshot = await getDocs(collection(db, collectionName));
-// // //                 setter(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-// // //             };
-
-// // //             await fetchCollection("Instructor", setAllBatchFaculty);
-// // //             await fetchCollection("Instructor", setAllBatchManager); // Fetch all managers
-// // //             await fetchCollection("Curriculum", setCurriculums);
-// // //             await fetchCollection("student", setAllStudents); // Fetch all students
-// // //             await fetchCollection("Centers", setCenters);
-// // //             setLoading(false);
-// // //         };
-
-// // //         fetchData();
-
-// // //         if (batch) {
-// // //             setBatchName(batch.name);
-// // //             setBatchDuration(batch.duration);
-// // //             setSelectedBatchManagers(batch.managers || []);
-// // //             setSelectedBatchFaculty(batch.faculty || []);
-// // //             setSelectedCurriculums(batch.curriculums || []);
-// // //             setSelectedCenters(batch.centers || []);
-// // //             setSelectedStudents(batch.students || []);
-// // //         }
-// // //     }, [batch]);
-
-// // //     useEffect(() => {
-// // //         filterFacultyByCenter();
-// // //         filterManagerByCenter();
-// // //         filterStudentByCenter();
-// // //     }, [selectedCenters, allBatchFaculty, allBatchManager, allStudents]);
-
-// // //     const filterFacultyByCenter = () => {
-// // //         if (selectedCenters.length === 0) {
-// // //             setBatchFaculty(allBatchFaculty);
-// // //             return;
-// // //         }
-
-// // //         const filteredFaculty = allBatchFaculty.filter(faculty => {
-// // //             return selectedCenters.some(centerId => {
-// // //                 const center = centers.find(c => c.id === centerId);
-// // //                 return center && faculty.center === center.name;
-// // //             });
-// // //         });
-// // //         setBatchFaculty(filteredFaculty);
-// // //     };
-
-// // //     const filterManagerByCenter = () => {
-// // //         if (selectedCenters.length === 0) {
-// // //             setBatchManager(allBatchManager);
-// // //             return;
-// // //         }
-
-// // //         const filteredManager = allBatchManager.filter(manager => {
-// // //             return selectedCenters.some(centerId => {
-// // //                 const center = centers.find(c => c.id === centerId);
-// // //                 return center && manager.center === center.name;
-// // //             });
-// // //         });
-// // //         setBatchManager(filteredManager);
-// // //     };
-
-// // //     const filterStudentByCenter = () => {
-// // //         if (selectedCenters.length === 0) {
-// // //             setStudents(allStudents);
-// // //             return;
-// // //         }
-
-// // //         const filteredStudents = allStudents.filter(student => {
-// // //             if (!student.course_details || student.course_details.length === 0) {
-// // //                 return false; // Skip students without course details
-// // //             }
-
-// // //             return student.course_details.some(course => {
-// // //                 return selectedCenters.some(centerId => {
-// // //                     const center = centers.find(c => c.id === centerId);
-// // //                     return center && course.center === center.name;
-// // //                 });
-// // //             });
-// // //         });
-// // //         setStudents(filteredStudents);
-// // //     };
-
-// // //     // const filterStudentByCenter = () => {
-// // //     //     if (selectedCenters.length === 0) {
-// // //     //         setStudents(allStudents);
-// // //     //         return;
-// // //     //     }
-
-// // //     //     const filteredStudents = allStudents.filter(student => {
-// // //     //         return selectedCenters.some(centerId => {
-// // //     //             const center = centers.find(c => c.id === centerId);
-// // //     //             return center && student.center === center.name;
-// // //     //         });
-// // //     //     });
-// // //     //     setStudents(filteredStudents);
-// // //     // };
-
-// // //     const handleSelection = (id, setter, selected) => {
-// // //         setter(prev => prev.includes(id) ? prev.filter(itemId => itemId !== id) : [...prev, id]);
-// // //     };
-
-// // //     const handleStudentSelection = (studentId) => {
-// // //         setSelectedStudents(prev =>
-// // //             prev.includes(studentId) ? prev.filter(id => id !== studentId) : [...prev, studentId]
-// // //         );
-// // //     };
-
-// // //     const addSelectedStudentsToBatch = () => {
-// // //         alert("Students added to batch!");
-// // //     };
-
-// // //     const onSubmitBatch = async (e) => {
-// // //         e.preventDefault();
-// // //         if (!batchName.trim() || !batchDuration.trim()) {
-// // //             alert("Please fill in all required fields");
-// // //             return;
-// // //         }
-
-// // //         try {
-// // //             let batchId;
-// // //             const batchData = {
-// // //                 name: batchName,
-// // //                 duration: batchDuration,
-// // //                 managers: selectedBatchManagers,
-// // //                 faculty: selectedBatchFaculty,
-// // //                 curriculums: selectedCurriculums,
-// // //                 students: selectedStudents,
-// // //                 centers: selectedCenters
-// // //             };
-
-// // //             if (batch) {
-// // //                 const batchDoc = doc(db, "Batch", batch.id);
-// // //                 await updateDoc(batchDoc, batchData);
-// // //                 batchId = batch.id;
-// // //             } else {
-// // //                 const docRef = await addDoc(collection(db, "Batch"), batchData);
-// // //                 batchId = docRef.id;
-// // //             }
-
-// // //             alert("Batch successfully saved!");
-// // //             setBatchName("");
-// // //             setBatchDuration("");
-// // //             setSelectedBatchManagers([]);
-// // //             setSelectedBatchFaculty([]);
-// // //             setSelectedCurriculums([]);
-// // //             setSelectedCenters([]);
-// // //             setSelectedStudents([]);
-// // //             toggleSidebar();
-// // //             navigate(`/batches`);
-// // //         } catch (err) {
-// // //             console.error("Error adding document:", err);
-// // //             alert(`Error adding batch: ${err.message}`);
-// // //         }
-// // //     };
-
-// // //     return (
-// // //         <div className={`fixed top-0 right-0 h-full bg-white w-2/5 shadow-lg transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'} p-4 overflow-y-auto`}>
-
-// // //             <button type="button" className="close-button" onClick={toggleSidebar}>Back</button>
-// // //             <h1>{batch ? "Edit Batch" : "Create Batch"}</h1>
-// // //             <form onSubmit={onSubmitBatch}>
-// // //                 {/* ... (rest of your form) ... */}
-// // //                 <div className="mb-3">
-// // //                     <label>Batch Name</label>
-// // //                     <input type="text" value={batchName} onChange={(e) => setBatchName(e.target.value)} required />
-// // //                 </div>
-// // //                 <div className="mb-3">
-// // //                     <label>Batch Duration</label>
-// // //                     <input type="text" value={batchDuration} onChange={(e) => setBatchDuration(e.target.value)} required />
-// // //                 </div>
-
-// // //                 <div className="mb-3">
-// // //                     <label>Select Curriculum</label>
-// // //                     {curriculums.map(curriculum => (<div key={curriculum.id}>
-// // //                         <input type="checkbox" checked={selectedCurriculums.includes(curriculum.id)} onChange={() => handleSelection(curriculum.id, setSelectedCurriculums, selectedCurriculums)} />
-// // //                         {curriculum.name}
-// // //                     </div>))}
-// // //                 </div>
-// // //                 <div className="mb-3">
-// // //                     <label>Select Center</label>
-// // //                     {centers.map(center => (
-// // //                         <div key={center.id}>
-// // //                             <input type="checkbox" checked={selectedCenters.includes(center.id)} onChange={() => handleSelection(center.id, setSelectedCenters, selectedCenters)} />
-// // //                             {center.name}
-// // //                         </div>
-// // //                     ))}
-// // //                 </div>
-
-// // //                 <div className="mb-3">
-// // //                     <label>Batch Manager</label>
-// // //                     {batchManager.map(instructor => (
-// // //                         <div key={instructor.id}>
-// // //                             <input type="checkbox" checked={selectedBatchManagers.includes(instructor.id)} onChange={() => handleSelection(instructor.id, setSelectedBatchManagers, selectedBatchManagers)} />
-// // //                             {instructor.f_name} {instructor.l_name}
-// // //                         </div>))}
-// // //                 </div>
-
-
-// // //                 <div className="mb-3">
-// // //                     <label>Batch Faculty</label>
-// // //                     {batchFaculty.map(instructor => (
-// // //                         <div key={instructor.id}>
-// // //                             <input type="checkbox" checked={selectedBatchFaculty.includes(instructor.id)} onChange={() => handleSelection(instructor.id, setSelectedBatchFaculty, selectedBatchFaculty)} />
-// // //                             {instructor.f_name}
-// // //                         </div>
-// // //                     ))}
-// // //                 </div>
-
-// // //                 <div className="mb-3">
-// // //                     <label>Add Students</label>
-// // //                     <table className="table">
-// // //                         <thead>
-// // //                             <tr>
-// // //                                 <th>Sr No</th>
-// // //                                 <th>Student Name</th>
-// // //                                 <th>Enrollment Date</th>
-// // //                                 <th>Course Name</th>
-// // //                                 <th>Select</th>
-// // //                             </tr>
-// // //                         </thead>
-
-
-// // //                         <tbody>
-// // //                             {loading ? (
-// // //                                 <tr>
-// // //                                     <td colSpan="5" className="text-center py-4">Loading...</td>
-// // //                                 </tr>
-// // //                             ) : students.length > 0 ? (
-// // //                                 students.flatMap((student, index) =>
-// // //                                     (student.course_details || [{}]).map((course, courseIndex) => (
-// // //                                         <tr key={`${student.id || index}-${courseIndex}`}>
-// // //                                             <td>{index + 1}</td>
-// // //                                             <td>{student.first_name} {student.last_name}</td>
-// // //                                             <td>{student.enrollment_date || "N/A"}</td>
-// // //                                             <td>{course.courseName || "No Course Assigned"}</td>
-// // //                                             <td>
-// // //                                                 <input
-// // //                                                     type="checkbox"
-// // //                                                     checked={selectedStudents.includes(student.id)}
-// // //                                                     onChange={() => handleStudentSelection(student.id)}
-// // //                                                 />
-// // //                                             </td>
-// // //                                         </tr>
-// // //                                     ))
-// // //                                 )
-// // //                             ) : (
-// // //                                 <tr>
-// // //                                     <td colSpan="5" className="text-center py-4">No students found</td>
-// // //                                 </tr>
-// // //                             )}
-// // //                         </tbody>
-
-// // //                     </table>
-// // //                     <button
-// // //                         type="button"
-// // //                         className="bg-green-500 text-white px-4 py-2 rounded-lg mt-3"
-// // //                         onClick={addSelectedStudentsToBatch}
-// // //                     >
-// // //                         Add Students
-// // //                     </button>
-// // //                 </div>
-
-// // //                 <button type="submit">{batch ? "Update" : "Create"}</button>
-// // //             </form>
-// // //         </div >
-// // //     );
-// // // };
-// // // export default CreateBatches;
-
-
-// // // import React, { useState } from 'react';
-// // // import './CreateBatch.css';
-// // // import { db } from '../../../../config/firebase'; // Adjust path
-// // // import { collection, addDoc } from 'firebase/firestore';
-
-// // // const CreateBatch = ({ onClose, onBatchCreated }) => {
-// // //   const [batchName, setBatchName] = useState('');
-// // //   const [course, setCourse] = useState('');
-// // //   const [curriculum, setCurriculum] = useState('');
-// // //   const [startDate, setStartDate] = useState('');
-// // //   const [endDate, setEndDate] = useState('');
-// // //   const [batchManager, setBatchManager] = useState('');
-// // //   const [additionalBatchManager, setAdditionalBatchManager] = useState('');
-
-// // //   const handleSubmit = async (e) => {
-// // //     e.preventDefault();
-// // //     try {
-// // //       const batchData = {
-// // //         batchName,
-// // //         course,
-// // //         curriculum,
-// // //         startDate,
-// // //         endDate,
-// // //         batchManager,
-// // //         additionalBatchManager,
-// // //       };
-// // //       await addDoc(collection(db, 'Batch'), batchData);
-// // //       onBatchCreated(); // Notify parent component
-// // //       onClose(); // Close the form
-// // //     } catch (error) {
-// // //       console.error('Error creating batch:', error);
-// // //       alert('Failed to create batch.');
-// // //     }
-// // //   };
-
-// // //   return (
-// // //     <div className="create-batch-form-overlay">
-// // //       <div className="create-batch-form">
-// // //         <div className="form-header">
-// // //           <div className="form-title">Create Batch</div>
-// // //           <button className="close-button" onClick={onClose}>
-// // //             X
-// // //           </button>
-// // //         </div>
-// // //         <form onSubmit={handleSubmit} className="form-content">
-// // //           <div className="form-group">
-// // //             <label htmlFor="batchName">Batch name*</label>
-// // //             <input
-// // //               type="text"
-// // //               id="batchName"
-// // //               placeholder="Enter batch name"
-// // //               value={batchName}
-// // //               onChange={(e) => setBatchName(e.target.value)}
-// // //               required
-// // //             />
-// // //           </div>
-// // //           <div className="form-group">
-// // //             <label htmlFor="course">Course *</label>
-// // //             <select
-// // //               id="course"
-// // //               value={course}
-// // //               onChange={(e) => setCourse(e.target.value)}
-// // //               required
-// // //             >
-// // //               <option value="">Select course</option>
-// // //               {/* Add your course options here */}
-// // //             </select>
-// // //           </div>
-// // //           <div className="form-group">
-// // //             <label htmlFor="curriculum">Curriculum *</label>
-// // //             <select
-// // //               id="curriculum"
-// // //               value={curriculum}
-// // //               onChange={(e) => setCurriculum(e.target.value)}
-// // //               required
-// // //             >
-// // //               <option value="">Add Curriculum</option>
-// // //               {/* Add your curriculum options here */}
-// // //             </select>
-// // //           </div>
-// // //           <div className="form-group">
-// // //             <label htmlFor="startDate">Start date</label>
-// // //             <input
-// // //               type="date"
-// // //               id="startDate"
-// // //               value={startDate}
-// // //               onChange={(e) => setStartDate(e.target.value)}
-// // //             />
-// // //           </div>
-// // //           <div className="form-group">
-// // //             <label htmlFor="endDate">End date</label>
-// // //             <input
-// // //               type="date"
-// // //               id="endDate"
-// // //               value={endDate}
-// // //               onChange={(e) => setEndDate(e.target.value)}
-// // //             />
-// // //           </div>
-// // //           <div className="form-group">
-// // //             <label htmlFor="batchManager">Batch manager *</label>
-// // //             <select
-// // //               id="batchManager"
-// // //               value={batchManager}
-// // //               onChange={(e) => setBatchManager(e.target.value)}
-// // //               required
-// // //             >
-// // //               <option value="">Select the batch manager</option>
-// // //               {/* Add your batch manager options here */}
-// // //             </select>
-// // //           </div>
-// // //           <div className="form-group">
-// // //             <label htmlFor="additionalBatchManager">Additional batch manager</label>
-// // //             <select
-// // //               id="additionalBatchManager"
-// // //               value={additionalBatchManager}
-// // //               onChange={(e) => setAdditionalBatchManager(e.target.value)}
-// // //             >
-// // //               <option value="">Select the additional batch manager</option>
-// // //               {/* Add your additional batch manager options here */}
-// // //             </select>
-// // //           </div>
-// // //           <div className="form-footer">
-// // //             <button type="button" className="cancel-button" onClick={onClose}>
-// // //               Cancel
-// // //             </button>
-// // //             <button type="submit" className="create-button">
-// // //               Create Batch
-// // //             </button>
-// // //           </div>
-// // //         </form>
-// // //       </div>
-// // //     </div>
-// // //   );
-// // // };
-
-// // // export default CreateBatch;
-
-
-
-// // // import React, { useState, useEffect } from 'react';
-// // // import './CreateBatch.css';
-// // // import { db } from '../../../../config/firebase';
-// // // import { collection, addDoc, getDocs } from 'firebase/firestore';
-
-// // // const CreateBatch = ({ onClose, onBatchCreated }) => {
-// // //     const [batchName, setBatchName] = useState('');
-// // //     const [course, setCourse] = useState('');
-// // //     const [curriculum, setCurriculum] = useState('');
-// // //     const [startDate, setStartDate] = useState('');
-// // //     const [endDate, setEndDate] = useState('');
-// // //     const [batchManager, setBatchManager] = useState('');
-// // //     const [additionalBatchManager, setAdditionalBatchManager] = useState('');
-// // //     const [courses, setCourses] = useState(); // State to store courses
-// // //     const [curriculums, setCurriculums] = useState();
-
-// // //     useEffect(() => {
-// // //         // Fetch courses from Firebase
-// // //         const fetchCourses = async () => {
-// // //             try {
-// // //                 const querySnapshot = await getDocs(collection(db, 'Course'));
-// // //                 const courseList = querySnapshot.docs.map((doc) => ({
-// // //                     id: doc.id,
-// // //                     ...doc.data(),
-// // //                 }));
-// // //                 setCourses(courseList);
-// // //             } catch (error) {
-// // //                 console.error('Error fetching courses:', error);
-// // //                 alert('Error fetching courses. Please try again.');
-// // //             }
-// // //         };
-
-// // //         fetchCourses();
-// // //     },); // Run only once on component mount
-
-
-// // //     useEffect(() => {
-// // //         // Fetch courses from Firebase
-// // //         const fetchCurriculum = async () => {
-// // //             try {
-// // //                 const querySnapshot = await getDocs(collection(db, 'Curriculum'));
-// // //                 const curriculumList = querySnapshot.docs.map((doc) => ({
-// // //                     id: doc.id,
-// // //                     ...doc.data(),
-// // //                 }));
-// // //                 setCurriculums(curriculumList);
-// // //             } catch (error) {
-// // //                 console.error('Error fetching curriculum:', error);
-// // //                 alert('Error fetching curriculum. Please try again.');
-// // //             }
-// // //         };
-
-// // //         fetchCurriculum();
-// // //     },); // Run only once on component mount
-
-// // //     const handleSubmit = async (e) => {
-// // //         e.preventDefault();
-// // //         try {
-// // //             const batchData = {
-// // //                 batchName,
-// // //                 course,
-// // //                 curriculum,
-// // //                 startDate,
-// // //                 endDate,
-// // //                 batchManager,
-// // //                 additionalBatchManager,
-// // //             };
-// // //             await addDoc(collection(db, 'Batch'), batchData);
-// // //             await addDoc(collection(db, 'Curriculum'), batchData);
-// // //             onBatchCreated();
-// // //             onClose();
-// // //         } catch (error) {
-// // //             console.error('Error creating batch:', error);
-// // //             alert('Failed to create batch.');
-// // //         }
-// // //     };
-
-// // //     return (
-// // //         <div className="create-batch-form-overlay">
-// // //             <div className="create-batch-form">
-// // //                 <div className="form-header">
-// // //                     <div className="form-title">Create Batch</div>
-// // //                     <button className="close-button" onClick={onClose}>
-// // //                         X
-// // //                     </button>
-// // //                 </div>
-// // //                 <form onSubmit={handleSubmit} className="form-content">
-// // //                     <div className="form-group">
-// // //                         <label htmlFor="batchName">Batch name*</label>
-// // //                         <input
-// // //                             type="text"
-// // //                             id="batchName"
-// // //                             placeholder="Enter batch name"
-// // //                             value={batchName}
-// // //                             onChange={(e) => setBatchName(e.target.value)}
-// // //                             required
-// // //                         />
-// // //                     </div>
-// // //                     <div className="form-group">
-// // //                         <label htmlFor="course">Course *</label>
-// // //                         <select
-// // //                             id="course"
-// // //                             value={course}
-// // //                             onChange={(e) => setCourse(e.target.value)}
-// // //                             required
-// // //                         >
-// // //                             <option value="">Select course</option>
-// // //                             {courses &&
-// // //                                 courses.map((course) => (
-// // //                                     <option key={course.id} value={course.id}>
-// // //                                         {course.courseName}
-// // //                                     </option>
-// // //                                 ))}
-// // //                         </select>
-// // //                         {/* <select
-// // //               id="course"
-// // //               value={course}
-// // //               onChange={(e) => setCourse(e.target.value)}
-// // //               required
-// // //             >
-// // //               <option value="">Select course</option>
-// // //               {courses.map((course) => (
-// // //                 <option key={course.id} value={course.id}>
-// // //                   {course.courseName}
-// // //                 </option>
-// // //               ))}
-// // //             </select> */}
-// // //                     </div>
-// // //                     <div className="form-group">
-// // //                         <label htmlFor="curriculum">Curriculum *</label>
-// // //                         <select
-// // //                             id="curriculum"
-// // //                             value={curriculum}
-// // //                             onChange={(e) => setCurriculum(e.target.value)}
-// // //                             required
-// // //                         >
-// // //                             <option value="">Select Curriculum</option>
-// // //                             {curriculum &&
-// // //                                 curriculum.map((curriculum) => (
-// // //                                     <option key={curriculum.id} value={curriculum.id}>
-// // //                                         {curriculum.name}
-// // //                                     </option>
-// // //                                 ))}
-// // //                         </select>
-// // //                         {/* <select
-// // //                             id="curriculum"
-// // //                             value={curriculum}
-// // //                             onChange={(e) => setCurriculum(e.target.value)}
-// // //                             required
-// // //                         >
-// // //                             <option value="">Add Curriculum</option> */}
-// // //                         {/* Add your curriculum options here */}
-// // //                         {/* </select> */}
-// // //                     </div>
-// // //                     <div className="form-group">
-// // //                         <label htmlFor="startDate">Start date</label>
-// // //                         <input
-// // //                             type="date"
-// // //                             id="startDate"
-// // //                             value={startDate}
-// // //                             onChange={(e) => setStartDate(e.target.value)}
-// // //                         />
-// // //                     </div>
-// // //                     <div className="form-group">
-// // //                         <label htmlFor="endDate">End date</label>
-// // //                         <input
-// // //                             type="date"
-// // //                             id="endDate"
-// // //                             value={endDate}
-// // //                             onChange={(e) => setEndDate(e.target.value)}
-// // //                         />
-// // //                     </div>
-// // //                     <div className="form-group">
-// // //                         <label htmlFor="batchManager">Batch manager *</label>
-// // //                         <select
-// // //                             id="batchManager"
-// // //                             value={batchManager}
-// // //                             onChange={(e) => setBatchManager(e.target.value)}
-// // //                             required
-// // //                         >
-// // //                             <option value="">Select the batch manager</option>
-// // //                             {/* Add your batch manager options here */}
-// // //                         </select>
-// // //                     </div>
-// // //                     <div className="form-group">
-// // //                         <label htmlFor="additionalBatchManager">
-// // //                             Additional batch manager
-// // //                         </label>
-// // //                         <select
-// // //                             id="additionalBatchManager"
-// // //                             value={additionalBatchManager}
-// // //                             onChange={(e) => setAdditionalBatchManager(e.target.value)}
-// // //                         >
-// // //                             <option value="">Select the additional batch manager</option>
-// // //                             {/* Add your additional batch manager options here */}
-// // //                         </select>
-// // //                     </div>
-// // //                     <div className="form-footer">
-// // //                         <button type="button" className="cancel-button" onClick={onClose}>
-// // //                             Cancel
-// // //                         </button>
-// // //                         <button type="submit" className="create-button">
-// // //                             Create Batch
-// // //                         </button>
-// // //                     </div>
-// // //                 </form>
-// // //             </div>
-// // //         </div>
-// // //     );
-// // // };
-
-// // // export default CreateBatch;
-
-
-// // import React, { useState, useEffect } from 'react';
-// // import './CreateBatch.css';
-// // import { db } from '../../../../config/firebase';
-// // import { collection, addDoc, getDocs } from 'firebase/firestore';
-
-// // const CreateBatch = ({ onClose, onBatchCreated }) => {
-// //     const [batchName, setBatchName] = useState('');
-// //     const [course, setCourse] = useState('');
-// //     const [curriculum, setCurriculum] = useState('');
-// //     const [startDate, setStartDate] = useState('');
-// //     const [endDate, setEndDate] = useState('');
-// //     const [batchManager, setBatchManager] = useState('');
-// //     const [additionalBatchManager, setAdditionalBatchManager] = useState('');
-// //     const [courses, setCourses] = useState([]); // Initialize as empty array
-// //     const [curriculums, setCurriculums] = useState([]); // Initialize as empty array
-
-// //     useEffect(() => {
-// //         const fetchCourses = async () => {
-// //             try {
-// //                 const querySnapshot = await getDocs(collection(db, 'Course'));
-// //                 const courseList = querySnapshot.docs.map((doc) => ({
-// //                     id: doc.id,
-// //                     ...doc.data(),
-// //                 }));
-// //                 setCourses(courseList);
-// //             } catch (error) {
-// //                 console.error('Error fetching courses:', error);
-// //                 alert('Error fetching courses. Please try again.');
-// //             }
-// //         };
-
-// //         const fetchCurriculum = async () => {
-// //             try {
-// //                 const querySnapshot = await getDocs(collection(db, 'Curriculum'));
-// //                 const curriculumList = querySnapshot.docs.map((doc) => ({
-// //                     id: doc.id,
-// //                     ...doc.data(),
-// //                 }));
-// //                 setCurriculums(curriculumList);
-// //             } catch (error) {
-// //                 console.error('Error fetching curriculum:', error);
-// //                 alert('Error fetching curriculum. Please try again.');
-// //             }
-// //         };
-
-// //         fetchCourses();
-// //         fetchCurriculum();
-// //     }, []);
-
-// //     const handleSubmit = async (e) => {
-// //         e.preventDefault();
-// //         try {
-// //             const batchData = {
-// //                 batchName,
-// //                 course,
-// //                 curriculum,
-// //                 startDate,
-// //                 endDate,
-// //                 batchManager,
-// //                 additionalBatchManager,
-// //             };
-// //             await addDoc(collection(db, 'Batch'), batchData);
-// //             onBatchCreated();
-// //             onClose();
-// //         } catch (error) {
-// //             console.error('Error creating batch:', error);
-// //             alert('Failed to create batch.');
-// //         }
-// //     };
-
-// //     return (
-// //         <div className="create-batch-form-overlay">
-// //             <div className="create-batch-form">
-// //                 <div className="form-header">
-// //                     <div className="form-title">Create Batch</div>
-// //                     <button className="close-button" onClick={onClose}>
-// //                         X
-// //                     </button>
-// //                 </div>
-// //                 <form onSubmit={handleSubmit} className="form-content">
-// //                     <div className="form-group">
-// //                         <label htmlFor="batchName">Batch name*</label>
-// //                         <input
-// //                             type="text"
-// //                             id="batchName"
-// //                             placeholder="Enter batch name"
-// //                             value={batchName}
-// //                             onChange={(e) => setBatchName(e.target.value)}
-// //                             required
-// //                         />
-// //                     </div>
-// //                     <div className="form-group">
-// //                         <label htmlFor="course">Course *</label>
-// //                         <select
-// //                             id="course"
-// //                             value={course}
-// //                             onChange={(e) => setCourse(e.target.value)}
-// //                             required
-// //                         >
-// //                             <option value="">Select course</option>
-// //                             {courses.map((course) => (
-// //                                 <option key={course.id} value={course.id}>
-// //                                     {course.courseName}
-// //                                 </option>
-// //                             ))}
-// //                         </select>
-// //                     </div>
-// //                     <div className="form-group">
-// //                         <label htmlFor="curriculum">Curriculum *</label>
-// //                         <select
-// //                             id="curriculum"
-// //                             value={curriculum}
-// //                             onChange={(e) => setCurriculum(e.target.value)}
-// //                             required
-// //                         >
-// //                             <option value="">Select Curriculum</option>
-// //                             {curriculums.map((curr) => ( // Corrected mapping
-// //                                 <option key={curr.id} value={curr.id}>
-// //                                     {curr.name}
-// //                                 </option>
-// //                             ))}
-// //                         </select>
-// //                     </div>
-// //                     <div className="form-group">
-// //                         <label htmlFor="startDate">Start date</label>
-// //                         <input
-// //                             type="date"
-// //                             id="startDate"
-// //                             value={startDate}
-// //                             onChange={(e) => setStartDate(e.target.value)}
-// //                         />
-// //                     </div>
-// //                     <div className="form-group">
-// //                         <label htmlFor="endDate">End date</label>
-// //                         <input
-// //                             type="date"
-// //                             id="endDate"
-// //                             value={endDate}
-// //                             onChange={(e) => setEndDate(e.target.value)}
-// //                         />
-// //                     </div>
-// //                     <div className="form-group">
-// //                         <label htmlFor="batchManager">Batch manager *</label>
-// //                         <select
-// //                             id="batchManager"
-// //                             value={batchManager}
-// //                             onChange={(e) => setBatchManager(e.target.value)}
-// //                             required
-// //                         >
-// //                             <option value="">Select the batch manager</option>
-// //                             {/* Add your batch manager options here */}
-// //                         </select>
-// //                     </div>
-// //                     <div className="form-group">
-// //                         <label htmlFor="additionalBatchManager">
-// //                             Additional batch manager
-// //                         </label>
-// //                         <select
-// //                             id="additionalBatchManager"
-// //                             value={additionalBatchManager}
-// //                             onChange={(e) => setAdditionalBatchManager(e.target.value)}
-// //                         >
-// //                             <option value="">Select the additional batch manager</option>
-// //                             {/* Add your additional batch manager options here */}
-// //                         </select>
-// //                     </div>
-// //                     <div className="form-footer">
-// //                         <button type="button" className="cancel-button" onClick={onClose}>
-// //                             Cancel
-// //                         </button>
-// //                         <button type="submit" className="create-button">
-// //                             Create Batch
-// //                         </button>
-// //                     </div>
-// //                 </form>
-// //             </div>
-// //         </div>
-// //     );
-// // };
-
-// // export default CreateBatch;
-
-
-
-// import React, { useState, useEffect } from 'react';
-// import './CreateBatch.css';
-// import { db } from '../../../../config/firebase';
-// import { collection, addDoc, getDocs } from 'firebase/firestore';
-
-// const CreateBatch = ({ onClose, onBatchCreated }) => {
-//     const [batchName, setBatchName] = useState('');
-//     const [course, setCourse] = useState('');
-//     const [curriculum, setCurriculum] = useState('');
-//     const [startDate, setStartDate] = useState('');
-//     const [endDate, setEndDate] = useState('');
-//     const [batchManager, setBatchManager] = useState('');
-//     const [additionalBatchManager, setAdditionalBatchManager] = useState('');
-//     const [courses, setCourses] = useState();
-//     const [curriculums, setCurriculums] = useState();
-//     const [instructors, setInstructors] = useState(); // New state for instructors
-
-//     useEffect(() => {
-//         const fetchCourses = async () => {
-//             try {
-//                 const querySnapshot = await getDocs(collection(db, 'Course'));
-//                 const courseList = querySnapshot.docs.map((doc) => ({
-//                     id: doc.id,
-//                     ...doc.data(),
-//                 }));
-//                 setCourses(courseList);
-//             } catch (error) {
-//                 console.error('Error fetching courses:', error);
-//                 alert('Error fetching courses. Please try again.');
-//             }
-//         };
-
-//         const fetchCurriculum = async () => {
-//             try {
-//                 const querySnapshot = await getDocs(collection(db, 'Curriculum'));
-//                 const curriculumList = querySnapshot.docs.map((doc) => ({
-//                     id: doc.id,
-//                     ...doc.data(),
-//                 }));
-//                 setCurriculums(curriculumList);
-//             } catch (error) {
-//                 console.error('Error fetching curriculum:', error);
-//                 alert('Error fetching curriculum. Please try again.');
-//             }
-//         };
-
-//         const fetchInstructors = async () => {
-//             try {
-//                 const querySnapshot = await getDocs(collection(db, 'Instructor'));
-//                 const instructorList = querySnapshot.docs.map((doc) => ({
-//                     id: doc.id,
-//                     ...doc.data(),
-//                 }));
-//                 setInstructors(instructorList);
-//             } catch (error) {
-//                 console.error('Error fetching instructors:', error);
-//                 alert('Error fetching instructors. Please try again.');
-//             }
-//         };
-
-//         fetchCourses();
-//         fetchCurriculum();
-//         fetchInstructors(); // Fetch instructors as well
-//     },);
-
-//     const handleSubmit = async (e) => {
-//         e.preventDefault();
-//         try {
-//             const batchData = {
-//                 batchName,
-//                 course,
-//                 curriculum,
-//                 startDate,
-//                 endDate,
-//                 batchManager,
-//                 additionalBatchManager,
-//             };
-//             await addDoc(collection(db, 'Batch'), batchData);
-//             onBatchCreated();
-//             onClose();
-//         } catch (error) {
-//             console.error('Error creating batch:', error);
-//             alert('Failed to create batch.');
-//         }
-//     };
-
-//     return (
-//         <div className="create-batch-form-overlay">
-//             <div className="create-batch-form">
-//                 <div className="form-header">
-//                     <div className="form-title">Create Batch</div>
-//                     <button className="close-button" onClick={onClose}>
-//                         X
-//                     </button>
-//                 </div>
-//                 <form onSubmit={handleSubmit} className="form-content">
-//                     <div className="form-group">
-//                         <label htmlFor="batchName">Batch name*</label>
-//                         <input
-//                             type="text"
-//                             id="batchName"
-//                             placeholder="Enter batch name"
-//                             value={batchName}
-//                             onChange={(e) => setBatchName(e.target.value)}
-//                             required
-//                         />
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="course">Course *</label>
-//                         <select
-//                             id="course"
-//                             value={course}
-//                             onChange={(e) => setCourse(e.target.value)}
-//                             required
-//                         >
-//                             <option value="">Select course</option>
-//                             {courses.map((course) => (
-//                                 <option key={course.id} value={course.id}>
-//                                     {course.courseName}
-//                                 </option>
-//                             ))}
-//                         </select>
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="curriculum">Curriculum *</label>
-//                         <select
-//                             id="curriculum"
-//                             value={curriculum}
-//                             onChange={(e) => setCurriculum(e.target.value)}
-//                             required
-//                         >
-//                             <option value="">Select Curriculum</option>
-//                             {curriculums.map((curr) => (
-//                                 <option key={curr.id} value={curr.id}>
-//                                     {curr.name}
-//                                 </option>
-//                             ))}
-//                         </select>
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="startDate">Start date</label>
-//                         <input
-//                             type="date"
-//                             id="startDate"
-//                             value={startDate}
-//                             onChange={(e) => setStartDate(e.target.value)}
-//                         />
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="endDate">End date</label>
-//                         <input
-//                             type="date"
-//                             id="endDate"
-//                             value={endDate}
-//                             onChange={(e) => setEndDate(e.target.value)}
-//                         />
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="batchManager">Batch manager *</label>
-//                         <select
-//                             id="batchManager"
-//                             value={batchManager}
-//                             onChange={(e) => setBatchManager(e.target.value)}
-//                             required
-//                         >
-//                             <option value="">Select the batch manager</option>
-//                             {instructors.map((instructor) => ( // Populate batch manager
-//                                 <option key={instructor.id} value={instructor.id}>
-//                                     {instructor.name}
-//                                 </option>
-//                             ))}
-//                         </select>
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="additionalBatchManager">
-//                             Additional batch manager
-//                         </label>
-//                         <select
-//                             id="additionalBatchManager"
-//                             value={additionalBatchManager}
-//                             onChange={(e) => setAdditionalBatchManager(e.target.value)}
-//                         >
-//                             <option value="">Select the additional batch manager</option>
-//                             {/* You can populate this dropdown similarly if needed */}
-//                         </select>
-//                     </div>
-//                     <div className="form-footer">
-//                         <button type="button" className="cancel-button" onClick={onClose}>
-//                             Cancel
-//                         </button>
-//                         <button type="submit" className="create-button">
-//                             Create Batch
-//                         </button>
-//                     </div>
-//                 </form>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default CreateBatch;
-
-// import React, { useState, useEffect } from 'react';
-// import './Batches.css';
-// import CreateBatch from './CreateBatch';
-// import { db } from '../../../../config/firebase';
-// import { collection, addDoc, onSnapshot, getDocs } from 'firebase/firestore'; // Import getDocs
-
-// const Batches = () => {
-//     const [isFormOpen, setIsFormOpen] = useState(false);
-//     const [batches, setBatches] = useState();
-//     const [courses, setCourses] = useState(); // New state for courses
-
-//     useEffect(() => {
-//         // Fetch batches
-//         const unsubscribeBatches = onSnapshot(collection(db, 'Batch'), (snapshot) => {
-//             const batchList = snapshot.docs.map((doc) => ({
-//                 id: doc.id,
-//                 ...doc.data(),
-//             }));
-//             setBatches(batchList);
-//         });
-
-//         // Fetch courses
-//         const fetchCourses = async () => {
-//             try {
-//                 const querySnapshot = await getDocs(collection(db, 'Course'));
-//                 const courseList = querySnapshot.docs.map((doc) => ({
-//                     id: doc.id,
-//                     ...doc.data(),
-//                 }));
-//                 setCourses(courseList);
-//             } catch (error) {
-//                 console.error('Error fetching courses:', error);
-//             }
-//         };
-
-//         fetchCourses(); // Call fetchCourses
-//         return () => unsubscribeBatches();
-//     },);
-
-//         const fetchCurriculum = async () => {
-//             try {
-//                 const querySnapshot = await getDocs(collection(db, 'Curriculum'));
-//                 const curriculumList = querySnapshot.docs.map((doc) => ({
-//                     id: doc.id,
-//                     ...doc.data(),
-//                 }));
-//                 setCurriculums(curriculumList);
-//             } catch (error) {
-//                 console.error('Error fetching curriculum:', error);
-//                 alert('Error fetching curriculum. Please try again.');
-//             }
-//         };
-
-//         const fetchInstructors = async () => {
-//             try {
-//                 const querySnapshot = await getDocs(collection(db, 'Instructor'));
-//                 const instructorList = querySnapshot.docs.map((doc) => ({
-//                     id: doc.id,
-//                     ...doc.data(),
-//                 }));
-//                 setInstructors(instructorList);
-//             } catch (error) {
-//                 console.error('Error fetching instructors:', error);
-//                 alert('Error fetching instructors. Please try again.');
-//             }
-//         };
-
-//         fetchCourses();
-//         fetchCurriculum();
-//         fetchInstructors();
-//     },);
-
-//     const handleSubmit = async (e) => {
-//         e.preventDefault();
-//         try {
-//             const batchData = {
-//                 batchName,
-//                 course,
-//                 curriculum,
-//                 startDate,
-//                 endDate,
-//                 batchManager,
-//                 additionalBatchManager,
-//             };
-//             await addDoc(collection(db, 'Batch'), batchData);
-//             onBatchCreated();
-//             onClose();
-//         } catch (error) {
-//             console.error('Error creating batch:', error);
-//             alert('Failed to create batch.');
-//         }
-//     };
-
-//     return (
-//         <div className="create-batch-form-overlay">
-//             <div className="create-batch-form">
-//                 <div className="form-header">
-//                     <div className="form-title">Create Batch</div>
-//                     <button className="close-button" onClick={onClose}>
-//                         X
-//                     </button>
-//                 </div>
-//                 <form onSubmit={handleSubmit} className="form-content">
-//                     <div className="form-group">
-//                         <label htmlFor="batchName">Batch name*</label>
-//                         <input
-//                             type="text"
-//                             id="batchName"
-//                             placeholder="Enter batch name"
-//                             value={batchName}
-//                             onChange={(e) => setBatchName(e.target.value)}
-//                             required
-//                         />
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="course">Course *</label>
-//                         <select
-//                             id="course"
-//                             value={course}
-//                             onChange={(e) => setCourse(e.target.value)}
-//                             required
-//                         >
-//                             <option value="">Select course</option>
-//                             {courses &&
-//                                 courses.map((course) => (
-//                                     <option key={course.id} value={course.id}>
-//                                         {course.courseName}
-//                                     </option>
-//                                 ))}
-//                         </select>
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="curriculum">Curriculum *</label>
-//                         <select
-//                             id="curriculum"
-//                             value={curriculum}
-//                             onChange={(e) => setCurriculum(e.target.value)}
-//                             required
-//                         >
-//                             <option value="">Select Curriculum</option>
-//                             {curriculums &&
-//                                 curriculums.map((curr) => (
-//                                     <option key={curr.id} value={curr.id}>
-//                                         {curr.name}
-//                                     </option>
-//                                 ))}
-//                         </select>
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="startDate">Start date</label>
-//                         <input
-//                             type="date"
-//                             id="startDate"
-//                             value={startDate}
-//                             onChange={(e) => setStartDate(e.target.value)}
-//                         />
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="endDate">End date</label>
-//                         <input
-//                             type="date"
-//                             id="endDate"
-//                             value={endDate}
-//                             onChange={(e) => setEndDate(e.target.value)}
-//                         />
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="batchManager">Batch manager *</label>
-//                         <select
-//                             id="batchManager"
-//                             value={batchManager}
-//                             onChange={(e) => setBatchManager(e.target.value)}
-//                             required
-//                         >
-//                             <option value="">Select the batch manager</option>
-//                             {instructors &&
-//                                 instructors.map((instructor) => (
-//                                     <option key={instructor.id} value={instructor.id}>
-//                                         {instructor.f_name}
-//                                     </option>
-//                                 ))}
-//                         </select>
-//                     </div>
-//                     <div className="form-group">
-//                         <label htmlFor="additionalBatchManager">
-//                             Additional batch manager
-//                         </label>
-//                         <select
-//                             id="additionalBatchManager"
-//                             value={additionalBatchManager}
-//                             onChange={(e) => setAdditionalBatchManager(e.target.value)}
-//                         >
-//                             <option value="">Select the additional batch manager</option>
-//                             {/* You can populate this dropdown similarly if needed */}
-//                         </select>
-//                     </div>
-//                     <div className="form-footer">
-//                         <button type="button" className="cancel-button" onClick={onClose}>
-//                             Cancel
-//                         </button>
-//                         <button type="submit" className="create-button">
-//                             Create Batch
-//                         </button>
-//                     </div>
-//                 </form>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default CreateBatch;
-
-
-import React, { useState } from 'react';
-import './CreateBatch.css';
-import { db } from '../../../../config/firebase';
-import { collection, addDoc } from 'firebase/firestore';
-
-const CreateBatch = ({ onClose, onBatchCreated, courses, curriculums, instructors }) => {
-    const [batchName, setBatchName] = useState('');
-    const [course, setCourse] = useState('');
-    const [curriculum, setCurriculum] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [batchManager, setBatchManager] = useState('');
-    const [additionalBatchManager, setAdditionalBatchManager] = useState('');
-
+    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const batchData = {
+            batchName: batchName,
+            startDate,
+            endDate,
+            centers: selectedCenters,
+            course: selectedCourse,
+            curriculum: selectedCurriculum,
+            batchManager: selectedBatchManager,
+            additionalBatchManager: selectedAdditionalBatchManager,
+            batchFaculty: selectedBatchFaculty,
+            createdAt: serverTimestamp(),
+        };
+
         try {
-            const batchData = {
-                batchName,
-                course,
-                curriculum,
-                startDate,
-                endDate,
-                batchManager,
-                additionalBatchManager,
-            };
-            await addDoc(collection(db, 'Batch'), batchData);
-            onBatchCreated();
-            onClose();
+            if (batch) {
+                await updateDoc(doc(db, "Batch", batch.id), batchData);
+                alert("Batch updated successfully!");
+            } else {
+                await addDoc(collection(db, "Batch"), batchData);
+                alert("Batch created successfully!");
+            }
+            resetForm();
+            toggleSidebar();
         } catch (error) {
-            console.error('Error creating batch:', error);
-            alert('Failed to create batch.');
+            console.error("Error saving batch:", error);
+            alert("Failed to save batch. Please try again.");
         }
     };
 
+    const resetForm = () => {
+        setBatchName("");
+        setStartDate("");
+        setEndDate("");
+
+        setSelectedCenters([]);
+        setAvailableCenters(centers);
+
+
+        setSelectedCourse([]);
+        setAvailableCourse(course);
+
+
+        setSelectedBatchManager([]);
+        setAvailableBatchManager(batchManager);
+
+
+        setSelectedAdditionalBatchManager([]);
+        setAvailableAdditionalBatchManager(additionalBatchManager);
+
+        setSelectedBatchFaculty([]);
+        setAvailableBatchFaculty(batchFaculty);
+
+        setSelectedCurriculum([]);
+        setAvailableCurriculum(curriculum);
+
+    };
+
+    const handleAddCenter = (centerId) => {
+        if (centerId && !selectedCenters.includes(centerId)) {
+            setSelectedCenters([...selectedCenters, centerId]);
+            setAvailableCenters(availableCenters.filter((c) => c.id !== centerId));
+        }
+    };
+
+    const handleRemoveCenter = (centerId) => {
+        setSelectedCenters(selectedCenters.filter((id) => id !== centerId));
+        const removedCenter = centers.find((c) => c.id === centerId);
+        if (removedCenter) setAvailableCenters([...availableCenters, removedCenter]);
+    };
+
+
+    const handleAddCurriculum = (curriculumId) => {
+        if (curriculumId && !selectedCurriculum.includes(curriculumId)) {
+            setSelectedCurriculum([...selectedCurriculum, curriculumId]);
+            setAvailableCurriculum(availableCurriculum.filter((c) => c.id !== curriculumId));
+        }
+    };
+
+    const handleRemoveCurriculum = (curriculumId) => {
+        setSelectedCurriculum(selectedCurriculum.filter((id) => id !== curriculumId));
+        const removedCurriculum = curriculum.find((c) => c.id === curriculumId);
+        if (removedCurriculum) setAvailableCurriculum([...availableCurriculum, removedCurriculum]);
+    };
+
+
+    const handleAddBatchManager = (batchManagerId) => {
+        if (batchManagerId && !selectedBatchManager.includes(batchManagerId)) {
+            setSelectedBatchManager([...selectedBatchManager, batchManagerId]);
+            setAvailableBatchManager(availableBatchManager.filter((c) => c.id !== batchManagerId));
+        }
+    };
+
+    const handleRemoveBatchManager = (batchManagerId) => {
+        setSelectedBatchManager(selectedBatchManager.filter((id) => id !== batchManagerId));
+        const removedBatchManager = batchManager.find((c) => c.id === batchManagerId);
+        if (removedBatchManager) setAvailableBatchManager([...availableBatchManager, removedBatchManager]);
+    };
+
+
+    const handleAddAdditionalBatchManager = (additionalBatchManagerId) => {
+        if (additionalBatchManagerId && !selectedAdditionalBatchManager.includes(additionalBatchManagerId)) {
+            setSelectedAdditionalBatchManager([...selectedAdditionalBatchManager, additionalBatchManagerId]);
+            setAvailableAdditionalBatchManager(availableAdditionalBatchManager.filter((c) => c.id !== additionalBatchManagerId));
+        }
+    };
+
+    const handleRemoveAdditionalBatchManager = (additionalBatchManagerId) => {
+        setSelectedAdditionalBatchManager(selectedAdditionalBatchManager.filter((id) => id !== additionalBatchManagerId));
+        const removedAdditionalBatchManager = additionalBatchManager.find((c) => c.id === additionalBatchManagerId);
+        if (removedAdditionalBatchManager) setAvailableAdditionalBatchManager([...availableAdditionalBatchManager, removedAdditionalBatchManager]);
+    };
+
+
+    const handleAddBatchFaculty = (batchFacultyId) => {
+        if (batchFacultyId && !selectedBatchFaculty.includes(batchFacultyId)) {
+            setSelectedBatchFaculty([...selectedBatchFaculty, batchFacultyId]);
+            setAvailableBatchFaculty(availableBatchFaculty.filter((c) => c.id !== batchFacultyId));
+        }
+    };
+
+    const handleRemoveBatchFaculty = (batchFacultyId) => {
+        setSelectedBatchFaculty(selectedBatchFaculty.filter((id) => id !== batchFacultyId));
+        const removedBatchFaculty = batchFaculty.find((c) => c.id === batchFacultyId);
+        if (removedBatchFaculty) setAvailableBatchFaculty([...availableBatchFaculty, removedBatchFaculty]);
+    };
+
     return (
-        <div className="create-batch-form-overlay">
-            <div className="create-batch-form">
-                <div className="form-header">
-                    <div className="form-title">Create Batch</div>
-                    <button className="close-button" onClick={onClose}>
-                        X
-                    </button>
+        <div className={`fixed top-0 right-0 h-full bg-white w-2/5 shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} p-4 overflow-y-auto`}>
+            <button type="button" onClick={toggleSidebar} className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-red-600 transition duration-200">Back</button>
+            <h1>{batch ? "Edit Batch" : "Create Batch"}</h1>
+
+            <form onSubmit={handleSubmit}>
+                <label>Batch Name:</label>
+                <input type="text" value={batchName} onChange={(e) => setBatchName(e.target.value)} required />
+
+                <label>Start Date:</label>
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+
+                <label>End Date:</label>
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
+
+
+                {/* Select Centers */}
+                <select onChange={(e) => handleAddCenter(e.target.value)}>
+                    <option value="">Select a Center</option>
+                    {availableCenters.map((center) => (
+                        <option key={center.id} value={center.id}>{center.name}</option>
+                    ))}
+                </select>
+
+                {/* Centers Table */}
+                {selectedCenters.length > 0 && (
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Sr No</th>
+                                <th>Center Name</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {selectedCenters.map((centerId, index) => {
+                                const center = centers.find((c) => c.id === centerId);
+                                return (
+                                    <tr key={centerId}>
+                                        <td>{index + 1}</td>
+                                        <td>{center?.name}</td>
+                                        <td>
+                                            <button type="button" onClick={() => handleRemoveCenter(centerId)}>✕</button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+
+
+
+                <select onChange={(e) => handleAddCurriculum(e.target.value)}>
+                    <option value="">Select a Curriculum</option>
+                    {availableCurriculum.map((curriculum) => (
+                        <option key={curriculum.id} value={curriculum.id}>{curriculum.name}</option>
+                    ))}
+                </select>
+
+                {selectedCurriculum.length > 0 && (
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Sr No</th>
+                                <th>Curriculum Name</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {selectedCurriculum.map((curriculumId, index) => {
+                                const curr = curriculum.find((c) => c.id === curriculumId);
+                                return (
+                                    <tr key={curriculumId}>
+                                        <td>{index + 1}</td>
+                                        <td>{curr?.name}</td>
+                                        <td>
+                                            <button type="button" onClick={() => handleRemoveCurriculum(curriculumId)}>✕</button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+
+
+
+                <select onChange={(e) => handleAddBatchManager(e.target.value)}>
+                    <option value="">Select a Batch Manager</option>
+                    {availableBatchManager.map((batchManager) => (
+                        <option key={batchManager.id} value={batchManager.id}>{batchManager.f_name}</option>
+                    ))}
+                </select>
+
+                {selectedBatchManager.length > 0 && (
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Sr No</th>
+                                <th>Batch Manager</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {selectedBatchManager.map((batchManagerId, index) => {
+                                const BM = batchManager.find((c) => c.id === batchManagerId);
+                                return (
+                                    <tr key={batchManagerId}>
+                                        <td>{index + 1}</td>
+                                        <td>{BM?.f_name}</td>
+                                        <td>
+                                            <button type="button" onClick={() => handleRemoveBatchManager(batchManagerId)}>✕</button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+
+
+
+                <select onChange={(e) => handleAddBatchFaculty(e.target.value)}>
+                    <option value="">Select a Batch Faculty</option>
+                    {availableBatchFaculty.map((batchFaculty) => (
+                        <option key={batchFaculty.id} value={batchFaculty.id}>{batchFaculty.f_name}</option>
+                    ))}
+                </select>
+
+
+                {selectedBatchFaculty.length > 0 && (
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Sr No</th>
+                                <th>Batch Faculty Name</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {selectedBatchFaculty.map((batchFacultyId, index) => {
+                                const BF = batchFaculty.find((c) => c.id === batchFacultyId);
+                                return (
+                                    <tr key={batchFacultyId}>
+                                        <td>{index + 1}</td>
+                                        <td>{BF?.f_name}</td>
+                                        <td>
+                                            <button type="button" onClick={() => handleRemoveBatchFaculty(batchFacultyId)}>✕</button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+
+
+
+                <select onChange={(e) => handleAddAdditionalBatchManager(e.target.value)}>
+                    <option value="">Select a Additional Batch Manager</option>
+                    {availableAdditionalBatchManager.map((additionalBatchManager) => (
+                        <option key={additionalBatchManager.id} value={additionalBatchManager.id}>{additionalBatchManager.f_name}</option>
+                    ))}
+                </select>
+
+                {selectedAdditionalBatchManager.length > 0 && (
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Sr No</th>
+                                <th>Additional batch Manager Name</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {selectedAdditionalBatchManager.map((additionalBatchManagerId, index) => {
+                                const ABM = additionalBatchManager.find((c) => c.id === additionalBatchManagerId);
+                                return (
+                                    <tr key={additionalBatchManagerId}>
+                                        <td>{index + 1}</td>
+                                        <td>{ABM?.f_name}</td>
+                                        <td>
+                                            <button type="button" onClick={() => handleRemoveAdditionalBatchManager(additionalBatchManagerId)}>✕</button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+
+
+                <div className="flex justify-end">
+                    <button type="submit" className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200">{batch ? "Update batch" : "Create batch"}</button>
                 </div>
-                <form onSubmit={handleSubmit} className="form-content">
-                    <div className="form-group">
-                        <label htmlFor="batchName">Batch name*</label>
-                        <input
-                            type="text"
-                            id="batchName"
-                            placeholder="Enter batch name"
-                            value={batchName}
-                            onChange={(e) => setBatchName(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="course">Course *</label>
-                        <select
-                            id="course"
-                            value={course}
-                            onChange={(e) => setCourse(e.target.value)}
-                            required
-                        >
-                            <option value="">Select course</option>
-                            {courses &&
-                                courses.map((course) => (
-                                    <option key={course.id} value={course.id}>
-                                        {course.courseName}
-                                    </option>
-                                ))}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="curriculum">Curriculum *</label>
-                        <select
-                            id="curriculum"
-                            value={curriculum}
-                            onChange={(e) => setCurriculum(e.target.value)}
-                            required
-                        >
-                            <option value="">Select Curriculum</option>
-                            {curriculums &&
-                                curriculums.map((curr) => (
-                                    <option key={curr.id} value={curr.id}>
-                                        {curr.name}
-                                    </option>
-                                ))}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="startDate">Start date</label>
-                        <input
-                            type="date"
-                            id="startDate"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="endDate">End date</label>
-                        <input
-                            type="date"
-                            id="endDate"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="batchManager">Batch manager *</label>
-                        <select
-                            id="batchManager"
-                            value={batchManager}
-                            onChange={(e) => setBatchManager(e.target.value)}
-                            required
-                        >
-                            <option value="">Select the batch manager</option>
-                            {instructors &&
-                                instructors.map((instructor) => (
-                                    <option key={instructor.id} value={instructor.id}>
-                                        {instructor.f_name}
-                                    </option>
-                                ))}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="additionalBatchManager">
-                            Additional batch manager
-                        </label>
-                        <select
-                            id="additionalBatchManager"
-                            value={additionalBatchManager}
-                            onChange={(e) => setAdditionalBatchManager(e.target.value)}
-                        >
-                            <option value="">Select the additional batch manager</option>
-                            {/* You can populate this dropdown similarly if needed */}
-                        </select>
-                    </div>
-                    <div className="form-footer">
-                        <button type="button" className="cancel-button" onClick={onClose}>
-                            Cancel
-                        </button>
-                        <button type="submit" className="create-button">
-                            Create Batch
-                        </button>
-                    </div>
-                </form>
-            </div>
+
+                {/* <button type="submit">{batch ? "Update" : "Create"}</button> */}
+            </form>
         </div>
     );
 };
 
-export default CreateBatch;
+export default CreateBatches;

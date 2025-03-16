@@ -100,6 +100,7 @@ export default function Sidebar() {
                         </ListItemPrefix>
                         Dashboard
                     </ListItem>
+<<<<<<< HEAD
 
                     <Accordion open={openCourseDelivery}>
                         <ListItem className="p-0" selected={openCourseDelivery}>
@@ -108,6 +109,41 @@ export default function Sidebar() {
                                 setOpenUsers(false);
                                 setOpenSettings(false);
                             }} className="border-b-0 p-3">
+=======
+                    <AccordionBody className="py-1">
+                        <List className="p-0 text-white">
+                            <ListItem onClick={() => navigate('/courses')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Courses
+                            </ListItem>
+                            <ListItem onClick={() => navigate('/batches')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Batches
+                            </ListItem>
+                            <ListItem onClick={() => navigate('/sessions')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Sessions
+                            </ListItem>
+                            {/* <ListItem onClick={() => navigate('/curriculum')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Curriculum
+                            </ListItem> */}
+                            {/* <ListItem onClick={() => navigate('/assignment')}>
+                                <ListItemPrefix>
+                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                </ListItemPrefix>
+                                Assignment
+                            </ListItem> */}
+                            <ListItem onClick={() => navigate('/addPerformance')}>
+>>>>>>> 7d84a067566fceea24334ffd749a04c9c4bbec1f
                                 <ListItemPrefix>
                                     <PresentationChartBarIcon className="h-5 w-5" />
                                 </ListItemPrefix>
