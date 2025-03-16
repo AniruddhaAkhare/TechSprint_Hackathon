@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-import React from 'react';
-=======
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
 import {
@@ -498,7 +495,6 @@ export default CreateCourses;
 
 // import React from 'react';
 // import './CreateCourses.css'; // Create CSS file for this form
->>>>>>> c4a9abb96afb578fbf84baa5e4f5265cc4544fc6
 
 // const CreateCourses = ({ onClose, onCreateCourse}) => {
 

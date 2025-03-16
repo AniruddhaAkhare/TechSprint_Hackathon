@@ -48,7 +48,7 @@ export default function StudentDetails() {
                 status: newStatus
             });
             toast.success(`Status updated to ${newStatus}`);
-            fetchStudents(); 
+            fetchStudents();
         } catch (error) {
             console.error("Error updating status:", error);
             toast.error("Failed to update status");
@@ -119,7 +119,7 @@ export default function StudentDetails() {
                     const courseDetails = courseMap.get(courseId);
 
                     batch.set(enrollmentRef, {
-                        enrollmentId: enrollmentRef.id, 
+                        enrollmentId: enrollmentRef.id,
                         studentId,
                         studentName: `${student.first_name} ${student.last_name}`,
                         studentEmail: student.email,
@@ -150,7 +150,7 @@ export default function StudentDetails() {
     };
 
     return (
-        <div className="container ml-80 p-4">
+        <div className="flex-col ml-80 p-4 w-screen">
             <ToastContainer position="top-right" autoClose={3000} />
             <h1 className="text-2xl font-bold mb-4">Student Details</h1>
             <button onClick={() => navigate('/studentdetails/addstudent')} className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md">
@@ -174,6 +174,7 @@ export default function StudentDetails() {
                             <th>First Name</th>
                             <th>Last Name</th>
                             <th>Email</th>
+                            <th>Phone</th>
                             <th>Status</th>
                             <th>Actions</th>
 
@@ -185,10 +186,10 @@ export default function StudentDetails() {
                                 <td>
                                     <input type="checkbox" onChange={() => handleStudentSelect(student.id)} />
                                 </td>
-                                <td onClick={()=>{navigate(`/studentdetails/${student.id}`)}}>{student.first_name}</td>
-                                <td onClick={()=>{navigate(`/studentdetails/${student.id}`)}}>{student.last_name}</td>
-                                <td onClick={()=>{navigate(`/studentdetails/${student.id}`)}}>{student.email}</td>
-
+                                <td onClick={() => { navigate(`/studentdetails/${student.id}`) }}>{student.first_name}</td>
+                                <td onClick={() => { navigate(`/studentdetails/${student.id}`) }}>{student.last_name}</td>
+                                <td onClick={() => { navigate(`/studentdetails/${student.id}`) }}>{student.email}</td>
+                                <td onClick={() => { navigate(`/studentdetails/${student.id}`) }}>{student.phone}</td>
                                 <td>
                                     <select
                                         value={student.status ? student?.status : 'enrolled'}
@@ -197,8 +198,8 @@ export default function StudentDetails() {
                                     >
                                         <option value="enquiry">Enquiry</option>
                                         <option value="enrolled">Enrolled</option>
-                                        <option value="inactive">Inactive</option>
-                                        <option value="complete">Complete</option>
+                                        <option value="deferred">Deferred</option>
+                                        <option value="completed">Complete</option>
                                     </select>
                                 </td>
 
@@ -219,18 +220,23 @@ export default function StudentDetails() {
             </div>
             <h2 className="text-xl font-bold mt-6">Select Courses</h2>
             <div>
-                {course.map(course => (
-                    <label key={course.id} className="block">
-                        <input type="checkbox" onChange={() => handleCourseSelect(course.id)} /> {course.courseName}
-                    </label>
-                ))}
+                <label className="block" htmlFor="courseSelect">Select a Course:</label>
+                <select id="courseSelect" onChange={(e) => handleCourseSelect(e.target.value)}>
+                    <option value="">-- Select a course --</option>
+                    {course.map(course => (
+                        <option key={course.id} value={course.id}>
+                            {course.name}
+                        </option>
+                    ))}
+                </select>
             </div>
+
             <button
                 onClick={handleBulkEnrollment}
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 mt-4 rounded-md transition duration-300"
                 disabled={selectedStudents.length === 0 || selectedCourse.length === 0}
             >
-                Enroll Selected Students ({selectedStudents.length} students, {selectedCourse.length} courses)
+                Enroll Selected Students
             </button>
         </div>
     );

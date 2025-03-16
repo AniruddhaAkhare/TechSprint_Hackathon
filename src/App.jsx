@@ -28,7 +28,6 @@ import CreateCurriculum from './pages/components/CourseDelivery/Curriculum/Creat
 import Calendar from './pages/components/CourseDelivery/Session/Calendar.jsx';
 import Sessions from './pages/components/CourseDelivery/Session/Sessions.jsx';
 import CreateSession from './pages/components/CourseDelivery/Session/CreateSession.jsx';
-import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession';
 
 import Subjects from './pages/components/CourseDelivery/Subjects/Subjects.jsx';
 import CreateSubjects from './pages/components/CourseDelivery/Subjects/CreateSubjects.jsx';
@@ -73,26 +72,17 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
 import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/IndividualCourseStudnets.jsx';
 import IndividualCourseCurriculum from './pages/components/CourseDelivery/Course/IndividualCourseCurriculum.jsx';
-<<<<<<< HEAD
 
-=======
->>>>>>> c4a9abb96afb578fbf84baa5e4f5265cc4544fc6
 
-import StudentInfo from '../StudentInformation/StudentInfo.jsx';
-
+import StudentInfo from './StudentInformation/StudentInfo.jsx'
 import HeaderContent from './apps/Header/HeaderContainer.jsx';
 import Navigation from './apps/Navigation/NavigationContainer.jsx';
 import FeeTemplate from './pages/components/FeeTemplate/FeeTemplate.jsx';
-<<<<<<< HEAD
-import StudentInfo from './StudentInformation/StudentInfo.jsx'
-=======
 
 
+import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession';
 
-// import {ZoomSession} from './pages/components/CourseDelivery/Session/ZoomSession';
 
-
->>>>>>> c4a9abb96afb578fbf84baa5e4f5265cc4544fc6
 export default function App() {
 
   const [user, setUser] = useState(null);
@@ -109,7 +99,7 @@ export default function App() {
   useEffect(() => {
     console.log("Current User in App:", user);
   }, [user]);
-  
+
 
   return (
     <AuthProvider>
@@ -182,11 +172,8 @@ export default function App() {
             <Route path='/centers' element={<Centers />} />
 
             <Route path='/roles' element={<Role />} />
-<<<<<<< HEAD
             <Route path='/fee-template' element={<FeeTemplate />} />
             <Route path='/roles' element={<Role />} />
-=======
->>>>>>> c4a9abb96afb578fbf84baa5e4f5265cc4544fc6
 
 
             <Route path='/invoices' element={<Invoices />} />
@@ -203,9 +190,9 @@ export default function App() {
 
 
             <Route path='/zoom' element={<ZoomSession />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
+          </Routes >
+        </div >
+      </BrowserRouter >
+    </AuthProvider >
   );
 }
