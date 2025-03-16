@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getFirestore, collection, onSnapshot } from "firebase/firestore";
@@ -496,8 +495,6 @@ export default Dashboard;
 // // // export default Dashboard;
 
 
-=======
->>>>>>> 7d84a067566fceea24334ffd749a04c9c4bbec1f
 // // import { useEffect, useState } from "react";
 // // import { motion } from "framer-motion";
 // // import { getFirestore, collection, onSnapshot } from "firebase/firestore";
@@ -812,93 +809,4 @@ export default Dashboard;
 //           );
 // };
 
-<<<<<<< HEAD
 // export default Dashboard;
-=======
-
-import { useEffect, useState } from "react";
-import { getFirestore, collection, onSnapshot } from "firebase/firestore";
-import { motion } from "framer-motion";
-
-const Dashboard = () => {
-  const db = getFirestore();
-  const [data, setData] = useState({
-    Batch: [],
-    student: [],
-    Course: [],
-    Instructor: [],
-    Centers: [],
-  });
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const unsubscribes = [];
-
-    const collections = ["Batch", "student", "Course", "Instructor", "Centers"];
-    collections.forEach((col) => {
-      const unsubscribe = onSnapshot(
-        collection(db, col),
-        (snapshot) => {
-          setData((prev) => ({
-            ...prev,
-            [col]: snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
-          }));
-          setLoading(false);
-        },
-        (err) => setError(err.message)
-      );
-      unsubscribes.push(unsubscribe);
-    });
-
-    return () => unsubscribes.forEach((unsub) => unsub());
-  }, [db]);
-
-  if (loading)
-    return <div className="text-center text-xl font-semibold">Loading...</div>;
-  if (error)
-    return <div className="text-center text-red-500 font-semibold">{error}</div>;
-
-  return (
-    <motion.div
-      className="min-h-screen p-8 flex flex-col items-center bg-gray-100"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1 }}
-    >
-      
-      {/* <div className="flex-col w-screen ml-80 p-4"> */}
-      <h1 className="flex-col w-screen ml-80 p-4 text-4xl font-bold mb-6">Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
-        {[
-          { title: "Batches", count: data.Batch.length, list: data.Batch },
-          { title: "Students", count: data.student.length, list: data.student },
-          { title: "Courses", count: data.Course.length, list: data.Course },
-          { title: "Instructors", count: data.Instructor.length, list: data.Instructor },
-          { title: "Centers", count: data.Centers.length, list: data.Centers },
-        ].map((item, index) => (
-          <motion.div
-            key={index}
-            className="bg-white p-6 rounded-lg shadow-lg text-center"
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-          >
-            <h3 className="text-xl font-semibold">{item.title}</h3>
-            <p className="text-2xl font-bold">{item.count}</p>
-            <ul className="mt-2 text-gray-600">
-              {item.list.slice(0, 3).map((entry) => (
-                <li key={entry.id}>{entry.name || "Unnamed"}</li>
-              ))}
-              {item.list.length > 3 && <li>...</li>}
-            </ul>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  );
-};
-
-export default Dashboard;
->>>>>>> 7d84a067566fceea24334ffd749a04c9c4bbec1f

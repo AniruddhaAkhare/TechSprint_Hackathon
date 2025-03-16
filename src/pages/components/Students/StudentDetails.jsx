@@ -220,7 +220,6 @@ export default function StudentDetails() {
             </div>
             <h2 className="text-xl font-bold mt-6">Select Courses</h2>
             <div>
-                <label className="block" htmlFor="courseSelect">Select a Course:</label>
                 <select id="courseSelect" onChange={(e) => handleCourseSelect(e.target.value)}>
                     <option value="">-- Select a course --</option>
                     {course.map(course => (

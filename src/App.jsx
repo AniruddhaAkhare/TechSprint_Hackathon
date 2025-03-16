@@ -73,23 +73,15 @@ import { AuthProvider } from './context/AuthContext';
 import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/IndividualCourseStudnets.jsx';
 import IndividualCourseCurriculum from './pages/components/CourseDelivery/Course/IndividualCourseCurriculum.jsx';
 
-<<<<<<< HEAD
-=======
 
-// import StudentInfo from '../StudentInformation/StudentInfo.jsx';
->>>>>>> 7d84a067566fceea24334ffd749a04c9c4bbec1f
 
-import StudentInfo from './StudentInformation/StudentInfo.jsx'
 import HeaderContent from './apps/Header/HeaderContainer.jsx';
 import Navigation from './apps/Navigation/NavigationContainer.jsx';
 import FeeTemplate from './pages/components/FeeTemplate/FeeTemplate.jsx';
-<<<<<<< HEAD
-=======
 import StudentInfo from './StudentInformation/StudentInfo.jsx'
->>>>>>> 7d84a067566fceea24334ffd749a04c9c4bbec1f
 
 
-import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession';
+import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession.jsx';
 
 
 export default function App() {
