@@ -134,12 +134,12 @@ export default function Sidebar() {
                                 </ListItemPrefix>
                                 Sessions
                             </ListItem>
-                            <ListItem onClick={() => navigate('/curriculum')}>
+                            {/* <ListItem onClick={() => navigate('/curriculum')}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                 </ListItemPrefix>
                                 Curriculum
-                            </ListItem>
+                            </ListItem> */}
                             {/* <ListItem onClick={() => navigate('/assignment')}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
