@@ -36,6 +36,7 @@ const Dashboard = () => {
         (err) => setError(err.message)
       )
     );
+
     return () => unsubscribers.forEach((unsub) => unsub());
   }, [db]);
 
@@ -65,7 +66,7 @@ const Dashboard = () => {
 
   const studentStatusCounts = getStudentStatusCounts();
   const centerCounts = getCenterCounts();
-  
+
   const studentPieData = {
     labels: ["Active", "Inactive", "Enrolled", "Enquiry"],
     datasets: [
@@ -95,8 +96,7 @@ const Dashboard = () => {
   if (error) return <div className="text-center text-red-500">Error: {error}</div>;
 
   return (
-    <div className=" dashboard flex-col w-screen ml-80 pd-4">
-    {/* // <div className="p-6 bg-gray-100 min-h-screen"> */}
+    <div className="dashboard flex-col w-screen ml-80 pd-4">
       <h1 className="text-3xl font-semibold mb-6">Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
@@ -111,7 +111,7 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.2 }}
-            className="bg-white shadow-lg p-5 rounded-xl text-center"
+            className="bg-white shadow-lg p-5 rounded-md text-center"
           >
             <h3 className="text-lg font-medium text-gray-600">{item.title}</h3>
             <p className="text-2xl font-bold text-gray-800">{item.count}</p>
@@ -119,13 +119,28 @@ const Dashboard = () => {
         ))}
       </div>
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-lg w-full">
+        <div className="bg-white p-6 rounded-md shadow-lg w-full">
           <h2 className="text-xl font-semibold mb-4 text-center">Student Status Distribution</h2>
-          <Pie data={studentPieData} options={{ onClick: (event, elements) => handlePieClick(event, elements, "students") }} />
+          <div style={{ position: 'relative', height: '300px', width: '100%', maxWidth: '500px', margin: '0 auto' }}>
+            <Pie
+              data={studentPieData}
+              options={{
+                maintainAspectRatio: false, // Allow resizing
+                onClick: (event, elements) => handlePieClick(event, elements, "students"),
+              }}
+            />
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg w-full">
+        <div className="bg-white p-6 rounded-md shadow-lg w-full">
           <h2 className="text-xl font-semibold mb-4 text-center">Center Distribution</h2>
-          <Pie data={centerPieData} />
+          <div style={{ position: 'relative', height: '300px', width: '100%', maxWidth: '500px', margin: '0 auto' }}>
+            <Pie
+              data={centerPieData}
+              options={{
+                maintainAspectRatio: false, // Allow resizing
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -133,6 +148,7 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
 
 
 // // // // // // import { useEffect, useState } from "react";
