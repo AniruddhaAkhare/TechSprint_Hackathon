@@ -23,7 +23,8 @@ import Curriculum from './pages/components/CourseDelivery/Curriculum/Curriculum.
 import CurriculumEditor from './pages/components/CourseDelivery/Curriculum/CurriculumEditor.jsx'
 import NotesPage from './pages/components/CourseDelivery/Curriculum/NotesPages.jsx';
 import CreateCurriculum from './pages/components/CourseDelivery/Curriculum/CreateCurriculum.jsx';
-
+import SectionMaterials from './pages/components/CourseDelivery/Curriculum/SectionMaterials.jsx';
+import AddMaterial from './pages/components/CourseDelivery/Curriculum/AddMaterials.jsx';
 
 import Calendar from './pages/components/CourseDelivery/Session/Calendar.jsx';
 import Sessions from './pages/components/CourseDelivery/Session/Sessions.jsx';
@@ -126,10 +127,13 @@ export default function App() {
             <Route path="/editCourse/:id" element={<EditCourse />} />
             {/* <Route path="/courses/:courseId/curriculum" element={<Curriculum />} />
             <Route path="/editCourse/:id" element={<EditCourse />} /> */}
-            <Route path="/courses/:courseId/curriculum" element={<IndividualCourseCurriculum />} />
+            {/* <Route path="/courses/:courseId/curriculum" element={<IndividualCourseCurriculum />} /> */}
 
             <Route path="/createCurriculum" element={<CreateCurriculum />} />
-            <Route path="/courses/:courseId/curriculum/curriculumEditor/:curriculumId" element={<CurriculumEditor />} />
+            <Route path="/curriculum/:curriculumId" element={<CurriculumEditor />} />
+        <Route path="/curriculum/:curriculumId/section/:sectionId" element={<SectionMaterials />} />
+        <Route path="/curriculum/:curriculumId/section/:sectionId/add-material" element={<AddMaterial />} />
+            {/* <Route path="/courses/:courseId/curriculum/curriculumEditor/:curriculumId" element={<CurriculumEditor />} /> */}
             <Route path="/courses/:courseId/learners" element={<IndividualCourseStudnets />} />
             <Route path="/courses/:courseId/batches" element={<IndividualCourseBatch />} />
 

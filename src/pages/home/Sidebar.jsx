@@ -134,24 +134,24 @@ export default function Sidebar() {
                                 </ListItemPrefix>
                                 Sessions
                             </ListItem>
-                            {/* <ListItem onClick={() => navigate('/curriculum')}>
+                            <ListItem onClick={() => navigate('/curriculum')}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                 </ListItemPrefix>
                                 Curriculum
-                            </ListItem> */}
+                            </ListItem>
                             {/* <ListItem onClick={() => navigate('/assignment')}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                 </ListItemPrefix>
                                 Assignment
                             </ListItem> */}
-                            <ListItem onClick={() => navigate('/addPerformance')}>
+                            {/* <ListItem onClick={() => navigate('/addPerformance')}>
                                 <ListItemPrefix>
                                     <PresentationChartBarIcon className="h-5 w-5" />
                                 </ListItemPrefix>
                                 Add Performance
-                            </ListItem>
+                            </ListItem> */}
                         </List>
                     </AccordionBody>
                 </Accordion>
@@ -259,24 +259,24 @@ export default function Sidebar() {
                     </ListItem>
                     <AccordionBody className="py-1">
                         <List className="p-0 text-white">
-                            <ListItem onClick={() => navigate('/users')}>
+                            {/* <ListItem onClick={() => navigate('/users')}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                 </ListItemPrefix>
                                 Users
-                            </ListItem>
+                            </ListItem> */}
                             <ListItem onClick={() => navigate('/roles')}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                 </ListItemPrefix>
                                 Roles
                             </ListItem>
-                            <ListItem onClick={() => navigate('/preferences')}>
+                            {/* <ListItem onClick={() => navigate('/preferences')}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                 </ListItemPrefix>
                                 Preferences
-                            </ListItem>
+                            </ListItem> */}
                         </List>
                     </AccordionBody>
                 </Accordion>
