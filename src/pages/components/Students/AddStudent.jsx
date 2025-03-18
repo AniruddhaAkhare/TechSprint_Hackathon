@@ -423,7 +423,7 @@ export default function AddStudent() {
                             <select value={course.batch} onChange={(e) => handleCourseChange(index, 'batch', e.target.value)}>
                                 <option value="">Select Batch</option>
                                 {batches.map(b => (
-                                    <option key={b.id} value={b.name}>{b.name}</option>
+                                    <option key={b.id} value={b.batchName}>{b.batchame}</option>
                                 ))}
                             </select>
                             <select value={course.center} onChange={(e) => handleCourseChange(index, 'center', e.target.value)}>

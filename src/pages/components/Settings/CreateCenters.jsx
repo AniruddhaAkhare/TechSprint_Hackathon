@@ -203,12 +203,13 @@ export default function CreateCenters({ isOpen, toggleSidebar, centerData, refre
         city: "",
         state: "",
         pinCode: "",
-        owner: ""
+        owner: "",
+        status: "Ongoing"
     });
 
     useEffect(() => {
         if (centerData) {
-            setCenter(centerData);
+            setCenter({...centerData, status: centerData.status || "Ongoing"});
         } else {
             setCenter({
                 name: "",
@@ -218,7 +219,8 @@ export default function CreateCenters({ isOpen, toggleSidebar, centerData, refre
                 city: "",
                 state: "",
                 pinCode: "",
-                owner: ""
+                owner: "",
+                status: "Ongoing"
             });
         }
     }, [centerData]);
@@ -270,6 +272,22 @@ export default function CreateCenters({ isOpen, toggleSidebar, centerData, refre
                         />
                     </div>
                 ))}
+
+<div className="mb-3">
+                    <label className="block text-sm font-medium">Status</label>
+                    <select
+                        name="status"
+                        value={center.status}
+                        onChange={handleChange}
+                        className="border p-2 w-full rounded"
+                        required
+                    >
+                        <option value="Outgoing">Outgoing</option>
+                        <option value="Archive">Archive</option>
+                    </select>
+                </div>
+
+                
                 <div className="flex justify-between">
                     <button type="button" onClick={toggleSidebar} className="bg-gray-400 text-white py-2 px-4 rounded">
                         Cancel
