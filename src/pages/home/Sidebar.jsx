@@ -100,49 +100,6 @@ export default function Sidebar() {
                         </ListItemPrefix>
                         Dashboard
                     </ListItem>
-<<<<<<< HEAD
-                    <AccordionBody className="py-1">
-                        <List className="p-0 text-white">
-                            <ListItem onClick={() => navigate('/courses')}>
-                                <ListItemPrefix>
-                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                </ListItemPrefix>
-                                Courses
-                            </ListItem>
-                            <ListItem onClick={() => navigate('/batches')}>
-                                <ListItemPrefix>
-                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                </ListItemPrefix>
-                                Batches
-                            </ListItem>
-                            <ListItem onClick={() => navigate('/sessions')}>
-                                <ListItemPrefix>
-                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                </ListItemPrefix>
-                                Sessions
-                            </ListItem>
-                            <ListItem onClick={() => navigate('/curriculum')}>
-                                <ListItemPrefix>
-                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                </ListItemPrefix>
-                                Curriculum
-                            </ListItem>
-                            {/* <ListItem onClick={() => navigate('/assignment')}>
-                                <ListItemPrefix>
-                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                </ListItemPrefix>
-                                Assignment
-                            </ListItem> */}
-                            {/* <ListItem onClick={() => navigate('/addPerformance')}>
-                                <ListItemPrefix>
-                                    <PresentationChartBarIcon className="h-5 w-5" />
-                                </ListItemPrefix>
-                                Add Performance
-                            </ListItem> */}
-                        </List>
-                    </AccordionBody>
-                </Accordion>
-=======
 
                     <Accordion open={openCourseDelivery}>
                         <ListItem className="p-0" selected={openCourseDelivery}>
@@ -200,7 +157,6 @@ export default function Sidebar() {
                             </List>
                         </AccordionBody>
                     </Accordion>
->>>>>>> 970d5113ce5314dad8cb0561480d8eb933af76d8
 
                     <Accordion open={openUsers}>
                         <ListItem className="p-0" selected={openUsers}>
@@ -252,27 +208,6 @@ export default function Sidebar() {
                     </ListItem>
 
 
-<<<<<<< HEAD
-                <Accordion open={openRoles}>
-                    <ListItem className="p-0" selected={openRoles}>
-                        <AccordionHeader onClick={() => {
-                            setOpenRoles(!openRoles);
-                            setOpenCourseDelivery(false);
-                            setOpenUsers(false);
-                            setOpenSettings(false);
-                        }} className="border-b-0 p-3">
-                            <ListItemPrefix>
-                                <PresentationChartBarIcon className="h-5 w-5" />
-                            </ListItemPrefix>
-                            <Typography color="blue-gray" className="mr-auto font-normal">
-                                Users & Roles
-                            </Typography>
-                        </AccordionHeader>
-                    </ListItem>
-                    <AccordionBody className="py-1">
-                        <List className="p-0 text-white">
-                            {/* <ListItem onClick={() => navigate('/users')}>
-=======
                     <Accordion open={openSettings}>
                         <ListItem className="p-0" selected={openSettings}>
                             <AccordionHeader onClick={() => {
@@ -281,29 +216,9 @@ export default function Sidebar() {
                                 setOpenRoles(false);
                                 setOpenUsers(false);
                             }} className="border-b-0 p-3">
->>>>>>> 970d5113ce5314dad8cb0561480d8eb933af76d8
                                 <ListItemPrefix>
                                     <PresentationChartBarIcon className="h-5 w-5" />
                                 </ListItemPrefix>
-<<<<<<< HEAD
-                                Users
-                            </ListItem> */}
-                            <ListItem onClick={() => navigate('/roles')}>
-                                <ListItemPrefix>
-                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                </ListItemPrefix>
-                                Roles
-                            </ListItem>
-                            {/* <ListItem onClick={() => navigate('/preferences')}>
-                                <ListItemPrefix>
-                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                </ListItemPrefix>
-                                Preferences
-                            </ListItem> */}
-                        </List>
-                    </AccordionBody>
-                </Accordion>
-=======
                                 <Typography color="blue-gray" className="mr-auto font-normal">
                                     Settings
                                 </Typography>
@@ -326,7 +241,6 @@ export default function Sidebar() {
                             </List>
                         </AccordionBody>
                     </Accordion>
->>>>>>> 970d5113ce5314dad8cb0561480d8eb933af76d8
 
 
                     <Accordion open={openRoles}>
