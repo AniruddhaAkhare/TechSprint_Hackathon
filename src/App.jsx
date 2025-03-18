@@ -29,7 +29,6 @@ import AddMaterial from './pages/components/CourseDelivery/Curriculum/AddMateria
 import Calendar from './pages/components/CourseDelivery/Session/Calendar.jsx';
 import Sessions from './pages/components/CourseDelivery/Session/Sessions.jsx';
 import CreateSession from './pages/components/CourseDelivery/Session/CreateSession.jsx';
-import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession';
 
 import Subjects from './pages/components/CourseDelivery/Subjects/Subjects.jsx';
 import CreateSubjects from './pages/components/CourseDelivery/Subjects/CreateSubjects.jsx';
@@ -76,7 +75,6 @@ import IndividualCourseStudnets from './pages/components/CourseDelivery/Course/I
 import IndividualCourseCurriculum from './pages/components/CourseDelivery/Course/IndividualCourseCurriculum.jsx';
 
 
-// import StudentInfo from '../StudentInformation/StudentInfo.jsx';
 
 import HeaderContent from './apps/Header/HeaderContainer.jsx';
 import Navigation from './apps/Navigation/NavigationContainer.jsx';
@@ -84,8 +82,7 @@ import FeeTemplate from './pages/components/FeeTemplate/FeeTemplate.jsx';
 import StudentInfo from './StudentInformation/StudentInfo.jsx'
 
 
-
-// import {ZoomSession} from './pages/components/CourseDelivery/Session/ZoomSession';
+import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession.jsx';
 
 
 export default function App() {
@@ -104,7 +101,7 @@ export default function App() {
   useEffect(() => {
     console.log("Current User in App:", user);
   }, [user]);
-  
+
 
   return (
     <AuthProvider>
@@ -198,9 +195,9 @@ export default function App() {
 
 
             <Route path='/zoom' element={<ZoomSession />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
+          </Routes >
+        </div >
+      </BrowserRouter >
+    </AuthProvider >
   );
 }

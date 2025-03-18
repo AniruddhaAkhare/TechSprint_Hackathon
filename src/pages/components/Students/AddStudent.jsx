@@ -5,6 +5,7 @@ import { db } from "../../../config/firebase";
 import './Profile.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { Checkbox } from "@material-tailwind/react";
 
 export default function AddStudent() {
     const [firstName, setFirstName] = useState("");
@@ -95,6 +96,17 @@ export default function AddStudent() {
             return;
         }
 
+        let installmentTotal = 0;
+        installmentDetails.map((installment) => {
+            installmentTotal += Number(installment.dueAmount);
+        });
+
+        if (installmentTotal != total) {
+            alert("Installment total does not match with total amount");
+            console.log(installmentTotal);
+            return;
+        }
+
         try {
             const studentDocRef = await addDoc(collection(db, 'student'), {
                 first_name: firstName,
@@ -104,7 +116,7 @@ export default function AddStudent() {
                 residential_address: address,
                 billing_address: billingAddress,
                 goal: goal || "Not specified",
-                status: "Enrolled",
+                status: status,
                 date_of_birth: Timestamp.fromDate(new Date(dateOfBirth)),
                 admission_date: Timestamp.fromDate(new Date(admissionDate)),
                 course_details: courseDetails,
@@ -133,10 +145,10 @@ export default function AddStudent() {
 
                 const dueDate = new Date(installment.dueDate).toISOString().split("T")[0];
 
-                if (dueDate > today && installmentDetails.paidAmount===0) {
-                    outstanding += amtDue; 
-                } else if(dueDate <= today && installmentDetails.paidAmount===0) {
-                    overdue += amtDue; 
+                if (dueDate > today && installmentDetails.paidAmount === 0) {
+                    outstanding += amtDue;
+                } else if (dueDate <= today && installmentDetails.paidAmount === 0) {
+                    overdue += amtDue;
                 }
             });
 
@@ -285,7 +297,7 @@ export default function AddStudent() {
             dueAmount: "",
             dueDate: "",
             paidDate: "",
-           paidAmount: "",
+            paidAmount: "",
             modeOfPayment: "",
             pdcStatus: "",
             remark: ""
@@ -335,135 +347,313 @@ export default function AddStudent() {
     return (
         <div className="flex-col w-screen ml-80 p-4">
             <button className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200" onClick={() => navigate("/studentdetails")}>Back</button>
-            <h1>Add Student</h1>
+            <h1 className="text-lg font-semibold mb-4">Add Student</h1>
             <form className="student-form" onSubmit={handleAddStudent}>
                 <div className="form-group">
-                    <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-                    <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-                    <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                    <input type="text" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-                </div><br />
+                    <div className="flex">
+                        <div className="w-2/4">
+                            <label>First Name</label>
+                            <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                        </div>
+                        <div className="w-2/4">
+                            <label>Last Name</label>
+                            <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                        </div>
+                    </div>
+                    <div className="flex">
+                        <div className="w-2/4">
+                            <label>Email</label>
+                            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                        </div>
+                        <div className="w-2/4">
+                            <label>Phone</label>
+                            <input type="text" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                        </div>
+                    </div>
+                    <div className="flex">
+                        <div className="w-2/4">
+                            <label>Date of Birth</label>
+                            <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
+                        </div>
+                    </div>
+                </div><br /><br/>
 
                 <div className="form-group">
-                    <h3>Date of Birth</h3>
-                    <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
-                </div><br />
-
-                <div className="form-group">
-                    <h3>Residential Address</h3>
-                    <input type="text" placeholder="Street" value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })} />
-                    <input type="text" placeholder="Area" value={address.area} onChange={(e) => setAddress({ ...address, area: e.target.value })} />
-                    <input type="text" placeholder="City" value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} />
-                    <input type="text" placeholder="State" value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} />
-                    <input type="text" placeholder="Zip Code" value={address.zip} onChange={(e) => setAddress({ ...address, zip: e.target.value })} />
-                    <input type="text" placeholder="Country" value={address.country} onChange={(e) => setAddress({ ...address, country: e.target.value })} />
-                </div><br />
-
-                <div className="form-group">
-                    <h3>Billing Address</h3>
-                    <label> <input type="checkbox" checked={copyAddress} onChange={(e) => handleCopyAddress(e.target.checked)} />Same as Residential Address </label>
-                    <input type="text" placeholder="Street" value={billingAddress.street} onChange={(e) => setBillingAddress({ ...billingAddress, street: e.target.value })} />
-                    <input type="text" placeholder="Area" value={billingAddress.area} onChange={(e) => setBillingAddress({ ...billingAddress, area: e.target.value })} />
-                    <input type="text" placeholder="City" value={billingAddress.city} onChange={(e) => setBillingAddress({ ...billingAddress, city: e.target.value })} />
-                    <input type="text" placeholder="State" value={billingAddress.state} onChange={(e) => setBillingAddress({ ...billingAddress, state: e.target.value })} />
-                    <input type="text" placeholder="Zip Code" value={billingAddress.zip} onChange={(e) => setBillingAddress({ ...billingAddress, zip: e.target.value })} />
-                    <input type="text" placeholder="Country" value={billingAddress.country} onChange={(e) => setBillingAddress({ ...billingAddress, country: e.target.value })} />
-                    <input type="text" placeholder="GST No." value={billingAddress.gstNo} onChange={(e) => setBillingAddress({ ...billingAddress, gstNo: e.target.value })} />
-                </div><br />
-
-                <div>
-                    <h3>Educational Details</h3>
-                    {educationDetails.map((edu, index) => (
-                        <div key={index} className="education-group">
-                            <select value={edu.level} onChange={(e) => handleEducationChange(index, 'level', e.target.value)}>
-                                <option value="" disabled>Select Level</option>
-                                <option value="School">School</option>
-                                <option value="UG">UG</option>
-                                <option value="PG">PG</option>
-                            </select>
-                            <input type="text" placeholder="Institute Name" value={edu.institute} onChange={(e) => handleEducationChange(index, 'institute', e.target.value)} />
-                            <input type="text" placeholder="Degree" value={edu.degree} onChange={(e) => handleEducationChange(index, 'degree', e.target.value)} required />
-                            <input type="text" placeholder="Specialization" value={edu.specialization} onChange={(e) => handleEducationChange(index, 'specialization', e.target.value)} />
-                            <input type="text" placeholder="Grade" value={edu.grade} onChange={(e) => handleEducationChange(index, 'grade', e.target.value)} />
-                            <input type="number" placeholder="Passing Year" value={edu.passingyr} onChange={(e) => handleEducationChange(index, 'passingyr', e.target.value)} />
-                            <button type="button" onClick={() => deleteEducation(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
-                                <FontAwesomeIcon icon={faXmark} />
-                            </button>
+                    <div className="flex">
+                        <div className="w-2/4">
+                            <h3 className="text-lg font-semibold mb-4">Residential Address</h3>
+                            <label>Street</label>
+                            <input type="text" placeholder="Street" value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })} />
+                            <label>Area</label>
+                            <input type="text" placeholder="Area" value={address.area} onChange={(e) => setAddress({ ...address, area: e.target.value })} />
+                            <label>City</label>
+                            <input type="text" placeholder="City" value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} />
+                            <label>State</label>
+                            <input type="text" placeholder="State" value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} />
+                            <label>Zip Code</label>
+                            <input type="text" placeholder="Zip Code" value={address.zip} onChange={(e) => setAddress({ ...address, zip: e.target.value })} />
+                            <label>Country</label>
+                            <input type="text" placeholder="Country" value={address.country} onChange={(e) => setAddress({ ...address, country: e.target.value })} />
+                            <label> <input type="checkbox" checked={copyAddress} onChange={(e) => handleCopyAddress(e.target.checked)} /> Same as Residential Address </label>
                         </div>
-                    ))}
-                    <button type="button" onClick={addEducation} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Education</button>
-                </div><br />
-
-                <div>
-                    <h3>Experience Details</h3>
-                    {experienceDetails.map((experience, index) => (
-                        <div key={index} className="experience-group">
-                            <input type="text" placeholder="Company Name" value={experience.companyName} onChange={(e) => handleExperienceChange(index, 'companyName', e.target.value)} />
-                            <input type="text" placeholder="Designation" value={experience.designation} onChange={(e) => handleExperienceChange(index, 'designation', e.target.value)} />
-                            <input type="text" placeholder="Salary" value={experience.salary} onChange={(e) => handleExperienceChange(index, 'salary', e.target.value)} />
-                            <input type="text" placeholder="Description" value={experience.description} onChange={(e) => handleExperienceChange(index, 'description', e.target.value)} />
-                            <button type="button" onClick={() => deleteExperience(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
-                                <FontAwesomeIcon icon={faXmark} />
-                            </button>
+                        <div className="w-2/4">
+                            <h3 className="text-lg font-semibold mb-4">Billing Address</h3>
+                            <label>Street</label>
+                            <input type="text" placeholder="Street" value={billingAddress.street} onChange={(e) => setBillingAddress({ ...billingAddress, street: e.target.value })} />
+                            <label>Area</label>
+                            <input type="text" placeholder="Area" value={billingAddress.area} onChange={(e) => setBillingAddress({ ...billingAddress, area: e.target.value })} />
+                            <label>City</label>
+                            <input type="text" placeholder="City" value={billingAddress.city} onChange={(e) => setBillingAddress({ ...billingAddress, city: e.target.value })} />
+                            <label>State</label>
+                            <input type="text" placeholder="State" value={billingAddress.state} onChange={(e) => setBillingAddress({ ...billingAddress, state: e.target.value })} />
+                            <label>Zip Code</label>
+                            <input type="text" placeholder="Zip Code" value={billingAddress.zip} onChange={(e) => setBillingAddress({ ...billingAddress, zip: e.target.value })} />
+                            <label>Country</label>
+                            <input type="text" placeholder="Country" value={billingAddress.country} onChange={(e) => setBillingAddress({ ...billingAddress, country: e.target.value })} />
+                            <label>GST No.</label>
+                            <input type="text" placeholder="GST No." value={billingAddress.gstNo} onChange={(e) => setBillingAddress({ ...billingAddress, gstNo: e.target.value })} />
                         </div>
-                    ))}
-                    <button type="button" onClick={addExperience} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Experience</button>
-                </div><br />
+                    </div>
+                </div><br /><br/>
 
-                <div>
-                    <h3>Course Details</h3>
-                    {courseDetails.map((course, index) => (
-                        <div key={index} className="course-group">
-                            <select value={course.courseName} onChange={(e) => handleCourseChange(index, 'courseName', e.target.value)}>
-                                <option value="">Select Course</option>
-                                {courses.map(c => (
-                                    <option key={c.id} value={c.name}>{c.name}</option>
-                                ))}
-                            </select>
-                            <select value={course.batch} onChange={(e) => handleCourseChange(index, 'batch', e.target.value)}>
-                                <option value="">Select Batch</option>
-                                {batches.map(b => (
-                                    <option key={b.id} value={b.batchName}>{b.batchame}</option>
-                                ))}
-                            </select>
-                            <select value={course.center} onChange={(e) => handleCourseChange(index, 'center', e.target.value)}>
-                                <option value="">Select Center</option>
-                                {centers.map(center => (
-                                    <option key={center.id} value={center.name}>{center.name}</option>
-                                ))}
-                            </select>
-                            <select value={course.mode} onChange={(e) => handleCourseChange(index, 'mode', e.target.value)}>
-                                <option value="">Select Mode</option>
-                                <option value="Online">Online</option>
-                                <option value="Offline">Offline</option>
-                            </select>
-                            <button type="button" onClick={() => deleteCourse(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
-                                <FontAwesomeIcon icon={faXmark} />
-                            </button>
-                        </div>
-                    ))}
-                    <button type="button" onClick={addCourse} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Course</button>
-                </div><br />
 
-                <div>
-                    <h3>Goal</h3>
-                    <select value={goal} onChange={(e) => { setGoal(e.target.value) }}>
-                        <option value="" disabled>Select Goal</option>
-                        <option value="Upskilling">Upskilling</option>
-                        <option value="Career Switch">Career Switch</option>
-                        <option value="Placement">Placement</option>
-                    </select>
+                <div className="overflow-x-auto">
+                    <h3 className="text-lg font-semibold mb-4">Educational Details</h3>
+                    <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
+                        <thead className="bg-blue">
+                            <tr>
+                                <th className="py-2 px-4 border border-gray-300">Level</th>
+                                <th className="py-2 px-4 border border-gray-300">Institute Name</th>
+                                <th className="py-2 px-4 border border-gray-300">Degree</th>
+                                <th className="py-2 px-4 border border-gray-300">Specialization</th>
+                                <th className="py-2 px-4 border border-gray-300">Grade</th>
+                                <th className="py-2 px-4 border border-gray-300">Passing Year</th>
+                                <th className="py-2 px-4 border border-gray-300">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {educationDetails.map((edu, index) => (
+                                <tr key={index} className="hover:bg-gray-100">
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <select value={edu.level} onChange={(e) => handleEducationChange(index, 'level', e.target.value)} className="border-gray-300 rounded">
+                                            <option value="" disabled>Select Level</option>
+                                            <option value="School">School</option>
+                                            <option value="UG">UG</option>
+                                            <option value="PG">PG</option>
+                                        </select>
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input type="text" placeholder="Institute Name" value={edu.institute} onChange={(e) => handleEducationChange(index, 'institute', e.target.value)} className="border-gray-300 rounded w-full" />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input type="text" placeholder="Degree" value={edu.degree} onChange={(e) => handleEducationChange(index, 'degree', e.target.value)} className="border-gray-300 rounded w-full" required />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input type="text" placeholder="Specialization" value={edu.specialization} onChange={(e) => handleEducationChange(index, 'specialization', e.target.value)} className="border-gray-300 rounded w-full" />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input type="number" placeholder="Grade" value={edu.grade} onChange={(e) => handleEducationChange(index, 'grade', e.target.value)} className="border-gray-300 rounded w-full" />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input type="number" placeholder="Passing Year" value={edu.passingyr} onChange={(e) => handleEducationChange(index, 'passingyr', e.target.value)} className="border-gray-300 rounded w-full" />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <button type="button" onClick={() => deleteEducation(index)} className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 transition duration-200">
+                                            <FontAwesomeIcon icon={faXmark} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <button type="button" onClick={addEducation} className="mt-4 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Education</button>
                 </div>
+                <br /><br/>
+
+                <div className="overflow-x-auto">
+                    <h3 className="text-lg font-semibold mb-4">Experience Details</h3>
+                    <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
+                        <thead className="bg-blue">
+                            <tr>
+                                <th className="py-2 px-4 border border-gray-300">Company Name</th>
+                                <th className="py-2 px-4 border border-gray-300">Designation</th>
+                                <th className="py-2 px-4 border border-gray-300">Salary</th>
+                                <th className="py-2 px-4 border border-gray-300">Description</th>
+                                <th className="py-2 px-4 border border-gray-300">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {experienceDetails.map((experience, index) => (
+                                <tr key={index} className="hover:bg-gray-100">
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            type="text"
+                                            placeholder="Company Name"
+                                            value={experience.companyName}
+                                            onChange={(e) => handleExperienceChange(index, 'companyName', e.target.value)}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            type="text"
+                                            placeholder="Designation"
+                                            value={experience.designation}
+                                            onChange={(e) => handleExperienceChange(index, 'designation', e.target.value)}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            type="text"
+                                            placeholder="Salary"
+                                            value={experience.salary}
+                                            onChange={(e) => handleExperienceChange(index, 'salary', e.target.value)}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            type="text"
+                                            placeholder="Description"
+                                            value={experience.description}
+                                            onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteExperience(index)}
+                                            className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 transition duration-200"
+                                        >
+                                            <FontAwesomeIcon icon={faXmark} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <button type="button" onClick={addExperience} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
+                        Add Experience
+                    </button>
+                </div>
+                <br /><br/>
+
+                <div className="overflow-x-auto">
+                    <h3 className="text-lg font-semibold mb-4">Course Details</h3>
+                    <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
+                        <thead className="bg-blue">
+                            <tr>
+                                <th className="py-2 px-4 border border-gray-300">Course</th>
+                                <th className="py-2 px-4 border border-gray-300">Batch</th>
+                                <th className="py-2 px-4 border border-gray-300">Center</th>
+                                <th className="py-2 px-4 border border-gray-300">Mode</th>
+                                <th className="py-2 px-4 border border-gray-300">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {courseDetails.map((course, index) => (
+                                <tr key={index} className="hover:bg-gray-100">
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <select
+                                            value={course.courseName}
+                                            onChange={(e) => handleCourseChange(index, 'courseName', e.target.value)}
+                                            className="border-gray-300 rounded w-full"
+                                        >
+                                            <option value="">Select Course</option>
+                                            {courses.map(c => (
+                                                <option key={c.id} value={c.name}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <select
+                                            value={course.batch}
+                                            onChange={(e) => handleCourseChange(index, 'batch', e.target.value)}
+                                            className="border-gray-300 rounded w-full"
+                                        >
+                                            <option value="">Select Batch</option>
+                                            {batches.map(b => (
+                                                <option key={b.id} value={b.name}>{b.name}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <select
+                                            value={course.center}
+                                            onChange={(e) => handleCourseChange(index, 'center', e.target.value)}
+                                            className="border-gray-300 rounded w-full"
+                                        >
+                                            <option value="">Select Center</option>
+                                            {centers.map(center => (
+                                                <option key={center.id} value={center.name}>{center.name}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <select
+                                            value={course.mode}
+                                            onChange={(e) => handleCourseChange(index, 'mode', e.target.value)}
+                                            className="border-gray-300 rounded w-full"
+                                        >
+                                            <option value="">Select Mode</option>
+                                            <option value="Online">Online</option>
+                                            <option value="Offline">Offline</option>
+                                        </select>
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteCourse(index)}
+                                            className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 transition duration-200"
+                                        >
+                                            <FontAwesomeIcon icon={faXmark} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <button type="button" onClick={addCourse} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
+                        Add Course
+                    </button>
+                </div>
+                <br /><br/>
+
+                <div className="flex">
+                    <div className="w-2/4">
+                        <label><b>Goal</b></label><br />
+                        <select value={goal} onChange={(e) => { setGoal(e.target.value) }}>
+                            <option value="" disabled>Select Goal</option>
+                            <option value="Upskilling">Upskilling</option>
+                            <option value="Career Switch">Career Switch</option>
+                            <option value="Placement">Placement</option>
+                        </select>
+                    </div>
+                    <div className="w-2/4">
+                        <label><b>Status</b></label><br />
+                        <select value={status} onChange={(e) => { setStatus(e.target.value) }}>
+                            <option value="" disabled>Select Status</option>
+                            <option value="enquiry">Enquiry</option>
+                            <option value="enrolled">Enrolled</option>
+                            <option value="completed">Completed</option>
+                            <option value="deferred">Deferred</option>
+                        </select>
+                    </div>
+                </div><br/><br/>
 
                 <div>
-                    <h3>Payments</h3>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                        <div>
-                            <h4>Date Of Enrollments</h4>
+                    <h3 className="text-lg font-semibold mb-4">Payments</h3>
+                    <div className="flex">
+                        <div className="w-2/4">
+                            <label><b>Date Of Enrollments</b></label><br />
                             <input value={admissionDate} readOnly />
                         </div>
-                        <div>
-                            <h4>Fees Scheme</h4>
+                        <div className="w-2/4">
+                            <label><b>Fees Scheme</b></label><br />
                             <select name="payment-type" value={selectedTemplate} onChange={handleTemplateChange}>
                                 <option value="">--Select a Type--</option>
                                 {feeTemplates.map((template) => (
@@ -472,42 +662,150 @@ export default function AddStudent() {
                             </select>
                         </div>
                     </div>
-                    <div>
-                        <h2>Installment Details</h2>
-                        {installmentDetails.map((installment, index) => (
-                            <div key={index} className="course-group">
-                                <input name={`installmentDetails.${index}.number`} type="text" placeholder="Installment No.:" value={installment.number} readOnly />
-                                <input name={`installmentDetails.${index}.dueAmount`} type="text" placeholder="Due Amount" value={installment.dueAmount} onChange={handleChange} />
-                                <input name={`installmentDetails.${index}.dueDate`} type="date" placeholder="Due Date" value={installment.dueDate} onChange={handleChange} />
-                                <input name={`installmentDetails.${index}.paidDate`} type="date" placeholder="Paid On" value={installment.paidDate} onChange={handleChange} />
-                                <input name={`installmentDetails.${index}.paidAmount`} type="text" placeholder="Amount Paid" value={installment.paidAmount} onChange={handleChange} />
-                                <select name={`installmentDetails.${index}.modeOfPayment`} value={installment.modeOfPayment} onChange={handleChange}>
-                                    <option value="" disabled>Select Mode Of Payment</option>
-                                    <option value="m1">mode1</option>
-                                    <option value="m2">mode2</option>
-                                    <option value="m3">mode3</option>
-                                </select>
-                                <select name={`installmentDetails.${index}.pdcStatus`} value={installment.pdcStatus} onChange={handleChange}>
-                                    <option value="" disabled>Select PDC Status</option>
-                                    <option value="s1">status1</option>
-                                    <option value="s2">status2</option>
-                                    <option value="s3">status3</option>
-                                </select>
-                                <input name={`installmentDetails.${index}.remark`} type="text" placeholder="Remark" value={installment.remark} onChange={handleChange} />
-                                <button type="button" onClick={() => deleteInstallment(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
-                                    <FontAwesomeIcon icon={faXmark} />
-                                </button>
-                            </div>
+                    <div className="overflow-x-auto">
+                        <label><b>Add Discount</b></label><br />
+                        <input
+                            name='Discount'
+                            value={discount}
+                            placeholder="Discount"
+                            onChange={(e) => { setDiscount(e.target.value); }}
+                            className="border-gray-300 rounded w-1/4"
+                        /> %Rup<br />
 
-                        ))}
+                        <button type="button" onClick={handleFeeSummary} className="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
+                            Apply Discount
+                        </button><br />
 
-                        <button type="button" onClick={addInstallment} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Installment</button>
-                        <br /><label>Add Discount</label><br />
-                        <input name='Discount' value={discount} placeholder="Discount" onChange={(e) => { setDiscount(e.target.value) }} /> %Rup<br />
-                        <button type="button" onClick={handleFeeSummary}> Apply Discount</button>
-                        <h4>Fees Summary</h4>
-                        Total: <input type="number" value={total} disabled />
-                    </div><br />
+                        <div className="w-2/4">
+                            <label><b>Fees Summary</b></label><br />
+                            Total: <input type="number" value={total} disabled className="w-1/4 border-gray-300 rounded " /><br />
+                        </div>
+                        <label><b>Installment Details</b></label>
+                        <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
+                            <thead className="bg-blue">
+                                <tr>
+                                    <th className="py-2 px-4 border border-gray-300">No.</th>
+                                    <th className="py-2 px-4 border border-gray-300">Due Amount</th>
+                                    <th className="py-2 px-4 border border-gray-300">Due Date</th>
+                                    <th className="py-2 px-4 border border-gray-300">Paid On</th>
+                                    <th className="py-2 px-4 border border-gray-300">Amount Paid</th>
+                                    <th className="py-2 px-4 border border-gray-300">Mode of Payment</th>
+                                    <th className="py-2 px-4 border border-gray-300">PDC Status</th>
+                                    <th className="py-2 px-4 border border-gray-300">Remark</th>
+                                    <th className="py-2 px-4 border border-gray-300">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {installmentDetails.map((installment, index) => (
+                                    <tr key={index} className="hover:bg-gray-100">
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.number`}
+                                                type="text"
+                                                placeholder="Installment No.:"
+                                                value={installment.number}
+                                                readOnly
+                                                className="w-full border-gray-300 rounded"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.dueAmount`}
+                                                type="text"
+                                                placeholder="Due Amount"
+                                                value={installment.dueAmount}
+                                                onChange={handleChange}
+                                                className="w-full border-gray-300 rounded"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.dueDate`}
+                                                type="date"
+                                                placeholder="Due Date"
+                                                value={installment.dueDate}
+                                                onChange={handleChange}
+                                                className="w-full border-gray-300 rounded"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.paidDate`}
+                                                type="date"
+                                                placeholder="Paid On"
+                                                value={installment.paidDate}
+                                                onChange={handleChange}
+                                                className="w-full border-gray-300 rounded"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.paidAmount`}
+                                                type="text"
+                                                placeholder="Amount Paid"
+                                                value={installment.paidAmount}
+                                                onChange={handleChange}
+                                                className="w-full border-gray-300 rounded"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <select
+                                                name={`installmentDetails.${index}.modeOfPayment`}
+                                                value={installment.modeOfPayment}
+                                                onChange={handleChange}
+                                                className="w-full border-gray-300 rounded"
+                                            >
+                                                <option value="" disabled>Select</option>
+                                                <option value="m1">mode1</option>
+                                                <option value="m2">mode2</option>
+                                                <option value="m3">mode3</option>
+                                            </select>
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <select
+                                                name={`installmentDetails.${index}.pdcStatus`}
+                                                value={installment.pdcStatus}
+                                                onChange={handleChange}
+                                                className="w-full border-gray-300 rounded"
+                                            >
+                                                <option value="" disabled>Select</option>
+                                                <option value="s1">status1</option>
+                                                <option value="s2">status2</option>
+                                                <option value="s3">status3</option>
+                                            </select>
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.remark`}
+                                                type="text"
+                                                placeholder="Remark"
+                                                value={installment.remark}
+                                                onChange={handleChange}
+                                                className="w-full border-gray-300 rounded"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <button
+                                                type="button"
+                                                onClick={() => deleteInstallment(index)}
+                                                className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 transition duration-200"
+                                            >
+                                                <FontAwesomeIcon icon={faXmark} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        <button type="button" onClick={addInstallment} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
+                            Add Installment
+                        </button>
+
+                        <br />
+
+                    </div>
+
 
                 </div>
 

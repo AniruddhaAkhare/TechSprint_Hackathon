@@ -60,7 +60,7 @@ const Fees = ({ studentId }) => {
                         return {
                             id: doc.id,
                             course_id: data.course_id,
-                            course_name: courses[data.course_id] || 'Course not found',
+                            name: courses[data.course_id] || 'Course not found',
                             fees: data.fee || {},
                             enrolled_date: data.enrollment_date ? new Date(data.enrollment_date).toLocaleString() : 'Not available',
                             installments: data.installments || {},
@@ -134,7 +134,7 @@ const Fees = ({ studentId }) => {
                         {enrollmentData.map((enrollment, index) => (
                             <tr key={enrollment.id} className="hover:bg-gray-100 cursor-pointer" onClick={() => handleRowClick(enrollment)}>
                                 <td className="p-3 border-b">{index + 1}</td>
-                                <td className="p-3 border-b">{enrollment.course_name}</td>
+                                <td className="p-3 border-b">{enrollment.name}</td>
                                 <td className="p-3 border-b">{calculateTotalAmount(enrollment.fees?.discount, enrollment.fees?.total)}</td>
                                 <td className="p-3 border-b">{enrollment.fees?.discount || 0}</td>
                                 <td className="p-3 border-b">{enrollment.fees?.total || 0}</td>

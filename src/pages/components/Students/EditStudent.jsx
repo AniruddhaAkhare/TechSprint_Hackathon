@@ -42,7 +42,9 @@ export default function EditStudent() {
         educationDetails: [],
         installmentDetails: [],
         experienceDetails: [],
-        fees:[]
+        fees: "",
+        discount: "",
+        total: "",
     });
 
     const navigate = useNavigate();
@@ -51,12 +53,51 @@ export default function EditStudent() {
 
     const [selectedTemplate, setSelectedTemplate] = useState(null);
 
+    const [courses, setCourses] = useState([]);
+    const [batches, setBatches] = useState([]);
+    const [centers, setCenters] = useState([]);
+
+
+    useEffect(() => {
+        fetchCourses();
+        fetchBatches();
+        fetchCenters();
+    }, []);
+
+    const fetchCourses = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "Course"));
+            setCourses(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            console.log(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } catch (error) {
+            console.error("Error fetching courses:", error);
+        }
+    };
+
+    const fetchBatches = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "Batch"));
+            setBatches(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } catch (error) {
+            console.error("Error fetching batches:", error);
+        }
+    };
+
+    const fetchCenters = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "Centers"));
+            setCenters(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } catch (error) {
+            console.error("Error fetching centers:", error);
+        }
+    };
+
     useEffect(() => {
         const fetchStudent = async () => {
             try {
                 const studentRef = doc(db, "student", studentId);
                 const studentSnap = await getDoc(studentRef);
-                await fetchFeeTemplates(); 
+
 
                 if (studentSnap.exists()) {
                     const data = studentSnap.data();
@@ -90,7 +131,9 @@ export default function EditStudent() {
                         educationDetails: data.education_details || [],
                         installmentDetails: data.installment_details || [],
                         experienceDetails: data.experience_details || [],
-                        formData: data.fees || [],
+                        fees: data.fees || "",
+                        discount: data.discount || "",
+                        total: data.total || "",
                     });
                 } else {
                     alert("Student not found.");
@@ -220,20 +263,20 @@ export default function EditStudent() {
     useEffect(() => {
         const fetchFeeTemplates = async () => {
 
-        try {
-            const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
-            if (templateSnapshot.empty) {
-                alert("No fee templates found.");
-                return;
+            try {
+                const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
+                if (templateSnapshot.empty) {
+                    alert("No fee templates found.");
+                    return;
+                }
+
+                setFeeTemplates(templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            } catch (error) {
+                console.error("Error in fetching payment type:", error);
             }
+        };
 
-            setFeeTemplates(templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        } catch (error) {
-            console.error("Error in fetching payment type:", error);
-        }
-    };
-
-        fetchFeeTemplates(); 
+        fetchFeeTemplates();
     }, [studentId, navigate]);
 
 
@@ -262,7 +305,9 @@ export default function EditStudent() {
                 education_details: student.educationDetails,
                 installment_details: student.installmentDetails,
                 experienceDetails: student.experienceDetails,
-                fees: formData, 
+                fees: fees,
+                discount: discount,
+                total: total,
             });
 
 
@@ -340,184 +385,511 @@ export default function EditStudent() {
     return (
         <div className="flex-col w-screen ml-80 p-4">
             <button onClick={() => navigate(-1)} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Back</button>
-            <h1>Edit Student</h1><br />
-            <form onSubmit={handleUpdate}>
-
-                <input type="text" name="first_name" value={student.first_name} onChange={handleChange} placeholder="First Name" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="last_name" value={student.last_name} onChange={handleChange} placeholder="Last Name" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="email" name="email" value={student.email} onChange={handleChange} placeholder="Email" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="phone" value={student.phone} onChange={handleChange} placeholder="Phone" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-
-                <h2>Residential Address</h2>
-                <input type="text" name="address.street" value={student.address.street} onChange={handleChange} placeholder="Street" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="address.area" value={student.address.area} onChange={handleChange} placeholder="Area" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="address.city" value={student.address.city} onChange={handleChange} placeholder="City" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="address.state" value={student.address.state} onChange={handleChange} placeholder="State" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="address.zip" value={student.address.zip} onChange={handleChange} placeholder="Zip Code" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="address.country" value={student.address.country} onChange={handleChange} placeholder="Country" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" /><br />
-
-                <h2>Billing Address</h2>
-                <input type="text" name="billingAddress.street" value={student.billingAddress.street} onChange={handleChange} placeholder="Street" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="billingAddress.area" value={student.billingAddress.area} onChange={handleChange} placeholder="Area" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="billingAddress.city" value={student.billingAddress.city} onChange={handleChange} placeholder="City" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="billingAddress.state" value={student.billingAddress.state} onChange={handleChange} placeholder="State" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="billingAddress.zip" value={student.billingAddress.zip} onChange={handleChange} placeholder="Zip Code" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="billingAddress.country" value={student.billingAddress.country} onChange={handleChange} placeholder="Country" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="text" name="billingAddress.gstNo" value={student.billingAddress.gstNo} onChange={handleChange} placeholder="GST Number" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" /><br />
-
-                <h2>Date Of Birth</h2>
-                <input type="date" name="date_of_birth" value={student.date_of_birth} onChange={handleChange} placeholder="Date of Birth" /><br />
-                <h2>Admission Date</h2>
-                <input type="date" name="admission_date" value={student.admission_date} onChange={handleChange} placeholder="Admission Date" /><br />
-
-                <div>
-                    <h2>Course Details</h2>
-                    {Array.isArray(student.courseDetails) && student.courseDetails.map((course, index) => (
-                        <div key={index} className="course-group">
-                            <select name={`courseDetails.${index}.courseName`} value={course.courseName} onChange={handleChange}>
-                                <option value="">Select Course</option>
-                                <option value="Full Stack Development (MERN)">Full Stack Development (MERN)</option>
-                                <option value="Full Stack Development (Python)">Full Stack Development (Python)</option>
-                                <option value="Data Science">Data Science</option>
-                            </select>
-                            <select name={`courseDetails.${index}.batch`} value={course.batch} onChange={handleChange} >
-                                <option value="">Select Batch</option>
-                                <option value="Full Time">Full Time</option>
-                                <option value="Weekend">Weekend</option>
-                            </select>
-                            <select name={`courseDetails.${index}.branch`} value={course.branch} onChange={handleChange}>
-                                <option value="">Select Branch</option>
-                                <option value="Mate Sq">Mate Sq</option>
-                                <option value="Nandanwan">Nandanwan</option>
-                                <option value="Sadar">Sadar</option>
-                            </select>
-                            <select name={`courseDetails.${index}.mode`} value={course.mode} onChange={handleChange}>
-                                <option value="">Select Mode</option>
-                                <option value="Online">Online</option>
-                                <option value="Offline">Offline</option>
-                            </select>
-                            <button type="button" onClick={() => removeCourse(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
-                                <FontAwesomeIcon icon={faXmark} />
-                            </button>
+            <h1 className="text-lg font-semibold mb-4">Edit Student</h1><br />
+            <form className="student-form" onSubmit={handleUpdate}>
+                <div className="form-group">
+                    <div className="flex">
+                        <div className="w-2/4">
+                            <label>First Name</label>
+                            <input type="text" name="first_name" value={student.first_name} onChange={handleChange} placeholder="First Name" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
-                    ))}
-                    <button type="button" onClick={addCourse} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Course</button>
-                </div><br />
-
-                <div>
-                    <h2>Status of Student</h2>
-                    <select name="status" value={student.status} onChange={handleChange}>
-                        <option value="">Select Status</option>
-                        <option value="enquiry">Enquiry</option>
-                        <option value="enrolled">Enrolled</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="completed">Completed</option>
-                    </select>
-                </div><br />
-
-                <div>
-                    <h2>Payment Type</h2>
-                    <select name="payment-type" value={student.paymentType} onChange={handleTemplateChange}>
-                        <option value="">--Select a Type--</option>
-                        {feeTemplates.map((template) => (
-                            <option key={template.id} value={template.id}>{template.templateName}</option>
-                        ))}
-                    </select>
-                </div><br />
-
-                {selectedTemplate && (
-                    <div className="mt-4 bg-gray-50 p-4 rounded-md">
-                        <h3 className="text-lg font-semibold">Fill Fee Details:</h3>
-                        {renderTemplateFields()}
+                        <div className="w-2/4">
+                            <label>Last Name</label>
+                            <input type="text" name="last_name" value={student.last_name} onChange={handleChange} placeholder="Last Name" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
                     </div>
-                )}
-
-                <div>
-                    <h2>Educational Details</h2>
-                    {student.educationDetails.map((edu, index) => (
-                        <div key={index} className="education-group">
-                            <select name={`educationDetails.${index}.level`} value={edu.level} onChange={handleChange}>
-                                <option value="" disabled>Select Level</option>
-                                <option value="School">School</option>
-                                <option value="UG">UG</option>
-                                <option value="PG">PG</option>
-                            </select>
-                            <input name={`educationDetails.${index}.institute`} type="text" placeholder="Institute Name" value={edu.institute} onChange={handleChange} />
-                            <input name={`educationDetails.${index}.degree`} type="text" placeholder="Degree" value={edu.degree} onChange={handleChange} />
-                            <input name={`educationDetails.${index}.specialization`} type="text" placeholder="Specialization" value={edu.specialization} onChange={handleChange} />
-                            <input name={`educationDetails.${index}.grade`} type="text" placeholder="Grade" value={edu.grade} onChange={handleChange} />
-                            <input name={`educationDetails.${index}.passingyr`} type="number" placeholder="Passing Year" value={edu.passingyr} onChange={handleChange} />
-
-                            <button type="button" onClick={() => deleteEducation(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
-                                <FontAwesomeIcon icon={faXmark} />
-                            </button>
+                    <div className="flex">
+                        <div className="w-2/4">
+                            <label>Email</label>
+                            <input type="email" name="email" value={student.email} onChange={handleChange} placeholder="Email" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
-                    ))}
-                    <button type="button" onClick={addEducation} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Education</button>
-                </div><br />
-
-                <div>
-                    <h2>Experience Details</h2>
-                    {student.experienceDetails.map((exp, index) => (
-                        <div key={index} className="experience-group">
-                            <input name={`experienceDetails.${index}.companyName`} type="text" placeholder="Company Name" value={exp.companyName} onChange={handleChange} />
-                            <input name={`experienceDetails.${index}.designation`} type="text" placeholder="Designation" value={exp.designation} onChange={handleChange} />
-                            <input name={`experienceDetails.${index}.salary`} type="text" placeholder="Salary" value={exp.salary} onChange={handleChange} />
-                            <input name={`experienceDetails.${index}.description`} type="text" placeholder="Description" value={exp.description} onChange={handleChange} />
-                            <button type="button" onClick={() => deleteExperience(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
-                                <FontAwesomeIcon icon={faXmark} />
-                            </button>
+                        <div className="w-2/4">
+                            <label>Phone</label>
+                            <input type="text" name="phone" value={student.phone} onChange={handleChange} placeholder="Phone" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
-                    ))}
-                    <button type="button" onClick={addExperience} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Experience</button>
-                </div><br />
-
-                <div>
-                    <h2>Installment Details</h2>
-                    {student.installmentDetails.map((installment, index) => (
-                        <div key={index} className="course-group">
-                            <input name={`installmentDetails.${index}.number`} type="text" placeholder="Installment No.:" value={installment.number} onChange={handleChange} />
-                            <input name={`installmentDetails.${index}.dueAmount`} type="text" placeholder="Due Amount" value={installment.dueAmount} onChange={handleChange} />
-                            <input name={`installmentDetails.${index}.dueDate`} type="date" placeholder="Due Date" value={installment.dueDate} onChange={handleChange} />
-                            <input name={`installmentDetails.${index}.paidOn`} type="date" placeholder="Paid On" value={installment.paidOn} onChange={handleChange} />
-                            <input name={`installmentDetails.${index}.amtPaid`} type="text" placeholder="Amount Paid" value={installment.amtPaid} onChange={handleChange} />
-                            <select name={`installmentDetails.${index}.modeOfPayment`} value={installment.modeOfPayment} onChange={handleChange}>
-                                <option value="" disabled>Select Mode Of Payment</option>
-                                <option value="m1">mode1</option>
-                                <option value="m2">mode2</option>
-                                <option value="m3">mode3</option>
-                            </select>
-                            <select name={`installmentDetails.${index}.pdcStatus`} value={installment.pdcStatus} onChange={handleChange}>
-                                <option value="" disabled>Select PDC Status</option>
-                                <option value="s1">status1</option>
-                                <option value="s2">status2</option>
-                                <option value="s3">status3</option>
-                            </select>
-                            <input name={`installmentDetails.${index}.remark`} type="text" placeholder="Remark" value={installment.remark} onChange={handleChange} />
-                            <button type="button" onClick={() => deleteInstallment(index)} className="ml-2 btn bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200">
-                                <FontAwesomeIcon icon={faXmark} />
-                            </button>
+                    </div>
+                    <div className="flex">
+                        <div className="w-2/4">
+                            <label>Date of Birth</label>
+                            <input type="date" value={student.date_of_birth} onChange={handleChange} placeholder="Date of Birth" />
                         </div>
-                    ))}
-                    
-                    <button type="button" onClick={addInstallment} className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Add Installment</button>
-                    <h4>Add Discount</h4>
-                    <input></input> %Rup<br/>
-                    <button>Apply Discount</button>
-                    <h4>Fees Summary</h4>
-                    Total: <input type="number" disabled/>
+                        <div className="w-2/4">
+                            <label>Enrollment Date</label>
+                            <input type="date" name="phone" value={student.admission_date} placeholder="Phone" className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" readOnly />
+                        </div>
+                    </div>
+                </div><br/><br/>
 
-                </div><br />
+                <div className="form-group">
+                    <div className="flex">
+                        <div className="w-2/4">
+                            <h3 className="text-lg font-semibold mb-4">Residential Address</h3>
+                            <label>Street</label>
+                            <input type="text" placeholder="Street" value={student.address.street} onChange={handleChange} />
+                            <label>Area</label>
+                            <input type="text" placeholder="Area" value={student.address.area} onChange={handleChange} />
+                            <label>City</label>
+                            <input type="text" placeholder="City" value={student.address.city} onChange={handleChange} />
+                            <label>State</label>
+                            <input type="text" placeholder="State" value={student.address.state} onChange={handleChange} />
+                            <label>Zip Code</label>
+                            <input type="text" placeholder="Zip Code" value={student.address.zip} onChange={handleChange} />
+                            <label>Country</label>
+                            <input type="text" placeholder="Country" value={student.address.country} onChange={handleChange} />
+                        </div>
+                        <div className="w-2/4">
+                            <h3 className="text-lg font-semibold mb-4">Billing Address</h3>
+                            <label>Street</label>
+                            <input type="text" placeholder="Street" value={student.billingAddress.street} onChange={(e) => setBillingAddress({ ...billingAddress, street: e.target.value })} />
+                            <label>Area</label>
+                            <input type="text" placeholder="Area" value={student.billingAddress.area} onChange={handleChange} />
+                            <label>City</label>
+                            <input type="text" placeholder="City" value={student.billingAddress.city} onChange={handleChange} />
+                            <label>State</label>
+                            <input type="text" placeholder="State" value={student.billingAddress.state} onChange={handleChange} />
+                            <label>Zip Code</label>
+                            <input type="text" placeholder="Zip Code" value={student.billingAddress.zip} onChange={handleChange} />
+                            <label>Country</label>
+                            <input type="text" placeholder="Country" value={student.billingAddress.country} onChange={handleChange} />
+                            <label>GST No.</label>
+                            <input type="text" placeholder="GST No." value={student.billingAddress.gstNo} onChange={handleChange} />
+                        </div>
+                    </div>
+                </div><br /><br/>
+
+
+
+                <div className="overflow-x-auto">
+                    <h3 className="text-lg font-semibold mb-4">Educational Details</h3>
+                    <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
+                        <thead className="bg-blue">
+                            <tr>
+                                <th className="py-2 px-4 border border-gray-300">Level</th>
+                                <th className="py-2 px-4 border border-gray-300">Institute Name</th>
+                                <th className="py-2 px-4 border border-gray-300">Degree</th>
+                                <th className="py-2 px-4 border border-gray-300">Specialization</th>
+                                <th className="py-2 px-4 border border-gray-300">Grade</th>
+                                <th className="py-2 px-4 border border-gray-300">Passing Year</th>
+                                <th className="py-2 px-4 border border-gray-300">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {student.educationDetails.map((edu, index) => (
+                                <tr key={index} className="hover:bg-gray-100">
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <select
+                                            name={`educationDetails.${index}.level`}
+                                            value={edu.level}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        >
+                                            <option value="School">School</option>
+                                            <option value="UG">UG</option>
+                                            <option value="PG">PG</option>
+                                        </select>
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            name={`educationDetails.${index}.institute`}
+                                            type="text"
+                                            placeholder="Institute Name"
+                                            value={edu.institute}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            name={`educationDetails.${index}.degree`}
+                                            type="text"
+                                            placeholder="Degree"
+                                            value={edu.degree}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            name={`educationDetails.${index}.specialization`}
+                                            type="text"
+                                            placeholder="Specialization"
+                                            value={edu.specialization}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            name={`educationDetails.${index}.grade`}
+                                            type="text"
+                                            placeholder="Grade"
+                                            value={edu.grade}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            name={`educationDetails.${index}.passingyr`}
+                                            type="number"
+                                            placeholder="Passing Year"
+                                            value={edu.passingyr}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteEducation(index)}
+                                            className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 transition duration-200"
+                                        >
+                                            <FontAwesomeIcon icon={faXmark} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <button type="button" onClick={addEducation} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
+                        Add Education
+                    </button>
+                </div><br/><br/>
+
+
+                <div className="overflow-x-auto">
+                    <h3 className="text-lg font-semibold mb-4">Experience Details</h3>
+                    <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
+                        <thead className="bg-blue">
+                            <tr>
+                                <th className="py-2 px-4 border border-gray-300">Company Name</th>
+                                <th className="py-2 px-4 border border-gray-300">Designation</th>
+                                <th className="py-2 px-4 border border-gray-300">Salary</th>
+                                <th className="py-2 px-4 border border-gray-300">Description</th>
+                                <th className="py-2 px-4 border border-gray-300">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {student.experienceDetails.map((exp, index) => (
+                                <tr key={index} className="hover:bg-gray-100">
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            name={`experienceDetails.${index}.companyName`}
+                                            type="text"
+                                            placeholder="Company Name"
+                                            value={exp.companyName}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            name={`experienceDetails.${index}.designation`}
+                                            type="text"
+                                            placeholder="Designation"
+                                            value={exp.designation}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            name={`experienceDetails.${index}.salary`}
+                                            type="text"
+                                            placeholder="Salary"
+                                            value={exp.salary}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <input
+                                            name={`experienceDetails.${index}.description`}
+                                            type="text"
+                                            placeholder="Description"
+                                            value={exp.description}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteExperience(index)}
+                                            className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 transition duration-200"
+                                        >
+                                            <FontAwesomeIcon icon={faXmark} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <button type="button" onClick={addExperience} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
+                        Add Experience
+                    </button>
+                </div><br/><br/>
+
+                <div className="overflow-x-auto">
+                    <h3 className="text-lg font-semibold mb-4">Course Details</h3>
+                    <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
+                        <thead className="bg-blue">
+                            <tr>
+                                <th className="py-2 px-4 border border-gray-300">Course Name</th>
+                                <th className="py-2 px-4 border border-gray-300">Batch</th>
+                                <th className="py-2 px-4 border border-gray-300">Branch</th>
+                                <th className="py-2 px-4 border border-gray-300">Mode</th>
+                                <th className="py-2 px-4 border border-gray-300">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Array.isArray(student.courseDetails) && student.courseDetails.map((course, index) => (
+                                <tr key={index} className="hover:bg-gray-100">
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <select
+                                            name={`courseDetails.${index}.courseName`}
+                                            value={course.courseName}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        >
+                                            {courses.map(c => (
+                                                <option key={c.id} value={c.name}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <select
+                                            name={`courseDetails.${index}.batch`}
+                                            value={course.batch}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        >
+                                            {batches.map(b => (
+                                                <option key={b.id} value={b.name}>{b.name}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <select
+                                            name={`courseDetails.${index}.branch`}
+                                            value={course.branch}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        >
+                                            {centers.map(center => (
+                                                <option key={center.id} value={center.name}>{center.name}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <select
+                                            name={`courseDetails.${index}.mode`}
+                                            value={course.mode}
+                                            onChange={handleChange}
+                                            className="border-gray-300 rounded w-full"
+                                        >
+                                            <option value="Online">Online</option>
+                                            <option value="Offline">Offline</option>
+                                        </select>
+                                    </td>
+                                    <td className="py-2 px-4 border border-gray-300">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeCourse(index)}
+                                            className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 transition duration-200"
+                                        >
+                                            <FontAwesomeIcon icon={faXmark} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <button type="button" onClick={addCourse} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
+                        Add Course
+                    </button>
+                </div><br/><br/>
+
+                <div className="flex">
+                    <div className="w-2/4">
+                        <label><b>Status of Student</b></label><br/>
+                        <select name="status" value={student.status} onChange={handleChange}>
+                            <option value="enquiry">Enquiry</option>
+                            <option value="enrolled">Enrolled</option>
+                            <option value="deferred">Deferred</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+
+
+                    <div className="w-2/4">
+                        <label><b>Enrollment Goals</b></label><br/>
+                        <select name="goal" value={student.goal} onChange={handleChange}>
+                            <option value="upskilling">Upskilling</option>
+                            <option value="placement">Placement</option>
+                            <option value="career_switch">Career Switch</option>
+                        </select>
+                    </div>
+                </div><br/><br/>
 
                 <div>
-                    <h2>Enrollment Goals</h2>
-                    <select name="goal" value={student.goal} onChange={handleChange}>
-                        <option value="">Select Goal</option>
-                        <option value="upskilling">Upskilling</option>
-                        <option value="placement">Placement</option>
-                        <option value="career_switch">Career Switch</option>
-                    </select>
-                </div><br />
+                    <h3 className="text-lg font-semibold mb-4">Payments</h3>
+
+                    <div>
+                        <label><b>Payment Type</b></label><br/>
+                        <select name="payment-type" value={student.paymentType} onChange={handleTemplateChange} readOnly>
+                            {feeTemplates.map((template) => (
+                                <option key={template.id} value={template.id}>{template.templateName}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {selectedTemplate && (
+                        <div className="mt-4 bg-gray-50 p-4 rounded-md">
+                            <h3 className="text-lg font-semibold">Fill Fee Details:</h3>
+                            {renderTemplateFields()}
+                        </div>
+                    )}
+                    <br/>
+                    <div className="w-2/4">
+                        <label><b>Add Discount</b></label>
+                        <input className="border-gray-300 rounded" placeholder="Discount" type="number" value={student.discount} readOnly/>%Rup<br />
+                    </div>
+
+                    <button type="button" className="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
+                        Apply Discount
+                    </button><br/><br/>
+
+                    <div className="w-2/4">
+                        <label><b>Fees Summary</b></label><br/>
+                        Total: <input type="number" className="border-gray-300 rounded" value={student.total} readOnly/>
+                    </div><br/>
+
+                    <div className="overflow-x-auto">
+                        <label><b>Installment Details</b></label>
+                        <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
+                            <thead className="bg-blue">
+                                <tr>
+                                    <th className="py-2 px-4 border border-gray-300">Installment No.</th>
+                                    <th className="py-2 px-4 border border-gray-300">Due Amount</th>
+                                    <th className="py-2 px-4 border border-gray-300">Due Date</th>
+                                    <th className="py-2 px-4 border border-gray-300">Paid On</th>
+                                    <th className="py-2 px-4 border border-gray-300">Amount Paid</th>
+                                    <th className="py-2 px-4 border border-gray-300">Mode of Payment</th>
+                                    <th className="py-2 px-4 border border-gray-300">PDC Status</th>
+                                    <th className="py-2 px-4 border border-gray-300">Remark</th>
+                                    <th className="py-2 px-4 border border-gray-300">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {student.installmentDetails.map((installment, index) => (
+                                    <tr key={index} className="hover:bg-gray-100">
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.number`}
+                                                type="text"
+                                                placeholder="Installment No.:"
+                                                value={installment.number}
+                                                onChange={handleChange}
+                                                className="border-gray-300 rounded w-full"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.dueAmount`}
+                                                type="text"
+                                                placeholder="Due Amount"
+                                                value={installment.dueAmount}
+                                                onChange={handleChange}
+                                                className="border-gray-300 rounded w-full"
+                                                readOnly
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.dueDate`}
+                                                type="date"
+                                                value={installment.dueDate}
+                                                onChange={handleChange}
+                                                className="border-gray-300 rounded w-full"
+                                                readOnly
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.paidOn`}
+                                                type="date"
+                                                value={installment.paidOn}
+                                                onChange={handleChange}
+                                                className="border-gray-300 rounded w-full"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.amtPaid`}
+                                                type="text"
+                                                placeholder="Amount Paid"
+                                                value={installment.amtPaid}
+                                                onChange={handleChange}
+                                                className="border-gray-300 rounded w-full"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <select
+                                                name={`installmentDetails.${index}.modeOfPayment`}
+                                                value={installment.modeOfPayment}
+                                                onChange={handleChange}
+                                                className="border-gray-300 rounded w-full"
+                                            >
+                                                <option value="m1">mode1</option>
+                                                <option value="m2">mode2</option>
+                                                <option value="m3">mode3</option>
+                                            </select>
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <select
+                                                name={`installmentDetails.${index}.pdcStatus`}
+                                                value={installment.pdcStatus}
+                                                onChange={handleChange}
+                                                className="border-gray-300 rounded w-full"
+                                            >
+                                                <option value="s1">status1</option>
+                                                <option value="s2">status2</option>
+                                                <option value="s3">status3</option>
+                                            </select>
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <input
+                                                name={`installmentDetails.${index}.remark`}
+                                                type="text"
+                                                placeholder="Remark"
+                                                value={installment.remark}
+                                                onChange={handleChange}
+                                                className="border-gray-300 rounded w-full"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-4 border border-gray-300">
+                                            <button
+                                                type="button"
+                                                onClick={() => deleteInstallment(index)}
+                                                className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 transition duration-200"
+                                            >
+                                                <FontAwesomeIcon icon={faXmark} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <button type="button" onClick={addInstallment} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
+                            Add Installment
+                        </button>
+                    </div>
+                </div><br/><br/>
+
 
                 <button type="submit" className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Update Student</button>
                 <button type="button" onClick={handleDelete} className="ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Delete Student</button>

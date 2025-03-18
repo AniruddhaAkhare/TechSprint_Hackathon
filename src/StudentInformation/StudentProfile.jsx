@@ -31,27 +31,101 @@ export default function StudentProfile() {
 
     return (
         <div className="student-info">
-            <p><strong>First Name:</strong> {student.first_name}</p>
-            <p><strong>Last Name:</strong> {student.last_name}</p>
-            <p><strong>Email:</strong> {student.email}</p>
-            <p><strong>Phone:</strong> {student.phone}</p>
-            <p><strong>Status:</strong> {student.status}</p>
-            <p><strong>Student Goal:</strong> {student.goal}</p>
+            <div className='flex w-full'>
+                <div className='w-2/4'>
+                    <label className="block text-sm font-semibold mb-1">First Name</label>
+                    <input
+                        type="text"
+                        value={student.first_name}
+                        readOnly
+                        className="border border-gray-300 rounded px-2 py-1 w-12"
+                    />
+                </div>
+                <div className='w-2/4'>
+                    <label className="block text-sm font-semibold mb-1">Last Name</label>
+                    <input
+                        type="text"
+                        value={student.last_name}
+                        readOnly
+                        className="border border-gray-300 rounded px-2 py-1 w-12"
+                    />
+                </div>
 
-            <p><strong>Residential Address</strong></p>
-            <p>
-                {student.residential_address ? 
-                    `${student.residential_address.street}, ${student.residential_address.area}, ${student.residential_address.city}, ${student.residential_address.state}, ${student.residential_address.country} - ${student.residential_address.zip}` 
-                    : "Address not available"}
-            </p>
-
-            <p><strong>Billing Address</strong></p>
-            <p>
-                {student.billing_address ? 
-                    `${student.billing_address.street}, ${student.billing_address.area}, ${student.billing_address.city}, ${student.billing_address.state}, ${student.billing_address.country} - ${student.billing_address.zip}` 
-                    : "Address not available"}
-            </p>
-            <p><strong>GST No:</strong> {student.billing_address ? student.billing_address.gstNo : "N/A"}</p>
+            </div>
+            <div className='flex'>
+                <div className='w-2/4'>
+                    <label className="block text-sm font-semibold mb-1">Email</label>
+                    <input
+                        type="text"
+                        value={student.email}
+                        readOnly
+                        className="border border-gray-300 rounded px-2 py-1 w-12"
+                    />
+                </div>
+                <div className='w-2/4'>
+                    <label className="block text-sm font-semibold mb-1">Phone</label>
+                    <input
+                        type="text"
+                        value={student.phone}
+                        readOnly
+                        className="border border-gray-300 rounded px-2 py-1 w-12"
+                    />
+                </div>
+            </div>
+            <div className='flex'>
+                <div className='w-2/4'>
+                    <label className="block text-sm font-semibold mb-1">Status</label>
+                    <input
+                        type="text"
+                        value={student.status}
+                        readOnly
+                        className="border border-gray-300 rounded px-2 py-1 w-12"
+                    />
+                </div>
+                <div className='w-2/4'>
+                    <label className="block text-sm font-semibold mb-1">Goal</label>
+                    <input
+                        type="text"
+                        value={student.goal}
+                        readOnly
+                        className="border border-gray-300 rounded px-2 py-1 w-12"
+                    />
+                </div>
+            </div>
+            <div className='flex'>
+                <div className='w-2/4'>
+                    <label className="block text-sm font-semibold mb-1">Residential Address</label>
+                    <input
+                        type="text"
+                        value={student.residential_address ?
+                            `${student.residential_address.street}, ${student.residential_address.area}, ${student.residential_address.city}, ${student.residential_address.state}, ${student.residential_address.country} - ${student.residential_address.zip}`
+                            : "Address not available"}
+                        readOnly
+                        className="border border-gray-300 rounded px-2 py-1 w-12"
+                    />
+                </div>
+                <div className='w-2/4'>
+                    <label className="block text-sm font-semibold mb-1">Billing Address</label>
+                    <input
+                        type="text"
+                        value={student.billing_address ?
+                            `${student.billing_address.street}, ${student.billing_address.area}, ${student.billing_address.city}, ${student.billing_address.state}, ${student.billing_address.country} - ${student.billing_address.zip}`
+                            : "Address not available"}
+                        readOnly
+                        className="border border-gray-300 rounded px-2 py-1 w-12"
+                    />
+                </div>
+            </div>
+            <div className='w-2/4'>
+                    <label className="block text-sm font-semibold mb-1">GST No.</label>
+                    <input
+                        type="text"
+                        value={student.billing_address ? student.billing_address.gstNo : "N/A"}
+                        readOnly
+                        className="border border-gray-300 rounded px-2 py-1 w-12"
+                    />
+                </div>
+            <br/>
 
             <p><strong>Course Details</strong></p>
             {student.course_details && student.course_details.length > 0 ? (
@@ -78,7 +152,7 @@ export default function StudentProfile() {
             ) : (
                 <p>No courses enrolled.</p>
             )}
-
+            <br/>
             <p><strong>Education Details</strong></p>
             {student.education_details && student.education_details.length > 0 ? (
                 <table className='table-data table'>
@@ -110,7 +184,7 @@ export default function StudentProfile() {
             ) : (
                 <p>No education mentioned.</p>
             )}
-
+            <br/>
             <p><strong>Experience Details</strong></p>
             {student.experience_details && student.experience_details.length > 0 ? (
                 <table className='table-data table'>
@@ -138,7 +212,7 @@ export default function StudentProfile() {
             ) : (
                 <p>No experience.</p>
             )}
-
+            <br/>
             <p><strong>Installment Details</strong></p>
             {student.installment_details && student.installment_details.length > 0 ? (
                 <table className='data-table table'>
@@ -172,10 +246,9 @@ export default function StudentProfile() {
             ) : (
                 <p>No experience.</p>
             )}
-
+            <br/>
             <div>
-                <button onClick={()=>{navigate(`/studentdetails/updatestudent/${studentId}`);}} className='btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Edit</button>
-                <button onClick={() => navigate('/studentdetails')} className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Back</button>
+                <button onClick={() => { navigate(`/studentdetails/updatestudent/${studentId}`); }} className='btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Edit</button>
             </div>
         </div>
     );
