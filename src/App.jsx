@@ -84,6 +84,9 @@ import StudentInfo from './StudentInformation/StudentInfo.jsx'
 
 import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession.jsx';
 
+import FinancePartner from './pages/components/FinancePartner/FinancePartner.jsx';
+import AddFinancePartner from './pages/components/FinancePartner/AddFinancePartner.jsx';
+
 
 export default function App() {
 
@@ -191,6 +194,12 @@ export default function App() {
             <Route path='/createAssignment' element={<CreateAssignment />} />
 
             <Route path='/fee-template' element={<FeeTemplate/>}/>
+
+
+            <Route path="/financePartners" element={<FinancePartner />} />
+            {/* <Route path='/financePartners' element={FinancePartner}/> */}
+            <Route path='/addFinancePartner' element={<AddFinancePartner/>}/>
+
 
 
 

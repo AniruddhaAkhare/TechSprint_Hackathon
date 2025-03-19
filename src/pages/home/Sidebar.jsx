@@ -232,6 +232,15 @@ export default function Sidebar() {
                                     </ListItemPrefix>
                                     Add centers
                                 </ListItem>
+
+                                <ListItem onClick={() => navigate('/financePartners')}>
+                                    <ListItemPrefix>
+                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                    </ListItemPrefix>
+                                    Finance Partner
+                                </ListItem>
+
+
                                 <ListItem onClick={() => navigate('/fee-template')}>
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
