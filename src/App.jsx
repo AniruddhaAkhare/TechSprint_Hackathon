@@ -66,8 +66,8 @@ import UpdateInvoice from '../src/pages/components/Invoices/UpdateInvoice.jsx';
 import Role from './pages/components/UsersAndRoles.jsx/Roles.jsx'
 
 
-import Assignments from './pages/components/CourseDelivery/Assignment/Assignment.jsx';
-import CreateAssignment from './pages/components/CourseDelivery/Assignment/CreateAssignment.jsx';
+// import Assignments from './pages/components/CourseDelivery/Assignment/Assignment.jsx';
+// import CreateAssignment from './pages/components/CourseDelivery/Assignment/CreateAssignment.jsx';
 
 import { onAuthStateChanged } from 'firebase/auth';
 import { AuthProvider } from './context/AuthContext';
@@ -190,8 +190,8 @@ export default function App() {
 
 
 
-            <Route path='/assignment' element={<Assignments />} />
-            <Route path='/createAssignment' element={<CreateAssignment />} />
+            {/* <Route path='/assignment' element={<Assignments />} />
+            <Route path='/createAssignment' element={<CreateAssignment />} /> */}
 
             <Route path='/fee-template' element={<FeeTemplate/>}/>
 
