@@ -142,6 +142,15 @@ export default function Sidebar() {
                                     </ListItemPrefix>
                                     Curriculum
                                 </ListItem>
+
+                                <ListItem onClick={() => navigate('/attendance')}>
+                                    <ListItemPrefix>
+                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
+                                    </ListItemPrefix>
+                                    Attendance
+                                </ListItem>
+
+
                                 <ListItem onClick={() => navigate('/assignment')}>
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />

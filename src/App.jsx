@@ -87,6 +87,7 @@ import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession.j
 import FinancePartner from './pages/components/FinancePartner/FinancePartner.jsx';
 import AddFinancePartner from './pages/components/FinancePartner/AddFinancePartner.jsx';
 
+import Attendance from './StudentInformation/Attendance.jsx';
 
 export default function App() {
 
@@ -199,6 +200,10 @@ export default function App() {
             <Route path="/financePartners" element={<FinancePartner />} />
             {/* <Route path='/financePartners' element={FinancePartner}/> */}
             <Route path='/addFinancePartner' element={<AddFinancePartner/>}/>
+
+
+            {/* <Route path='/attendace' element={<Attendance/>}/> */}
+            <Route path="/attendance" element={<Attendance />} />
 
 
 
