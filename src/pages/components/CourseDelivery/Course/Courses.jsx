@@ -10,7 +10,7 @@ export default function Courses() {
     const [courses, setCourses] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
-    
+
     const CourseCollectionRef = collection(db, "Course");
     const StudentCollectionRef = collection(db, "student");
     const [isOpen, setIsOpen] = useState(false);
@@ -73,6 +73,7 @@ export default function Courses() {
     };
 
     const checkStudentsInCourse = async (courseId) => {
+        // ... (unchanged)
         try {
             console.log(`Checking students for course ID: ${courseId}`); // Add this line
             const snapshot = await getDocs(StudentCollectionRef);
@@ -95,6 +96,7 @@ export default function Courses() {
     };
 
     const deleteCourse = async () => {
+        // ... (unchanged)
         if (!deleteId) return;
 
         try {
@@ -116,25 +118,24 @@ export default function Courses() {
     };
 
     return (
-        <div className="flex-col w-screen ml-80 p-4">
-            <div className="justify-between items-center p-4 mb-4 flex">
-                <div className="flex-1">
-                    <h1 className="text-2xl font-semibold">Courses</h1>
-                </div>
-                <div>
-                    <button
-                        type="button"
-                        className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
-                        onClick={handleCreateCourseClick}
-                    >
-                        + Create Course
-                    </button>
-                </div>
+        <div className="flex flex-col w-full p-4 md:ml-80">
+            {/* Header and Create Button */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 mb-4 gap-4">
+                <h1 className="text-xl md:text-2xl font-semibold">Courses</h1>
+                <button
+                    type="button"
+                    className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200 w-full md:w-auto"
+                    onClick={handleCreateCourseClick}
+                >
+                    + Create Course
+                </button>
             </div>
 
+            {/* Sidebar for Create/Edit Course */}
             <CreateCourses isOpen={isOpen} toggleSidebar={handleClose} course={currentCourse} />
 
-            <div className="justify-between items-center p-4 mt-4">
+            {/* Search Bar */}
+            <div className="p-4 mt-4">
                 <SearchBar
                     searchTerm={searchTerm}
                     setSearchTerm={setSearchTerm}
@@ -142,11 +143,12 @@ export default function Courses() {
                 />
             </div>
 
-            <div className="sec-3">
-                <table className="data-table table w-full">
+            {/* Courses Table */}
+            <div className="sec-3 overflow-x-auto">
+                <table className="data-table table w-full min-w-[600px]">
                     <thead className="table-secondary">
                         <tr>
-                            <th>Sr No</th>
+                            <th className="sticky left-0 bg-gray-200">Sr No</th>
                             <th>Course Name</th>
                             <th>Status</th>
                             <th>Action</th>
@@ -155,24 +157,24 @@ export default function Courses() {
                     <tbody>
                         {(searchResults.length > 0 ? searchResults : courses).map((course, index) => (
                             <tr key={course.id}>
-                                <td>{index + 1}</td>
+                                <td className="sticky left-0 bg-white">{index + 1}</td>
                                 <td>{course.name}</td>
                                 <td>{course.status || "Ongoing"}</td>
                                 <td>
-                                    <div className="flex items-center space-x-2">
-                                        <button 
+                                    <div className="flex items-center space-x-2 flex-wrap gap-2">
+                                        <button
                                             onClick={() => {
                                                 setDeleteId(course.id);
                                                 setOpenDelete(true);
                                                 setDeleteMessage("Are you sure you want to delete this course? This action cannot be undone.");
-                                            }} 
-                                            className="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600"
+                                            }}
+                                            className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 text-sm md:text-base"
                                         >
                                             Delete
                                         </button>
-                                        <button 
-                                            onClick={() => handleEditClick(course)} 
-                                            className="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600"
+                                        <button
+                                            onClick={() => handleEditClick(course)}
+                                            className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 text-sm md:text-base"
                                         >
                                             Update
                                         </button>
@@ -184,13 +186,18 @@ export default function Courses() {
                 </table>
             </div>
 
-            <Dialog open={openDelete} handler={() => setOpenDelete(false)}>
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={openDelete} handler={() => setOpenDelete(false)} size="sm">
                 <DialogHeader>Confirm Deletion</DialogHeader>
                 <DialogBody>{deleteMessage}</DialogBody>
-                <DialogFooter>
-                    <Button variant="text" color="gray" onClick={() => setOpenDelete(false)}>Cancel</Button>
+                <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                    <Button variant="text" color="gray" onClick={() => setOpenDelete(false)} className="w-full sm:w-auto">
+                        Cancel
+                    </Button>
                     {deleteMessage === "Are you sure you want to delete this course? This action cannot be undone." && (
-                        <Button variant="filled" color="red" onClick={deleteCourse}>Yes, Delete</Button>
+                        <Button variant="filled" color="red" onClick={deleteCourse} className="w-full sm:w-auto">
+                            Yes, Delete
+                        </Button>
                     )}
                 </DialogFooter>
             </Dialog>

@@ -110,9 +110,13 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div style={{ display: 'flex' }}>
+      <div className="flex flex-col md:flex-row min-h-screen">
+                    {user && <Sidebar />}
+                    {/* <main className="flex-1 md:ml-80 w-full"> */}
+                        <Routes>
+        {/* <div style={{ display: 'flex' }}>
           {user && <Sidebar />}
-          <Routes>
+          <Routes> */}
             <Route path="/" element={user ? <Profile /> : <Welcome />} />
             <Route path='/header' element={<HeaderContent />} />
             <Route path='/navigation' element={<Navigation />} />
@@ -210,7 +214,9 @@ export default function App() {
 
             <Route path='/zoom' element={<ZoomSession />} />
           </Routes >
+          {/* </main> */}
         </div >
+        
       </BrowserRouter >
     </AuthProvider >
   );

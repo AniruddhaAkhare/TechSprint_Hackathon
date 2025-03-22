@@ -124,8 +124,7 @@ const EditCourse = () => {
                         <span className="ml-2">{center.name}</span>
                     </label>
                 ))}
-                
-            
+                          
                 <div className="flex space-x-4 mt-4">
                     <button type="button" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onClick={handleSave}>Save Changes</button>
                     <button type="button" className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onClick={() => navigate(-1)}>Cancel</button>
@@ -134,5 +133,4 @@ const EditCourse = () => {
         </div>
     );
 };
-
 export default EditCourse;

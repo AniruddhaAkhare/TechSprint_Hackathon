@@ -1,35 +1,28 @@
 import React, { useState } from 'react';
 import { db } from '../../../config/firebase';
 import { collection, addDoc } from 'firebase/firestore';
-
 const CreateFeeTemplate = ({ onCancel }) => {
     const [templateName, setTemplateName] = useState('');
     const [fields, setFields] = useState([]);
     const [numOfInstallments, setNumOfInstallment] = useState('');
-
     const addField = () => {
         setFields([...fields, { fieldName: '', fieldType: '' }]);
     };
-
     const handleFieldChange = (index, key, value) => {
         const updatedFields = [...fields];
         updatedFields[index][key] = value;
         setFields(updatedFields);
     };
-
     const removeField = (index) => {
         const updatedFields = fields.filter((_, i) => i !== index);
         setFields(updatedFields);
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         const templateData = {
             templateName,
             fields,
         };
-
         try {
             const docRef = await addDoc(collection(db, 'feeTemplates'), templateData);
             console.log('Template saved with ID: ', docRef.id);
@@ -41,12 +34,10 @@ const CreateFeeTemplate = ({ onCancel }) => {
             alert('Error saving template. Please try again.');
         }
     };
-
     const resetForm = () => {
         setTemplateName('');
         setFields([]);
     };
-
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
             <div className="bg-white p-6 rounded-lg shadow-md w-1/3 max-h-[80vh] overflow-y-auto">
@@ -96,9 +87,7 @@ const CreateFeeTemplate = ({ onCancel }) => {
                                             type="button"
                                             onClick={() => removeField(index)}
                                             className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
-                                        >
-                                            Remove
-                                        </button>
+                                        >Remove</button>
                                     </div>
                                 </div>
                             </div>

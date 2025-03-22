@@ -1,4 +1,4 @@
-.batches-container {
+/* .batches-container {
     font-family: sans-serif;
     padding: 20px;
     background-color: #f9f9f9;
@@ -79,7 +79,6 @@
   }
   
   .batches-table th {
-    /* background-color: ; */
     font-weight: bold;
   }
   
@@ -102,5 +101,5 @@
   .pagination-bar {
     margin-top: 20px;
     text-align: center;
-    /* Add pagination styles here */
-  }
+   
+  } */
