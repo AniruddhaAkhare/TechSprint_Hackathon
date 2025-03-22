@@ -112,15 +112,18 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <div style={{ display: 'flex' }}>
+          
           {user && <Sidebar />}
           <Routes>
             <Route path="/" element={user ? <Profile /> : <Welcome />} />
             <Route path='/header' element={<HeaderContent />} />
             <Route path='/navigation' element={<Navigation />} />
+            <Route path="/login" element={<LoginForm />} />
+
 
             <Route path="/dashboard" element={<Dashboard />} />
 
-            <Route path="/login" element={<LoginForm />} />
+            
             <Route path="/register" element={<RegisterForm />} />
 
             <Route path="/courses" element={<Courses />} />
