@@ -380,7 +380,7 @@ export default function LoginForm() {
                 <h2 className="text-2xl font-semibold text-center text-gray-700 mb-6">Login</h2>
                 {/* <div className="login-container h-screen flex items-center justify-center w-screen"> */}
                 <Form className="login-form" onSubmitCapture={handleSubmit}>
-                        <h2 className="login-title">Login</h2>
+                        {/* <h2 className="login-title">Login</h2> */}
 
                         <Form.Item
                             label="Email"

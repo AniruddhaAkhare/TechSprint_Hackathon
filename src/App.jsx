@@ -83,6 +83,7 @@ import StudentInfo from './StudentInformation/StudentInfo.jsx'
 
 
 import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession.jsx';
+import AddCourse from './pages/components/Students/AddStudent/AddCourse.jsx'
 
 import FinancePartner from './pages/components/FinancePartner/FinancePartner.jsx';
 import AddFinancePartner from './pages/components/FinancePartner/AddFinancePartner.jsx';
@@ -120,10 +121,12 @@ export default function App() {
             <Route path="/" element={user ? <Profile /> : <Welcome />} />
             <Route path='/header' element={<HeaderContent />} />
             <Route path='/navigation' element={<Navigation />} />
+            <Route path="/login" element={<LoginForm />} />
+
 
             <Route path="/dashboard" element={<Dashboard />} />
 
-            <Route path="/login" element={<LoginForm />} />
+            
             <Route path="/register" element={<RegisterForm />} />
 
             <Route path="/courses" element={<Courses />} />
@@ -199,6 +202,7 @@ export default function App() {
             <Route path='/createAssignment' element={<CreateAssignment />} /> */}
 
             <Route path='/fee-template' element={<FeeTemplate/>}/>
+            <Route path='/add-course/:studentId' element={<AddCourse/>}/>
 
 
             <Route path="/financePartners" element={<FinancePartner />} />
