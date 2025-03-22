@@ -671,7 +671,7 @@ export default function EditStudent() {
                                             className="border-gray-300 rounded w-full"
                                         >
                                             {batches.map(b => (
-                                                <option key={b.id} value={b.name}>{b.name}</option>
+                                                <option key={b.id} value={b.batchName}>{b.batchName}</option>
                                             ))}
                                         </select>
                                     </td>

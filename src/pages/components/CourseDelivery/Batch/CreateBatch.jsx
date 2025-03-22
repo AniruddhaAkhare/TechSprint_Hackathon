@@ -3,8 +3,6 @@ import { db } from "../../../../config/firebase";
 import { getDocs, collection, addDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
-// import { serverTimestamp } from "firebase/firestore";
-
 const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
     const navigate = useNavigate();
 
@@ -12,11 +10,11 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
     const [batchName, setBatchName] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    const [status, setStatus] = useState("Ongoing");
 
     const [centers, setCenters] = useState([]);
     const [selectedCenters, setSelectedCenters] = useState("");
     const [availableCenters, setAvailableCenters] = useState([]);
-
 
     const [course, setCourse] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState("");
@@ -84,6 +82,7 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
             setBatchName(batch.batchName);
             setStartDate(batch.startDate);
             setEndDate(batch.endDate);
+            setStatus(batch.status || "Ongoing");
 
             setSelectedCenters(batch.centers || []);
             setAvailableCenters(centers.filter((c) => !batch.centers.includes(c.id)));
@@ -114,6 +113,7 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
             batchName: batchName,
             startDate,
             endDate,
+            status,
             centers: selectedCenters,
             course: selectedCourse,
             curriculum: selectedCurriculum,
@@ -143,6 +143,7 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
         setBatchName("");
         setStartDate("");
         setEndDate("");
+        setStatus("Ongoing");
 
         setSelectedCenters([]);
         setAvailableCenters(centers);
@@ -251,6 +252,12 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
                 <label>End Date:</label>
                 <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
 
+                <label>Status: </label>
+                <select value={status} onChange={(e) => setStatus(e.target.value)} required>
+                    <option value="Ongoing">Ongoing</option>
+                    <option value="Archive">Archive</option>
+                    </select>
+                    
 
                 {/* Select Centers */}
                 <select onChange={(e) => handleAddCenter(e.target.value)}>
