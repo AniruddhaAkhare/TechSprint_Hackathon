@@ -636,7 +636,7 @@ export default function EditStudent() {
                     </button>
                 </div><br/><br/>
 
-                <div className="overflow-x-auto">
+                {/* <div className="overflow-x-auto">
                     <h3 className="text-lg font-semibold mb-4">Course Details</h3>
                     <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
                         <thead className="bg-blue">
@@ -715,7 +715,7 @@ export default function EditStudent() {
                     <button type="button" onClick={addCourse} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
                         Add Course
                     </button>
-                </div><br/><br/>
+                </div><br/><br/> */}
 
                 <div className="flex">
                     <div className="w-2/4">
@@ -739,7 +739,7 @@ export default function EditStudent() {
                     </div>
                 </div><br/><br/>
 
-                <div>
+                {/* <div>
                     <h3 className="text-lg font-semibold mb-4">Payments</h3>
 
                     <div>
@@ -894,7 +894,7 @@ export default function EditStudent() {
                             Add Installment
                         </button>
                     </div>
-                </div><br/><br/>
+                </div><br/><br/> */}
 
 
                 <button type="submit" className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">Update Student</button>
