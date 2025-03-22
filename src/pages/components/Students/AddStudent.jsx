@@ -13,7 +13,7 @@ export default function AddStudent() {
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [address, setAddress] = useState({ street: "", area: "", city: "", state: "", zip: "", country: "" });
-    const [billingAddress, setBillingAddress] = useState({ street: "", area: "", city: "", state: "", zip: "", country: "", gstNo: "" });
+    const [billingAddress, setBillingAddress] = useState({name:"", street: "", area: "", city: "", state: "", zip: "", country: "", gstNo: "" });
     const [copyAddress, setCopyAddress] = useState(false);
     const [status, setStatus] = useState("");
     const [dateOfBirth, setDateOfBirth] = useState("");
@@ -141,14 +141,14 @@ export default function AddStudent() {
                 const amtPaid = installment.paidAmount || 0;
                 const amtDue = installment.dueAmount || 0;
 
-                paidAmt += amtPaid;
+                paidAmt += Number(amtPaid);
 
                 const dueDate = new Date(installment.dueDate).toISOString().split("T")[0];
 
                 if (dueDate > today && installmentDetails.paidAmount === 0) {
-                    outstanding += amtDue;
+                    outstanding += Number(amtDue);
                 } else if (dueDate <= today && installmentDetails.paidAmount === 0) {
-                    overdue += amtDue;
+                    overdue += Number(amtDue);
                 }
             });
 
@@ -271,8 +271,6 @@ export default function AddStudent() {
     };
 
 
-
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         const [fieldName, index, subField] = name.split('.');
@@ -304,7 +302,6 @@ export default function AddStudent() {
         };
         setInstallmentDetails([...installmentDetails, newInstallment]);
     };
-
 
     const deleteInstallment = (index) => {
         const updatedInstallments = installmentDetails.filter((_, i) => i !== index);
@@ -398,6 +395,8 @@ export default function AddStudent() {
                         </div>
                         <div className="w-2/4">
                             <h3 className="text-lg font-semibold mb-4">Billing Address</h3>
+                            <label>Name/Company Name</label>
+                            <input type="text" placeholder="Name" value={billingAddress.name} onChange={(e) => setBillingAddress({ ...billingAddress, name: e.target.value })} />
                             <label>Street</label>
                             <input type="text" placeholder="Street" value={billingAddress.street} onChange={(e) => setBillingAddress({ ...billingAddress, street: e.target.value })} />
                             <label>Area</label>
@@ -650,7 +649,7 @@ export default function AddStudent() {
                     <div className="flex">
                         <div className="w-2/4">
                             <label><b>Date Of Enrollments</b></label><br />
-                            <input value={admissionDate} readOnly />
+                            <input value={admissionDate} />
                         </div>
                         <div className="w-2/4">
                             <label><b>Fees Scheme</b></label><br />

@@ -9,6 +9,7 @@ import Attendance from "./Attendance";
 import StudentProfile from "./StudentProfile";
 import Result from "./Result";
 import "./Profile.css";
+import AddCourse from "../pages/components/Students/AddStudent/AddCourse";
 
 export default function StudentInfo() {
     const navigate = useNavigate();
@@ -94,6 +95,9 @@ export default function StudentInfo() {
                     <p className="text-lg">Registered on: {student.admission_date}</p>
                     <p className="text-lg">Reg. ID: {studentId}</p>
                     <p className="text-lg">Phone: {student.phone}</p>
+                </div>
+                <div>
+                    <button onClick={()=>{navigate(`/add-course/${studentId}`)}}>Add Course</button>
                 </div>
 
                 <div className="flex space-x-4 mb-4">

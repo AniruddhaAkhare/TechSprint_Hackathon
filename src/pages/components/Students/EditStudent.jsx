@@ -28,6 +28,7 @@ export default function EditStudent() {
             country: "",
         },
         billingAddress: {
+            name: "",
             street: "",
             area: "",
             city: "",
@@ -42,7 +43,7 @@ export default function EditStudent() {
         educationDetails: [],
         installmentDetails: [],
         experienceDetails: [],
-        fees: "",
+        // fees: "",
         discount: "",
         total: "",
     });
@@ -117,6 +118,7 @@ export default function EditStudent() {
                             country: "",
                         },
                         billingAddress: data.billing_address || {
+                            name: "",
                             street: "",
                             area: "",
                             city: "",
@@ -131,7 +133,7 @@ export default function EditStudent() {
                         educationDetails: data.education_details || [],
                         installmentDetails: data.installment_details || [],
                         experienceDetails: data.experience_details || [],
-                        fees: data.fees || "",
+                        // fees: data.fees || "",
                         discount: data.discount || "",
                         total: data.total || "",
                     });
@@ -305,9 +307,9 @@ export default function EditStudent() {
                 education_details: student.educationDetails,
                 installment_details: student.installmentDetails,
                 experienceDetails: student.experienceDetails,
-                fees: fees,
-                discount: discount,
-                total: total,
+                // fees: fees,
+                // discount: discount,
+                // total: total,
             });
 
 
@@ -439,8 +441,10 @@ export default function EditStudent() {
                         </div>
                         <div className="w-2/4">
                             <h3 className="text-lg font-semibold mb-4">Billing Address</h3>
+                            <label>Name / Company Name</label>
+                            <input type="text" placeholder="Name" value={student.billingAddress.name} onChange={handleChange} />
                             <label>Street</label>
-                            <input type="text" placeholder="Street" value={student.billingAddress.street} onChange={(e) => setBillingAddress({ ...billingAddress, street: e.target.value })} />
+                            <input type="text" placeholder="Street" value={student.billingAddress.street} onChange={handleChange} />
                             <label>Area</label>
                             <input type="text" placeholder="Area" value={student.billingAddress.area} onChange={handleChange} />
                             <label>City</label>
@@ -822,7 +826,7 @@ export default function EditStudent() {
                                             <input
                                                 name={`installmentDetails.${index}.paidOn`}
                                                 type="date"
-                                                value={installment.paidOn}
+                                                value={installment.paidDate}
                                                 onChange={handleChange}
                                                 className="border-gray-300 rounded w-full"
                                             />
@@ -832,7 +836,7 @@ export default function EditStudent() {
                                                 name={`installmentDetails.${index}.amtPaid`}
                                                 type="text"
                                                 placeholder="Amount Paid"
-                                                value={installment.amtPaid}
+                                                value={installment.paidAmount}
                                                 onChange={handleChange}
                                                 className="border-gray-300 rounded w-full"
                                             />
@@ -844,6 +848,7 @@ export default function EditStudent() {
                                                 onChange={handleChange}
                                                 className="border-gray-300 rounded w-full"
                                             >
+                                                <option>select</option>
                                                 <option value="m1">mode1</option>
                                                 <option value="m2">mode2</option>
                                                 <option value="m3">mode3</option>
@@ -856,6 +861,7 @@ export default function EditStudent() {
                                                 onChange={handleChange}
                                                 className="border-gray-300 rounded w-full"
                                             >
+                                                <option>select</option>
                                                 <option value="s1">status1</option>
                                                 <option value="s2">status2</option>
                                                 <option value="s3">status3</option>

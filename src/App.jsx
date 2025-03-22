@@ -82,6 +82,7 @@ import StudentInfo from './StudentInformation/StudentInfo.jsx'
 
 
 import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession.jsx';
+import AddCourse from './pages/components/Students/AddStudent/AddCourse.jsx'
 
 
 export default function App() {
@@ -187,6 +188,7 @@ export default function App() {
             <Route path='/createAssignment' element={<CreateAssignment />} />
 
             <Route path='/fee-template' element={<FeeTemplate/>}/>
+            <Route path='/add-course/:studentId' element={<AddCourse/>}/>
 
 
 

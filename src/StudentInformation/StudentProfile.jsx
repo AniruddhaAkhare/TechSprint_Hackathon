@@ -109,7 +109,7 @@ export default function StudentProfile() {
                     <input
                         type="text"
                         value={student.billing_address ?
-                            `${student.billing_address.street}, ${student.billing_address.area}, ${student.billing_address.city}, ${student.billing_address.state}, ${student.billing_address.country} - ${student.billing_address.zip}`
+                            `${student.billing_address.name}, ${student.billing_address.street}, ${student.billing_address.area}, ${student.billing_address.city}, ${student.billing_address.state}, ${student.billing_address.country} - ${student.billing_address.zip}`
                             : "Address not available"}
                         readOnly
                         className="border border-gray-300 rounded px-2 py-1 w-12"
@@ -234,8 +234,8 @@ export default function StudentProfile() {
                                 <td>{index + 1}</td>
                                 <td>{installment.dueAmount}</td>
                                 <td>{installment.dueDate}</td>
-                                <td>{installment.paidOn}</td>
-                                <td>{installment.amtPaid}</td>
+                                <td>{installment.paidDate}</td>
+                                <td>{installment.paidAmount}</td>
                                 <td>{installment.modeOfPayment}</td>
                                 <td>{installment.pdcStatus}</td>
                                 <td>{installment.remark}</td>
