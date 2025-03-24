@@ -1,377 +1,7 @@
-
-
-
-// // import { useState, useEffect } from "react";
-// // import { db } from '../../../../config/firebase';
-// // import { getDocs, collection, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
-// // import CreateBatch from "./CreateBatch";
-// // import SearchBar from "../../SearchBar";
-// // import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input } from "@material-tailwind/react";
-
-// // export default function Batches() {
-// //     const [currentBatch, setCurrentBatch] = useState(null);
-// //     const [batches, setBatches] = useState([]);
-
-// //     const [subjects, setSubjects] = useState([]);
-
-// //     const [searchTerm, setSearchTerm] = useState('');
-// //     const [searchResults, setSearchResults] = useState([]);
-
-// //     const BatchCollectionRef = collection(db, "Batch");
-// //     const SubjectCollectionRef = collection(db, "Subject");
-// //     const [isOpen, setIsOpen] = useState(false);
-
-
-// //     const [openDelete, setOpenDelete] = useState(false);
-// //     const [deleteId, setDeleteId] = useState(null);
-
-// //     const toggleSidebar = () => {
-// //         setIsOpen(prev => !prev);
-// //     };
-
-// //     const handleSearch = (e) => {
-// //         if (e) e.preventDefault();
-// //         if (!searchTerm.trim()) {
-// //             setSearchResults([]);
-// //             return;
-// //         }
-// //         const results = batches.filter(batch =>
-// //             batch.batchName.toLowerCase().includes(searchTerm.toLowerCase())
-// //         );
-// //         setSearchResults(results);
-// //     };
-
-// //     useEffect(() => {
-// //         if (searchTerm) {
-// //             handleSearch();
-// //         } else {
-// //             setSearchResults([]);
-// //         }
-// //     }, [searchTerm]);
-
-// //     const fetchBatches = async () => {
-// //         const q = query(BatchCollectionRef, orderBy('createdAt', 'desc')); // Add order by createdAt
-// //         const snapshot = await getDocs(q);
-// //         const batchData = snapshot.docs.map(doc => ({
-// //             id: doc.id,
-// //             ...doc.data(),
-// //         }));
-// //         setBatches(batchData);
-// //     };
-
-// //     useEffect(() => {
-// //         fetchBatches();
-// //     }, []);
-
-// //     // const fetchBatches = async () => {
-// //     //     const snapshot = await getDocs(BatchCollectionRef);
-// //     //     const batchData = snapshot.docs.map(doc => ({
-// //     //         id: doc.id,
-// //     //         ...doc.data(),
-// //     //     }));
-// //     //     setBatches(batchData);
-// //     // };
-
-// //     // useEffect(() => {
-// //     //     fetchBatches();
-// //     // }, []);
-
-// //     const handleCreateBatchClick = () => {
-// //         setCurrentBatch(null);
-// //         toggleSidebar();
-// //     };
-
-// //     const handleEditClick = (batch) => {
-// //         setCurrentBatch(batch);
-// //         setIsOpen(true);
-// //     };
-
-// //     const handleClose = () => {
-// //         setIsOpen(false);
-// //         setCurrentBatch(null);
-// //         fetchBatches();
-// //     };
-
-// //     // const deleteBatch = async () => {
-// //     //     console.log("Delete function triggered for ID:", deleteId);
-// //     //     if (deleteId) {
-// //     //         try {
-// //     //             await deleteDoc(doc(db, "Batch", deleteId));
-// //     //             console.log("Batch deleted successfully");
-// //     //             fetchBatches(); // Refresh the list
-// //     //         } catch (err) {
-// //     //             console.error("Error deleting batch:", err);
-// //     //         }
-// //     //     }
-// //     //     setOpenDelete(false);
-// //     // };
-
-
-// //     const deleteBatch = async () => {
-// //         if (deleteId) {
-// //             try {
-// //                 await deleteDoc(doc(db, "Batch", deleteId));
-// //                 setBatches(prevBatches => prevBatches.filter(batch => batch.id !== deleteId)); // Update UI
-// //                 fetchBatches(); // Fetch latest data
-// //             } catch (err) {
-// //                 console.error("Error deleting batch:", err);
-// //             }
-// //         }
-// //         setOpenDelete(false);
-// //     };
-
-
-// //     // const deleteBatch = async () => {
-// //     //     // console.log("delete ");
-// //     //     if (deleteId) {
-// //     //         try {
-// //     //             await deleteDoc(doc(db, "Batch", deleteId));
-// //     //             fetchBatches();
-// //     //         } catch (err) {
-// //     //             console.error("Error deleting batches:", err);
-// //     //         }
-// //     //     }
-// //     //     setOpenDelete(false);
-// //     // };
-
-// //     return (
-// //         <div className="flex-col w-screen ml-80 p-4">
-// //             <div className="justify-between items-center p-4 mb-4">
-// //                 <div className="flex-1">
-// //                     <h1 className="text-2xl font-semibold">Batches</h1>
-// //                 </div>
-// //                 <div>
-// //                     <button type="button"
-// //                         className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
-// //                         onClick={handleCreateBatchClick}>
-// //                         + Create Batch
-// //                     </button>
-// //                 </div>
-// //             </div>
-
-// //             <CreateBatch isOpen={isOpen} toggleSidebar={handleClose} batch={currentBatch} />
-
-// //             <div className="justify-between items-center p-4 mt-4">
-// //                 <SearchBar
-// //                     searchTerm={searchTerm}
-// //                     setSearchTerm={setSearchTerm}
-// //                     handleSearch={handleSearch}
-// //                 />
-// //             </div>
-
-// //             <div className="sec-3">
-// //                 <table className="data-table table">
-// //                     <thead className="table-secondary">
-// //                         <tr>
-// //                             <th>Sr No</th>
-// //                             <th>Batch Name</th>
-// //                             <th>Action</th>
-// //                         </tr>
-// //                     </thead>
-// //                     <tbody>
-// //                         {(searchResults.length > 0 ? searchResults : batches).map((batch, index) => (
-// //                             <tr key={batch.id}>
-// //                                 <td>{index + 1}</td>
-// //                                 <td>{batch.batchName}</td>
-
-// //                                 <Dialog open={openDelete} handler={() => setOpenDelete(false)}>
-// //                                     <DialogHeader>Confirm Deletion</DialogHeader>
-// //                                     <DialogBody>Are you sure you want to delete this instructor? This action cannot be undone.</DialogBody>
-// //                                     <DialogFooter>
-// //                                         <Button variant="text" color="gray" onClick={() => setOpenDelete(false)}>Cancel</Button>
-// //                                         <Button variant="filled" color="red" onClick={deleteBatch}>Yes, Delete</Button>
-// //                                     </DialogFooter>
-// //                                 </Dialog>
-// //                                 <td>
-// //                                     <div className="flex items-center space-x-2">
-// //                                         <button onClick={() => { setDeleteId(batch.id); setOpenDelete(true); }} className="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600">
-// //                                             Delete
-// //                                         </button>
-// //                                         <button onClick={() => handleEditClick(batch)} className="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600">
-// //                                             Update
-// //                                         </button>
-// //                                     </div>
-// //                                 </td>
-// //                             </tr>
-// //                         ))}
-// //                     </tbody>
-// //                 </table>
-// //             </div>
-// //         </div>
-// //     );
-// // }
-
-
-// import { useState, useEffect } from "react";
-// import { db } from '../../../../config/firebase';
-// import { getDocs, collection, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
-// import CreateBatch from "./CreateBatch";
-// import SearchBar from "../../SearchBar";
-// import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input } from "@material-tailwind/react";
-
-// export default function Batches() {
-//     const [currentBatch, setCurrentBatch] = useState(null);
-//     const [batches, setBatches] = useState([]);
-//     const [subjects, setSubjects] = useState([]);
-//     const [searchTerm, setSearchTerm] = useState('');
-//     const [searchResults, setSearchResults] = useState([]);
-
-//     const BatchCollectionRef = collection(db, "Batch");
-//     const SubjectCollectionRef = collection(db, "Subject");
-//     const [isOpen, setIsOpen] = useState(false);
-//     const [openDelete, setOpenDelete] = useState(false);
-//     const [deleteId, setDeleteId] = useState(null);
-
-//     const toggleSidebar = () => {
-//         setIsOpen(prev => !prev);
-//     };
-
-//     const handleSearch = (e) => {
-//         if (e) e.preventDefault();
-//         if (!searchTerm.trim()) {
-//             setSearchResults([]);
-//             return;
-//         }
-//         const results = batches.filter(batch =>
-//             batch.batchName.toLowerCase().includes(searchTerm.toLowerCase())
-//         );
-//         setSearchResults(results);
-//     };
-
-//     useEffect(() => {
-//         if (searchTerm) {
-//             handleSearch();
-//         } else {
-//             setSearchResults([]);
-//         }
-//     }, [searchTerm]);
-
-//     const fetchBatches = async () => {
-//         const q = query(BatchCollectionRef, orderBy('createdAt', 'desc'));
-//         const snapshot = await getDocs(q);
-//         const batchData = snapshot.docs.map(doc => ({
-//             id: doc.id,
-//             ...doc.data(),
-//         }));
-//         setBatches(batchData);
-//     };
-
-//     useEffect(() => {
-//         fetchBatches();
-//     }, []);
-
-//     const handleCreateBatchClick = () => {
-//         setCurrentBatch(null);
-//         toggleSidebar();
-//     };
-
-//     const handleEditClick = (batch) => {
-//         setCurrentBatch(batch);
-//         setIsOpen(true);
-//     };
-
-//     const handleClose = () => {
-//         setIsOpen(false);
-//         setCurrentBatch(null);
-//         fetchBatches();
-//     };
-
-//     const deleteBatch = async () => {
-//         if (deleteId) {
-//             try {
-//                 await deleteDoc(doc(db, "Batch", deleteId));
-//                 setBatches(prevBatches => prevBatches.filter(batch => batch.id !== deleteId));
-//                 fetchBatches();
-//             } catch (err) {
-//                 console.error("Error deleting batch:", err);
-//             }
-//         }
-//         setOpenDelete(false);
-//     };
-
-//     return (
-//         <div className="flex-col w-screen ml-80 p-4">
-//             <div className="justify-between items-center p-4 mb-4">
-//                 <div className="flex-1">
-//                     <h1 className="text-2xl font-semibold">Batches</h1>
-//                 </div>
-//                 <div>
-//                     <button type="button"
-//                         className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
-//                         onClick={handleCreateBatchClick}>
-//                         + Create Batch
-//                     </button>
-//                 </div>
-//             </div>
-
-//             <CreateBatch isOpen={isOpen} toggleSidebar={handleClose} batch={currentBatch} />
-
-//             <div className="justify-between items-center p-4 mt-4">
-//                 <SearchBar
-//                     searchTerm={searchTerm}
-//                     setSearchTerm={setSearchTerm}
-//                     handleSearch={handleSearch}
-//                 />
-//             </div>
-
-//             <div className="sec-3">
-//                 <table className="data-table table">
-//                     <thead className="table-secondary">
-//                         <tr>
-//                             <th>Sr No</th>
-//                             <th>Batch Name</th>
-//                             <th>Status</th> {/* New Status Column */}
-//                             <th>Action</th>
-//                         </tr>
-//                     </thead>
-//                     <tbody>
-//                         {(searchResults.length > 0 ? searchResults : batches).map((batch, index) => (
-//                             <tr key={batch.id}>
-//                                 <td>{index + 1}</td>
-//                                 <td>{batch.batchName}</td>
-//                                 <td>
-//                                     <span className={`px-2 py-1 rounded-full text-sm ${
-//                                         batch.status === 'Ongoing' 
-//                                         ? 'bg-green-100 text-green-800' 
-//                                         : 'bg-gray-100 text-gray-800'
-//                                     }`}>
-//                                         {batch.status || 'Ongoing'} {/* Default to 'Ongoing' if status is undefined */}
-//                                     </span>
-//                                 </td>
-//                                 <td>
-//                                     <div className="flex items-center space-x-2">
-//                                         <button onClick={() => { setDeleteId(batch.id); setOpenDelete(true); }} className="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600">
-//                                             Delete
-//                                         </button>
-//                                         <button onClick={() => handleEditClick(batch)} className="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600">
-//                                             Update
-//                                         </button>
-//                                     </div>
-//                                 </td>
-//                             </tr>
-//                         ))}
-//                     </tbody>
-//                 </table>
-//             </div>
-
-//             <Dialog open={openDelete} handler={() => setOpenDelete(false)}>
-//                 <DialogHeader>Confirm Deletion</DialogHeader>
-//                 <DialogBody>Are you sure you want to delete this batch? This action cannot be undone.</DialogBody>
-//                 <DialogFooter>
-//                     <Button variant="text" color="gray" onClick={() => setOpenDelete(false)}>Cancel</Button>
-//                     <Button variant="filled" color="red" onClick={deleteBatch}>Yes, Delete</Button>
-//                 </DialogFooter>
-//             </Dialog>
-//         </div>
-//     );
-// }
-
-
 import { useState, useEffect } from "react";
 import { db } from '../../../../config/firebase';
 import { getDocs, collection, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import CreateBatch from "./CreateBatch";
-import SearchBar from "../../SearchBar";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 
 export default function Batches() {
@@ -381,7 +11,7 @@ export default function Batches() {
     const [searchResults, setSearchResults] = useState([]);
     
     const BatchCollectionRef = collection(db, "Batch");
-    const StudentCollectionRef = collection(db, "student"); // Reference to student collection
+    const StudentCollectionRef = collection(db, "student");
     const [isOpen, setIsOpen] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
@@ -389,21 +19,19 @@ export default function Batches() {
 
     const toggleSidebar = () => setIsOpen(prev => !prev);
 
-    const handleSearch = (e) => {
-        if (e) e.preventDefault();
-        if (!searchTerm.trim()) {
+    const handleSearch = (term) => {
+        if (!term.trim()) {
             setSearchResults([]);
             return;
         }
         const results = batches.filter(batch =>
-            batch.batchName.toLowerCase().includes(searchTerm.toLowerCase())
+            batch.batchName.toLowerCase().includes(term.toLowerCase())
         );
         setSearchResults(results);
     };
 
     useEffect(() => {
-        if (searchTerm) handleSearch();
-        else setSearchResults([]);
+        handleSearch(searchTerm);
     }, [searchTerm]);
 
     const fetchBatches = async () => {
@@ -457,7 +85,7 @@ export default function Batches() {
             return hasStudents;
         } catch (err) {
             console.error("Error checking students in batch:", err);
-            return false; // Default to false if there's an error
+            return false;
         }
     };
 
@@ -465,19 +93,17 @@ export default function Batches() {
         if (!deleteId) return;
 
         try {
-            // Check if any student is enrolled in the batch
             const hasStudents = await checkStudentsInBatch(deleteId);
             if (hasStudents) {
                 setDeleteMessage("This batch cannot be deleted because students are enrolled in it.");
                 return;
             }
 
-            // Proceed with deletion if no students are enrolled
             await deleteDoc(doc(db, "Batch", deleteId));
             console.log(`Batch ${deleteId} deleted successfully`);
             fetchBatches();
             setOpenDelete(false);
-            setDeleteMessage("Are you sure you want to delete this batch? This action cannot be undone."); // Reset message
+            setDeleteMessage("Are you sure you want to delete this batch? This action cannot be undone.");
         } catch (err) {
             console.error("Error deleting batch:", err);
             setDeleteMessage("An error occurred while trying to delete the batch.");
@@ -485,89 +111,116 @@ export default function Batches() {
     };
 
     return (
-        <div className="flex-col w-screen ml-80 p-4">
-            <div className="justify-between items-center p-4 mb-4">
-                <div className="flex-1">
-                    <h1 className="text-2xl font-semibold">Batches</h1>
-                </div>
-                <div>
-                    <button
-                        type="button"
-                        className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
-                        onClick={handleCreateBatchClick}
-                    >
-                        + Create Batch
-                    </button>
-                </div>
+        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-6 ml-0 sm:ml-80">
+            {/* Header Section */}
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-semibold text-gray-800">Batches</h1>
+                <button
+                    type="button"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    onClick={handleCreateBatchClick}
+                >
+                    + Create Batch
+                </button>
             </div>
 
-            <CreateBatch isOpen={isOpen} toggleSidebar={handleClose} batch={currentBatch} />
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                {/* Search Bar */}
+                <div className="mb-6">
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search batches by name..."
+                        className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
 
-            <div className="justify-between items-center p-4 mt-4">
-                <SearchBar
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    handleSearch={handleSearch}
-                />
-            </div>
-
-            <div className="sec-3">
-                <table className="data-table table">
-                    <thead className="table-secondary">
-                        <tr>
-                            <th>Sr No</th>
-                            <th>Batch Name</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(searchResults.length > 0 ? searchResults : batches).map((batch, index) => (
-                            <tr key={batch.id}>
-                                <td>{index + 1}</td>
-                                <td>{batch.batchName}</td>
-                                <td>
-                                    <span className={`px-2 py-1 rounded-full text-sm ${
-                                        batch.status === 'Ongoing' 
-                                        ? 'bg-green-100 text-green-800' 
-                                        : 'bg-gray-100 text-gray-800'
-                                    }`}>
-                                        {batch.status || 'Ongoing'}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div className="flex items-center space-x-2">
-                                        <button 
-                                            onClick={() => {
-                                                setDeleteId(batch.id);
-                                                setOpenDelete(true);
-                                                setDeleteMessage("Are you sure you want to delete this batch? This action cannot be undone.");
-                                            }} 
-                                            className="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600"
-                                        >
-                                            Delete
-                                        </button>
-                                        <button 
-                                            onClick={() => handleEditClick(batch)} 
-                                            className="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600"
-                                        >
-                                            Update
-                                        </button>
-                                    </div>
-                                </td>
+                {/* Table Section */}
+                <div className="rounded-lg shadow-md overflow-x-auto">
+                    <table className="w-full table-auto">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Sr No</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Batch Name</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Action</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {(searchResults.length > 0 ? searchResults : batches).map((batch, index) => (
+                                <tr key={batch.id} className="border-b hover:bg-gray-50 transition duration-150">
+                                    <td className="px-4 py-3 text-gray-600">{index + 1}</td>
+                                    <td className="px-4 py-3 text-gray-800">{batch.batchName}</td>
+                                    <td className="px-4 py-3 text-gray-600">{batch.status || "Ongoing"}</td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center space-x-2">
+                                            <button
+                                                onClick={() => {
+                                                    setDeleteId(batch.id);
+                                                    setOpenDelete(true);
+                                                    setDeleteMessage("Are you sure you want to delete this batch? This action cannot be undone.");
+                                                }}
+                                                className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                            >
+                                                Delete
+                                            </button>
+                                            <button
+                                                onClick={() => handleEditClick(batch)}
+                                                className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                            >
+                                                Update
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <Dialog open={openDelete} handler={() => setOpenDelete(false)}>
-                <DialogHeader>Confirm Deletion</DialogHeader>
-                <DialogBody>{deleteMessage}</DialogBody>
-                <DialogFooter>
-                    <Button variant="text" color="gray" onClick={() => setOpenDelete(false)}>Cancel</Button>
+            {/* Backdrop for Sidebar */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                    onClick={handleClose}
+                />
+            )}
+
+            {/* Sidebar (CreateBatch) */}
+            <div
+                className={`fixed top-0 right-0 h-full w-full sm:w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} z-50 overflow-y-auto`}
+            >
+                <CreateBatch isOpen={isOpen} toggleSidebar={handleClose} batch={currentBatch} />
+            </div>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={openDelete}
+                handler={() => setOpenDelete(false)}
+                className="rounded-lg shadow-lg"
+            >
+                <DialogHeader className="text-gray-800 font-semibold">Confirm Deletion</DialogHeader>
+                <DialogBody className="text-gray-600">{deleteMessage}</DialogBody>
+                <DialogFooter className="space-x-4">
+                    <Button
+                        variant="text"
+                        color="gray"
+                        onClick={() => setOpenDelete(false)}
+                        className="hover:bg-gray-100 transition duration-200"
+                    >
+                        Cancel
+                    </Button>
                     {deleteMessage === "Are you sure you want to delete this batch? This action cannot be undone." && (
-                        <Button variant="filled" color="red" onClick={deleteBatch}>Yes, Delete</Button>
+                        <Button
+                            variant="filled"
+                            color="red"
+                            onClick={deleteBatch}
+                            className="bg-red-500 hover:bg-red-600 transition duration-200"
+                        >
+                            Yes, Delete
+                        </Button>
                     )}
                 </DialogFooter>
             </Dialog>
