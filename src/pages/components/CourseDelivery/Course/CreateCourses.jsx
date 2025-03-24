@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 131a9e7d27aa2ab0832178eec7299aa64b174d8e
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
 import {
@@ -190,12 +193,21 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
 
   return (
     <div
+<<<<<<< HEAD
       className={`fixed inset-y-0 right-0 z-50 bg-white w-full sm:w-3/4 md:w-2/5 shadow-lg transform transition-transform duration-300 ${
+=======
+      className={`fixed top-0 right-0 h-full bg-white w-full shadow-lg transform transition-transform duration-300 ${
+>>>>>>> 131a9e7d27aa2ab0832178eec7299aa64b174d8e
         isOpen ? "translate-x-0" : "translate-x-full"
-      } p-4 overflow-y-auto`}
+      } p-6 overflow-y-auto`}
     >
+<<<<<<< HEAD
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl md:text-2xl font-semibold">
+=======
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">
+>>>>>>> 131a9e7d27aa2ab0832178eec7299aa64b174d8e
           {course ? "Edit Course" : "Create Course"}
         </h1>
         <button
@@ -207,74 +219,72 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="courseName" className="block text-sm font-medium">Course Name:</label>
+          <label htmlFor="courseName" className="block text-sm font-medium text-gray-700">
+            Course Name
+          </label>
           <input
             type="text"
             value={courseName}
             placeholder="Course Name"
             onChange={(e) => setCourseName(e.target.value)}
             required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
 
         <div>
-          <label htmlFor="courseCode" className="block text-sm font-medium">Course Code:</label>
-          <input
-            type="text"
-            value={courseCode}
-            placeholder="Course Name"
-            onChange={(e) => setCourseCode(e.target.value)}
-            required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="courseDescription" className="block text-sm font-medium">Course Description:</label>
+          <label htmlFor="courseDescription" className="block text-sm font-medium text-gray-700">
+            Course Description
+          </label>
           <input
             type="text"
             value={courseDescription}
             placeholder="Course Description"
             onChange={(e) => setCourseDescription(e.target.value)}
             required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
 
         <div>
-          <label htmlFor="courseFee" className="block text-sm font-medium">Fee:</label>
+          <label htmlFor="courseFee" className="block text-sm font-medium text-gray-700">
+            Fee
+          </label>
           <input
             type="number"
             value={courseFee}
             placeholder="Enter Course Fee"
             onChange={(e) => setCourseFee(e.target.value)}
             required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
 
         <div>
-          <label htmlFor="courseDuration" className="block text-sm font-medium">Duration:</label>
+          <label htmlFor="courseDuration" className="block text-sm font-medium text-gray-700">
+            Duration
+          </label>
           <input
             type="text"
             value={courseDuration}
             placeholder="Enter Course Duration"
             onChange={(e) => setCourseDuration(e.target.value)}
             required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
 
         <div>
-          <label htmlFor="courseMode" className="block text-sm font-medium">Mode:</label>
+          <label htmlFor="courseMode" className="block text-sm font-medium text-gray-700">
+            Mode
+          </label>
           <select
             value={courseMode}
             onChange={(e) => setCourseMode(e.target.value)}
             required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">Select Mode</option>
             <option value="online">Online</option>
@@ -284,180 +294,185 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
         </div>
 
         <div>
-          <label htmlFor="courseStatus" className="block text-sm font-medium">Status:</label>
+          <label htmlFor="courseStatus" className="block text-sm font-medium text-gray-700">
+            Status
+          </label>
           <select
             value={courseStatus}
             onChange={(e) => setCourseStatus(e.target.value)}
             required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="Ongoing">Ongoing</option>
             <option value="Archive">Archive</option>
           </select>
         </div>
 
-        <h3 className="text-lg font-medium">Total Students: {studentCount}</h3>
+        <h3 className="text-lg font-semibold text-gray-800">Total Students: {studentCount}</h3>
 
         <div>
-          <label className="block text-sm font-medium">Add Center:</label>
           <select
             onChange={(e) => handleAddCenter(e.target.value)}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">Select a Center</option>
             {availableCenters.map((center) => (
-              <option key={center.id} value={center.id}>{center.name}</option>
+              <option key={center.id} value={center.id}>
+                {center.name}
+              </option>
             ))}
           </select>
+
+          {centerAssignments.length > 0 && (
+            <div className="mt-4">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr No</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Center Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {centerAssignments.map((ca, index) => {
+                    const center = centers.find((c) => c.id === ca.centerId);
+                    return (
+                      <tr key={ca.centerId}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{center?.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <select
+                            value={ca.status}
+                            onChange={(e) => handleCenterStatusChange(ca.centerId, e.target.value)}
+                            className="block w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          >
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCenter(ca.centerId)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {centerAssignments.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[500px] border-collapse">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="p-2 text-left text-sm font-medium">Sr No</th>
-                  <th className="p-2 text-left text-sm font-medium">Center Name</th>
-                  <th className="p-2 text-left text-sm font-medium">Status</th>
-                  <th className="p-2 text-left text-sm font-medium">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {centerAssignments.map((ca, index) => {
-                  const center = centers.find(c => c.id === ca.centerId);
-                  return (
-                    <tr key={ca.centerId}>
-                      <td className="p-2 text-sm">{index + 1}</td>
-                      <td className="p-2 text-sm">{center?.name}</td>
-                      <td className="p-2">
-                        <select
-                          value={ca.status}
-                          onChange={(e) => handleCenterStatusChange(ca.centerId, e.target.value)}
-                          className="w-full p-1 border rounded-md text-sm"
-                        >
-                          <option value="Active">Active</option>
-                          <option value="Inactive">Inactive</option>
-                        </select>
-                      </td>
-                      <td className="p-2">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveCenter(ca.centerId)}
-                          className="text-red-500 hover:text-red-700 text-sm"
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
         <div>
-          <label className="block text-sm font-medium">Add Batch:</label>
           <select
             onChange={(e) => handleAddBatch(e.target.value)}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">Select a Batch</option>
             {availableBatches.map((batch) => (
-              <option key={batch.id} value={batch.id}>{batch.batchName}</option>
+              <option key={batch.id} value={batch.id}>
+                {batch.batchName}
+              </option>
             ))}
           </select>
+
+          {selectedBatches.length > 0 && (
+            <div className="mt-4">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr No</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Count</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {selectedBatches.map((batchId, index) => {
+                    const batch = batches.find((b) => b.id === batchId);
+                    return (
+                      <tr key={batchId}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{batch?.batchName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{batchStudentCounts[batchId] || 0}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBatch(batchId)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {selectedBatches.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[500px] border-collapse">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="p-2 text-left text-sm font-medium">Sr No</th>
-                  <th className="p-2 text-left text-sm font-medium">Batch Name</th>
-                  <th className="p-2 text-left text-sm font-medium">Student Count</th>
-                  <th className="p-2 text-left text-sm font-medium">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedBatches.map((batchId, index) => {
-                  const batch = batches.find(b => b.id === batchId);
-                  return (
-                    <tr key={batchId}>
-                      <td className="p-2 text-sm">{index + 1}</td>
-                      <td className="p-2 text-sm">{batch?.batchName}</td>
-                      <td className="p-2 text-sm">{batchStudentCounts[batchId] || 0}</td>
-                      <td className="p-2">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveBatch(batchId)}
-                          className="text-red-500 hover:text-red-700 text-sm"
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
         <div>
-          <label className="block text-sm font-medium">Add Owner:</label>
           <select
             onChange={(e) => handleAddOwner(e.target.value)}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">Select an Owner</option>
             {availableOwners.map((owner) => (
-              <option key={owner.id} value={owner.id}>{owner.f_name}</option>
+              <option key={owner.id} value={owner.id}>
+                {owner.f_name}
+              </option>
             ))}
           </select>
+
+          {selectedOwners.length > 0 && (
+            <div className="mt-4">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr No</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {selectedOwners.map((ownerId, index) => {
+                    const owner = owners.find((o) => o.id === ownerId);
+                    return (
+                      <tr key={ownerId}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{owner?.f_name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveOwner(ownerId)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {selectedOwners.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[400px] border-collapse">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="p-2 text-left text-sm font-medium">Sr No</th>
-                  <th className="p-2 text-left text-sm font-medium">Owner Name</th>
-                  <th className="p-2 text-left text-sm font-medium">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedOwners.map((ownerId, index) => {
-                  const owner = owners.find(o => o.id === ownerId);
-                  return (
-                    <tr key={ownerId}>
-                      <td className="p-2 text-sm">{index + 1}</td>
-                      <td className="p-2 text-sm">{owner?.f_name}</td>
-                      <td className="p-2">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveOwner(ownerId)}
-                          className="text-red-500 hover:text-red-700 text-sm"
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end">
           <button
             type="submit"
-            className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200 w-full sm:w-auto"
+            className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200"
           >
-            {course ? "Update course" : "Create course"}
+            {course ? "Update Course" : "Create Course"}
           </button>
         </div>
       </form>

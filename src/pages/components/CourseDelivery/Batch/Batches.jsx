@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // import { useState, useEffect } from "react";
 // import { db } from '../../../../config/firebase';
 // import { getDocs, collection, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
@@ -217,11 +218,12 @@
 
 
 
+=======
+>>>>>>> 131a9e7d27aa2ab0832178eec7299aa64b174d8e
 import { useState, useEffect } from "react";
 import { db } from '../../../../config/firebase';
 import { getDocs, collection, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import CreateBatch from "./CreateBatch";
-import SearchBar from "../../SearchBar";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 
 export default function Batches() {
@@ -239,21 +241,19 @@ export default function Batches() {
 
     const toggleSidebar = () => setIsOpen(prev => !prev);
 
-    const handleSearch = (e) => {
-        if (e) e.preventDefault();
-        if (!searchTerm.trim()) {
+    const handleSearch = (term) => {
+        if (!term.trim()) {
             setSearchResults([]);
             return;
         }
         const results = batches.filter(batch =>
-            batch.batchName.toLowerCase().includes(searchTerm.toLowerCase())
+            batch.batchName.toLowerCase().includes(term.toLowerCase())
         );
         setSearchResults(results);
     };
 
     useEffect(() => {
-        if (searchTerm) handleSearch();
-        else setSearchResults([]);
+        handleSearch(searchTerm);
     }, [searchTerm]);
 
     const fetchBatches = async () => {
@@ -333,92 +333,114 @@ export default function Batches() {
     };
 
     return (
-        <div className="p-20">
-            {/* Header and Create Button */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 mb-4 gap-4">
-                <h1 className="text-xl md:text-2xl font-semibold">Batches</h1>
+        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-6 ml-0 sm:ml-80">
+            {/* Header Section */}
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-semibold text-gray-800">Batches</h1>
                 <button
                     type="button"
-                    className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200 w-full md:w-auto"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     onClick={handleCreateBatchClick}
                 >
                     + Create Batch
                 </button>
             </div>
 
-            {/* Sidebar for Create/Edit Batch */}
-            <CreateBatch isOpen={isOpen} toggleSidebar={handleClose} batch={currentBatch} />
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                {/* Search Bar */}
+                <div className="mb-6">
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search batches by name..."
+                        className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
 
-            {/* Search Bar */}
-            <div className="p-4 mt-4">
-                <SearchBar
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    handleSearch={handleSearch}
-                />
+                {/* Table Section */}
+                <div className="rounded-lg shadow-md overflow-x-auto">
+                    <table className="w-full table-auto">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Sr No</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Batch Name</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(searchResults.length > 0 ? searchResults : batches).map((batch, index) => (
+                                <tr key={batch.id} className="border-b hover:bg-gray-50 transition duration-150">
+                                    <td className="px-4 py-3 text-gray-600">{index + 1}</td>
+                                    <td className="px-4 py-3 text-gray-800">{batch.batchName}</td>
+                                    <td className="px-4 py-3 text-gray-600">{batch.status || "Ongoing"}</td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center space-x-2">
+                                            <button
+                                                onClick={() => {
+                                                    setDeleteId(batch.id);
+                                                    setOpenDelete(true);
+                                                    setDeleteMessage("Are you sure you want to delete this batch? This action cannot be undone.");
+                                                }}
+                                                className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                            >
+                                                Delete
+                                            </button>
+                                            <button
+                                                onClick={() => handleEditClick(batch)}
+                                                className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                            >
+                                                Update
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            {/* Batches Table */}
-            <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px] border-collapse">
-                    <thead className="bg-gray-100">
-                        <tr>
-                            <th className="p-2 text-left text-sm font-medium">Sr No</th>
-                            <th className="p-2 text-left text-sm font-medium">Batch Name</th>
-                            <th className="p-2 text-left text-sm font-medium">Status</th>
-                            <th className="p-2 text-left text-sm font-medium">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(searchResults.length > 0 ? searchResults : batches).map((batch, index) => (
-                            <tr key={batch.id} className="border-b">
-                                <td className="sticky left-0 bg-white p-2 text-sm">{index + 1}</td>
-                                <td className="p-2 text-sm">{batch.batchName}</td>
-                                <td className="p-2">
-                                    <span className={`px-2 py-1 rounded-full text-xs md:text-sm ${
-                                        batch.status === 'Ongoing'
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-gray-100 text-gray-800'
-                                    }`}>
-                                        {batch.status || 'Ongoing'}
-                                    </span>
-                                </td>
-                                <td className="p-2">
-                                    <div className="flex items-center space-x-2 flex-wrap gap-2">
-                                        <button
-                                            onClick={() => {
-                                                setDeleteId(batch.id);
-                                                setOpenDelete(true);
-                                                setDeleteMessage("Are you sure you want to delete this batch? This action cannot be undone.");
-                                            }}
-                                            className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 text-sm"
-                                        >
-                                            Delete
-                                        </button>
-                                        <button
-                                            onClick={() => handleEditClick(batch)}
-                                            className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-sm"
-                                        >
-                                            Update
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            {/* Backdrop for Sidebar */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                    onClick={handleClose}
+                />
+            )}
+
+            {/* Sidebar (CreateBatch) */}
+            <div
+                className={`fixed top-0 right-0 h-full w-full sm:w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} z-50 overflow-y-auto`}
+            >
+                <CreateBatch isOpen={isOpen} toggleSidebar={handleClose} batch={currentBatch} />
             </div>
 
             {/* Delete Confirmation Dialog */}
-            <Dialog open={openDelete} handler={() => setOpenDelete(false)} size="sm">
-                <DialogHeader>Confirm Deletion</DialogHeader>
-                <DialogBody>{deleteMessage}</DialogBody>
-                <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                    <Button variant="text" color="gray" onClick={() => setOpenDelete(false)} className="w-full sm:w-auto">
+            <Dialog
+                open={openDelete}
+                handler={() => setOpenDelete(false)}
+                className="rounded-lg shadow-lg"
+            >
+                <DialogHeader className="text-gray-800 font-semibold">Confirm Deletion</DialogHeader>
+                <DialogBody className="text-gray-600">{deleteMessage}</DialogBody>
+                <DialogFooter className="space-x-4">
+                    <Button
+                        variant="text"
+                        color="gray"
+                        onClick={() => setOpenDelete(false)}
+                        className="hover:bg-gray-100 transition duration-200"
+                    >
                         Cancel
                     </Button>
                     {deleteMessage === "Are you sure you want to delete this batch? This action cannot be undone." && (
-                        <Button variant="filled" color="red" onClick={deleteBatch} className="w-full sm:w-auto">
+                        <Button
+                            variant="filled"
+                            color="red"
+                            onClick={deleteBatch}
+                            className="bg-red-500 hover:bg-red-600 transition duration-200"
+                        >
                             Yes, Delete
                         </Button>
                     )}
