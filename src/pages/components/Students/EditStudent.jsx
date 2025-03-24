@@ -211,7 +211,8 @@ export default function EditStudent() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6 ml-80 w-[calc(100vw-20rem)]">
+        <div className="p-20">
+        {/* // <div className="min-h-screen bg-gray-50 p-6 ml-80 w-[calc(100vw-20rem)]"> */}
             <div className="max-w-4xl mx-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-semibold text-gray-800">Edit Student</h1>

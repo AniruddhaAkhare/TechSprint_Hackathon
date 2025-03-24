@@ -961,7 +961,7 @@ export default function Instructor() {
     };
 
     return (
-        <div className="flex-col w-screen ml-80 p-4">
+        <div className="p-20">
             <div className="justify-between items-center p-4 mb-4">
                 <Input 
                     placeholder="Search Instructor..." 

@@ -245,7 +245,8 @@ const Dashboard = () => {
   if (error) return <div className="text-center text-red-500 text-sm sm:text-base p-4">Error: {error}</div>;
 
   return (
-    <div className="flex flex-col w-full p-4 sm:p-6 md:ml-80 min-h-screen bg-gray-50">
+    <div className="p-20">
+    {/* // <div className="flex flex-col w-full p-4 sm:p-6 md:ml-80 min-h-screen bg-gray-50"> */}
       <h1 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">Dashboard</h1>
 
       {/* Card Grid */}

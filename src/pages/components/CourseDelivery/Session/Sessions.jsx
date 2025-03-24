@@ -256,7 +256,7 @@ export default function Sessions() {
     };
 
     return (
-        <div className="flex flex-col w-full p-4 md:ml-80">
+        <div className="p-20">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 mb-4 gap-4">
                 <h1 className="text-xl sm:text-2xl font-bold">Sessions</h1>
@@ -292,10 +292,11 @@ export default function Sessions() {
                                     <div className="flex items-center space-x-2 flex-wrap gap-2">
                                         <button
                                             onClick={() => handleEditClick(s)}
-                                            className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 text-sm"
+                                            className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-sm"
                                         >
                                             Edit
                                         </button>
+                                        
                                         <button
                                             onClick={() => {
                                                 setDeleteId(s.id);
@@ -344,3 +345,118 @@ export default function Sessions() {
         </div>
     );
 }
+
+// import React, { useState, useEffect } from 'react';
+
+// import { db } from '../../../../config/firebase.js';
+// // import { db } from '../../../config/firebase';
+// import { collection, getDocs } from 'firebase/firestore';
+// import './Sessions.css';
+// import { FaSearch } from 'react-icons/fa';
+
+// const Sessions = () => {
+//   const [branches, setBranches] = useState([]);
+//   const [selectedBranch, setSelectedBranch] = useState('');
+//   const [searchQuery, setSearchQuery] = useState('');
+//   const [sessions, setSessions] = useState([]);
+
+//   // Fetch branches for the dropdown
+//   useEffect(() => {
+//     const fetchBranches = async () => {
+//       const querySnapshot = await getDocs(collection(db, 'branches'));
+//       const branchList = querySnapshot.docs.map((doc) => ({
+//         id: doc.id,
+//         ...doc.data(),
+//       }));
+//       setBranches(branchList);
+//       if (branchList.length > 0) {
+//         setSelectedBranch(branchList[0].name); // Default to the first branch
+//       }
+//     };
+//     fetchBranches();
+//   }, []);
+
+//   // Fetch sessions (for now, we'll show a placeholder since no sessions exist)
+//   useEffect(() => {
+//     const fetchSessions = async () => {
+//       // In a real app, you would fetch sessions from Firebase based on the selected branch
+//       // For now, we'll set an empty array to match the "No sessions found" message
+//       setSessions([]);
+//     };
+//     fetchSessions();
+//   }, [selectedBranch]);
+
+//   // Handle search input change
+//   const handleSearchChange = (e) => {
+//     setSearchQuery(e.target.value);
+//   };
+
+//   // Handle branch selection change
+//   const handleBranchChange = (e) => {
+//     setSelectedBranch(e.target.value);
+//   };
+
+//   return (
+//     <div className="session-management">
+//       <h1>Session Management</h1>
+//       <div className="filters">
+//         <select
+//           value={selectedBranch}
+//           onChange={handleBranchChange}
+//           className="branch-dropdown"
+//         >
+//           {branches.map((branch) => (
+//             <option key={branch.id} value={branch.name}>
+//               {branch.name}
+//             </option>
+//           ))}
+//         </select>
+//         <div className="search-bar">
+//           <input
+//             type="text"
+//             placeholder="Search sessions..."
+//             value={searchQuery}
+//             onChange={handleSearchChange}
+//           />
+//           <button className="search-btn">
+//             <FaSearch />
+//             Search
+//           </button>
+//         </div>
+//         <button className="add-session-btn">+ Add Session</button>
+//       </div>
+//       <div className="session-table">
+//         <div className="table-header">
+//           <span>Date</span>
+//           <span>Title</span>
+//           <span>Batch</span>
+//           <span>Instructor</span>
+//           <span>Medium</span>
+//           <span>Status</span>
+//           <span>Actions</span>
+//         </div>
+//         {sessions.length === 0 ? (
+//           <div className="no-sessions">
+//             No sessions found. Create your first session to get started.
+//           </div>
+//         ) : (
+//           sessions.map((session) => (
+//             <div key={session.id} className="table-row">
+//               <span>{session.date}</span>
+//               <span>{session.title}</span>
+//               <span>{session.batch}</span>
+//               <span>{session.instructor}</span>
+//               <span>{session.medium}</span>
+//               <span>{session.status}</span>
+//               <span className="actions">
+//                 {/* Add action buttons here (e.g., edit, delete) */}
+//               </span>
+//             </div>
+//           ))
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default Sessions;

@@ -1,0 +1,203 @@
+/* .sidebar {
+    width: 300px;
+    height: 100vh;
+    background-color: #f8f9fa;
+    border-right: 1px solid #e0e0e0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+  
+  .logo img{
+    width: 50px;
+  }
+
+  .logo-icon  {
+    font-size: 8px;
+    color: #007bff; 
+    margin-right: 10px;
+  }
+  
+  .logo span {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: #666;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-bottom: 5px;
+  }
+  
+  .nav-item:hover {
+    background-color: #e9ecef;
+  }
+  
+  .nav-item.active {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .nav-icon {
+    margin-right: 10px;
+    font-size: 18px;
+  }
+  
+  .nav-section {
+    padding: 15px 15px 5px;
+    color: #999;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+  
+  .admin-profile {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+  }
+  
+  .admin-initials {
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+  
+  } */
+
+
+  .sidebar {
+    width: 300px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #e0e0e0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    height: 100vh; /* Full viewport height */
+    position: sticky; /* Make the sidebar sticky */
+    top: 0; /* Stick to the top of the viewport */
+    display: flex; /* Use flexbox to manage layout */
+    flex-direction: column; /* Stack children vertically */
+    justify-content: space-between; /* Push admin-profile to the bottom */
+    overflow-y: auto; /* Allow scrolling if content overflows */
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+  
+  .logo img {
+    width: 50px;
+  }
+  
+  .logo-icon {
+    font-size: 8px;
+    margin-right: 10px;
+  }
+  
+  .logo span {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1; /* Allow nav-list to take up available space */
+  }
+  
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: #666;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-bottom: 5px;
+  }
+  
+  .nav-item:hover {
+    background-color: #e9ecef;
+  }
+  
+  .nav-item.active {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .nav-icon {
+    margin-right: 10px;
+    font-size: 18px;
+  }
+  
+  .nav-section {
+    padding: 15px 15px 5px;
+    color: #999;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+  
+  .admin-profile {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px; /* Match nav-item padding */
+    background-color: #f8f9fa; /* Match sidebar background */
+    position: sticky; /* Make admin-profile sticky */
+    bottom: 0; /* Stick to the bottom of the sidebar */
+    border-top: 1px solid #e0e0e0; /* Optional: Add a separator */
+  }
+  
+  .admin-initials {
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  /* Ensure nav-link behaves like nav-item */
+  .nav-link {
+    text-decoration: none;
+    color: inherit;
+    display: block; /* Make the link fill the li */
+  }
+  
+  /* Ensure nav-link children inherit styles */
+  .nav-link .nav-item {
+    width: 100%; /* Fill the link width */
+  }

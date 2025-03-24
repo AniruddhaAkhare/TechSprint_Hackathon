@@ -94,7 +94,7 @@ export default function Invoices() {
 
     
     return (
-        <div className="container ml-80 p-4">
+        <div className="p-20">
             <h1 className="text-2xl font-semibold mb-4">Invoices</h1>
             <button
                 onClick={() => navigate("/invoices/createInvoice")}

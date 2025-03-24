@@ -178,7 +178,7 @@ const Curriculum = () => {
     };
 
     return (
-        <div className="flex flex-col w-full p-4 md:ml-80">
+        <div className="p-20">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                 <h1 className="text-xl sm:text-2xl font-semibold">Curriculum</h1>

@@ -333,7 +333,7 @@ export default function Batches() {
     };
 
     return (
-        <div className="flex flex-col w-full p-4 md:ml-80">
+        <div className="p-20">
             {/* Header and Create Button */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 mb-4 gap-4">
                 <h1 className="text-xl md:text-2xl font-semibold">Batches</h1>

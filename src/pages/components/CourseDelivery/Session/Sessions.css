@@ -1,0 +1,100 @@
+.session-management {
+    padding: 20px;
+  }
+  
+  .session-management h1 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .branch-dropdown {
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .search-bar input {
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #333;
+    width: 200px;
+  }
+  
+  .search-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .search-btn:hover {
+    background-color: #0056b3;
+  }
+  
+  .add-session-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .add-session-btn:hover {
+    background-color: #0056b3;
+  }
+  
+  .session-table {
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .table-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    padding: 10px;
+    background-color: #f1f3f5;
+    font-weight: bold;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .table-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    align-items: center;
+  }
+  
+  .no-sessions {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+  }

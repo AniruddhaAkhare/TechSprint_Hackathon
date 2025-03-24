@@ -44,7 +44,7 @@ const FeeTemplate = () => {
         return <p className="text-center text-gray-600">Loading...</p>;
     }
     return (
-        <div className="w-screen p-4 bg-gray-100 ml-80">
+        <div className="p-20">
             <h2 className="text-2xl font-bold mb-6">Fee Templates</h2>
             
             <button

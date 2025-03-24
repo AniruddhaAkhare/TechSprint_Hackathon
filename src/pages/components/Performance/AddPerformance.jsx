@@ -135,7 +135,7 @@ export default function AddPerformance() {
     };
 
     return (
-        <div className='flex-col w-screen p-4 ml-80'>
+        <div className='p-20'>
             <h1>Add Performance</h1>
             <form>
                 <label htmlFor="performanceType">Select Performance Type:</label>
