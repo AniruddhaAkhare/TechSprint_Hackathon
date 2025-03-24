@@ -1,98 +1,9 @@
-// import { useState } from "react";
-// import { db } from '../../../config/firebase';
-// import { addDoc, updateDoc, doc, collection } from 'firebase/firestore';
-// import { Button, Input, Select, Option, Drawer } from "@material-tailwind/react";
-
-// export default function AddInstructor({ open, onClose, instructor, centers, roles, setInstructorList }) {
-//     const [selectedInstructor, setSelectedInstructor] = useState(instructor || {});
-
-//     const instructorCollectionRef = collection(db, "Instructor");
-
-//     const handleSaveInstructor = async () => {
-//         if (!selectedInstructor.f_name || !selectedInstructor.email || !selectedInstructor.phone || 
-//             !selectedInstructor.specialization || !selectedInstructor.center || !selectedInstructor.role) {
-//             alert("All fields are required!");
-//             return;
-//         }
-
-//         try {
-//             if (selectedInstructor.id) {
-//                 await updateDoc(doc(db, "Instructor", selectedInstructor.id), selectedInstructor);
-//                 setInstructorList(prev => prev.map(i => i.id === selectedInstructor.id ? selectedInstructor : i));
-//             } else {
-//                 const newDoc = await addDoc(instructorCollectionRef, selectedInstructor);
-//                 setInstructorList(prev => [...prev, { id: newDoc.id, ...selectedInstructor }]);
-//             }
-//             onClose();
-//         } catch (error) {
-//             console.error("Error saving instructor:", error);
-//         }
-//     };
-
-//     return (
-//         <Drawer open={open} onClose={onClose} placement="right" size={500}>
-//             <div className="p-6 w-full">
-//                 <h2 className="text-lg font-bold mb-4">{selectedInstructor?.id ? "Edit" : "Add"} Instructor</h2>
-//                 <form className="space-y-4">
-//                     <Input 
-//                         label="First Name" 
-//                         value={selectedInstructor?.f_name || ""} 
-//                         onChange={(e) => setSelectedInstructor({ ...selectedInstructor, f_name: e.target.value })} 
-//                     />
-//                     <Input 
-//                         label="Last Name" 
-//                         value={selectedInstructor?.l_name || ""} 
-//                         onChange={(e) => setSelectedInstructor({ ...selectedInstructor, l_name: e.target.value })} 
-//                     />
-//                     <Input 
-//                         label="Email" 
-//                         value={selectedInstructor?.email || ""} 
-//                         onChange={(e) => setSelectedInstructor({ ...selectedInstructor, email: e.target.value })} 
-//                     />
-//                     <Input 
-//                         label="Phone" 
-//                         value={selectedInstructor?.phone || ""} 
-//                         onChange={(e) => setSelectedInstructor({ ...selectedInstructor, phone: e.target.value })} 
-//                     />
-//                     <Input 
-//                         label="Specialization" 
-//                         value={selectedInstructor?.specialization || ""} 
-//                         onChange={(e) => setSelectedInstructor({ ...selectedInstructor, specialization: e.target.value })} 
-//                     />
-//                     <Select 
-//                         label="Center" 
-//                         value={selectedInstructor?.center || ""} 
-//                         onChange={(value) => setSelectedInstructor({ ...selectedInstructor, center: value })}
-//                     >
-//                         {centers.map(center => (
-//                             <Option key={center.id} value={center.name}>{center.name}</Option>
-//                         ))}
-//                     </Select>
-//                     <Select 
-//                         label="Role" 
-//                         value={selectedInstructor?.role || ""} 
-//                         onChange={(value) => setSelectedInstructor({ ...selectedInstructor, role: value })}
-//                     >
-//                         {roles.map(role => (
-//                             <Option key={role.id} value={role.name}>{role.name}</Option>
-//                         ))}
-//                     </Select>
-//                     <Button className="mt-4" onClick={handleSaveInstructor}>
-//                         {selectedInstructor?.id ? "Update" : "Add"}
-//                     </Button>
-//                 </form>
-//             </div>
-//         </Drawer>
-//     );
-// }
-
-
 import { useState, useEffect } from "react";
 import { db } from '../../../config/firebase';
 import { addDoc, updateDoc, doc, collection } from 'firebase/firestore';
 
 const AddInstructor = ({ open, onClose, instructor, centers, roles, setInstructorList }) => {
-    const [selectedInstructor, setSelectedInstructor] = useState(instructor || {
+    const [formData, setFormData] = useState({
         f_name: "",
         l_name: "",
         email: "",
@@ -101,46 +12,57 @@ const AddInstructor = ({ open, onClose, instructor, centers, roles, setInstructo
         center: "",
         role: ""
     });
+    const [errors, setErrors] = useState({});
 
     const instructorCollectionRef = collection(db, "Instructor");
 
-    // Update selectedInstructor when the instructor prop changes (for edit mode)
     useEffect(() => {
-        if (instructor) {
-            setSelectedInstructor(instructor);
+        if (instructor && instructor.id) {
+            setFormData(instructor);
         } else {
-            setSelectedInstructor({
-                f_name: "",
-                l_name: "",
-                email: "",
-                phone: "",
-                specialization: "",
-                center: "",
-                role: ""
-            });
+            resetForm();
         }
     }, [instructor]);
+
+    const validateForm = () => {
+        const newErrors = {};
+        if (!formData.f_name.trim()) newErrors.f_name = "First name is required";
+        if (!formData.l_name.trim()) newErrors.l_name = "Last name is required";
+        if (!formData.email.trim()) {
+            newErrors.email = "Email is required";
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = "Invalid email format";
+        }
+        if (!formData.phone.trim()) {
+            newErrors.phone = "Phone number is required";
+        } else if (!/^\d{10}$/.test(formData.phone)) {
+            newErrors.phone = "Phone number must be 10 digits";
+        }
+        if (!formData.specialization.trim()) newErrors.specialization = "Specialization is required";
+        if (!formData.center) newErrors.center = "Center is required";
+        if (!formData.role) newErrors.role = "Role is required";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!selectedInstructor.f_name || !selectedInstructor.email || !selectedInstructor.phone || 
-            !selectedInstructor.specialization || !selectedInstructor.center || !selectedInstructor.role) {
-            alert("All fields are required!");
+        if (!validateForm()) {
             return;
         }
 
         try {
-            if (selectedInstructor.id) {
-                await updateDoc(doc(db, "Instructor", selectedInstructor.id), selectedInstructor);
-                setInstructorList(prev => prev.map(i => i.id === selectedInstructor.id ? selectedInstructor : i));
+            if (formData.id) {
+                await updateDoc(doc(db, "Instructor", formData.id), formData);
+                setInstructorList(prev => prev.map(i => i.id === formData.id ? formData : i));
                 alert("Instructor updated successfully!");
             } else {
-                const newDoc = await addDoc(instructorCollectionRef, selectedInstructor);
-                setInstructorList(prev => [...prev, { id: newDoc.id, ...selectedInstructor }]);
+                const newDoc = await addDoc(instructorCollectionRef, formData);
+                setInstructorList(prev => [...prev, { id: newDoc.id, ...formData }]);
                 alert("Instructor created successfully!");
             }
-            resetForm();
             onClose();
         } catch (error) {
             console.error("Error saving instructor:", error);
@@ -149,7 +71,7 @@ const AddInstructor = ({ open, onClose, instructor, centers, roles, setInstructo
     };
 
     const resetForm = () => {
-        setSelectedInstructor({
+        setFormData({
             f_name: "",
             l_name: "",
             email: "",
@@ -158,103 +80,179 @@ const AddInstructor = ({ open, onClose, instructor, centers, roles, setInstructo
             center: "",
             role: ""
         });
+        setErrors({});
+    };
+
+    const handleChange = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors(prev => ({ ...prev, [field]: "" }));
+        }
     };
 
     return (
-        <div
-            className={`fixed top-0 right-0 h-full bg-white w-2/5 shadow-lg transform transition-transform duration-300 ${
-                open ? "translate-x-0" : "translate-x-full"
-            } p-4 overflow-y-auto`}
-        >
-            <button 
-                type="button" 
-                onClick={onClose} 
-                className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-red-600 transition duration-200"
+        <>
+            {/* Backdrop Overlay */}
+            {open && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                    onClick={onClose}
+                />
+            )}
+
+            {/* Drawer */}
+            <div
+                className={`fixed top-0 right-0 h-full bg-white w-1/3 shadow-lg transform transition-transform duration-300 ${
+                    open ? "translate-x-0" : "translate-x-full"
+                } z-50 overflow-y-auto`}
             >
-                Back
-            </button>
-            <h1>{selectedInstructor?.id ? "Edit Instructor" : "Add Instructor"}</h1>
+                <div className="p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-semibold text-gray-800">
+                            {formData.id ? "Edit Instructor" : "Add Instructor"}
+                        </h2>
+                        <button
+                            onClick={onClose}
+                            className="text-gray-500 hover:text-gray-700 transition duration-200"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
 
-            <form onSubmit={handleSubmit}>
-                <label htmlFor="f_name">First Name:</label>
-                <input 
-                    type="text" 
-                    value={selectedInstructor.f_name} 
-                    placeholder="First Name" 
-                    onChange={(e) => setSelectedInstructor({ ...selectedInstructor, f_name: e.target.value })} 
-                    required 
-                />
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* First Name */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600">First Name</label>
+                            <input
+                                type="text"
+                                value={formData.f_name}
+                                onChange={(e) => handleChange("f_name", e.target.value)}
+                                placeholder="Enter first name"
+                                className={`mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                    errors.f_name ? "border-red-500" : "border-gray-300"
+                                }`}
+                            />
+                            {errors.f_name && <p className="mt-1 text-sm text-red-500">{errors.f_name}</p>}
+                        </div>
 
-                <label htmlFor="l_name">Last Name:</label>
-                <input 
-                    type="text" 
-                    value={selectedInstructor.l_name} 
-                    placeholder="Last Name" 
-                    onChange={(e) => setSelectedInstructor({ ...selectedInstructor, l_name: e.target.value })} 
-                    required 
-                />
+                        {/* Last Name */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600">Last Name</label>
+                            <input
+                                type="text"
+                                value={formData.l_name}
+                                onChange={(e) => handleChange("l_name", e.target.value)}
+                                placeholder="Enter last name"
+                                className={`mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                    errors.l_name ? "border-red-500" : "border-gray-300"
+                                }`}
+                            />
+                            {errors.l_name && <p className="mt-1 text-sm text-red-500">{errors.l_name}</p>}
+                        </div>
 
-                <label htmlFor="email">Email:</label>
-                <input 
-                    type="email" 
-                    value={selectedInstructor.email} 
-                    placeholder="Email" 
-                    onChange={(e) => setSelectedInstructor({ ...selectedInstructor, email: e.target.value })} 
-                    required 
-                />
+                        {/* Email */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600">Email</label>
+                            <input
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => handleChange("email", e.target.value)}
+                                placeholder="Enter email"
+                                className={`mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                    errors.email ? "border-red-500" : "border-gray-300"
+                                }`}
+                            />
+                            {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+                        </div>
 
-                <label htmlFor="phone">Phone:</label>
-                <input 
-                    type="text" 
-                    value={selectedInstructor.phone} 
-                    placeholder="Phone" 
-                    onChange={(e) => setSelectedInstructor({ ...selectedInstructor, phone: e.target.value })} 
-                    required 
-                />
+                        {/* Phone */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600">Phone</label>
+                            <input
+                                type="text"
+                                value={formData.phone}
+                                onChange={(e) => handleChange("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                                placeholder="Enter 10-digit phone number"
+                                className={`mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                    errors.phone ? "border-red-500" : "border-gray-300"
+                                }`}
+                            />
+                            {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
+                        </div>
 
-                <label htmlFor="specialization">Specialization:</label>
-                <input 
-                    type="text" 
-                    value={selectedInstructor.specialization} 
-                    placeholder="Specialization" 
-                    onChange={(e) => setSelectedInstructor({ ...selectedInstructor, specialization: e.target.value })} 
-                    required 
-                />
+                        {/* Specialization */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600">Specialization</label>
+                            <input
+                                type="text"
+                                value={formData.specialization}
+                                onChange={(e) => handleChange("specialization", e.target.value)}
+                                placeholder="Enter specialization"
+                                className={`mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                    errors.specialization ? "border-red-500" : "border-gray-300"
+                                }`}
+                            />
+                            {errors.specialization && <p className="mt-1 text-sm text-red-500">{errors.specialization}</p>}
+                        </div>
 
-                <label htmlFor="center">Center:</label>
-                <select 
-                    value={selectedInstructor.center} 
-                    onChange={(e) => setSelectedInstructor({ ...selectedInstructor, center: e.target.value })} 
-                    required
-                >
-                    <option value="">Select a Center</option>
-                    {centers.map(center => (
-                        <option key={center.id} value={center.name}>{center.name}</option>
-                    ))}
-                </select>
+                        {/* Center */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600">Center</label>
+                            <select
+                                value={formData.center}
+                                onChange={(e) => handleChange("center", e.target.value)}
+                                className={`mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                    errors.center ? "border-red-500" : "border-gray-300"
+                                }`}
+                            >
+                                <option value="">Select a center</option>
+                                {centers.map(center => (
+                                    <option key={center.id} value={center.name}>{center.name}</option>
+                                ))}
+                            </select>
+                            {errors.center && <p className="mt-1 text-sm text-red-500">{errors.center}</p>}
+                        </div>
 
-                <label htmlFor="role">Role:</label>
-                <select 
-                    value={selectedInstructor.role} 
-                    onChange={(e) => setSelectedInstructor({ ...selectedInstructor, role: e.target.value })} 
-                    required
-                >
-                    <option value="">Select a Role</option>
-                    {roles.map(role => (
-                        <option key={role.id} value={role.name}>{role.name}</option>
-                    ))}
-                </select>
+                        {/* Role */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600">Role</label>
+                            <select
+                                value={formData.role}
+                                onChange={(e) => handleChange("role", e.target.value)}
+                                className={`mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                    errors.role ? "border-red-500" : "border-gray-300"
+                                }`}
+                            >
+                                <option value="">Select a role</option>
+                                {roles.map(role => (
+                                    <option key={role.id} value={role.name}>{role.name}</option>
+                                ))}
+                            </select>
+                            {errors.role && <p className="mt-1 text-sm text-red-500">{errors.role}</p>}
+                        </div>
 
-                <div className="flex justify-end">
-                    <button 
-                        type="submit" 
-                        className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200"
-                    >
-                        {selectedInstructor?.id ? "Update Instructor" : "Add Instructor"}
-                    </button>
+                        {/* Buttons */}
+                        <div className="flex justify-end space-x-2 mt-6">
+                            <button
+                                type="button"
+                                onClick={() => { resetForm(); onClose(); }}
+                                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition duration-200"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+                            >
+                                {formData.id ? "Update Instructor" : "Add Instructor"}
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
-        </div>
+            </div>
+        </>
     );
 };
 

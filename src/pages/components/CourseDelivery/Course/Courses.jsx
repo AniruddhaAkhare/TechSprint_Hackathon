@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { db } from '../../../../config/firebase';
 import { getDocs, collection, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import CreateCourses from "./CreateCourses";
-import SearchBar from "../../SearchBar";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 
 export default function Courses() {
@@ -10,7 +9,7 @@ export default function Courses() {
     const [courses, setCourses] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
-    
+
     const CourseCollectionRef = collection(db, "Course");
     const StudentCollectionRef = collection(db, "student");
     const [isOpen, setIsOpen] = useState(false);
@@ -20,23 +19,24 @@ export default function Courses() {
 
     const toggleSidebar = () => setIsOpen(prev => !prev);
 
-    const handleSearch = (e) => {
-        if (e) e.preventDefault();
-        if (!searchTerm.trim()) {
+    // Unified search handler
+    const handleSearch = (term) => {
+        if (!term.trim()) {
             setSearchResults([]);
             return;
         }
         const results = courses.filter(course =>
-            course.name.toLowerCase().includes(searchTerm.toLowerCase())
+            course.name.toLowerCase().includes(term.toLowerCase())
         );
         setSearchResults(results);
     };
 
+    // Trigger search on searchTerm change
     useEffect(() => {
-        if (searchTerm) handleSearch();
-        else setSearchResults([]);
+        handleSearch(searchTerm);
     }, [searchTerm]);
 
+    // Fetch courses from Firestore
     const fetchCourses = async () => {
         try {
             const q = query(CourseCollectionRef, orderBy('createdAt', 'asc'));
@@ -74,7 +74,7 @@ export default function Courses() {
 
     const checkStudentsInCourse = async (courseId) => {
         try {
-            console.log(`Checking students for course ID: ${courseId}`); // Add this line
+            console.log(`Checking students for course ID: ${courseId}`);
             const snapshot = await getDocs(StudentCollectionRef);
             const students = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -108,7 +108,7 @@ export default function Courses() {
             console.log(`Course ${deleteId} deleted successfully`);
             fetchCourses();
             setOpenDelete(false);
-            setDeleteMessage("Are you sure you want to delete this course? This action cannot be undone."); // Reset message
+            setDeleteMessage("Are you sure you want to delete this course? This action cannot be undone.");
         } catch (err) {
             console.error("Error deleting course:", err);
             setDeleteMessage("An error occurred while trying to delete the course.");
@@ -116,81 +116,116 @@ export default function Courses() {
     };
 
     return (
-        <div className="flex-col w-screen ml-80 p-4">
-            <div className="justify-between items-center p-4 mb-4 flex">
-                <div className="flex-1">
-                    <h1 className="text-2xl font-semibold">Courses</h1>
-                </div>
-                <div>
-                    <button
-                        type="button"
-                        className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
-                        onClick={handleCreateCourseClick}
-                    >
-                        + Create Course
-                    </button>
-                </div>
+        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-6 ml-80">
+            {/* Header Section */}
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-semibold text-gray-800">Courses</h1>
+                <button
+                    type="button"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    onClick={handleCreateCourseClick}
+                >
+                    + Create Course
+                </button>
             </div>
 
-            <CreateCourses isOpen={isOpen} toggleSidebar={handleClose} course={currentCourse} />
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                {/* Search Bar */}
+                <div className="mb-6">
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search courses by name..."
+                        className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
 
-            <div className="justify-between items-center p-4 mt-4">
-                <SearchBar
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    handleSearch={handleSearch}
-                />
-            </div>
-
-            <div className="sec-3">
-                <table className="data-table table w-full">
-                    <thead className="table-secondary">
-                        <tr>
-                            <th>Sr No</th>
-                            <th>Course Name</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(searchResults.length > 0 ? searchResults : courses).map((course, index) => (
-                            <tr key={course.id}>
-                                <td>{index + 1}</td>
-                                <td>{course.name}</td>
-                                <td>{course.status || "Ongoing"}</td>
-                                <td>
-                                    <div className="flex items-center space-x-2">
-                                        <button 
-                                            onClick={() => {
-                                                setDeleteId(course.id);
-                                                setOpenDelete(true);
-                                                setDeleteMessage("Are you sure you want to delete this course? This action cannot be undone.");
-                                            }} 
-                                            className="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600"
-                                        >
-                                            Delete
-                                        </button>
-                                        <button 
-                                            onClick={() => handleEditClick(course)} 
-                                            className="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600"
-                                        >
-                                            Update
-                                        </button>
-                                    </div>
-                                </td>
+                {/* Table Section */}
+                <div className="rounded-lg shadow-md overflow-x-auto">
+                    <table className="w-full table-auto">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Sr No</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Course Name</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Action</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {(searchResults.length > 0 ? searchResults : courses).map((course, index) => (
+                                <tr key={course.id} className="border-b hover:bg-gray-50 transition duration-150">
+                                    <td className="px-4 py-3 text-gray-600">{index + 1}</td>
+                                    <td className="px-4 py-3 text-gray-800">{course.name}</td>
+                                    <td className="px-4 py-3 text-gray-600">{course.status || "Ongoing"}</td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center space-x-2">
+                                            <button
+                                                onClick={() => {
+                                                    setDeleteId(course.id);
+                                                    setOpenDelete(true);
+                                                    setDeleteMessage("Are you sure you want to delete this course? This action cannot be undone.");
+                                                }}
+                                                className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                            >
+                                                Delete
+                                            </button>
+                                            <button
+                                                onClick={() => handleEditClick(course)}
+                                                className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                            >
+                                                Update
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <Dialog open={openDelete} handler={() => setOpenDelete(false)}>
-                <DialogHeader>Confirm Deletion</DialogHeader>
-                <DialogBody>{deleteMessage}</DialogBody>
-                <DialogFooter>
-                    <Button variant="text" color="gray" onClick={() => setOpenDelete(false)}>Cancel</Button>
+            {/* Backdrop for Sidebar */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                    onClick={handleClose}
+                />
+            )}
+
+            {/* Sidebar (CreateCourses) */}
+            <div
+                className={`fixed top-0 right-0 h-full w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} z-50 overflow-y-auto`}
+            >
+                <CreateCourses isOpen={isOpen} toggleSidebar={handleClose} course={currentCourse} />
+            </div>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={openDelete}
+                handler={() => setOpenDelete(false)}
+                className="rounded-lg shadow-lg"
+            >
+                <DialogHeader className="text-gray-800 font-semibold">Confirm Deletion</DialogHeader>
+                <DialogBody className="text-gray-600">{deleteMessage}</DialogBody>
+                <DialogFooter className="space-x-4">
+                    <Button
+                        variant="text"
+                        color="gray"
+                        onClick={() => setOpenDelete(false)}
+                        className="hover:bg-gray-100 transition duration-200"
+                    >
+                        Cancel
+                    </Button>
                     {deleteMessage === "Are you sure you want to delete this course? This action cannot be undone." && (
-                        <Button variant="filled" color="red" onClick={deleteCourse}>Yes, Delete</Button>
+                        <Button
+                            variant="filled"
+                            color="red"
+                            onClick={deleteCourse}
+                            className="bg-red-500 hover:bg-red-600 transition duration-200"
+                        >
+                            Yes, Delete
+                        </Button>
                     )}
                 </DialogFooter>
             </Dialog>
