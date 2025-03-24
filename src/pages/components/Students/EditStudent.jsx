@@ -232,6 +232,6 @@ export default function EditStudent() {
                     </button>
                 </div>
             </div>
-        </>
+        </div>
     );
 }

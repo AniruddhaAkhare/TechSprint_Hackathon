@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 131a9e7d27aa2ab0832178eec7299aa64b174d8e
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
 import {
@@ -192,22 +187,14 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
   };
 
   return (
-    <div
-<<<<<<< HEAD
-      className={`fixed inset-y-0 right-0 z-50 bg-white w-full sm:w-3/4 md:w-2/5 shadow-lg transform transition-transform duration-300 ${
-=======
-      className={`fixed top-0 right-0 h-full bg-white w-full shadow-lg transform transition-transform duration-300 ${
->>>>>>> 131a9e7d27aa2ab0832178eec7299aa64b174d8e
-        isOpen ? "translate-x-0" : "translate-x-full"
-      } p-6 overflow-y-auto`}
-    >
-<<<<<<< HEAD
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl md:text-2xl font-semibold">
-=======
+    <div className="p-20">
+    {/* // <div
+    //   className={`fixed top-0 right-0 h-full bg-white w-full shadow-lg transform transition-transform duration-300 ${
+    //     isOpen ? "translate-x-0" : "translate-x-full"
+    //   } p-6 overflow-y-auto`}
+    // > */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
->>>>>>> 131a9e7d27aa2ab0832178eec7299aa64b174d8e
           {course ? "Edit Course" : "Create Course"}
         </h1>
         <button

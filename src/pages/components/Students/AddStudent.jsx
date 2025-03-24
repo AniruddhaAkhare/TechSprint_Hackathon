@@ -292,8 +292,9 @@ export default function AddStudent() {
   };
 
   return (
+    // <div>
     <div className="p-20">
-    {/* // <div className="min-h-screen bg-gray-50 ml-80 w-[calc(100vw-20rem)]"> */}
+      {/* // <div className="min-h-screen bg-gray-50 ml-80 w-[calc(100vw-20rem)]"> */}
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-800">Add Student</h1>
@@ -788,6 +789,7 @@ export default function AddStudent() {
           </div>
         </form>
       </div>
-    </>
-  );
+      </div>
+
+      );
 }
