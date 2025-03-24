@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
 export default function AddStudent() {
+  const [isOpen, setIsOpen] = useState(true); // Control sidebar visibility
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -285,20 +286,38 @@ export default function AddStudent() {
     }
   };
 
+  const toggleSidebar = () => {
+    setIsOpen(false);
+    navigate("/studentdetails"); // Navigate back when closing
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 ml-80 w-[calc(100vw-20rem)]">
-      <div className="max-w-7xl mx-auto">
+    <>
+      {/* Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={toggleSidebar}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/3 shadow-lg transform transition-transform duration-300 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        } p-6 overflow-y-auto z-50`}
+      >
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-800">Add Student</h1>
           <button
-            onClick={() => navigate("/studentdetails")}
+            onClick={toggleSidebar}
             className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition duration-200"
           >
             Back
           </button>
         </div>
 
-        <form onSubmit={handleAddStudent} className="space-y-8 bg-white p-6 rounded-lg shadow-md">
+        <form onSubmit={handleAddStudent} className="space-y-8">
           {/* Personal Details */}
           <div>
             <h2 className="text-lg font-medium text-gray-700 mb-4">Personal Details</h2>
@@ -478,11 +497,7 @@ export default function AddStudent() {
                 </div>
               </div>
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-md font-medium text-gray-600">Billing Address</h3>
-                  
-                </div>
-                
+                <h3 className="text-md font-medium text-gray-600 mb-2">Billing Address</h3>
                 <div className="space-y-3">
                   <input
                     type="text"
@@ -785,6 +800,6 @@ export default function AddStudent() {
           </div>
         </form>
       </div>
-    </div>
+    </>
   );
 }

@@ -14,41 +14,52 @@ import {
     Typography,
     MenuItem,
     Select,
+    InputLabel,
+    FormControl,
 } from '@mui/material';
 
 const AddCourse = () => {
     const { studentId } = useParams();
     const [courses, setCourses] = useState([]);
     const [courseEntries, setCourseEntries] = useState([]);
+    const [financePartners, setFinancePartners] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isOpen, setIsOpen] = useState(false); // Control drawer visibility
+    const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
 
     const defaultFinanceDetails = {
-        financingType: '',
-        providerName: '',
-        agreementId: '',
-        totalAmountFinanced: 0,
-        repaymentTerms: '',
-        status: 'Pending',
-        approvalDate: '',
-        remarks: ''
+        financePartner: '',
+        contactPerson: '',
+        scheme: '',
+        loanAmount: 0,
+        downPayment: 0,
+        downPaymentDate: '',
+        applicantName: '',
+        relationship: '',
+        loanStatus: 'Pending',
+        bankStatement: null,
+        aadharCard: null,
+        panCard: null,
+        registration: { amount: '', date: '', receivedBy: '', paymentMethod: '', remark: '' }
     };
 
     const defaultEntry = {
         selectedCourse: '',
         mode: '',
         feeTemplate: '',
-        installmentDetails: [{ number: '', dueDate: '', dueAmount: '', paidDate: '', paidAmount: '', paymentMode: '', pdcStatus: '', receivedBy: '', remark: '' }],
+        installmentDetails: [
+            { number: '', dueDate: '', dueAmount: '', paidDate: '', paidAmount: '', paymentMode: '', pdcStatus: '', receivedBy: '', remark: '' }
+        ],
         fullFeesDetails: {
             discountType: '',
             discountValue: '',
             feeAfterDiscount: 0,
             totalFees: 0,
-            registration: { amount: '', date: '', receivedBy: '', remark: '' },
-            finalPayment: { amount: '', date: '', receivedBy: '', remark: '' }
+            registration: { amount: '', date: '', receivedBy: '', paymentMethod: '', remark: '' },
+            finalPayment: { amount: '', date: '', receivedBy: '', paymentMethod: '', remark: '' }
         },
-        financeDetails: { ...defaultFinanceDetails }
+        financeDetails: { ...defaultFinanceDetails },
+        registration: { amount: '', date: '', receivedBy: '', paymentMethod: '', remark: '' }
     };
 
     useEffect(() => {
@@ -59,13 +70,20 @@ const AddCourse = () => {
                 const fetchedCourses = coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setCourses(fetchedCourses);
 
+                const financePartnersSnapshot = await getDocs(collection(db, 'FinancePartner'));
+                const activeFinancePartners = financePartnersSnapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(partner => partner.status === 'Active');
+                setFinancePartners(activeFinancePartners);
+
                 const enrollmentDoc = await getDoc(doc(db, 'enrollments', studentId));
                 if (enrollmentDoc.exists() && enrollmentDoc.data().courses) {
                     const existingCourses = enrollmentDoc.data().courses.map(course => ({
                         ...defaultEntry,
                         ...course,
                         selectedCourse: fetchedCourses.find(c => c.id === course.selectedCourse?.id) || course.selectedCourse || '',
-                        financeDetails: { ...defaultFinanceDetails, ...course.financeDetails }
+                        financeDetails: { ...defaultFinanceDetails, ...course.financeDetails, scheme: course.financeDetails?.scheme || '' },
+                        registration: course.registration || defaultEntry.registration
                     }));
                     setCourseEntries(existingCourses);
                 } else {
@@ -76,7 +94,7 @@ const AddCourse = () => {
                 setCourseEntries([defaultEntry]);
             } finally {
                 setLoading(false);
-                setTimeout(() => setIsOpen(true), 10); // Trigger slide-in animation after data load
+                setTimeout(() => setIsOpen(true), 10);
             }
         };
         fetchData();
@@ -124,6 +142,19 @@ const AddCourse = () => {
         setCourseEntries(updatedEntries);
     };
 
+    const handleRegistrationChange = (index, field, value) => {
+        const updatedEntries = courseEntries.map((entry, i) => {
+            if (i === index) {
+                return {
+                    ...entry,
+                    registration: { ...entry.registration, [field]: value }
+                };
+            }
+            return entry;
+        });
+        setCourseEntries(updatedEntries);
+    };
+
     const handleInstallmentChange = (courseIndex, installmentIndex, field, value) => {
         const updatedEntries = courseEntries.map((entry, i) => {
             if (i === courseIndex) {
@@ -164,12 +195,34 @@ const AddCourse = () => {
         setCourseEntries(updatedEntries);
     };
 
-    const handleFinanceChange = (index, field, value) => {
+    const handleFinanceChange = (index, field, subField, value) => {
+        const updatedEntries = courseEntries.map((entry, i) => {
+            if (i === index) {
+                const financeDetails = { ...entry.financeDetails };
+                if (subField) {
+                    financeDetails[field] = { ...financeDetails[field], [subField]: value };
+                } else {
+                    financeDetails[field] = value;
+                }
+                // Reset dependent fields when financePartner changes
+                if (field === 'financePartner') {
+                    financeDetails.contactPerson = '';
+                    financeDetails.scheme = '';
+                }
+                return { ...entry, financeDetails };
+            }
+            return entry;
+        });
+        setCourseEntries(updatedEntries);
+    };
+
+    const handleFileChange = (index, field, event) => {
+        const file = event.target.files[0];
         const updatedEntries = courseEntries.map((entry, i) => {
             if (i === index) {
                 return {
                     ...entry,
-                    financeDetails: { ...entry.financeDetails, [field]: value }
+                    financeDetails: { ...entry.financeDetails, [field]: file }
                 };
             }
             return entry;
@@ -179,7 +232,14 @@ const AddCourse = () => {
 
     const saveEnrollmentData = async () => {
         try {
-            await setDoc(doc(db, 'enrollments', studentId), { courses: courseEntries }, { merge: true });
+            const updatedEntries = courseEntries.map(entry => {
+                if (entry.feeTemplate === 'Finance') {
+                    const { bankStatement, aadharCard, panCard, ...restFinanceDetails } = entry.financeDetails;
+                    return { ...entry, financeDetails: restFinanceDetails };
+                }
+                return entry;
+            });
+            await setDoc(doc(db, 'enrollments', studentId), { courses: updatedEntries }, { merge: true });
             alert("Enrollment data saved successfully!");
             handleClose();
         } catch (error) {
@@ -190,35 +250,23 @@ const AddCourse = () => {
 
     const handleClose = () => {
         setIsOpen(false);
-        setTimeout(() => navigate(-1), 300); // Match transition duration
+        setTimeout(() => navigate(-1), 300);
     };
 
     if (loading) return <Typography className="text-center text-gray-500">Loading...</Typography>;
 
     return (
         <>
-            {/* Backdrop */}
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={handleClose} />
             <div
-                className="fixed inset-0 bg-black bg-opacity-50 z-40"
-                onClick={handleClose}
-            />
-
-            {/* Drawer */}
-            <div
-                className={`fixed top-0 right-0 h-full bg-gray-50 w-3/4 shadow-lg transform transition-transform duration-300 ${
-                    isOpen ? "translate-x-0" : "translate-x-full"
-                } z-50 overflow-y-auto`}
+                className={`fixed top-0 right-0 h-full bg-gray-50 w-3/4 shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} z-50 overflow-y-auto`}
             >
                 <div className="p-6">
                     <div className="flex justify-between items-center mb-6">
                         <Typography variant="h5" className="text-gray-800 font-semibold">
                             Add Courses
                         </Typography>
-                        <Button
-                            onClick={handleClose}
-                            className="text-gray-500 hover:text-gray-700"
-                            sx={{ minWidth: 0, padding: 1 }}
-                        >
+                        <Button onClick={handleClose} className="text-gray-500 hover:text-gray-700" sx={{ minWidth: 0, padding: 1 }}>
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -290,10 +338,11 @@ const AddCourse = () => {
                                     <TableContainer>
                                         <Table>
                                             <TableHead>
-                                                <TableRow className="bg-blue">
+                                                <TableRow className="bg-blue-50">
                                                     <TableCell className="text-gray-800 font-medium">Title</TableCell>
                                                     <TableCell className="text-gray-800 font-medium">Amount</TableCell>
                                                     <TableCell className="text-gray-800 font-medium">Date</TableCell>
+                                                    <TableCell className="text-gray-800 font-medium">Payment Method</TableCell>
                                                     <TableCell className="text-gray-800 font-medium">Received By</TableCell>
                                                     <TableCell className="text-gray-800 font-medium">Remark</TableCell>
                                                 </TableRow>
@@ -303,6 +352,22 @@ const AddCourse = () => {
                                                     <TableCell>Registration</TableCell>
                                                     <TableCell><TextField value={entry.fullFeesDetails.registration.amount || ''} onChange={(e) => handleFullFeesChange(courseIndex, 'registration', 'amount', e.target.value)} size="small" /></TableCell>
                                                     <TableCell><TextField type="date" value={entry.fullFeesDetails.registration.date || ''} onChange={(e) => handleFullFeesChange(courseIndex, 'registration', 'date', e.target.value)} size="small" /></TableCell>
+                                                    <TableCell>
+                                                        <Select
+                                                            value={entry.fullFeesDetails.registration.paymentMethod || ""}
+                                                            onChange={(e) => handleFullFeesChange(courseIndex, "registration", "paymentMethod", e.target.value)}
+                                                            size="small"
+                                                            displayEmpty
+                                                            fullWidth
+                                                        >
+                                                            <MenuItem value="" disabled>Select Payment Method</MenuItem>
+                                                            <MenuItem value="Cash">Cash</MenuItem>
+                                                            <MenuItem value="Card">Card</MenuItem>
+                                                            <MenuItem value="UPI">UPI</MenuItem>
+                                                            <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+                                                            <MenuItem value="Cheque">Cheque</MenuItem>
+                                                        </Select>
+                                                    </TableCell>
                                                     <TableCell><TextField value={entry.fullFeesDetails.registration.receivedBy || ''} onChange={(e) => handleFullFeesChange(courseIndex, 'registration', 'receivedBy', e.target.value)} size="small" /></TableCell>
                                                     <TableCell><TextField value={entry.fullFeesDetails.registration.remark || ''} onChange={(e) => handleFullFeesChange(courseIndex, 'registration', 'remark', e.target.value)} size="small" /></TableCell>
                                                 </TableRow>
@@ -310,6 +375,22 @@ const AddCourse = () => {
                                                     <TableCell>Final Payment</TableCell>
                                                     <TableCell><TextField value={entry.fullFeesDetails.finalPayment.amount || ''} onChange={(e) => handleFullFeesChange(courseIndex, 'finalPayment', 'amount', e.target.value)} size="small" /></TableCell>
                                                     <TableCell><TextField type="date" value={entry.fullFeesDetails.finalPayment.date || ''} onChange={(e) => handleFullFeesChange(courseIndex, 'finalPayment', 'date', e.target.value)} size="small" /></TableCell>
+                                                    <TableCell>
+                                                        <Select
+                                                            value={entry.fullFeesDetails.finalPayment.paymentMethod || ""}
+                                                            onChange={(e) => handleFullFeesChange(courseIndex, "finalPayment", "paymentMethod", e.target.value)}
+                                                            size="small"
+                                                            displayEmpty
+                                                            fullWidth
+                                                        >
+                                                            <MenuItem value="" disabled>Select Payment Method</MenuItem>
+                                                            <MenuItem value="Cash">Cash</MenuItem>
+                                                            <MenuItem value="Card">Card</MenuItem>
+                                                            <MenuItem value="UPI">UPI</MenuItem>
+                                                            <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+                                                            <MenuItem value="Cheque">Cheque</MenuItem>
+                                                        </Select>
+                                                    </TableCell>
                                                     <TableCell><TextField value={entry.fullFeesDetails.finalPayment.receivedBy || ''} onChange={(e) => handleFullFeesChange(courseIndex, 'finalPayment', 'receivedBy', e.target.value)} size="small" /></TableCell>
                                                     <TableCell><TextField value={entry.fullFeesDetails.finalPayment.remark || ''} onChange={(e) => handleFullFeesChange(courseIndex, 'finalPayment', 'remark', e.target.value)} size="small" /></TableCell>
                                                 </TableRow>
@@ -343,10 +424,49 @@ const AddCourse = () => {
                                         />
                                         <Typography className="text-gray-700">Fee After Discount: {entry.fullFeesDetails.feeAfterDiscount}</Typography>
                                     </div>
+                                    <Typography variant="subtitle1" className="text-gray-800 font-medium">Registration</Typography>
                                     <TableContainer>
                                         <Table>
                                             <TableHead>
-                                                <TableRow className="bg-blue">
+                                                <TableRow className="bg-blue-50">
+                                                    <TableCell className="text-gray-800 font-medium">Amount</TableCell>
+                                                    <TableCell className="text-gray-800 font-medium">Date</TableCell>
+                                                    <TableCell className="text-gray-800 font-medium">Payment Method</TableCell>
+                                                    <TableCell className="text-gray-800 font-medium">Received By</TableCell>
+                                                    <TableCell className="text-gray-800 font-medium">Remark</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                <TableRow>
+                                                    <TableCell><TextField value={entry.registration.amount || ''} onChange={(e) => handleRegistrationChange(courseIndex, 'amount', e.target.value)} size="small" /></TableCell>
+                                                    <TableCell><TextField type="date" value={entry.registration.date || ''} onChange={(e) => handleRegistrationChange(courseIndex, 'date', e.target.value)} size="small" /></TableCell>
+                                                    <TableCell>
+                                                        <Select
+                                                            value={entry.registration.paymentMethod || ""}
+                                                            onChange={(e) => handleRegistrationChange(courseIndex, "paymentMethod", e.target.value)}
+                                                            size="small"
+                                                            displayEmpty
+                                                            fullWidth
+                                                        >
+                                                            <MenuItem value="" disabled>Select Payment Method</MenuItem>
+                                                            <MenuItem value="Cash">Cash</MenuItem>
+                                                            <MenuItem value="Card">Card</MenuItem>
+                                                            <MenuItem value="UPI">UPI</MenuItem>
+                                                            <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+                                                            <MenuItem value="Cheque">Cheque</MenuItem>
+                                                        </Select>
+                                                    </TableCell>
+                                                    <TableCell><TextField value={entry.registration.receivedBy || ''} onChange={(e) => handleRegistrationChange(courseIndex, 'receivedBy', e.target.value)} size="small" /></TableCell>
+                                                    <TableCell><TextField value={entry.registration.remark || ''} onChange={(e) => handleRegistrationChange(courseIndex, 'remark', e.target.value)} size="small" /></TableCell>
+                                                </TableRow>
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                    <Typography variant="subtitle1" className="text-gray-800 font-medium">Installments</Typography>
+                                    <TableContainer>
+                                        <Table>
+                                            <TableHead>
+                                                <TableRow className="bg-blue-50">
                                                     <TableCell className="text-gray-800 font-medium">No.</TableCell>
                                                     <TableCell className="text-gray-800 font-medium">Due Date</TableCell>
                                                     <TableCell className="text-gray-800 font-medium">Due Amount</TableCell>
@@ -402,87 +522,202 @@ const AddCourse = () => {
 
                             {entry.feeTemplate === 'Finance' && (
                                 <div className="space-y-4">
-                                    <div className="flex items-center space-x-4">
-                                        <Typography className="text-gray-700">Total Fees: {entry.fullFeesDetails?.totalFees || 0}</Typography>
-                                        <Select
-                                            value={entry.financeDetails?.financingType || ''}
-                                            onChange={(e) => handleFinanceChange(courseIndex, 'financingType', e.target.value)}
-                                            displayEmpty
-                                            className="w-48 bg-gray-100 rounded-lg"
-                                        >
-                                            <MenuItem value="" disabled>Select Financing Type</MenuItem>
-                                            <MenuItem value="Loan">Loan</MenuItem>
-                                            <MenuItem value="Employer">Employer Sponsorship</MenuItem>
-                                            <MenuItem value="Deferred">Deferred Payment</MenuItem>
-                                            <MenuItem value="Scholarship">Scholarship</MenuItem>
-                                        </Select>
-                                    </div>
+                                    <Typography variant="subtitle1" className="text-gray-700">Total Fees: {entry.fullFeesDetails?.totalFees || 0}</Typography>
+                                    <Typography variant="subtitle1" className="text-gray-800 font-medium">Registration</Typography>
+                                    <TableContainer>
+                                        <Table>
+                                            <TableHead>
+                                                <TableRow className="bg-blue-50">
+                                                    <TableCell className="text-gray-800 font-medium">Amount</TableCell>
+                                                    <TableCell className="text-gray-800 font-medium">Date</TableCell>
+                                                    <TableCell className="text-gray-800 font-medium">Payment Method</TableCell>
+                                                    <TableCell className="text-gray-800 font-medium">Received By</TableCell>
+                                                    <TableCell className="text-gray-800 font-medium">Remark</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                <TableRow>
+                                                    <TableCell><TextField value={entry.financeDetails.registration.amount || ''} onChange={(e) => handleFinanceChange(courseIndex, 'registration', 'amount', e.target.value)} size="small" /></TableCell>
+                                                    <TableCell><TextField type="date" value={entry.financeDetails.registration.date || ''} onChange={(e) => handleFinanceChange(courseIndex, 'registration', 'date', e.target.value)} size="small" /></TableCell>
+                                                    <TableCell>
+                                                        <Select
+                                                            value={entry.financeDetails.registration.paymentMethod || ""}
+                                                            onChange={(e) => handleFinanceChange(courseIndex, "registration", "paymentMethod", e.target.value)}
+                                                            size="small"
+                                                            displayEmpty
+                                                            fullWidth
+                                                        >
+                                                            <MenuItem value="" disabled>Select Payment Method</MenuItem>
+                                                            <MenuItem value="Cash">Cash</MenuItem>
+                                                            <MenuItem value="Card">Card</MenuItem>
+                                                            <MenuItem value="UPI">UPI</MenuItem>
+                                                            <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+                                                            <MenuItem value="Cheque">Cheque</MenuItem>
+                                                        </Select>
+                                                    </TableCell>
+                                                    <TableCell><TextField value={entry.financeDetails.registration.receivedBy || ''} onChange={(e) => handleFinanceChange(courseIndex, 'registration', 'receivedBy', e.target.value)} size="small" /></TableCell>
+                                                    <TableCell><TextField value={entry.financeDetails.registration.remark || ''} onChange={(e) => handleFinanceChange(courseIndex, 'registration', 'remark', e.target.value)} size="small" /></TableCell>
+                                                </TableRow>
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                    <Typography variant="subtitle1" className="text-gray-800 font-medium">Finance Details</Typography>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <FormControl fullWidth>
+                                            <InputLabel>Finance Partner</InputLabel>
+                                            <Select
+                                                value={entry.financeDetails.financePartner || ''}
+                                                onChange={(e) => handleFinanceChange(courseIndex, 'financePartner', '', e.target.value)}
+                                                label="Finance Partner"
+                                                className="bg-gray-100 rounded-lg"
+                                            >
+                                                <MenuItem value="" disabled>Select Finance Partner</MenuItem>
+                                                {financePartners.map(partner => (
+                                                    <MenuItem key={partner.id} value={partner.name}>{partner.name}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        <FormControl fullWidth>
+                                            <InputLabel>Contact Person</InputLabel>
+                                            <Select
+                                                value={entry.financeDetails.contactPerson || ''}
+                                                onChange={(e) => handleFinanceChange(courseIndex, 'contactPerson', '', e.target.value)}
+                                                label="Contact Person"
+                                                className="bg-gray-100 rounded-lg"
+                                                disabled={!entry.financeDetails.financePartner}
+                                            >
+                                                <MenuItem value="" disabled>Select Contact Person</MenuItem>
+                                                {entry.financeDetails.financePartner && financePartners
+                                                    .find(p => p.name === entry.financeDetails.financePartner)?.contactPersons
+                                                    ?.map((person, idx) => (
+                                                        <MenuItem key={idx} value={person.name}>{person.name}</MenuItem>
+                                                    ))}
+                                            </Select>
+                                        </FormControl>
+                                        <FormControl fullWidth>
+                                            <InputLabel>Finance Scheme</InputLabel>
+                                            <Select
+                                                value={entry.financeDetails.scheme || ''}
+                                                onChange={(e) => handleFinanceChange(courseIndex, 'scheme', '', e.target.value)}
+                                                label="Finance Scheme"
+                                                className="bg-gray-100 rounded-lg"
+                                                disabled={!entry.financeDetails.financePartner}
+                                            >
+                                                <MenuItem value="">Select Finance Scheme</MenuItem>
+                                                {entry.financeDetails.financePartner && financePartners
+                                                    .find(p => p.name === entry.financeDetails.financePartner)?.scheme
+                                                    ?.map((schemeItem, idx) => (
+                                                        <MenuItem
+                                                            key={idx}
+                                                            value={schemeItem.plan}
+                                                        >
+                                                            {schemeItem.plan}
+                                                            {schemeItem.description && ` - ${schemeItem.description}`}
+                                                        </MenuItem>
+                                                    ))}
+                                            </Select>
+                                        </FormControl>
                                         <TextField
-                                            label="Provider Name"
-                                            value={entry.financeDetails?.providerName || ''}
-                                            onChange={(e) => handleFinanceChange(courseIndex, 'providerName', e.target.value)}
-                                            variant="outlined"
-                                            size="small"
-                                            fullWidth
-                                        />
-                                        <TextField
-                                            label="Agreement ID"
-                                            value={entry.financeDetails?.agreementId || ''}
-                                            onChange={(e) => handleFinanceChange(courseIndex, 'agreementId', e.target.value)}
-                                            variant="outlined"
-                                            size="small"
-                                            fullWidth
-                                        />
-                                        <TextField
-                                            label="Total Amount Financed"
+                                            label="Loan Amount"
                                             type="number"
-                                            value={entry.financeDetails?.totalAmountFinanced || 0}
-                                            onChange={(e) => handleFinanceChange(courseIndex, 'totalAmountFinanced', e.target.value)}
+                                            value={entry.financeDetails.loanAmount || 0}
+                                            onChange={(e) => handleFinanceChange(courseIndex, 'loanAmount', '', e.target.value)}
                                             variant="outlined"
                                             size="small"
                                             fullWidth
                                         />
                                         <TextField
-                                            label="Repayment Terms"
-                                            value={entry.financeDetails?.repaymentTerms || ''}
-                                            onChange={(e) => handleFinanceChange(courseIndex, 'repaymentTerms', e.target.value)}
+                                            label="Down Payment"
+                                            type="number"
+                                            value={entry.financeDetails.downPayment || 0}
+                                            onChange={(e) => handleFinanceChange(courseIndex, 'downPayment', '', e.target.value)}
                                             variant="outlined"
                                             size="small"
                                             fullWidth
                                         />
-                                        <Select
-                                            value={entry.financeDetails?.status || 'Pending'}
-                                            onChange={(e) => handleFinanceChange(courseIndex, 'status', e.target.value)}
-                                            fullWidth
-                                            className="bg-gray-100 rounded-lg"
-                                        >
-                                            <MenuItem value="Pending">Pending</MenuItem>
-                                            <MenuItem value="Approved">Approved</MenuItem>
-                                            <MenuItem value="Active">Active</MenuItem>
-                                            <MenuItem value="Completed">Completed</MenuItem>
-                                        </Select>
                                         <TextField
-                                            label="Approval Date"
+                                            label="Down Payment Date"
                                             type="date"
-                                            value={entry.financeDetails?.approvalDate || ''}
-                                            onChange={(e) => handleFinanceChange(courseIndex, 'approvalDate', e.target.value)}
+                                            value={entry.financeDetails.downPaymentDate || ''}
+                                            onChange={(e) => handleFinanceChange(courseIndex, 'downPaymentDate', '', e.target.value)}
                                             variant="outlined"
                                             size="small"
                                             fullWidth
                                             InputLabelProps={{ shrink: true }}
                                         />
+                                        <TextField
+                                            label="Applicant Name"
+                                            value={entry.financeDetails.applicantName || ''}
+                                            onChange={(e) => handleFinanceChange(courseIndex, 'applicantName', '', e.target.value)}
+                                            variant="outlined"
+                                            size="small"
+                                            fullWidth
+                                        />
+                                        <TextField
+                                            label="Relationship"
+                                            value={entry.financeDetails.relationship || ''}
+                                            onChange={(e) => handleFinanceChange(courseIndex, 'relationship', '', e.target.value)}
+                                            variant="outlined"
+                                            size="small"
+                                            fullWidth
+                                        />
+                                        <FormControl fullWidth>
+                                            <InputLabel>Loan Status</InputLabel>
+                                            <Select
+                                                value={entry.financeDetails.loanStatus || 'Pending'}
+                                                onChange={(e) => handleFinanceChange(courseIndex, 'loanStatus', '', e.target.value)}
+                                                label="Loan Status"
+                                                className="bg-gray-100 rounded-lg"
+                                            >
+                                                <MenuItem value="Pending">Pending</MenuItem>
+                                                <MenuItem value="Approved">Approved</MenuItem>
+                                                <MenuItem value="Rejected">Rejected</MenuItem>
+                                                <MenuItem value="Disbursed">Disbursed</MenuItem>
+                                                <MenuItem value="Completed">Completed</MenuItem>
+                                            </Select>
+                                        </FormControl>
                                     </div>
-                                    <TextField
-                                        label="Remarks"
-                                        value={entry.financeDetails?.remarks || ''}
-                                        onChange={(e) => handleFinanceChange(courseIndex, 'remarks', e.target.value)}
-                                        variant="outlined"
-                                        size="small"
-                                        fullWidth
-                                        multiline
-                                        rows={2}
-                                    />
+                                    <div className="space-y-4 mt-4">
+                                        <div>
+                                            <Typography variant="subtitle2" className="text-gray-700">6 Months Bank Statement</Typography>
+                                            <input
+                                                type="file"
+                                                onChange={(e) => handleFileChange(courseIndex, 'bankStatement', e)}
+                                                className="mt-1"
+                                            />
+                                            {entry.financeDetails.bankStatement && (
+                                                <Typography variant="body2" className="text-gray-600 mt-1">
+                                                    {entry.financeDetails.bankStatement.name}
+                                                </Typography>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <Typography variant="subtitle2" className="text-gray-700">Aadhar Card</Typography>
+                                            <input
+                                                type="file"
+                                                onChange={(e) => handleFileChange(courseIndex, 'aadharCard', e)}
+                                                className="mt-1"
+                                            />
+                                            {entry.financeDetails.aadharCard && (
+                                                <Typography variant="body2" className="text-gray-600 mt-1">
+                                                    {entry.financeDetails.aadharCard.name}
+                                                </Typography>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <Typography variant="subtitle2" className="text-gray-700">PAN Card</Typography>
+                                            <input
+                                                type="file"
+                                                onChange={(e) => handleFileChange(courseIndex, 'panCard', e)}
+                                                className="mt-1"
+                                            />
+                                            {entry.financeDetails.panCard && (
+                                                <Typography variant="body2" className="text-gray-600 mt-1">
+                                                    {entry.financeDetails.panCard.name}
+                                                </Typography>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -519,4 +754,4 @@ const AddCourse = () => {
     );
 };
 
-export default AddCourse;
+export default AddCourse;  
