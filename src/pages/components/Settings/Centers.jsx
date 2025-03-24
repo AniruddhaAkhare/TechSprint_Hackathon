@@ -251,7 +251,7 @@ export default function Centers() {
     };
 
     return (
-        <div className="flex-col w-screen ml-80 p-4">
+        <div className="p-20">
             <div className="justify-between items-center p-4 mb-4">
                 <div className="flex-1">
                     <h1 className="text-2xl font-semibold">Centers</h1>

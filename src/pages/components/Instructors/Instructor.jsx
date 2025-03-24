@@ -44,7 +44,8 @@ export default function Instructor() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6 ml-80 w-screen justify-between items-center">
+        <div className="p-20">
+        {/* <div className="min-h-screen bg-gray-50 p-6 ml-80 w-screen justify-between items-center"> */}
             <div className="max-w-8xl mx-auto">
                 {/* Header Section */}
                 <div className="flex justify-between items-center mb-6">

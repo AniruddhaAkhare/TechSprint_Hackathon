@@ -67,7 +67,7 @@ const Roles = () => {
   };
 
   return (
-    <div className="flex-col w-screen ml-80 p-4">
+    <div className="p-20">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Roles & Permissions</h2>
         <Button className="bg-blue-600 text-white" onClick={handleNewRole}>

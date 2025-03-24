@@ -98,7 +98,7 @@ export default function FinancePartner() {
   }
 
   return (
-    <div className="flex-col w-screen ml-80 p-4">
+    <div className="p-20">
       <div className="flex justify-between items-center p-4 mb-4">
         <h1 className="text-2xl font-semibold text-gray-800">Finance Partners</h1>
         <button

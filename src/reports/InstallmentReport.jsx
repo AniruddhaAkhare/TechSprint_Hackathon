@@ -119,7 +119,7 @@ export default function InstallmentReport() {
     const totalAmount = filteredInstallments.reduce((acc, installment) => acc + Number(installment.dueAmount), 0);
 
     return (
-        <div className="flex-col w-screen ml-80 p-4">
+        <div className="p-20">
             <h1 className="text-2xl font-bold mb-4">Installment Report</h1>
             <div className="mb-4">
                 <select value={filter} onChange={(e) => setFilter(e.target.value)} className="p-2 border rounded">

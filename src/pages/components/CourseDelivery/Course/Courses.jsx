@@ -93,6 +93,7 @@ export default function Courses() {
     };
 
     const checkStudentsInCourse = async (courseId) => {
+        // ... (unchanged)
         try {
             const snapshot = await getDocs(StudentCollectionRef);
             const students = snapshot.docs.map(doc => ({
@@ -111,6 +112,7 @@ export default function Courses() {
     };
 
     const deleteCourse = async () => {
+        // ... (unchanged)
         if (!deleteId) return;
 
         try {
@@ -139,7 +141,7 @@ export default function Courses() {
     };
 
     return (
-        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-6 ml-80">
+        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-20">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-semibold text-gray-800">Courses</h1>
                 <button
