@@ -113,7 +113,7 @@ const Fees = ({ studentId }) => {
         <div className="space-y-6">
             {/* Main Table */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-lg font-medium text-gray-700 mb-4">Fee Summary</h2>
+                {/* <h2 className="text-lg font-medium text-gray-700 mb-4">Fee Summary</h2> */}
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>

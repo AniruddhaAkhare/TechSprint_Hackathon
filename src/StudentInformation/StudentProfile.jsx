@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 export default function StudentProfile() {
     const { studentId } = useParams();
     const [student, setStudent] = useState(null);
+    const [centers, setCenters] = useState([]); // State to store center details
     const navigate = useNavigate();
 
     useEffect(() => {
         console.log("Fetching student data for ID:", studentId);
 
         const fetchStudentData = async () => {
+            // Fetch student data
             const docRef = doc(db, 'student', studentId);
             const docSnap = await getDoc(docRef);
 
@@ -22,7 +24,19 @@ export default function StudentProfile() {
             }
         };
 
+        const fetchCenters = async () => {
+            // Fetch all centers to map center IDs to names
+            try {
+                const querySnapshot = await getDocs(collection(db, "Centers"));
+                setCenters(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            } catch (error) {
+                console.error("Error fetching centers:", error);
+            }
+        };
+
+        // Call both fetch functions
         fetchStudentData();
+        fetchCenters();
     }, [studentId]);
 
     if (!student) return <div className="text-gray-600 text-center py-10">Loading...</div>;
@@ -126,6 +140,36 @@ export default function StudentProfile() {
                         />
                     </div>
                 </div>
+            </div>
+
+            {/* Preferred Learning Centers */}
+            <div>
+                <h2 className="text-lg font-medium text-gray-700 mb-4">Preferred Learning Centers</h2>
+                {student.preferred_centers && student.preferred_centers.length > 0 ? (
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-gray-100">
+                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Sr. No.</th>
+                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Center Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {student.preferred_centers.map((centerId, index) => {
+                                    const center = centers.find(c => c.id === centerId);
+                                    return (
+                                        <tr key={centerId} className="border-b hover:bg-gray-50">
+                                            <td className="p-3 text-gray-700">{index + 1}</td>
+                                            <td className="p-3 text-gray-700">{center ? center.name : "Unknown Center"}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <p className="text-gray-600">No preferred learning centers selected.</p>
+                )}
             </div>
 
             {/* Course Details */}

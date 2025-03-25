@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
 export default function AddStudent() {
-  const [isOpen, setIsOpen] = useState(true); // Control sidebar visibility
+  const [isOpen, setIsOpen] = useState(true);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -25,12 +25,15 @@ export default function AddStudent() {
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
   const [centers, setCenters] = useState([]);
+  const [preferredCenters, setPreferredCenters] = useState([]); // Array to store selected center IDs
+  const [selectedCenter, setSelectedCenter] = useState(""); // Temporary state for dropdown selection
   const [goal, setGoal] = useState("");
   const [discount, setDiscount] = useState(0);
   const [total, setTotal] = useState("");
   const [courseId, setCourseId] = useState("");
   const [feeTemplates, setFeeTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [branches, setbranches] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -119,6 +122,7 @@ export default function AddStudent() {
         discount: discount || 0,
         total: total || 0,
         installment_details: installmentDetails,
+        preferred_centers: preferredCenters, // Store array of center IDs
       });
 
       const studentId = studentDocRef.id;
@@ -286,9 +290,20 @@ export default function AddStudent() {
     }
   };
 
+  const handleAddCenter = () => {
+    if (selectedCenter && !preferredCenters.includes(selectedCenter)) {
+      setPreferredCenters([...preferredCenters, selectedCenter]);
+      setSelectedCenter(""); // Reset dropdown after adding
+    }
+  };
+
+  const handleRemoveCenter = (centerId) => {
+    setPreferredCenters(preferredCenters.filter(id => id !== centerId));
+  };
+
   const toggleSidebar = () => {
     setIsOpen(false);
-    navigate("/studentdetails"); // Navigate back when closing
+    navigate("/studentdetails");
   };
 
   return (
@@ -746,7 +761,7 @@ export default function AddStudent() {
             </div>
           </div>
 
-          {/* Goal and Status */}
+          {/* Goal, Status, and Preferred Learning Centers */}
           <div>
             <h2 className="text-lg font-medium text-gray-700 mb-4">Additional Details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -776,6 +791,57 @@ export default function AddStudent() {
                   <option value="completed">Completed</option>
                   <option value="deferred">Deferred</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600">Preferred Learning Centers</label>
+                <div className="flex items-center space-x-2">
+                  <select
+                    value={selectedCenter}
+                    onChange={(e) => setSelectedCenter(e.target.value)}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="" disabled>Select a Center</option>
+                    {centers
+                      .filter(center => !preferredCenters.includes(center.id))
+                      .map((center) => (
+                        <option key={center.id} value={center.id}>
+                          {center.name}
+                        </option>
+                      ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleAddCenter}
+                    disabled={!selectedCenter}
+                    className={`mt-1 px-3 py-2 rounded-md text-white ${
+                      selectedCenter ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
+                    } transition duration-200`}
+                  >
+                    Add
+                  </button>
+                </div>
+                {preferredCenters.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium text-gray-600">Selected Centers:</p>
+                    <ul className="mt-1 space-y-1">
+                      {preferredCenters.map((centerId) => {
+                        const center = centers.find(c => c.id === centerId);
+                        return (
+                          <li key={centerId} className="flex items-center justify-between bg-gray-100 p-2 rounded-md">
+                            <span>{center?.name || "Unknown Center"}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveCenter(centerId)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <FontAwesomeIcon icon={faXmark} />
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600">Date of Enrollment</label>

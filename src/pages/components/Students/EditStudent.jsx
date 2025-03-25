@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { doc, getDoc, updateDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteDoc, collection, getDocs, setDoc } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
@@ -26,6 +26,8 @@ export default function EditStudent() {
         experienceDetails: [],
         discount: "",
         total: "",
+        preferred_centers: [], // Added to store preferred centers
+        guardian_details: { name: "", phone: "", email: "", relation: "", occupation: "" }, // Added guardian details
     });
     const [feeTemplates, setFeeTemplates] = useState([]);
     const [selectedTemplate, setSelectedTemplate] = useState(null);
@@ -33,6 +35,7 @@ export default function EditStudent() {
     const [batches, setBatches] = useState([]);
     const [centers, setCenters] = useState([]);
     const [isOpen, setIsOpen] = useState(false); // Control drawer visibility
+    const [selectedCenter, setSelectedCenter] = useState(""); // Temporary state for dropdown selection
 
     useEffect(() => {
         fetchStudent();
@@ -67,6 +70,8 @@ export default function EditStudent() {
                     experienceDetails: data.experience_details || [],
                     discount: data.discount || "",
                     total: data.total || "",
+                    preferred_centers: data.preferred_centers || [], // Load preferred centers
+                    guardian_details: data.guardian_details || { name: "", phone: "", email: "", relation: "", occupation: "" }, // Load guardian details
                 });
             } else {
                 alert("Student not found.");
@@ -123,6 +128,9 @@ export default function EditStudent() {
         } else if (name.includes("address")) {
             const field = name.split(".")[1];
             setStudent(prev => ({ ...prev, address: { ...prev.address, [field]: value } }));
+        } else if (name.includes("guardian_details")) {
+            const field = name.split(".")[1];
+            setStudent(prev => ({ ...prev, guardian_details: { ...prev.guardian_details, [field]: value } }));
         } else if (name.includes("courseDetails")) {
             const [_, index, fieldName] = name.split(".");
             setStudent(prev => {
@@ -156,15 +164,26 @@ export default function EditStudent() {
         }
     };
 
-    const addCourse = () => setStudent(prev => ({ ...prev, courseDetails: [...prev.courseDetails, { courseName: '', batch: '', branch: '', mode: '' }] }));
+    const addCourse = () => setStudent(prev => ({ ...prev, courseDetails: [...prev.courseDetails, { courseName: '', batch: '', branch: '', mode: '', fee: 0 }] }));
     const addEducation = () => setStudent(prev => ({ ...prev, educationDetails: [...prev.educationDetails, { level: '', institute: '', degree: '', specialization: '', grade: '', passingyr: '' }] }));
     const addInstallment = () => setStudent(prev => ({ ...prev, installmentDetails: [...prev.installmentDetails, { number: '', dueAmount: '', dueDate: '', paidOn: '', amtPaid: '', modeOfPayment: '', pdcStatus: '', remark: '' }] }));
-    const addExperience = () => setStudent(prev => ({ ...prev, experienceDetails: [...prev.experienceDetails, { companyName: '', designation: '', salary: '', description: '' }] }));
+    const addExperience = () => setStudent(prev => ({ ...prev, experienceDetails: [...prev.experienceDetails, { companyName: '', designation: '', salary: '', years: '', description: '' }] }));
 
     const removeCourse = (index) => setStudent(prev => ({ ...prev, courseDetails: prev.courseDetails.filter((_, i) => i !== index) }));
     const deleteEducation = (index) => setStudent(prev => ({ ...prev, educationDetails: prev.educationDetails.filter((_, i) => i !== index) }));
     const deleteInstallment = (index) => setStudent(prev => ({ ...prev, installmentDetails: prev.installmentDetails.filter((_, i) => i !== index) }));
     const deleteExperience = (index) => setStudent(prev => ({ ...prev, experienceDetails: prev.experienceDetails.filter((_, i) => i !== index) }));
+
+    const handleAddCenter = () => {
+        if (selectedCenter && !student.preferred_centers.includes(selectedCenter)) {
+            setStudent(prev => ({ ...prev, preferred_centers: [...prev.preferred_centers, selectedCenter] }));
+            setSelectedCenter(""); // Reset dropdown after adding
+        }
+    };
+
+    const handleRemoveCenter = (centerId) => {
+        setStudent(prev => ({ ...prev, preferred_centers: prev.preferred_centers.filter(id => id !== centerId) }));
+    };
 
     const handleUpdate = async (e) => {
         e.preventDefault();
@@ -172,7 +191,19 @@ export default function EditStudent() {
             alert("Please fill necessary fields.");
             return;
         }
+    
+        let installmentTotal = 0;
+        student.installmentDetails.forEach((installment) => {
+            installmentTotal += Number(installment.dueAmount);
+        });
+    
+        if (installmentTotal !== Number(student.total)) {
+            alert("Installment total does not match with total amount");
+            return;
+        }
+    
         try {
+            // Update the student document
             const studentRef = doc(db, "student", studentId);
             await updateDoc(studentRef, {
                 first_name: student.first_name,
@@ -188,10 +219,76 @@ export default function EditStudent() {
                 course_details: student.courseDetails,
                 education_details: student.educationDetails,
                 installment_details: student.installmentDetails,
-                experienceDetails: student.experienceDetails,
+                experience_details: student.experienceDetails,
                 discount: student.discount,
                 total: student.total,
+                preferred_centers: student.preferred_centers,
+                guardian_details: student.guardian_details,
             });
+    
+            // Update or create the enrollments document
+            let paidAmt = 0;
+            const today = new Date().toISOString().split("T")[0];
+            let outstanding = 0;
+            let overdue = 0;
+    
+            student.installmentDetails.forEach((installment) => {
+                const amtPaid = Number(installment.amtPaid) || 0;
+                const amtDue = Number(installment.dueAmount) || 0;
+    
+                paidAmt += amtPaid;
+    
+                const dueDate = new Date(installment.dueDate).toISOString().split("T")[0];
+                if (dueDate > today && !installment.amtPaid) {
+                    outstanding += amtDue;
+                } else if (dueDate <= today && !installment.amtPaid) {
+                    overdue += amtDue;
+                }
+            });
+    
+            const enrollmentData = {
+                student_id: studentId,
+                course_id: student.courseDetails[0]?.courseId || "",
+                enrollment_date: Timestamp.fromDate(new Date(student.admission_date)),
+                fee: {
+                    discount: student.discount || 0,
+                    total: student.total || 0,
+                    overdue: overdue,
+                    paid: paidAmt,
+                    outstanding: outstanding,
+                },
+                installments: student.installmentDetails,
+            };
+    
+            // Use setDoc with merge to create or update the enrollments document
+            await setDoc(doc(db, 'enrollments', studentId), enrollmentData, { merge: true });
+    
+            // Update or create the installments documents
+            for (const installmentData of student.installmentDetails) {
+                if (installmentData.id) {
+                    // If the installment has an ID, update or create it
+                    await setDoc(doc(db, 'installments', installmentData.id), {
+                        ...installmentData,
+                        student_id: studentId
+                    }, { merge: true });
+                } else {
+                    // If the installment doesn't have an ID, create a new document
+                    const newInstallmentRef = doc(collection(db, 'installments'));
+                    await setDoc(newInstallmentRef, {
+                        ...installmentData,
+                        student_id: studentId,
+                        id: newInstallmentRef.id // Assign the generated ID to the installment
+                    });
+                    // Update the installmentDetails with the new ID
+                    setStudent(prev => {
+                        const updatedInstallments = [...prev.installmentDetails];
+                        const index = updatedInstallments.findIndex(inst => inst === installmentData);
+                        updatedInstallments[index] = { ...installmentData, id: newInstallmentRef.id };
+                        return { ...prev, installmentDetails: updatedInstallments };
+                    });
+                }
+            }
+    
             alert("Student updated successfully!");
             navigate("/studentdetails");
         } catch (error) {
@@ -207,7 +304,7 @@ export default function EditStudent() {
                 alert("Student deleted successfully!");
                 navigate("/studentdetails");
             } catch (error) {
-                console.error("Error deleting student :", error);
+                console.error("Error deleting student:", error);
                 alert("Error deleting student. Please try again.");
             }
         }
@@ -216,6 +313,29 @@ export default function EditStudent() {
     const handleClose = () => {
         setIsOpen(false);
         setTimeout(() => navigate("/studentdetails"), 300); // Match transition duration
+    };
+
+    const handleFeeSummary = () => {
+        let totalFees = 0;
+        student.courseDetails.forEach((course) => {
+            if (course.fee && !isNaN(course.fee)) {
+                totalFees += Number(course.fee);
+            }
+        });
+        const discountAmount = (totalFees * (student.discount / 100)) || 0;
+        const finalTotal = totalFees - discountAmount;
+        setStudent(prev => ({ ...prev, total: finalTotal }));
+    };
+
+    const handleTemplateChange = async (e) => {
+        const templateId = e.target.value;
+        setSelectedTemplate(templateId);
+
+        const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
+        const templateData = templateSnapshot.docs.find(doc => doc.id === templateId)?.data();
+        if (templateData && templateData.installments) {
+            setStudent(prev => ({ ...prev, installmentDetails: templateData.installments }));
+        }
     };
 
     return (
@@ -317,6 +437,68 @@ export default function EditStudent() {
                                         value={student.admission_date}
                                         onChange={handleChange}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Guardian Details */}
+                        <div>
+                            <h2 className="text-lg font-medium text-gray-700 mb-4">Guardian Details</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Name</label>
+                                    <input
+                                        type="text"
+                                        name="guardian_details.name"
+                                        value={student.guardian_details.name}
+                                        onChange={handleChange}
+                                        placeholder="Guardian Name"
+                                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Phone</label>
+                                    <input
+                                        type="text"
+                                        name="guardian_details.phone"
+                                        value={student.guardian_details.phone}
+                                        onChange={handleChange}
+                                        placeholder="Guardian Phone"
+                                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Email</label>
+                                    <input
+                                        type="email"
+                                        name="guardian_details.email"
+                                        value={student.guardian_details.email}
+                                        onChange={handleChange}
+                                        placeholder="Guardian Email"
+                                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Relation</label>
+                                    <input
+                                        type="text"
+                                        name="guardian_details.relation"
+                                        value={student.guardian_details.relation}
+                                        onChange={handleChange}
+                                        placeholder="Relation"
+                                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Occupation</label>
+                                    <input
+                                        type="text"
+                                        name="guardian_details.occupation"
+                                        value={student.guardian_details.occupation}
+                                        onChange={handleChange}
+                                        placeholder="Occupation"
+                                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
                             </div>
@@ -566,6 +748,7 @@ export default function EditStudent() {
                                             <th className="p-3 text-sm font-medium text-gray-600">Company Name</th>
                                             <th className="p-3 text-sm font-medium text-gray-600">Designation</th>
                                             <th className="p-3 text-sm font-medium text-gray-600">Salary</th>
+                                            <th className="p-3 text-sm font-medium text-gray-600">Years</th>
                                             <th className="p-3 text-sm font-medium text-gray-600">Description</th>
                                             <th className="p-3 text-sm font-medium text-gray-600">Actions</th>
                                         </tr>
@@ -605,6 +788,16 @@ export default function EditStudent() {
                                                 </td>
                                                 <td className="p-3">
                                                     <input
+                                                        type="number"
+                                                        name={`experienceDetails.${index}.years`}
+                                                        value={exp.years}
+                                                        onChange={handleChange}
+                                                        placeholder="Years"
+                                                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </td>
+                                                <td className="p-3">
+                                                    <input
                                                         type="text"
                                                         name={`experienceDetails.${index}.description`}
                                                         value={exp.description}
@@ -636,10 +829,24 @@ export default function EditStudent() {
                             </div>
                         </div>
 
-                        {/* Goal and Status */}
+                        {/* Goal, Status, and Preferred Learning Centers */}
                         <div>
                             <h2 className="text-lg font-medium text-gray-700 mb-4">Additional Details</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Goal</label>
+                                    <select
+                                        name="goal"
+                                        value={student.goal}
+                                        onChange={handleChange}
+                                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="" disabled>Select Goal</option>
+                                        <option value="Upskilling">Upskilling</option>
+                                        <option value="Career Switch">Career Switch</option>
+                                        <option value="Placement">Placement</option>
+                                    </select>
+                                </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-600">Status</label>
                                     <select
@@ -651,23 +858,70 @@ export default function EditStudent() {
                                         <option value="" disabled>Select Status</option>
                                         <option value="enquiry">Enquiry</option>
                                         <option value="enrolled">Enrolled</option>
-                                        <option value="deferred">Deferred</option>
                                         <option value="completed">Completed</option>
+                                        <option value="deferred">Deferred</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600">Goal</label>
-                                    <select
-                                        name="goal"
-                                        value={student.goal}
+                                    <label className="block text-sm font-medium text-gray-600">Preferred Learning Centers</label>
+                                    <div className="flex items-center space-x-2">
+                                        <select
+                                            value={selectedCenter}
+                                            onChange={(e) => setSelectedCenter(e.target.value)}
+                                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="" disabled>Select a Center</option>
+                                            {centers
+                                                .filter(center => !student.preferred_centers.includes(center.id))
+                                                .map((center) => (
+                                                    <option key={center.id} value={center.id}>
+                                                        {center.name}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                        <button
+                                            type="button"
+                                            onClick={handleAddCenter}
+                                            disabled={!selectedCenter}
+                                            className={`mt-1 px-3 py-2 rounded-md text-white ${
+                                                selectedCenter ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
+                                            } transition duration-200`}
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
+                                    {student.preferred_centers.length > 0 && (
+                                        <div className="mt-2">
+                                            <p className="text-sm font-medium text-gray-600">Selected Centers:</p>
+                                            <ul className="mt-1 space-y-1">
+                                                {student.preferred_centers.map((centerId) => {
+                                                    const center = centers.find(c => c.id === centerId);
+                                                    return (
+                                                        <li key={centerId} className="flex items-center justify-between bg-gray-100 p-2 rounded-md">
+                                                            <span>{center?.name || "Unknown Center"}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveCenter(centerId)}
+                                                                className="text-red-500 hover:text-red-700"
+                                                            >
+                                                                <FontAwesomeIcon icon={faXmark} />
+                                                            </button>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Date of Enrollment</label>
+                                    <input
+                                        type="date"
+                                        name="admission_date"
+                                        value={student.admission_date}
                                         onChange={handleChange}
-                                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="" disabled>Select Goal</option>
-                                        <option value="upskilling">Upskilling</option>
-                                        <option value="placement">Placement</option>
-                                        <option value="career_switch">Career Switch</option>
-                                    </select>
+                                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 focus:outline-none"
+                                    />
                                 </div>
                             </div>
                         </div>

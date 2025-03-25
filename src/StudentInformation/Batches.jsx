@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
-export default function  Grades ({ studentId })  {
+export default function  Batches ({ studentId })  {
     const [grades, setGrades] = useState([]);
     const [newGrade, setNewGrade] = useState({ grade: '', marks_obtained: '', max_marks: '', student_id: studentId});
 

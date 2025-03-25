@@ -9,7 +9,7 @@ export default function Batches() {
     const [batches, setBatches] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
-    
+
     const BatchCollectionRef = collection(db, "Batch");
     const StudentCollectionRef = collection(db, "student");
     const [isOpen, setIsOpen] = useState(false);
@@ -111,13 +111,13 @@ export default function Batches() {
     };
 
     return (
-        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-20">
+        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-2">
             {/* Header Section */}
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-semibold text-gray-800">Batches</h1>
                 <button
                     type="button"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700"
                     onClick={handleCreateBatchClick}
                 >
                     + Create Batch
@@ -141,10 +141,10 @@ export default function Batches() {
                     <table className="w-full table-auto">
                         <thead className="bg-gray-100">
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Sr No</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Batch Name</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Action</th>
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Sr No</th>
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Batch Name</th>
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Status</th>
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -190,7 +190,9 @@ export default function Batches() {
 
             {/* Sidebar (CreateBatch) */}
             <div
-                className={`fixed top-0 right-0 h-full w-full sm:w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} z-50 overflow-y-auto`}
+                className={`fixed top-0 right-0 h-full w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${
+                    isOpen ? "translate-x-0" : "translate-x-full"
+                } z-50 overflow-y-auto`}
             >
                 <CreateBatch isOpen={isOpen} toggleSidebar={handleClose} batch={currentBatch} />
             </div>
