@@ -1,43 +1,63 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { db } from '../../../../config/firebase';
 import { getDocs, collection, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import CreateCourses from "./CreateCourses";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
+import LearnerList from "./LearnerList";
+import { Select, MenuItem, FormControl } from '@mui/material';
 
 export default function Courses() {
     const [currentCourse, setCurrentCourse] = useState(null);
     const [courses, setCourses] = useState([]);
+    const [students, setStudents] = useState([]); // New state for student data
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
-
-    const CourseCollectionRef = collection(db, "Course");
-    const StudentCollectionRef = collection(db, "student");
     const [isOpen, setIsOpen] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
     const [deleteMessage, setDeleteMessage] = useState("Are you sure you want to delete this course? This action cannot be undone.");
+    const [openLearnersDialog, setOpenLearnersDialog] = useState(false);
+    const [selectedCourseId, setSelectedCourseId] = useState(null);
+
+    const CourseCollectionRef = collection(db, "Course");
+    const StudentCollectionRef = collection(db, "student");
 
     const toggleSidebar = () => setIsOpen(prev => !prev);
 
-    // Unified search handler
-    const handleSearch = (term) => {
+    const handleLearnersClick = (courseId) => {
+        setSelectedCourseId(courseId);
+        setOpenLearnersDialog(true);
+    };
+
+    const handleSearch = useCallback((term) => {
         if (!term.trim()) {
             setSearchResults([]);
             return;
         }
-        const results = courses.filter(course =>
-            course.name.toLowerCase().includes(term.toLowerCase())
+        const results = courses.filter(course => 
+            course.name?.toLowerCase().includes(term.toLowerCase())
         );
         setSearchResults(results);
-    };
+    }, [courses]);
 
-    // Trigger search on searchTerm change
     useEffect(() => {
         handleSearch(searchTerm);
-    }, [searchTerm]);
+    }, [searchTerm, handleSearch]);
 
-    // Fetch courses from Firestore
-    const fetchCourses = async () => {
+    const fetchStudents = useCallback(async () => {
+        try {
+            const snapshot = await getDocs(StudentCollectionRef);
+            const studentData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            setStudents(studentData);
+        } catch (err) {
+            console.error("Error fetching students:", err);
+        }
+    }, []);
+
+    const fetchCourses = useCallback(async () => {
         try {
             const q = query(CourseCollectionRef, orderBy('createdAt', 'asc'));
             const snapshot = await getDocs(q);
@@ -46,15 +66,15 @@ export default function Courses() {
                 ...doc.data(),
             }));
             setCourses(courseData);
-            console.log("Courses fetched:", courseData);
         } catch (err) {
             console.error("Error fetching courses:", err);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchCourses();
-    }, []);
+        fetchStudents(); // Fetch students when component mounts
+    }, [fetchCourses, fetchStudents]);
 
     const handleCreateCourseClick = () => {
         setCurrentCourse(null);
@@ -75,20 +95,16 @@ export default function Courses() {
     const checkStudentsInCourse = async (courseId) => {
         // ... (unchanged)
         try {
-            console.log(`Checking students for course ID: ${courseId}`);
             const snapshot = await getDocs(StudentCollectionRef);
             const students = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
             }));
-            console.log("Students fetched:", students);
-            const hasStudents = students.some(student => {
-                const courseDetails = student.course_details || [];
-                console.log(`Checking student ${student.id} course_details:`, courseDetails);
-                return courseDetails.some(course => course.course_id === courseId);
-            });
-            console.log(`Course ${courseId} has students: ${hasStudents}`);
-            return hasStudents;
+            return students.some(student => 
+                (student.course_details || []).some(course => 
+                    course.course_id === courseId
+                )
+            );
         } catch (err) {
             console.error("Error checking students:", err);
             return false;
@@ -107,8 +123,7 @@ export default function Courses() {
             }
 
             await deleteDoc(doc(db, "Course", deleteId));
-            console.log(`Course ${deleteId} deleted successfully`);
-            fetchCourses();
+            await fetchCourses();
             setOpenDelete(false);
             setDeleteMessage("Are you sure you want to delete this course? This action cannot be undone.");
         } catch (err) {
@@ -117,14 +132,21 @@ export default function Courses() {
         }
     };
 
+    // Helper function to get student names for a course
+    const getStudentNamesForCourse = (courseId) => {
+        const enrolledStudents = students.filter(student => 
+            (student.course_details || []).some(course => course.course_id === courseId)
+        );
+        return enrolledStudents.map(student => student.name || 'Unknown').join(', ') || 'None';
+    };
+
     return (
-        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-6 ml-80">
-            {/* Header Section */}
+        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-20">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-semibold text-gray-800">Courses</h1>
                 <button
                     type="button"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700"
                     onClick={handleCreateCourseClick}
                 >
                     + Create Course
@@ -132,7 +154,6 @@ export default function Courses() {
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-md">
-                {/* Search Bar */}
                 <div className="mb-6">
                     <input
                         type="text"
@@ -143,42 +164,55 @@ export default function Courses() {
                     />
                 </div>
 
-                {/* Table Section */}
                 <div className="rounded-lg shadow-md overflow-x-auto">
                     <table className="w-full table-auto">
                         <thead className="bg-gray-100">
                             <tr>
                                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Sr No</th>
                                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Course Name</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Fee (₹)</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Duration</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Mode</th>
                                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Students</th> {/* New column */}
                                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {(searchResults.length > 0 ? searchResults : courses).map((course, index) => (
-                                <tr key={course.id} className="border-b hover:bg-gray-50 transition duration-150">
+                                <tr key={course.id} className="border-b hover:bg-gray-50">
                                     <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                                    <td className="px-4 py-3 text-gray-800">{course.name}</td>
-                                    <td className="px-4 py-3 text-gray-600">{course.status || "Ongoing"}</td>
+                                    <td className="px-4 py-3 text-gray-800">{course.name || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-gray-600">{course.fee || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-gray-600">{course.duration || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-gray-600">{course.mode || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-gray-600">{course.status || "Active"}</td>
+                                    <td className="px-4 py-3 text-gray-600">{getStudentNamesForCourse(course.id)}</td> {/* Display student names */}
                                     <td className="px-4 py-3">
-                                        <div className="flex items-center space-x-2">
-                                            <button
-                                                onClick={() => {
-                                                    setDeleteId(course.id);
-                                                    setOpenDelete(true);
-                                                    setDeleteMessage("Are you sure you want to delete this course? This action cannot be undone.");
+                                        <FormControl size="small">
+                                            <Select
+                                                value=""
+                                                onChange={(e) => {
+                                                    const action = e.target.value;
+                                                    if (action === 'delete') {
+                                                        setDeleteId(course.id);
+                                                        setOpenDelete(true);
+                                                        setDeleteMessage("Are you sure you want to delete this course? This action cannot be undone.");
+                                                    } else if (action === 'update') {
+                                                        handleEditClick(course);
+                                                    } else if (action === 'learners') {
+                                                        handleLearnersClick(course.id);
+                                                    }
                                                 }}
-                                                className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                                displayEmpty
+                                                renderValue={() => "Actions"}
                                             >
-                                                Delete
-                                            </button>
-                                            <button
-                                                onClick={() => handleEditClick(course)}
-                                                className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                                            >
-                                                Update
-                                            </button>
-                                        </div>
+                                                <MenuItem value="" disabled>Actions</MenuItem>
+                                                <MenuItem value="update">Update</MenuItem>
+                                                <MenuItem value="delete">Delete</MenuItem>
+                                                <MenuItem value="learners">Learners</MenuItem>
+                                            </Select>
+                                        </FormControl>
                                     </td>
                                 </tr>
                             ))}
@@ -187,7 +221,6 @@ export default function Courses() {
                 </div>
             </div>
 
-            {/* Backdrop for Sidebar */}
             {isOpen && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40"
@@ -195,14 +228,16 @@ export default function Courses() {
                 />
             )}
 
-            {/* Sidebar (CreateCourses) */}
             <div
                 className={`fixed top-0 right-0 h-full w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} z-50 overflow-y-auto`}
             >
-                <CreateCourses isOpen={isOpen} toggleSidebar={handleClose} course={currentCourse} />
+                <CreateCourses 
+                    isOpen={isOpen} 
+                    toggleSidebar={handleClose} 
+                    course={currentCourse} 
+                />
             </div>
 
-            {/* Delete Confirmation Dialog */}
             <Dialog
                 open={openDelete}
                 handler={() => setOpenDelete(false)}
@@ -215,7 +250,6 @@ export default function Courses() {
                         variant="text"
                         color="gray"
                         onClick={() => setOpenDelete(false)}
-                        className="hover:bg-gray-100 transition duration-200"
                     >
                         Cancel
                     </Button>
@@ -224,13 +258,18 @@ export default function Courses() {
                             variant="filled"
                             color="red"
                             onClick={deleteCourse}
-                            className="bg-red-500 hover:bg-red-600 transition duration-200"
                         >
                             Yes, Delete
                         </Button>
                     )}
                 </DialogFooter>
             </Dialog>
+
+            <LearnerList
+                courseId={selectedCourseId}
+                open={openLearnersDialog}
+                onClose={() => setOpenLearnersDialog(false)}
+            />
         </div>
     );
 }

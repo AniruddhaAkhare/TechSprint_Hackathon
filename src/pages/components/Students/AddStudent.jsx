@@ -292,10 +292,21 @@ export default function AddStudent() {
   };
 
   return (
-    // <div>
-    <div className="p-20">
-      {/* // <div className="min-h-screen bg-gray-50 ml-80 w-[calc(100vw-20rem)]"> */}
-      <div className="max-w-4xl mx-auto">
+    <>
+      {/* Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={toggleSidebar}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/3 shadow-lg transform transition-transform duration-300 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        } p-6 overflow-y-auto z-50`}
+      >
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-800">Add Student</h1>
           <button
@@ -789,7 +800,6 @@ export default function AddStudent() {
           </div>
         </form>
       </div>
-      </div>
-
-      );
+    </>
+  );
 }

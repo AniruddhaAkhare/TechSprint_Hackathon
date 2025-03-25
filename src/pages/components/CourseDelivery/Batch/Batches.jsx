@@ -111,7 +111,7 @@ export default function Batches() {
     };
 
     return (
-        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-6 ml-0 sm:ml-80">
+        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-20">
             {/* Header Section */}
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-semibold text-gray-800">Batches</h1>

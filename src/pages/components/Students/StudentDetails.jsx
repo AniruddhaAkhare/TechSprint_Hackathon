@@ -200,6 +200,7 @@ export default function StudentDetails() {
                                     <th className="p-3 text-sm font-medium text-gray-600 text-left">Last Name</th>
                                     <th className="p-3 text-sm font-medium text-gray-600 text-left">Email</th>
                                     <th className="p-3 text-sm font-medium text-gray-600 text-left">Phone</th>
+                                    {/* <th className="p-3 text-sm font-medium text-gray-600 text-left">Branch</th> */}
                                     <th className="p-3 text-sm font-medium text-gray-600 text-left">Status</th>
                                     <th className="p-3 text-sm font-medium text-gray-600 text-left">Actions</th>
                                 </tr>

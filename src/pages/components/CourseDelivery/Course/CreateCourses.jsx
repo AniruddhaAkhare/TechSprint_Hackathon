@@ -19,12 +19,11 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
   const [owners, setOwners] = useState([]);
 
   const [courseName, setCourseName] = useState("");
-  const [courseCode, setCourseCode] = useState("");
   const [courseDescription, setCourseDescription] = useState("");
   const [courseFee, setCourseFee] = useState("");
   const [courseDuration, setCourseDuration] = useState("");
   const [courseMode, setCourseMode] = useState("");
-  const [courseStatus, setCourseStatus] = useState("Ongoing");
+  const [courseStatus, setCourseStatus] = useState("Active");
 
   const [centerAssignments, setCenterAssignments] = useState([]);
   const [selectedBatches, setSelectedBatches] = useState([]);
@@ -71,29 +70,33 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
     fetchData();
   }, [course]);
 
+  // Reset or populate form based on course prop
   useEffect(() => {
     if (course) {
-      setCourseName(course.name);
-      setCourseCode(course.code);
-      setCourseDescription(course.description);
-      setCourseFee(course.fee);
-      setCourseDuration(course.duration);
-      setCourseMode(course.mode);
-      setCourseStatus(course.status || "Ongoing");
+      // Editing an existing course
+      setCourseName(course.name || "");
+      setCourseDescription(course.description || "");
+      setCourseFee(course.fee || "");
+      setCourseDuration(course.duration || "");
+      setCourseMode(course.mode || "");
+      setCourseStatus(course.status || "Active");
       setCenterAssignments(course.centers?.map(c => typeof c === "string" ? { centerId: c, status: "Active" } : c) || []);
       setSelectedBatches(course.batches || []);
       setSelectedOwners(course.owners || []);
       setAvailableCenters(centers.filter(c => !course.centers?.some(ca => ca.centerId === c.id)));
       setAvailableBatches(batches.filter(b => (b.status === "Ongoing" || !b.status) && !course.batches?.includes(b.id)));
       setAvailableOwners(owners.filter(o => !course.owners?.includes(o.id)));
+    } else {
+      // Creating a new course - reset form
+      resetForm();
     }
   }, [course, centers, batches, owners]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const courseData = {
       name: courseName,
-      code:courseCode,
       description: courseDescription,
       fee: courseFee,
       duration: courseDuration,
@@ -123,12 +126,11 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
 
   const resetForm = () => {
     setCourseName("");
-    setCourseCode("");
     setCourseDescription("");
     setCourseFee("");
     setCourseDuration("");
     setCourseMode("");
-    setCourseStatus("Ongoing");
+    setCourseStatus("Active");
     setCenterAssignments([]);
     setSelectedBatches([]);
     setSelectedOwners([]);
@@ -187,12 +189,11 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
   };
 
   return (
-    <div className="p-20">
-    {/* // <div
-    //   className={`fixed top-0 right-0 h-full bg-white w-full shadow-lg transform transition-transform duration-300 ${
-    //     isOpen ? "translate-x-0" : "translate-x-full"
-    //   } p-6 overflow-y-auto`}
-    // > */}
+    <div
+      className={`fixed top-0 right-0 h-full bg-white w-full shadow-lg transform transition-transform duration-300 ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      } p-6 overflow-y-auto`}
+    >
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
           {course ? "Edit Course" : "Create Course"}
@@ -274,9 +275,9 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">Select Mode</option>
-            <option value="online">Online</option>
-            <option value="offline">Offline</option>
-            <option value="both">Both</option>
+            <option value="Online">Online</option>
+            <option value="Offline">Offline</option>
+            <option value="Hybrid">Hybrid</option>
           </select>
         </div>
 
@@ -290,8 +291,8 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
             required
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
-            <option value="Ongoing">Ongoing</option>
-            <option value="Archive">Archive</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
           </select>
         </div>
 
