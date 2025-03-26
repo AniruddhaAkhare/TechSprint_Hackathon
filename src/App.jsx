@@ -82,7 +82,7 @@ import Navigation from './apps/Navigation/NavigationContainer.jsx';
 // import FeeTemplate from './pages/components/FeeTemplate/FeeTemplate.jsx';
 import StudentInfo from './StudentInformation/StudentInfo.jsx'
 
-
+import EditCurriculum from './pages/components/CourseDelivery/Curriculum/EditCurriculum.jsx';
 import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession.jsx';
 import AddCourse from './pages/components/Students/AddStudent/AddCourse.jsx'
 
@@ -152,7 +152,8 @@ export default function App() {
               <Route path="/instructor" element={<Instructor />} />
 
               <Route path='/curriculum' element={<Curriculum />} />
-              <Route path="/notes/:curriculumId/:sectionId" element={<NotesPage />} />
+              <Route path="/edit-curriculum/:id" element={<EditCurriculum />} />
+              {/* <Route path="/notes/:curriculumId/:sectionId" element={<NotesPage />} /> */}
 
 
               <Route path="/studentdetails" element={<StudentDetails />} />
