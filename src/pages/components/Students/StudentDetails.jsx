@@ -10,24 +10,26 @@ export default function StudentDetails() {
     const { adminId } = useParams();
     const navigate = useNavigate();
     const [students, setStudents] = useState([]);
-    const [filteredStudents, setFilteredStudents] = useState([]); // New state for filtered list
+    const [filteredStudents, setFilteredStudents] = useState([]);
     const [course, setCourse] = useState([]);
+    const [centers, setCenters] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState([]);
     const [openDelete, setOpenDelete] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
-    const [searchQuery, setSearchQuery] = useState(""); // New state for search input
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         fetchStudents();
         fetchCourse();
+        fetchCenters();
     }, []);
 
     const fetchStudents = async () => {
         const snapshot = await getDocs(collection(db, "student"));
         const studentList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setStudents(studentList);
-        setFilteredStudents(studentList); // Initialize filtered list
+        setFilteredStudents(studentList);
     };
 
     const fetchCourse = async () => {
@@ -35,15 +37,20 @@ export default function StudentDetails() {
         setCourse(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     };
 
-    // Handle search input change
+    const fetchCenters = async () => {
+        const snapshot = await getDocs(collection(db, "Centers"));
+        const centerList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setCenters(centerList);
+    };
+
     const handleSearch = (e) => {
         const query = e.target.value.toLowerCase();
         setSearchQuery(query);
         const filtered = students.filter(student =>
-            student.first_name.toLowerCase().includes(query) ||
-            student.last_name.toLowerCase().includes(query) ||
-            student.email.toLowerCase().includes(query) ||
-            student.phone.toLowerCase().includes(query)
+            student.first_name?.toLowerCase().includes(query) ||
+            student.last_name?.toLowerCase().includes(query) ||
+            student.email?.toLowerCase().includes(query) ||
+            student.phone?.toLowerCase().includes(query)
         );
         setFilteredStudents(filtered);
     };
@@ -158,9 +165,18 @@ export default function StudentDetails() {
         }
     };
 
+    const getCenterNames = (centerIds) => {
+        if (!centerIds || centerIds.length === 0) return 'No Centers';
+        return centerIds
+            .map(id => {
+                const center = centers.find(c => c.id === id);
+                return center ? center.name : 'Unknown Center';
+            })
+            .join(', ');
+    };
+
     return (
-        <div className="p-2">
-        {/* <div className="min-h-screen bg-gray-50 p-6 ml-80 w-screen justify-between items-center"> */}
+        <div className="p-4 fixed inset-0 left-[300px]">
             <ToastContainer position="top-right" autoClose={3000} />
             <div className="max-w-8xl mx-auto">
                 <div className="flex justify-between items-center mb-6">
@@ -173,8 +189,7 @@ export default function StudentDetails() {
                     </button>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                    {/* Search Bar */}
+                <div className="bg-white p-6 rounded-lg shadow-md h-full flex flex-col">
                     <div className="mb-6">
                         <input
                             type="text"
@@ -185,10 +200,10 @@ export default function StudentDetails() {
                         />
                     </div>
 
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-450px)]">
                         <table className="w-full border-collapse">
                             <thead>
-                                <tr className="bg-gray-100">
+                                <tr className="bg-gray-100 sticky top-0 z-10">
                                     <th className="p-3 text-sm font-medium text-gray-600 text-left">
                                         <input
                                             type="checkbox"
@@ -200,15 +215,16 @@ export default function StudentDetails() {
                                     <th className="p-3 text-sm font-medium text-gray-600 text-left">Last Name</th>
                                     <th className="p-3 text-sm font-medium text-gray-600 text-left">Email</th>
                                     <th className="p-3 text-sm font-medium text-gray-600 text-left">Phone</th>
-                                    {/* <th className="p-3 text-sm font-medium text-gray-600 text-left">Branch</th> */}
+                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Preferred Learning Centers</th>
                                     <th className="p-3 text-sm font-medium text-gray-600 text-left">Status</th>
+                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Goal</th>
                                     <th className="p-3 text-sm font-medium text-gray-600 text-left">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredStudents.map(student => (
-                                    <tr key={student.id} className="border-b hover:bg-gray-50 cursor-pointer ">
-                                        <td className="p-3 hover:text-blue-600">
+                                    <tr key={student.id} className="border-b hover:bg-gray-50 cursor-pointer">
+                                        <td className="p-3 hover:text-blue-600 min-w-40">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedStudents.includes(student.id)}
@@ -217,34 +233,40 @@ export default function StudentDetails() {
                                             />
                                         </td>
                                         <td
-                                            className="p-3 text-gray-700 cursor-pointer hover:text-blue-600"
+                                            className="p-3 text-gray-700 cursor-pointer hover:text-blue-600 min-w-40"
                                             onClick={() => navigate(`/studentdetails/${student.id}`)}
                                         >
-                                            {student.first_name}
+                                            {student.first_name || 'N/A'}
                                         </td>
                                         <td
-                                            className="p-3 text-gray-700 cursor-pointer hover:text-blue-600"
+                                            className="p-3 text-gray-700 cursor-pointer hover:text-blue-600 min-w-40"
                                             onClick={() => navigate(`/studentdetails/${student.id}`)}
                                         >
-                                            {student.last_name}
+                                            {student.last_name || 'N/A'}
                                         </td>
                                         <td
-                                            className="p-3 text-gray-700 cursor-pointer hover:text-blue-600"
+                                            className="p-3 text-gray-700 cursor-pointer hover:text-blue-600 min-w-40"
                                             onClick={() => navigate(`/studentdetails/${student.id}`)}
                                         >
-                                            {student.email}
+                                            {student.email || 'N/A'}
                                         </td>
                                         <td
-                                            className="p-3 text-gray-700 cursor-pointer hover:text-blue-600"
+                                            className="p-3 text-gray-700 cursor-pointer hover:text-blue-600 min-w-40"
                                             onClick={() => navigate(`/studentdetails/${student.id}`)}
                                         >
-                                            {student.phone}
+                                            {student.phone || 'N/A'}
+                                        </td>
+                                        <td
+                                            className="p-3 text-gray-700 cursor-pointer hover:text-blue-600 min-w-80"
+                                            onClick={() => navigate(`/studentdetails/${student.id}`)}
+                                        >
+                                            {getCenterNames(student.preferred_centers)}
                                         </td>
                                         <td className="p-3">
                                             <select
                                                 value={student.status || 'enrolled'}
                                                 onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                                                className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="w-full min-w-40 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             >
                                                 <option value="enquiry">Enquiry</option>
                                                 <option value="enrolled">Enrolled</option>
@@ -252,7 +274,13 @@ export default function StudentDetails() {
                                                 <option value="completed">Completed</option>
                                             </select>
                                         </td>
-                                        <td className="p-3">
+                                        <td
+                                            className="p-3 text-gray-700 cursor-pointer hover:text-blue-600 min-w-40"
+                                            onClick={() => navigate(`/studentdetails/${student.id}`)}
+                                        >
+                                            {student.goal || 'N/A'}
+                                        </td>
+                                        <td className="p-3 min-w-40">
                                             <div className="flex space-x-2">
                                                 <button
                                                     onClick={() => navigate(`/studentdetails/updatestudent/${student.id}`)}
@@ -275,7 +303,6 @@ export default function StudentDetails() {
                     </div>
                 </div>
 
-                {/* Course Selection and Bulk Enrollment */}
                 <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
                     <h2 className="text-lg font-medium text-gray-700 mb-4">Bulk Enrollment</h2>
                     <div className="space-y-4">
@@ -302,7 +329,6 @@ export default function StudentDetails() {
                     </div>
                 </div>
 
-                {/* Delete Confirmation Dialog */}
                 <Dialog open={openDelete} handler={() => setOpenDelete(false)}>
                     <DialogHeader className="text-gray-800">Confirm Deletion</DialogHeader>
                     <DialogBody className="text-gray-700">

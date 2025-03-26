@@ -69,4 +69,9 @@ button:focus-visible {
 
 @tailwind base;
 @tailwind components;
+<<<<<<< HEAD
 @tailwind utilities;
+=======
+@tailwind utilities;
+
+>>>>>>> a1185e9e0b5d26741b2f865e025f2b7d9519645b

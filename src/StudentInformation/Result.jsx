@@ -1,117 +1,190 @@
-import React, { useEffect, useState } from 'react';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../config/firebase';
-export default function  Result ({ studentId })  {
-    const [results, setResults] = useState([]);
-    const [newResults, setNewResults] = useState({ result: '', marks_obtained: '', max_marks: '', student_id: studentId });
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { getDoc, doc, setDoc, collection, getDocs } from "firebase/firestore";
+import { db } from "../config/firebase"; // Adjust path as needed
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+const Result = () => {
+    const { studentId } = useParams(); // Get studentId from URL params
+    const [enrollmentData, setEnrollmentData] = useState([]);
+    const [courses, setCourses] = useState([]);
+    const [results, setResults] = useState({});
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetchResults();
-    }, []);
+        const fetchData = async () => {
+            setIsLoading(true);
+            setError(null);
 
-    const fetchResults = async () => {
+            try {
+                // Fetch enrollment data
+                const enrollmentDoc = await getDoc(doc(db, "enrollments", studentId));
+                if (enrollmentDoc.exists() && enrollmentDoc.data().courses) {
+                    const coursesData = enrollmentDoc.data().courses;
+
+                    // Fetch course details
+                    const coursePromises = coursesData.map(course =>
+                        getDoc(doc(db, "Course", course.selectedCourse?.id || ""))
+                    );
+                    const courseDocs = await Promise.all(coursePromises);
+
+                    const formattedEnrollments = coursesData.map((course, index) => {
+                        const courseDoc = courseDocs[index];
+                        const courseName = courseDoc.exists() ? courseDoc.data().name : "Course not found";
+                        return {
+                            ...course,
+                            id: course.selectedCourse?.id || `course-${index}`,
+                            name: courseName,
+                        };
+                    });
+
+                    setEnrollmentData(formattedEnrollments);
+                } else {
+                    setError("No enrollments found for this student.");
+                }
+
+                // Fetch course list for reference
+                const courseSnapshot = await getDocs(collection(db, "Course"));
+                setCourses(courseSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+                // Fetch existing results
+                const resultSnapshot = await getDocs(collection(db, "Result"));
+                const resultList = resultSnapshot.docs.map(doc => doc.data());
+                const studentResults = resultList.reduce((acc, result) => {
+                    if (result.studentId === studentId) {
+                        acc[result.enrollmentId] = {
+                            status: result.status || "ongoing",
+                            marks: result.marks || "",
+                            totalMarks: result.totalMarks || ""
+                        };
+                    }
+                    return acc;
+                }, {});
+                setResults(studentResults);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                setError(error.message || "Failed to fetch data.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [studentId]);
+
+    const getCourseName = (courseId) => {
+        const course = courses.find(c => c.id === courseId);
+        return course ? course.name : "Unknown Course";
+    };
+
+    const handleResultChange = (enrollmentId, field, value) => {
+        setResults(prev => ({
+            ...prev,
+            [enrollmentId]: {
+                ...prev[enrollmentId] || { status: "ongoing", marks: "", totalMarks: "" },
+                [field]: value
+            }
+        }));
+    };
+
+    const saveResult = async (enrollmentId) => {
+        const resultData = results[enrollmentId] || { status: "ongoing", marks: "", totalMarks: "" };
         try {
-            const resultsCollection = collection(db, 'results');
-            const snapshot = await getDocs(resultsCollection);
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setResults(data);
+            const resultRef = doc(db, "Result", `${studentId}_${enrollmentId}`);
+            await setDoc(resultRef, {
+                studentId,
+                enrollmentId,
+                courseId: enrollmentData.find(e => e.id === enrollmentId)?.selectedCourse?.id,
+                courseName: getCourseName(enrollmentData.find(e => e.id === enrollmentId)?.selectedCourse?.id),
+                status: resultData.status,
+                marks: resultData.status === "certified" ? resultData.marks : "",
+                totalMarks: resultData.status === "certified" ? resultData.totalMarks : "",
+                updatedAt: new Date()
+            }, { merge: true });
+            toast.success("Result saved successfully!");
         } catch (error) {
-            console.error("Error fetching results: ", error);
-            alert("Failed to fetch results. Please try again later.");
+            console.error("Error saving result:", error);
+            toast.error("Failed to save result");
         }
     };
 
-    const addResults = async (e) => {
-        e.preventDefault();
-        try {
-            await addDoc(collection(db, 'results'), newResults);
-            setNewResults({ result: '', marks_obtained: '', max_marks: '', student_id: studentId }); 
-            fetchResults();
-        } catch (error) {
-            console.error("Error adding results: ", error);
-            alert("Failed to add result. Please try again."); 
-        }
-    };
-
-    const updateResults = async (id) => {
-        const resultsRef = doc(db, 'results', id);
-        try {
-            await updateDoc(resultsRef, newResults);
-            fetchResults(); 
-        } catch (error) {
-            console.error("Error updating results: ", error);
-            alert("Failed to update result. Please try again."); 
-        }
-    };
-
-    const deleteResults = async (id) => {
-        const confirmDelete = window.confirm("Are you sure you want to delete this grade?");
-        if (!confirmDelete) return;
-
-        try {
-            await deleteDoc(doc(db, 'results', id));
-            fetchResults();
-        } catch (error) {
-            console.error("Error deleting results: ", error);
-            alert("Failed to delete result. Please try again."); 
-        }
-    };
+    if (isLoading) return <p className="text-gray-600 text-center py-10">Loading...</p>;
+    if (error) return <p className="text-red-500 text-center py-10">{error}</p>;
 
     return (
-        <div className="grades-component">
-            <h1>Manage Result</h1>
-            <form onSubmit={addResults}>
-                <input
-                    type="text"
-                    placeholder="Result"
-                    value={newResults.result}
-                    onChange={(e) => setNewResults({ ...newResults, result: e.target.value })}
-                    required
-                />
-                <input
-                    type="number"
-                    placeholder="Marks Obtained"
-                    value={newResults.marks_obtained}
-                    onChange={(e) => setNewResults({ ...newResults, marks_obtained: e.target.value })}
-                    required
-                />
-                <input
-                    type="number"
-                    placeholder="Max Marks"
-                    value={newResults.max_marks}
-                    onChange={(e) => setNewResults({ ...newResults, max_marks: e.target.value })}
-                    required
-                />
-                <button type="submit" className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Add Result</button>
-            </form>
+        <div className="p-4">
+            <ToastContainer position="top-right" autoClose={3000} />
+            {/* <h2 className="text-2xl font-semibold text-gray-800 mb-6">Student Results</h2> */}
 
-            <table className='table-data table'>
-                <thead className='table-secondary'>
-                    <tr>
-                        <th>Result</th>
-                        <th>Marks Obtained</th>
-                        <th>Max Marks</th>
-                        <th>Student ID</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {results
-                        .filter(result => result.student_id === studentId) 
-                        .map(result => (
-                            <tr key={result.id}>
-                                <td>{result.result}</td>
-                                <td>{result.marks_obtained}</td>
-                                <td>{result.max_marks}</td>
-                                <td>{result.student_id}</td>
-                                <td>
-                                    <button onClick={() => { updateResults(result.id) }} className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Edit</button>
-                                    <button onClick={() => { deleteResults(result.id) }} className='ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200'>Delete</button>
+            <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+                <table className="w-full border-collapse">
+                    <thead>
+                        <tr className="bg-gray-100">
+                            <th className="p-3 text-sm font-medium text-gray-600 text-left min-w-[200px]">Course Name</th>
+                            <th className="p-3 text-sm font-medium text-gray-600 text-left min-w-[150px]">Status</th>
+                            <th className="p-3 text-sm font-medium text-gray-600 text-left min-w-[120px]">Marks</th>
+                            <th className="p-3 text-sm font-medium text-gray-600 text-left min-w-[120px]">Total Marks</th>
+                            <th className="p-3 text-sm font-medium text-gray-600 text-left min-w-[100px]">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {enrollmentData.map(enrollment => (
+                            <tr key={enrollment.id} className="border-b hover:bg-gray-50">
+                                <td className="p-3 text-gray-700">{enrollment.name}</td>
+                                <td className="p-3">
+                                    <select
+                                        value={results[enrollment.id]?.status || "ongoing"}
+                                        onChange={(e) => handleResultChange(enrollment.id, "status", e.target.value)}
+                                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="ongoing">Ongoing</option>
+                                        <option value="deferred">Deferred</option>
+                                        <option value="certified">Certified</option>
+                                    </select>
+                                </td>
+                                <td className="p-3">
+                                    {results[enrollment.id]?.status === "certified" ? (
+                                        <input
+                                            type="number"
+                                            value={results[enrollment.id]?.marks || ""}
+                                            onChange={(e) => handleResultChange(enrollment.id, "marks", e.target.value)}
+                                            className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            placeholder="Marks"
+                                        />
+                                    ) : (
+                                        <span className="text-gray-500">N/A</span>
+                                    )}
+                                </td>
+                                <td className="p-3">
+                                    {results[enrollment.id]?.status === "certified" ? (
+                                        <input
+                                            type="number"
+                                            value={results[enrollment.id]?.totalMarks || ""}
+                                            onChange={(e) => handleResultChange(enrollment.id, "totalMarks", e.target.value)}
+                                            className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            placeholder="Total Marks"
+                                        />
+                                    ) : (
+                                        <span className="text-gray-500">N/A</span>
+                                    )}
+                                </td>
+                                <td className="p-3">
+                                    <button
+                                        onClick={() => saveResult(enrollment.id)}
+                                        className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition duration-200"
+                                    >
+                                        Save
+                                    </button>
                                 </td>
                             </tr>
                         ))}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 };
+
+export default Result;
