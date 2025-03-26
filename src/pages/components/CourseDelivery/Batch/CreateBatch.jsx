@@ -36,6 +36,14 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
     const [selectedBatchFaculty, setSelectedBatchFaculty] = useState([]);
     const [availableBatchFaculty, setAvailableBatchFaculty] = useState([]);
 
+
+    // Utility function to capitalize the first letter
+    const capitalizeFirstLetter = (str) => {
+        if (!str || typeof str !== "string") return str;
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
+
+
     // useEffect hooks (unchanged)
     useEffect(() => {
         const fetchData = async () => {
@@ -121,7 +129,7 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
         e.preventDefault();
 
         const batchData = {
-            batchName,
+            batchName: capitalizeFirstLetter(batchName),
             startDate,
             endDate,
             status,

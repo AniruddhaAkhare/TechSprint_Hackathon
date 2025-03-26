@@ -123,15 +123,6 @@ export default function EditStudent() {
         }
       };
 
-    // const fetchCenters = async () => {
-    //     try {
-    //         const querySnapshot = await getDocs(collection(db, "Centers"));
-    //         setCenters(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    //     } catch (error) {
-    //         console.error("Error fetching centers:", error);
-    //     }
-    // };
-
     const fetchFeeTemplates = async () => {
         try {
             const templateSnapshot = await getDocs(collection(db, "feeTemplates"));

@@ -36,6 +36,13 @@ export default function AddStudent() {
   const [branches, setbranches] = useState([]);
   const navigate = useNavigate();
 
+  
+  // Utility function to capitalize the first letter
+  const capitalizeFirstLetter = (str) => {
+    if (!str || typeof str !== "string") return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setAdmissionDate(today);
@@ -86,16 +93,6 @@ export default function AddStudent() {
     }
   };
 
-  
-  // const fetchCenters = async () => {
-  //   try {
-  //     const querySnapshot = await getDocs(collection(db, "Centers"));
-  //     setCenters(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-  //   } catch (error) {
-  //     console.error("Error fetching centers:", error);
-  //   }
-  // };
-
   const fetchFeeTemplates = async () => {
     try {
       const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
@@ -128,8 +125,8 @@ export default function AddStudent() {
 
     try {
       const studentDocRef = await addDoc(collection(db, 'student'), {
-        first_name: firstName,
-        last_name: lastName,
+        first_name: capitalizeFirstLetter(firstName),
+        last_name: capitalizeFirstLetter(lastName),
         email,
         phone,
         residential_address: address,

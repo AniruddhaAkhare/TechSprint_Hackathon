@@ -364,6 +364,12 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null }) => {
   const [currentBatch, setCurrentBatch] = useState("");
   const [currentCurriculum, setCurrentCurriculum] = useState("");
 
+  // Utility function to capitalize the first letter
+  const capitalizeFirstLetter = (str) => {
+    if (!str || typeof str !== "string") return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
   useEffect(() => {
     if (sessionToEdit) {
       setSessionId(sessionToEdit.id);
@@ -421,7 +427,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null }) => {
     e.preventDefault();
 
     const sessionData = {
-      name: sessionName,
+      name: capitalizeFirstLetter(sessionName),
       curriculumID,
       batches: sessionType === "batch" ? selectedBatches : [],
       curriculums: sessionType === "subject" ? selectedCurriculums : [],
