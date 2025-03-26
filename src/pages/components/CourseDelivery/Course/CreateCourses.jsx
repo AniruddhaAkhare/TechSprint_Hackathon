@@ -12,27 +12,22 @@ import { useNavigate } from "react-router-dom";
 
 const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
   const navigate = useNavigate();
-  const [courses, setCourses] = useState([]);
   const [instructors, setInstructors] = useState([]);
   const [centers, setCenters] = useState([]);
-  const [batches, setBatches] = useState([]);
   const [owners, setOwners] = useState([]);
-
+  
   const [courseName, setCourseName] = useState("");
   const [courseDescription, setCourseDescription] = useState("");
   const [courseFee, setCourseFee] = useState("");
   const [courseDuration, setCourseDuration] = useState("");
   const [courseMode, setCourseMode] = useState("");
   const [courseStatus, setCourseStatus] = useState("Active");
-
+  
   const [centerAssignments, setCenterAssignments] = useState([]);
-  const [selectedBatches, setSelectedBatches] = useState([]);
   const [selectedOwners, setSelectedOwners] = useState([]);
-  const [studentCount, setStudentCount] = useState(0);
-  const [batchStudentCounts, setBatchStudentCounts] = useState({});
-
+  const [totalStudentCount, setTotalStudentCount] = useState(0);
+  
   const [availableCenters, setAvailableCenters] = useState([]);
-  const [availableBatches, setAvailableBatches] = useState([]);
   const [availableOwners, setAvailableOwners] = useState([]);
 
   useEffect(() => {
@@ -45,35 +40,35 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
       setCenters(centersList);
       setAvailableCenters(centersList);
 
-      const batchSnapshot = await getDocs(collection(db, "Batch"));
-      const batchesList = batchSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setBatches(batchesList);
-      setAvailableBatches(batchesList.filter(batch => batch.status === "Ongoing" || !batch.status));
-
       const ownerSnapshot = await getDocs(collection(db, "Instructor"));
       const ownersList = ownerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setOwners(ownersList);
       setAvailableOwners(ownersList);
 
       if (course) {
-        const studentSnapshot = await getDocs(collection(db, `Course/${course.id}/Students`));
-        setStudentCount(studentSnapshot.docs.length);
+        // Calculate total students similar to LearnerList
+        const enrollmentsRef = collection(db, "enrollments");
+        const enrollmentSnapshot = await getDocs(enrollmentsRef);
+        const allEnrollments = enrollmentSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
 
-        const batchCounts = {};
-        for (const batchId of course.batches || []) {
-          const batchStudents = await getDocs(collection(db, `Batch/${batchId}/Students`));
-          batchCounts[batchId] = batchStudents.docs.length;
-        }
-        setBatchStudentCounts(batchCounts);
+        const matchedLearners = allEnrollments
+          .filter(enrollment => 
+            enrollment.courses?.some(c => 
+              c.selectedCourse?.id === course.id
+            )
+          );
+        
+        setTotalStudentCount(matchedLearners.length);
       }
     };
     fetchData();
   }, [course]);
 
-  // Reset or populate form based on course prop
   useEffect(() => {
     if (course) {
-      // Editing an existing course
       setCourseName(course.name || "");
       setCourseDescription(course.description || "");
       setCourseFee(course.fee || "");
@@ -81,16 +76,13 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
       setCourseMode(course.mode || "");
       setCourseStatus(course.status || "Active");
       setCenterAssignments(course.centers?.map(c => typeof c === "string" ? { centerId: c, status: "Active" } : c) || []);
-      setSelectedBatches(course.batches || []);
       setSelectedOwners(course.owners || []);
       setAvailableCenters(centers.filter(c => !course.centers?.some(ca => ca.centerId === c.id)));
-      setAvailableBatches(batches.filter(b => (b.status === "Ongoing" || !b.status) && !course.batches?.includes(b.id)));
       setAvailableOwners(owners.filter(o => !course.owners?.includes(o.id)));
     } else {
-      // Creating a new course - reset form
       resetForm();
     }
-  }, [course, centers, batches, owners]);
+  }, [course, centers, owners]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,7 +95,6 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
       mode: courseMode,
       status: courseStatus,
       centers: centerAssignments,
-      batches: selectedBatches,
       owners: selectedOwners,
       createdAt: serverTimestamp(),
     };
@@ -113,7 +104,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
         await updateDoc(doc(db, "Course", course.id), courseData);
         alert("Course updated successfully!");
       } else {
-        await addDoc(collection(db, "Course"), courseData);
+        const docRef = await addDoc(collection(db, "Course"), courseData);
         alert("Course created successfully!");
       }
       resetForm();
@@ -132,12 +123,9 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
     setCourseMode("");
     setCourseStatus("Active");
     setCenterAssignments([]);
-    setSelectedBatches([]);
     setSelectedOwners([]);
-    setStudentCount(0);
-    setBatchStudentCounts({});
+    setTotalStudentCount(0);
     setAvailableCenters(centers);
-    setAvailableBatches(batches.filter(batch => batch.status === "Ongoing" || !batch.status));
     setAvailableOwners(owners);
   };
 
@@ -158,21 +146,6 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
     setCenterAssignments(centerAssignments.map(ca => 
       ca.centerId === centerId ? { ...ca, status: newStatus } : ca
     ));
-  };
-
-  const handleAddBatch = (batchId) => {
-    if (batchId && !selectedBatches.includes(batchId)) {
-      setSelectedBatches([...selectedBatches, batchId]);
-      setAvailableBatches(availableBatches.filter(b => b.id !== batchId));
-    }
-  };
-
-  const handleRemoveBatch = (batchId) => {
-    setSelectedBatches(selectedBatches.filter(id => id !== batchId));
-    const removedBatch = batches.find(b => b.id === batchId);
-    if (removedBatch && (removedBatch.status === "Ongoing" || !removedBatch.status)) {
-      setAvailableBatches([...availableBatches, removedBatch]);
-    }
   };
 
   const handleAddOwner = (ownerId) => {
@@ -296,7 +269,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
           </select>
         </div>
 
-        <h3 className="text-lg font-semibold text-gray-800">Total Students: {studentCount}</h3>
+        <h3 className="text-lg font-semibold text-gray-800">Total Students: {totalStudentCount}</h3>
 
         <div>
           <select
@@ -343,56 +316,6 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
                           <button
                             type="button"
                             onClick={() => handleRemoveCenter(ca.centerId)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            ✕
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <select
-            onChange={(e) => handleAddBatch(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
-          >
-            <option value="">Select a Batch</option>
-            {availableBatches.map((batch) => (
-              <option key={batch.id} value={batch.id}>
-                {batch.batchName}
-              </option>
-            ))}
-          </select>
-
-          {selectedBatches.length > 0 && (
-            <div className="mt-4">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr No</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Count</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {selectedBatches.map((batchId, index) => {
-                    const batch = batches.find((b) => b.id === batchId);
-                    return (
-                      <tr key={batchId}>
-                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">{index + 1}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900">{batch?.batchName}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">{batchStudentCounts[batchId] || 0}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveBatch(batchId)}
                             className="text-red-600 hover:text-red-800"
                           >
                             ✕

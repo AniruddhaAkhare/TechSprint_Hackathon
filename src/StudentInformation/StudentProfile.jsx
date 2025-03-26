@@ -173,7 +173,7 @@ export default function StudentProfile() {
             </div>
 
             {/* Course Details */}
-            <div>
+            {/* <div>
                 <h2 className="text-lg font-medium text-gray-700 mb-4">Course Details</h2>
                 {student.course_details && student.course_details.length > 0 ? (
                     <div className="overflow-x-auto">
@@ -201,7 +201,7 @@ export default function StudentProfile() {
                 ) : (
                     <p className="text-gray-600">No courses enrolled.</p>
                 )}
-            </div>
+            </div> */}
 
             {/* Education Details */}
             <div>
@@ -274,7 +274,7 @@ export default function StudentProfile() {
             </div>
 
             {/* Installment Details */}
-            <div>
+            {/* <div>
                 <h2 className="text-lg font-medium text-gray-700 mb-4">Installment Details</h2>
                 {student.installment_details && student.installment_details.length > 0 ? (
                     <div className="overflow-x-auto">
@@ -310,7 +310,7 @@ export default function StudentProfile() {
                 ) : (
                     <p className="text-gray-600">No installment details available.</p>
                 )}
-            </div>
+            </div> */}
 
             {/* Edit Button */}
             <div className="flex justify-end">
