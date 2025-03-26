@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { getAuth } from 'firebase/auth';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import axios from 'axios';
+// require('dotenv').config();
 
 import Sidebar from './pages/home/Sidebar.jsx'
 import LoginForm from './pages/home/LoginForm.jsx';
@@ -78,7 +79,7 @@ import ForgetPasswordForm from './pages/home/ForgetPasswordForm.jsx';
 
 import HeaderContent from './apps/Header/HeaderContainer.jsx';
 import Navigation from './apps/Navigation/NavigationContainer.jsx';
-import FeeTemplate from './pages/components/FeeTemplate/FeeTemplate.jsx';
+// import FeeTemplate from './pages/components/FeeTemplate/FeeTemplate.jsx';
 import StudentInfo from './StudentInformation/StudentInfo.jsx'
 
 
@@ -182,7 +183,7 @@ export default function App() {
               {/* <Route path='/centers' element={<Centers />} /> */}
 
               <Route path='/roles' element={<Role />} />
-              <Route path='/fee-template' element={<FeeTemplate />} />
+              {/* <Route path='/fee-template' element={<FeeTemplate />} /> */}
               <Route path='/roles' element={<Role />} />
 
 
@@ -194,7 +195,7 @@ export default function App() {
 
               <Route path='/assignment' element={<Assignments />} />
 
-              <Route path='/fee-template' element={<FeeTemplate />} />
+              {/* <Route path='/fee-template' element={<FeeTemplate />} /> */}
               <Route path='/add-course/:studentId' element={<AddCourse />} />
 
 

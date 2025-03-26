@@ -1649,12 +1649,12 @@ const Sidebar = () => {
           </li>
         </Link>
 
-        <Link to="/fee-template" className="nav-link">
+        {/* <Link to="/fee-template" className="nav-link">
           <li className="nav-item">
             <FaUserGraduate className="nav-icon" />
             <span>Fee Template</span>
           </li>
-        </Link>
+        </Link> */}
 
          <li className="nav-section">Setting</li>
         {/* <Link to="/centers" className="nav-link">
