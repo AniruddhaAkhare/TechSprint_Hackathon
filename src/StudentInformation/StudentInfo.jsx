@@ -161,7 +161,7 @@ import { db } from "../config/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import Enrollments from "./Enrollments";
 import Fees from "./Fees";
-import Grades from "./Grades";
+import Batches from "./Batches";
 import StudentProfile from "./StudentProfile";
 import Result from "./Result";
 
@@ -223,9 +223,9 @@ export default function StudentInfo() {
     };
 
     return (
-        <div className="p-20">
+        <div className="p-2">
         {/* <div className="min-h-screen bg-gray-50 p-6 ml-80 w-[calc(100vw-20rem)]"> */}
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-8xl mx-auto">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center space-x-4">
@@ -274,23 +274,23 @@ export default function StudentInfo() {
                         >
                             Profile
                         </button>
-                        <button
+                        {/* <button
                             onClick={() => handleFormSelection(2)}
                             className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 2 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
                         >
                             Enrollment
-                        </button>
+                        </button> */}
                         <button
                             onClick={() => handleFormSelection(3)}
                             className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 3 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
                         >
-                            Fees
+                            Enrollments
                         </button>
                         <button
                             onClick={() => handleFormSelection(4)}
                             className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 4 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
                         >
-                            Grades
+                            Batches
                         </button>
                         <button
                             onClick={() => handleFormSelection(5)}
@@ -304,9 +304,9 @@ export default function StudentInfo() {
                 {/* Content Area */}
                 <div className="bg-white p-6 rounded-lg shadow-md">
                     {selectedForm === 1 && <StudentProfile />}
-                    {selectedForm === 2 && <Enrollments studentId={studentId} />}
+                    {/* {selectedForm === 2 && <Enrollments studentId={studentId} />} */}
                     {selectedForm === 3 && <Fees studentId={studentId} />}
-                    {selectedForm === 4 && <Grades studentId={studentId} />}
+                    {selectedForm === 4 && <Batches studentId={studentId} />}
                     {selectedForm === 5 && <Result studentId={studentId} />}
                 </div>
             </div>

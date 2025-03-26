@@ -209,7 +209,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="courseName" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="courseName" className="block text-base font-medium text-gray-700">
             Course Name
           </label>
           <input
@@ -218,12 +218,12 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
             placeholder="Course Name"
             onChange={(e) => setCourseName(e.target.value)}
             required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
           />
         </div>
 
         <div>
-          <label htmlFor="courseDescription" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="courseDescription" className="block text-base font-medium text-gray-700">
             Course Description
           </label>
           <input
@@ -232,12 +232,12 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
             placeholder="Course Description"
             onChange={(e) => setCourseDescription(e.target.value)}
             required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
           />
         </div>
 
         <div>
-          <label htmlFor="courseFee" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="courseFee" className="block text-base font-medium text-gray-700">
             Fee
           </label>
           <input
@@ -246,12 +246,12 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
             placeholder="Enter Course Fee"
             onChange={(e) => setCourseFee(e.target.value)}
             required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
           />
         </div>
 
         <div>
-          <label htmlFor="courseDuration" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="courseDuration" className="block text-base font-medium text-gray-700">
             Duration
           </label>
           <input
@@ -260,19 +260,19 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
             placeholder="Enter Course Duration"
             onChange={(e) => setCourseDuration(e.target.value)}
             required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
           />
         </div>
 
         <div>
-          <label htmlFor="courseMode" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="courseMode" className="block text-base font-medium text-gray-700">
             Mode
           </label>
           <select
             value={courseMode}
             onChange={(e) => setCourseMode(e.target.value)}
             required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
           >
             <option value="">Select Mode</option>
             <option value="Online">Online</option>
@@ -282,14 +282,14 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
         </div>
 
         <div>
-          <label htmlFor="courseStatus" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="courseStatus" className="block text-base font-medium text-gray-700">
             Status
           </label>
           <select
             value={courseStatus}
             onChange={(e) => setCourseStatus(e.target.value)}
             required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
           >
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
@@ -301,7 +301,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
         <div>
           <select
             onChange={(e) => handleAddCenter(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
           >
             <option value="">Select a Center</option>
             {availableCenters.map((center) => (
@@ -327,13 +327,13 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
                     const center = centers.find((c) => c.id === ca.centerId);
                     return (
                       <tr key={ca.centerId}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{center?.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">{index + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900">{center?.name}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <select
                             value={ca.status}
                             onChange={(e) => handleCenterStatusChange(ca.centerId, e.target.value)}
-                            className="block w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="block w-full px-3 py-1 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
                           >
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
@@ -360,7 +360,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
         <div>
           <select
             onChange={(e) => handleAddBatch(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
           >
             <option value="">Select a Batch</option>
             {availableBatches.map((batch) => (
@@ -386,9 +386,9 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
                     const batch = batches.find((b) => b.id === batchId);
                     return (
                       <tr key={batchId}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{batch?.batchName}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{batchStudentCounts[batchId] || 0}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">{index + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900">{batch?.batchName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">{batchStudentCounts[batchId] || 0}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button
                             type="button"
@@ -410,7 +410,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
         <div>
           <select
             onChange={(e) => handleAddOwner(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
           >
             <option value="">Select an Owner</option>
             {availableOwners.map((owner) => (
@@ -435,8 +435,8 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
                     const owner = owners.find((o) => o.id === ownerId);
                     return (
                       <tr key={ownerId}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{owner?.f_name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">{index + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900">{owner?.f_name}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button
                             type="button"

@@ -9,7 +9,8 @@ import { Select, MenuItem, FormControl } from '@mui/material';
 export default function Courses() {
     const [currentCourse, setCurrentCourse] = useState(null);
     const [courses, setCourses] = useState([]);
-    const [students, setStudents] = useState([]); // New state for student data
+    const [students, setStudents] = useState([]);
+    const [studentNames, setStudentNames] = useState({}); // New state for student names
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -21,6 +22,7 @@ export default function Courses() {
 
     const CourseCollectionRef = collection(db, "Course");
     const StudentCollectionRef = collection(db, "student");
+    const EnrollmentsCollectionRef = collection(db, "enrollments");
 
     const toggleSidebar = () => setIsOpen(prev => !prev);
 
@@ -66,6 +68,13 @@ export default function Courses() {
                 ...doc.data(),
             }));
             setCourses(courseData);
+
+            // Fetch student names for each course
+            const names = {};
+            for (const course of courseData) {
+                names[course.id] = await getStudentNamesForCourse(course.id);
+            }
+            setStudentNames(names);
         } catch (err) {
             console.error("Error fetching courses:", err);
         }
@@ -73,7 +82,7 @@ export default function Courses() {
 
     useEffect(() => {
         fetchCourses();
-        fetchStudents(); // Fetch students when component mounts
+        fetchStudents();
     }, [fetchCourses, fetchStudents]);
 
     const handleCreateCourseClick = () => {
@@ -93,26 +102,27 @@ export default function Courses() {
     };
 
     const checkStudentsInCourse = async (courseId) => {
-        // ... (unchanged)
         try {
-            const snapshot = await getDocs(StudentCollectionRef);
-            const students = snapshot.docs.map(doc => ({
+            const enrollmentSnapshot = await getDocs(EnrollmentsCollectionRef);
+            const allEnrollments = enrollmentSnapshot.docs.map(doc => ({
                 id: doc.id,
-                ...doc.data(),
+                ...doc.data()
             }));
-            return students.some(student => 
-                (student.course_details || []).some(course => 
-                    course.course_id === courseId
+
+            const hasStudents = allEnrollments.some(enrollment => 
+                (enrollment.courses || []).some(course => 
+                    course.selectedCourse?.id === courseId
                 )
             );
+
+            return hasStudents;
         } catch (err) {
-            console.error("Error checking students:", err);
+            console.error("Error checking students in course:", err);
             return false;
         }
     };
 
     const deleteCourse = async () => {
-        // ... (unchanged)
         if (!deleteId) return;
 
         try {
@@ -132,16 +142,40 @@ export default function Courses() {
         }
     };
 
-    // Helper function to get student names for a course
-    const getStudentNamesForCourse = (courseId) => {
-        const enrolledStudents = students.filter(student => 
-            (student.course_details || []).some(course => course.course_id === courseId)
-        );
-        return enrolledStudents.map(student => student.name || 'Unknown').join(', ') || 'None';
+    const getStudentNamesForCourse = async (courseId) => {
+        try {
+            const enrollmentSnapshot = await getDocs(EnrollmentsCollectionRef);
+            const allEnrollments = enrollmentSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            const matchedEnrollments = allEnrollments.filter(enrollment => 
+                (enrollment.courses || []).some(course => 
+                    course.selectedCourse?.id === courseId
+                )
+            );
+
+            const studentSnapshot = await getDocs(StudentCollectionRef);
+            const allStudents = studentSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            const studentNames = matchedEnrollments.map(enrollment => {
+                const student = allStudents.find(s => s.id === enrollment.id);
+                return `${student?.first_name || student?.f_name || 'Unknown'} ${student?.last_name || student?.l_name || ''}`.trim();
+            });
+
+            return studentNames.join(', ') || 'None';
+        } catch (err) {
+            console.error("Error fetching student names:", err);
+            return 'None';
+        }
     };
 
     return (
-        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-20">
+        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-2">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-semibold text-gray-800">Courses</h1>
                 <button
@@ -168,14 +202,14 @@ export default function Courses() {
                     <table className="w-full table-auto">
                         <thead className="bg-gray-100">
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Sr No</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Course Name</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Fee (₹)</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Duration</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Mode</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Students</th> {/* New column */}
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Action</th>
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Sr No</th>
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Course Name</th>
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Fee (₹)</th>
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Duration</th>
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Mode</th>
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Status</th>
+                                {/* <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Students</th> */}
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -187,7 +221,7 @@ export default function Courses() {
                                     <td className="px-4 py-3 text-gray-600">{course.duration || 'N/A'}</td>
                                     <td className="px-4 py-3 text-gray-600">{course.mode || 'N/A'}</td>
                                     <td className="px-4 py-3 text-gray-600">{course.status || "Active"}</td>
-                                    <td className="px-4 py-3 text-gray-600">{getStudentNamesForCourse(course.id)}</td> {/* Display student names */}
+                                    {/* <td className="px-4 py-3 text-gray-600">{studentNames[course.id] || 'Loading...'}</td> */}
                                     <td className="px-4 py-3">
                                         <FormControl size="small">
                                             <Select
@@ -221,6 +255,7 @@ export default function Courses() {
                 </div>
             </div>
 
+            {/* Backdrop for Sidebar */}
             {isOpen && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40"
@@ -228,8 +263,11 @@ export default function Courses() {
                 />
             )}
 
+            {/* Sidebar (CreateCourses) */}
             <div
-                className={`fixed top-0 right-0 h-full w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} z-50 overflow-y-auto`}
+                className={`fixed top-0 right-0 h-full w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${
+                    isOpen ? "translate-x-0" : "translate-x-full"
+                } z-50 overflow-y-auto`}
             >
                 <CreateCourses 
                     isOpen={isOpen} 
@@ -238,6 +276,7 @@ export default function Courses() {
                 />
             </div>
 
+            {/* Delete Confirmation Dialog */}
             <Dialog
                 open={openDelete}
                 handler={() => setOpenDelete(false)}
@@ -265,6 +304,7 @@ export default function Courses() {
                 </DialogFooter>
             </Dialog>
 
+            {/* Learner List Dialog */}
             <LearnerList
                 courseId={selectedCourseId}
                 open={openLearnersDialog}

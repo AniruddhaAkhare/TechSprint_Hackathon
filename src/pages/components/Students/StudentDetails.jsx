@@ -159,7 +159,7 @@ export default function StudentDetails() {
     };
 
     return (
-        <div className="p-20">
+        <div className="p-2">
         {/* <div className="min-h-screen bg-gray-50 p-6 ml-80 w-screen justify-between items-center"> */}
             <ToastContainer position="top-right" autoClose={3000} />
             <div className="max-w-8xl mx-auto">
@@ -207,8 +207,8 @@ export default function StudentDetails() {
                             </thead>
                             <tbody>
                                 {filteredStudents.map(student => (
-                                    <tr key={student.id} className="border-b hover:bg-gray-50">
-                                        <td className="p-3">
+                                    <tr key={student.id} className="border-b hover:bg-gray-50 cursor-pointer ">
+                                        <td className="p-3 hover:text-blue-600">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedStudents.includes(student.id)}

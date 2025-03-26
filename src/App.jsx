@@ -56,7 +56,7 @@ import FeesRemarks from './pages/components/Performance/Fees/FeesRemarks.jsx';
 
 import Profile from './pages/components/Profile.jsx';
 
-import Centers from './pages/components/Settings/Centers.jsx';
+// import Centers from './pages/components/Settings/Centers.jsx';
 
 import InstallmentReport from './reports/InstallmentReport.jsx';
 
@@ -105,137 +105,114 @@ export default function App() {
   }, [auth]);
 
 
-  useEffect(() => {
-    console.log("Current User in App:", user);
-  }, [user]);
+  // useEffect(() => {
+  //   console.log("Current User in App:", user);
+  // }, [user]);
 
 
   return (
     <AuthProvider>
       <BrowserRouter>
         <div style={{ display: 'flex' }}>
-          <Sidebar />
-          <div style={{ flex: 1, padding: '20px' }}>
-            {/* <Routes> */}
-
-
-              {/* <div className="flex flex-col md:flex-row min-h-screen"> */}
-              {/* {user && <Sidebar />} */}
-              {/* <main className="flex-1 md:ml-80 w-full"> */}
-              <Routes>
-              <Route path="/institute-setup" element={<InstituteSetup />} />
-                {/* <div style={{ display: 'flex' }}>
           {user && <Sidebar />}
-          <Routes> */}
+          <div style={{ flex: 1, padding: '20px' }}>
+            <Routes>
 
-                <Route path="/my-profile/:uid" element={<Profile />} />
-                {/* <Route path="/" element={<Sidebar />} /> Sidebar as main layout */}
+              <Route path="/my-profile/:uid" element={<Profile />} />
+              {/* <Route path='/header' element={<HeaderContent />} /> */}
+              <Route path='/navigation' element={<Navigation />} />
+              <Route path="/login" element={<LoginForm />} />
+              <Route path="/register" element={<RegisterForm />} />
+              <Route path="/forgetPassword" element={<ForgetPasswordForm />} />
+{user && (
+  <>
 
+              <Route path="/dashboard" element={<Dashboard />} />
 
-                {/* <Route path="/" element={user ? <Profile /> : <Welcome />} /> */}
-                <Route path='/header' element={<HeaderContent />} />
-                <Route path='/navigation' element={<Navigation />} />
-                <Route path="/login" element={<LoginForm />} />
+<Route path='/instituteSetup' element={<InstituteSetup/>}/>
+              <Route path="/register" element={<RegisterForm />} />
 
+              <Route path="/courses" element={<Courses />} />
+              <Route path="/createCourses" element={<CreateCourses />} />
+              <Route path="/editCourse/:id" element={<EditCourse />} />
+              <Route path="/createCurriculum" element={<CreateCurriculum />} />
+              <Route path="/curriculum/:curriculumId" element={<CurriculumEditor />} />
+              <Route path="/curriculum/:curriculumId/section/:sectionId" element={<SectionMaterials />} />
+              <Route path="/curriculum/:curriculumId/section/:sectionId/add-material" element={<AddMaterial />} />
+              <Route path="/courses/:courseId/learners" element={<IndividualCourseStudnets />} />
+              <Route path="/courses/:courseId/batches" element={<IndividualCourseBatch />} />
 
-                <Route path="/dashboard" element={<Dashboard />} />
+              <Route path='/batches' element={<Batches />} />
+              <Route path="/createBatch" element={<CreateBatch />} />
 
+              <Route path='/calendar' element={<Calendar />} />
+              <Route path='/sessions' element={<Sessions />} />
+              <Route path="/createSession" element={<CreateSession />} />
+              <Route path="/instructor" element={<Instructor />} />
 
-                <Route path="/register" element={<RegisterForm />} />
-
-                <Route path="/courses" element={<Courses />} />
-                {/* <Route path="/create-course" element={<CreateCourses />} /> */}
-                <Route path="/createCourses" element={<CreateCourses />} />
-                <Route path="/editCourse/:id" element={<EditCourse />} />
-                {/* <Route path="/courses/:courseId/curriculum" element={<Curriculum />} />
-            <Route path="/editCourse/:id" element={<EditCourse />} /> */}
-                {/* <Route path="/courses/:courseId/curriculum" element={<IndividualCourseCurriculum />} /> */}
-
-                <Route path="/createCurriculum" element={<CreateCurriculum />} />
-                <Route path="/curriculum/:curriculumId" element={<CurriculumEditor />} />
-                <Route path="/curriculum/:curriculumId/section/:sectionId" element={<SectionMaterials />} />
-                <Route path="/curriculum/:curriculumId/section/:sectionId/add-material" element={<AddMaterial />} />
-                {/* <Route path="/courses/:courseId/curriculum/curriculumEditor/:curriculumId" element={<CurriculumEditor />} /> */}
-                <Route path="/courses/:courseId/learners" element={<IndividualCourseStudnets />} />
-                <Route path="/courses/:courseId/batches" element={<IndividualCourseBatch />} />
-
-                <Route path='/batches' element={<Batches />} />
-                <Route path="/createBatch" element={<CreateBatch />} />
-
-                <Route path='/calendar' element={<Calendar />} />
-                <Route path='/sessions' element={<Sessions />} />
-                <Route path="/createSession" element={<CreateSession />} />
-                {/* <Route path="/zoom-session" element={<ZoomSession />} /> */}
-
-                <Route path="/instructor" element={<Instructor />} />
-
-                <Route path='/curriculum' element={<Curriculum />} />
-                {/* <Route path="/createCurriculum" element={<CreateSubjects />} /> */}
-                <Route path="/notes/:curriculumId/:sectionId" element={<NotesPage />} />
+              <Route path='/curriculum' element={<Curriculum />} />
+              <Route path="/notes/:curriculumId/:sectionId" element={<NotesPage />} />
 
 
-                <Route path="/studentdetails" element={<StudentDetails />} />
-                <Route path="/studentdetails/addstudent" element={<AddStudent />} />
-                <Route path="/studentdetails/updatestudent/:studentId" element={<EditStudent />} />
-                <Route path="/studentdetails/:studentId" element={<StudentInfo />} />
+              <Route path="/studentdetails" element={<StudentDetails />} />
+              <Route path="/studentdetails/addstudent" element={<AddStudent />} />
+              <Route path="/studentdetails/updatestudent/:studentId" element={<EditStudent />} />
+              <Route path="/studentdetails/:studentId" element={<StudentInfo />} />
 
-                <Route path="/feedback" element={<Feedback />} />
+              <Route path="/feedback" element={<Feedback />} />
 
-                <Route path="/addPerformance" element={<AddPerformance />} />
+              <Route path="/addPerformance" element={<AddPerformance />} />
 
-                <Route path="/mocktestsessions" element={<MockTestSessions />} />
-                <Route path="/createMockTest" element={<CreateMockTest />} />
+              <Route path="/mocktestsessions" element={<MockTestSessions />} />
+              <Route path="/createMockTest" element={<CreateMockTest />} />
 
-                <Route path="/createExaminationremark" element={<CreateExaminationRemarks />} />
-                <Route path="/createExaminationRemarks" element={<CreateExaminationRemarks />} />
+              <Route path="/createExaminationremark" element={<CreateExaminationRemarks />} />
+              <Route path="/createExaminationRemarks" element={<CreateExaminationRemarks />} />
 
-                <Route path="/attendenceremark" element={<AttendanceRemarks />} />
-                <Route path="/createAttendanceRemarks" element={<CreateAttendenceRemarks />} />
+              <Route path="/attendenceremark" element={<AttendanceRemarks />} />
+              <Route path="/createAttendanceRemarks" element={<CreateAttendenceRemarks />} />
 
-                <Route path="/createFeesRemarks" element={<CreateFeesRemarks />} />
-                <Route path="/feesremark" element={<FeesRemarks />} />
-
-
-                <Route path='/reports' element={<InstallmentReport />} />
+              <Route path="/createFeesRemarks" element={<CreateFeesRemarks />} />
+              <Route path="/feesremark" element={<FeesRemarks />} />
 
 
-                <Route path='/centers' element={<Centers />} />
-
-                <Route path='/roles' element={<Role />} />
-                <Route path='/fee-template' element={<FeeTemplate />} />
-                <Route path='/roles' element={<Role />} />
+              <Route path='/reports' element={<InstallmentReport />} />
 
 
-                <Route path='/invoices' element={<Invoices />} />
-                <Route path='/invoices/createInvoice' element={<CreateInvoice />} />
-                <Route path='/invoices/updateInvoice/:id' element={<UpdateInvoice />} />
+              {/* <Route path='/centers' element={<Centers />} /> */}
+
+              <Route path='/roles' element={<Role />} />
+              <Route path='/fee-template' element={<FeeTemplate />} />
+              <Route path='/roles' element={<Role />} />
+
+
+              <Route path='/invoices' element={<Invoices />} />
+              <Route path='/invoices/createInvoice' element={<CreateInvoice />} />
+              <Route path='/invoices/updateInvoice/:id' element={<UpdateInvoice />} />
 
 
 
-                <Route path='/assignment' element={<Assignments />} />
-            {/* <Route path='/createAssignment' element={<CreateAssignment />} /> */}
+              <Route path='/assignment' element={<Assignments />} />
 
-                <Route path='/fee-template' element={<FeeTemplate />} />
-                <Route path='/add-course/:studentId' element={<AddCourse />} />
-
-
-                <Route path="/financePartners" element={<FinancePartner />} />
-                {/* <Route path='/financePartners' element={FinancePartner}/> */}
-                <Route path='/addFinancePartner' element={<AddFinancePartner />} />
+              <Route path='/fee-template' element={<FeeTemplate />} />
+              <Route path='/add-course/:studentId' element={<AddCourse />} />
 
 
-                {/* <Route path='/attendace' element={<Attendance/>}/> */}
-                <Route path="/attendance" element={<Attendance />} />
+              <Route path="/financePartners" element={<FinancePartner />} />
+              <Route path='/addFinancePartner' element={<AddFinancePartner />} />
 
 
-                <Route path='/forgetpassword' element={<ForgetPasswordForm />} />
+              <Route path="/attendance" element={<Attendance />} />
+
+
+              <Route path='/forgetpassword' element={<ForgetPasswordForm />} />
 
 
 
-                <Route path='/zoom' element={<ZoomSession />} />
-              </Routes >
-              {/* </main> */}
-
+              <Route path='/zoom' element={<ZoomSession />} />
+              </>
+)}
+            </Routes >
           </div >
 
         </div>

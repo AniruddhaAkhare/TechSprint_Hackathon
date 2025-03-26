@@ -8,11 +8,13 @@ import {
     DialogFooter, 
     Button 
 } from '@material-tailwind/react';
+import { useNavigate } from 'react-router-dom';
 
 export default function LearnerList({ courseId, open, onClose }) {
     const [learners, setLearners] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchLearners = async () => {
@@ -102,9 +104,9 @@ export default function LearnerList({ courseId, open, onClose }) {
                         </thead>
                         <tbody>
                             {learners.map((learner, index) => (
-                                <tr key={learner.studentId} className="border-b hover:bg-gray-50">
-                                    <td className="px-4 py-2">{index + 1}</td>
-                                    <td className="px-4 py-2">{learner.firstName}<span>   </span>{learner.lastName}</td>
+                                <tr key={learner.studentId} className="border-b hover:bg-gray-50 cursor-pointer hover:text-blue-600" onClick={()=>{navigate(`/studentdetails/${learner.studentId}`)}}>
+                                    <td className="px-4 py-2 ">{index + 1}</td>
+                                    <td className="px-4 py-2" >{learner.firstName}<span>   </span>{learner.lastName}</td>
                                     <td className="px-4 py-2">{learner.courseDetails?.mode || 'N/A'}</td>
                                 </tr>
                             ))}
