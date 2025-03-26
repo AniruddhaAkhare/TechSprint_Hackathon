@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from '../../../config/firebase';
-import { getDocs, collection, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { getDocs, collection, deleteDoc, doc, query, orderBy, where } from 'firebase/firestore';
 import AddInstructor from './AddInstructor';
 
 export default function Instructor() {
@@ -13,7 +13,7 @@ export default function Instructor() {
     const [selectedInstructor, setSelectedInstructor] = useState(null);
 
     const instructorCollectionRef = collection(db, "Instructor");
-    const centerCollectionRef = collection(db, "Centers");
+    // const centerCollectionRef = collection(db, "Centers");
     const roleCollectionRef = collection(db, "roles");
 
     useEffect(() => {
@@ -22,8 +22,23 @@ export default function Instructor() {
             const instructors = await getDocs(instructorsQuery);
             setInstructorList(instructors.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-            const centersData = await getDocs(centerCollectionRef);
-            setCenters(centersData.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+            if(instituteSnapshot.empty){
+                console.error("No institute setup document found");
+                return;
+            }
+            const instituteId = instituteSnapshot.docs[0].id;
+
+            const centerQuery = query(
+                collection(db, "instituteSetup", instituteId, "Center"),
+                where("isActive", "==", true)
+            );
+            const centerData = await getDocs(centerQuery);
+            setCenters(centerData.docs.map(doc=>({id: doc.id, ...doc.data()})));
+
+            
+            // const centersData = await getDocs(centerCollectionRef);
+            // setCenters(centersData.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
             const rolesData = await getDocs(roleCollectionRef);
             setRoles(rolesData.docs.map(doc => ({ id: doc.id, ...doc.data() })));

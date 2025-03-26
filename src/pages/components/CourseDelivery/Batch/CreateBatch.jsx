@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
-import { getDocs, collection, addDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { getDocs, collection, addDoc, updateDoc, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
@@ -39,10 +39,27 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
     // useEffect hooks (unchanged)
     useEffect(() => {
         const fetchData = async () => {
-            const centerSnapshot = await getDocs(collection(db, "Centers"));
-            const centersList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+            if(instituteSnapshot.empty){
+                console.error("No instituteSetup document found");
+                return;
+            }
+            const instituteId = instituteSnapshot.docs[0].id;
+            const centerQuery = query(
+                collection(db, "instituteSetup", instituteId, "Center"),
+                where ("isActive", "==", true)
+            );
+            const centerSnapshot = await getDocs(centerQuery);
+            const centersList = centerSnapshot.docs.map((doc)=>({id:doc.id, ...doc.data()}));
             setCenters(centersList);
             setAvailableCenters(centersList);
+            
+            // const centerSnapshot = await getDocs(collection(db, "Centers"));
+            // const centersList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            // setCenters(centersList);
+            // setAvailableCenters(centersList);
+
+
 
             const courseSnapshot = await getDocs(collection(db, "Course"));
             const coursesList = courseSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
