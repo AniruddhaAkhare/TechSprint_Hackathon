@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
     const navigate = useNavigate();
 
-    // State variables (unchanged)
+    // State variables (modified course to array for multiple selection)
     const [batchName, setBatchName] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
@@ -16,9 +16,9 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
     const [selectedCenters, setSelectedCenters] = useState([]);
     const [availableCenters, setAvailableCenters] = useState([]);
 
-    const [course, setCourse] = useState([]);
-    const [selectedCourse, setSelectedCourse] = useState("");
-    const [availableCourse, setAvailableCourse] = useState([]);
+    const [courses, setCourses] = useState([]); // Renamed from 'course' to 'courses'
+    const [selectedCourses, setSelectedCourses] = useState([]); // Changed to array
+    const [availableCourses, setAvailableCourses] = useState([]); // Renamed
 
     const [curriculum, setCurriculum] = useState([]);
     const [selectedCurriculum, setSelectedCurriculum] = useState([]);
@@ -28,15 +28,15 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
     const [selectedBatchManager, setSelectedBatchManager] = useState([]);
     const [availableBatchManager, setAvailableBatchManager] = useState([]);
 
-    const [additionalBatchManager, setAdditionalBatchManager] = useState([]);
-    const [selectedAdditionalBatchManager, setSelectedAdditionalBatchManager] = useState([]);
-    const [availableAdditionalBatchManager, setAvailableAdditionalBatchManager] = useState([]);
-
     const [batchFaculty, setBatchFaculty] = useState([]);
     const [selectedBatchFaculty, setSelectedBatchFaculty] = useState([]);
     const [availableBatchFaculty, setAvailableBatchFaculty] = useState([]);
 
-    // useEffect hooks (unchanged)
+    const [students, setStudents] = useState([]);
+    const [selectedStudents, setSelectedStudents] = useState([]);
+    const [availableStudents, setAvailableStudents] = useState([]);
+
+    // useEffect hooks (updated course fetching)
     useEffect(() => {
         const fetchData = async () => {
             const centerSnapshot = await getDocs(collection(db, "Centers"));
@@ -46,8 +46,8 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
 
             const courseSnapshot = await getDocs(collection(db, "Course"));
             const coursesList = courseSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            setCourse(coursesList);
-            setAvailableCourse(coursesList);
+            setCourses(coursesList);
+            setAvailableCourses(coursesList);
 
             const curriculumSnapshot = await getDocs(collection(db, "curriculum"));
             const curriculumList = curriculumSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -59,15 +59,15 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
             setBatchManager(batchManagersList);
             setAvailableBatchManager(batchManagersList);
 
-            const additionalBatchManagerSnapshot = await getDocs(collection(db, "Instructor"));
-            const additionalBatchManagersList = additionalBatchManagerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            setAdditionalBatchManager(additionalBatchManagersList);
-            setAvailableAdditionalBatchManager(additionalBatchManagersList);
-
             const batchFacultySnapshot = await getDocs(collection(db, "Instructor"));
             const batchFacultyList = batchFacultySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
             setBatchFaculty(batchFacultyList);
             setAvailableBatchFaculty(batchFacultyList);
+
+            const studentSnapshot = await getDocs(collection(db, "student"));
+            const studentsList = studentSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            setStudents(studentsList);
+            setAvailableStudents(studentsList);
         };
         fetchData();
     }, []);
@@ -78,28 +78,22 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
             setStartDate(batch.startDate || "");
             setEndDate(batch.endDate || "");
             setStatus(batch.status || "Ongoing");
-
             setSelectedCenters(batch.centers || []);
             setAvailableCenters(centers.filter((c) => !batch.centers?.includes(c.id)));
-
-            setSelectedCourse(batch.course || "");
-            setAvailableCourse(course.filter((c) => c.id !== batch.course));
-
+            setSelectedCourses(batch.courses || []); // Changed to courses (array)
+            setAvailableCourses(courses.filter((c) => !batch.courses?.includes(c.id)));
             setSelectedCurriculum(batch.curriculum || []);
             setAvailableCurriculum(curriculum.filter((c) => !batch.curriculum?.includes(c.id)));
-
             setSelectedBatchManager(batch.batchManager || []);
             setAvailableBatchManager(batchManager.filter((c) => !batch.batchManager?.includes(c.id)));
-
-            setSelectedAdditionalBatchManager(batch.additionalBatchManager || []);
-            setAvailableAdditionalBatchManager(additionalBatchManager.filter((c) => !batch.additionalBatchManager?.includes(c.id)));
-
             setSelectedBatchFaculty(batch.batchFaculty || []);
             setAvailableBatchFaculty(batchFaculty.filter((c) => !batch.batchFaculty?.includes(c.id)));
+            setSelectedStudents(batch.students || []);
+            setAvailableStudents(students.filter((s) => !batch.students?.includes(s.id)));
         }
-    }, [batch, centers, course, curriculum, batchManager, additionalBatchManager, batchFaculty]);
+    }, [batch, centers, courses, curriculum, batchManager, batchFaculty, students]);
 
-    // Handler functions (unchanged)
+    // Handler functions (added course handlers)
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -109,22 +103,32 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
             endDate,
             status,
             centers: selectedCenters,
-            course: selectedCourse,
+            courses: selectedCourses, // Changed to courses (array)
             curriculum: selectedCurriculum,
             batchManager: selectedBatchManager,
-            additionalBatchManager: selectedAdditionalBatchManager,
             batchFaculty: selectedBatchFaculty,
+            students: selectedStudents,
             createdAt: serverTimestamp(),
         };
 
         try {
+            let batchId;
             if (batch) {
                 await updateDoc(doc(db, "Batch", batch.id), batchData);
+                batchId = batch.id;
                 alert("Batch updated successfully!");
             } else {
-                await addDoc(collection(db, "Batch"), batchData);
+                const docRef = await addDoc(collection(db, "Batch"), batchData);
+                batchId = docRef.id;
                 alert("Batch created successfully!");
             }
+
+            for (const studentId of selectedStudents) {
+                await updateDoc(doc(db, "student", studentId), {
+                    enrolledBatch: batchId
+                });
+            }
+
             resetForm();
             toggleSidebar();
         } catch (error) {
@@ -140,16 +144,16 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
         setStatus("Ongoing");
         setSelectedCenters([]);
         setAvailableCenters(centers);
-        setSelectedCourse("");
-        setAvailableCourse(course);
+        setSelectedCourses([]); // Reset to empty array
+        setAvailableCourses(courses);
         setSelectedCurriculum([]);
         setAvailableCurriculum(curriculum);
         setSelectedBatchManager([]);
         setAvailableBatchManager(batchManager);
-        setSelectedAdditionalBatchManager([]);
-        setAvailableAdditionalBatchManager(additionalBatchManager);
         setSelectedBatchFaculty([]);
         setAvailableBatchFaculty(batchFaculty);
+        setSelectedStudents([]);
+        setAvailableStudents(students);
     };
 
     const handleAddCenter = (centerId) => {
@@ -163,6 +167,20 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
         setSelectedCenters(selectedCenters.filter((id) => id !== centerId));
         const removedCenter = centers.find((c) => c.id === centerId);
         if (removedCenter) setAvailableCenters([...availableCenters, removedCenter]);
+    };
+
+    // New course handlers
+    const handleAddCourse = (courseId) => {
+        if (courseId && !selectedCourses.includes(courseId)) {
+            setSelectedCourses([...selectedCourses, courseId]);
+            setAvailableCourses(availableCourses.filter((c) => c.id !== courseId));
+        }
+    };
+
+    const handleRemoveCourse = (courseId) => {
+        setSelectedCourses(selectedCourses.filter((id) => id !== courseId));
+        const removedCourse = courses.find((c) => c.id === courseId);
+        if (removedCourse) setAvailableCourses([...availableCourses, removedCourse]);
     };
 
     const handleAddCurriculum = (curriculumId) => {
@@ -191,17 +209,17 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
         if (removedBatchManager) setAvailableBatchManager([...availableBatchManager, removedBatchManager]);
     };
 
-    const handleAddAdditionalBatchManager = (additionalBatchManagerId) => {
-        if (additionalBatchManagerId && !selectedAdditionalBatchManager.includes(additionalBatchManagerId)) {
-            setSelectedAdditionalBatchManager([...selectedAdditionalBatchManager, additionalBatchManagerId]);
-            setAvailableAdditionalBatchManager(availableAdditionalBatchManager.filter((c) => c.id !== additionalBatchManagerId));
+    const handleAddStudent = (studentId) => {
+        if (studentId && !selectedStudents.includes(studentId)) {
+            setSelectedStudents([...selectedStudents, studentId]);
+            setAvailableStudents(availableStudents.filter((s) => s.id !== studentId));
         }
     };
 
-    const handleRemoveAdditionalBatchManager = (additionalBatchManagerId) => {
-        setSelectedAdditionalBatchManager(selectedAdditionalBatchManager.filter((id) => id !== additionalBatchManagerId));
-        const removedAdditionalBatchManager = additionalBatchManager.find((c) => c.id === additionalBatchManagerId);
-        if (removedAdditionalBatchManager) setAvailableAdditionalBatchManager([...availableAdditionalBatchManager, removedAdditionalBatchManager]);
+    const handleRemoveStudent = (studentId) => {
+        setSelectedStudents(selectedStudents.filter((id) => id !== studentId));
+        const removedStudent = students.find((s) => s.id === studentId);
+        if (removedStudent) setAvailableStudents([...availableStudents, removedStudent]);
     };
 
     const handleAddBatchFaculty = (batchFacultyId) => {
@@ -219,19 +237,15 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
 
     return (
         <>
-            {/* Overlay */}
             {isOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40"
                     onClick={toggleSidebar}
                 />
             )}
-            
-            {/* Sidebar */}
+
             <div
-                className={`fixed top-0 right-0 h-full bg-white w-full shadow-lg transform transition-transform duration-300 ${
-                    isOpen ? "translate-x-0" : "translate-x-full"
-                } p-6 overflow-y-auto z-50`}
+                className={`fixed top-0 right-0 h-full bg-white w-full shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} p-6 overflow-y-auto z-50`}
             >
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-800">
@@ -306,23 +320,66 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
                         </select>
                     </div>
 
-                    {/* Course Selection */}
+                    {/* Courses Selection (Modified) */}
                     <div>
-                        <label htmlFor="course" className="block text-base font-medium text-gray-700 mb-1">
-                            Course
+                        <label className="block text-base font-medium text-gray-700 mb-1">
+                            Select Courses
                         </label>
                         <select
-                            value={selectedCourse}
-                            onChange={(e) => setSelectedCourse(e.target.value)}
+                            onChange={(e) => handleAddCourse(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
                         >
                             <option value="">Select a Course</option>
-                            {availableCourse.map((courseItem) => (
+                            {availableCourses.map((courseItem) => (
                                 <option key={courseItem.id} value={courseItem.id}>
                                     {courseItem.name}
                                 </option>
                             ))}
                         </select>
+
+                        {selectedCourses.length > 0 && (
+                            <div className="mt-4">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Sr No
+                                            </th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Course Name
+                                            </th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Action
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {selectedCourses.map((courseId, index) => {
+                                            const course = courses.find((c) => c.id === courseId);
+                                            return (
+                                                <tr key={courseId}>
+                                                    <td className="px-4 py-2 whitespace-nowrap text-base text-gray-500">
+                                                        {index + 1}
+                                                    </td>
+                                                    <td className="px-4 py-2 whitespace-nowrap text-base text-gray-900">
+                                                        {course?.name}
+                                                    </td>
+                                                    <td className="px-4 py-2 whitespace-nowrap">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveCourse(courseId)}
+                                                            className="text-red-600 hover:text-red-800"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
 
                     {/* Centers */}
@@ -511,69 +568,6 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
                         )}
                     </div>
 
-                    {/* Additional Batch Manager */}
-                    <div>
-                        <label className="block text-base font-medium text-gray-700 mb-1">
-                            Select Additional Batch Manager
-                        </label>
-                        <select
-                            onChange={(e) => handleAddAdditionalBatchManager(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-                        >
-                            <option value="">Select an Additional Batch Manager</option>
-                            {availableAdditionalBatchManager.map((manager) => (
-                                <option key={manager.id} value={manager.id}>
-                                    {manager.f_name}
-                                </option>
-                            ))}
-                        </select>
-
-                        {selectedAdditionalBatchManager.length > 0 && (
-                            <div className="mt-4">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Sr No
-                                            </th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Additional Batch Manager
-                                            </th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Action
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {selectedAdditionalBatchManager.map((managerId, index) => {
-                                            const ABM = additionalBatchManager.find((c) => c.id === managerId);
-                                            return (
-                                                <tr key={managerId}>
-                                                    <td className="px-4 py-2 whitespace-nowrap text-base text-gray-500">
-                                                        {index + 1}
-                                                    </td>
-                                                    <td className="px-4 py-2 whitespace-nowrap text-base text-gray-900">
-                                                        {ABM?.f_name}
-                                                    </td>
-                                                    <td className="px-4 py-2 whitespace-nowrap">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleRemoveAdditionalBatchManager(managerId)}
-                                                            className="text-red-600 hover:text-red-800"
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Batch Faculty */}
                     <div>
                         <label className="block text-base font-medium text-gray-700 mb-1">
                             Select Batch Faculty
@@ -635,10 +629,59 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
                         )}
                     </div>
 
-                    {/* Total Students (Static for now) */}
                     <div>
                         <label className="block text-base font-medium text-gray-700 mb-1">
-                            Total Students: 0
+                            Select Students
+                        </label>
+                        <select
+                            onChange={(e) => handleAddStudent(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
+                        >
+                            <option value="">Select Students</option>
+                            {availableStudents.map((student) => (
+                                <option key={student.id} value={student.id}>
+                                    {student.first_name} {student.last_name} ({student.email})
+                                </option>
+                            ))}
+                        </select>
+
+                        {selectedStudents.length > 0 && (
+                            <div className="mt-4">
+                                <div className="bg-gray-100 p-3 rounded-md">
+                                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                                        Selected Students ({selectedStudents.length})
+                                    </h3>
+                                    <div className="max-h-40 overflow-y-auto">
+                                        {selectedStudents.map((studentId) => {
+                                            const student = students.find((s) => s.id === studentId);
+                                            return (
+                                                <div
+                                                    key={studentId}
+                                                    className="flex items-center justify-between bg-white p-2 mb-2 rounded-md shadow-sm"
+                                                >
+                                                    <span className="text-sm text-gray-900">
+                                                        {student?.first_name} {student?.last_name}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveStudent(studentId)}
+                                                        className="text-red-600 hover:text-red-800 text-sm"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Total Students */}
+                    <div>
+                        <label className="block text-base font-medium text-gray-700 mb-1">
+                            Total Students: {selectedStudents.length}
                         </label>
                     </div>
 

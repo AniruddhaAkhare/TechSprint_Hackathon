@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
 import {
@@ -32,19 +34,28 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
 
   useEffect(() => {
     const fetchData = async () => {
+      // Fetch Instructors
       const instructorSnapshot = await getDocs(collection(db, "Instructor"));
       setInstructors(instructorSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
 
-      const centerSnapshot = await getDocs(collection(db, "Centers"));
-      const centersList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setCenters(centersList);
-      setAvailableCenters(centersList);
+      // Fetch Centers from instituteSetup -> Center (only active ones)
+      const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+      if (!instituteSnapshot.empty) {
+        const instituteId = instituteSnapshot.docs[0].id; // Assuming single institute
+        const centerSnapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
+        const activeCenters = centerSnapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((center) => center.isActive); // Filter only active centers
+        setCenters(activeCenters);
+        setAvailableCenters(activeCenters);
+      }
 
       const ownerSnapshot = await getDocs(collection(db, "Instructor"));
       const ownersList = ownerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setOwners(ownersList);
       setAvailableOwners(ownersList);
 
+      // Fetch student count and batch student counts if editing a course
       if (course) {
         // Calculate total students similar to LearnerList
         const enrollmentsRef = collection(db, "enrollments");
