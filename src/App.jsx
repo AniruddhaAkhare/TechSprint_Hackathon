@@ -125,12 +125,12 @@ export default function App() {
               <Route path="/login" element={<LoginForm />} />
               <Route path="/register" element={<RegisterForm />} />
               <Route path="/forgetPassword" element={<ForgetPasswordForm />} />
-{user && (
-  <>
+              {/* {user && (
+  <> */}
 
               <Route path="/dashboard" element={<Dashboard />} />
 
-<Route path='/instituteSetup' element={<InstituteSetup/>}/>
+              <Route path='/instituteSetup' element={<InstituteSetup />} />
               <Route path="/register" element={<RegisterForm />} />
 
               <Route path="/courses" element={<Courses />} />
@@ -184,7 +184,7 @@ export default function App() {
 
               <Route path='/roles' element={<Role />} />
               {/* <Route path='/fee-template' element={<FeeTemplate />} /> */}
-              <Route path='/roles' element={<Role />} />
+              {/* <Route path='/roles' element={<Role />} /> */}
 
 
               <Route path='/invoices' element={<Invoices />} />
@@ -211,8 +211,8 @@ export default function App() {
 
 
               <Route path='/zoom' element={<ZoomSession />} />
-              </>
-)}
+              {/* </>
+)} */}
             </Routes >
           </div >
 

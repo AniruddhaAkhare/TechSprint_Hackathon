@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, addDoc, Timestamp, getDocs } from "firebase/firestore";
+import { collection, addDoc, Timestamp, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
@@ -36,6 +36,13 @@ export default function AddStudent() {
   const [branches, setbranches] = useState([]);
   const navigate = useNavigate();
 
+  
+  // Utility function to capitalize the first letter
+  const capitalizeFirstLetter = (str) => {
+    if (!str || typeof str !== "string") return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setAdmissionDate(today);
@@ -65,8 +72,22 @@ export default function AddStudent() {
 
   const fetchCenters = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, "Centers"));
-      setCenters(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      // Fetch the instituteSetup document first to get its ID
+      const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+      if (instituteSnapshot.empty) {
+        console.error("No instituteSetup document found");
+        return;
+      }
+      const instituteId = instituteSnapshot.docs[0].id;
+
+      // Fetch only active centers from the Center subcollection
+      const centerQuery = query(
+        collection(db, "instituteSetup", instituteId, "Center"),
+        where("isActive", "==", true)
+      );
+      const centerSnapshot = await getDocs(centerQuery);
+      const centersList = centerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setCenters(centersList);
     } catch (error) {
       console.error("Error fetching centers:", error);
     }
@@ -104,8 +125,8 @@ export default function AddStudent() {
 
     try {
       const studentDocRef = await addDoc(collection(db, 'student'), {
-        first_name: firstName,
-        last_name: lastName,
+        first_name: capitalizeFirstLetter(firstName),
+        last_name: capitalizeFirstLetter(lastName),
         email,
         phone,
         residential_address: address,
