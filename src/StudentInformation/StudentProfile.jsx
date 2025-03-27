@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 export default function StudentProfile() {
@@ -25,10 +25,24 @@ export default function StudentProfile() {
         };
 
         const fetchCenters = async () => {
-            // Fetch all centers to map center IDs to names
+            // Fetch centers from the instituteSetup subcollection
             try {
-                const querySnapshot = await getDocs(collection(db, "Centers"));
-                setCenters(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                // Fetch the instituteSetup document first to get its ID
+                const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+                if (instituteSnapshot.empty) {
+                    console.error("No instituteSetup document found");
+                    return;
+                }
+                const instituteId = instituteSnapshot.docs[0].id;
+
+                // Fetch only active centers from the Center subcollection
+                const centerQuery = query(
+                    collection(db, "instituteSetup", instituteId, "Center"),
+                    where("isActive", "==", true)
+                );
+                const centerSnapshot = await getDocs(centerQuery);
+                const centersList = centerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setCenters(centersList);
             } catch (error) {
                 console.error("Error fetching centers:", error);
             }
@@ -172,37 +186,6 @@ export default function StudentProfile() {
                 )}
             </div>
 
-            {/* Course Details */}
-            {/* <div>
-                <h2 className="text-lg font-medium text-gray-700 mb-4">Course Details</h2>
-                {student.course_details && student.course_details.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse">
-                            <thead>
-                                <tr className="bg-gray-100">
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Sr. No.</th>
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Course Name</th>
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Batch</th>
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Branch</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {student.course_details.map((course, index) => (
-                                    <tr key={index} className="border-b hover:bg-gray-50">
-                                        <td className="p-3 text-gray-700">{index + 1}</td>
-                                        <td className="p-3 text-gray-700">{course.courseName || "N/A"}</td>
-                                        <td className="p-3 text-gray-700">{course.batch || "N/A"}</td>
-                                        <td className="p-3 text-gray-700">{course.branch || "N/A"}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <p className="text-gray-600">No courses enrolled.</p>
-                )}
-            </div> */}
-
             {/* Education Details */}
             <div>
                 <h2 className="text-lg font-medium text-gray-700 mb-4">Education Details</h2>
@@ -272,45 +255,6 @@ export default function StudentProfile() {
                     <p className="text-gray-600">No experience.</p>
                 )}
             </div>
-
-            {/* Installment Details */}
-            {/* <div>
-                <h2 className="text-lg font-medium text-gray-700 mb-4">Installment Details</h2>
-                {student.installment_details && student.installment_details.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse">
-                            <thead>
-                                <tr className="bg-gray-100">
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Sr. No.</th>
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Due Amount</th>
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Due Date</th>
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Paid On</th>
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Paid Amount</th>
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Mode of Payment</th>
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">PDC Status</th>
-                                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Remark</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {student.installment_details.map((installment, index) => (
-                                    <tr key={index} className="border-b hover:bg-gray-50">
-                                        <td className="p-3 text-gray-700">{index + 1}</td>
-                                        <td className="p-3 text-gray-700">{installment.dueAmount || "N/A"}</td>
-                                        <td className="p-3 text-gray-700">{installment.dueDate || "N/A"}</td>
-                                        <td className="p-3 text-gray-700">{installment.paidOn || "N/A"}</td>
-                                        <td className="p-3 text-gray-700">{installment.amtPaid || "N/A"}</td>
-                                        <td className="p-3 text-gray-700">{installment.modeOfPayment || "N/A"}</td>
-                                        <td className="p-3 text-gray-700">{installment.pdcStatus || "N/A"}</td>
-                                        <td className="p-3 text-gray-700">{installment.remark || "N/A"}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <p className="text-gray-600">No installment details available.</p>
-                )}
-            </div> */}
 
             {/* Edit Button */}
             <div className="flex justify-end">

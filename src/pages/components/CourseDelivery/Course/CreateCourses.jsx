@@ -30,24 +30,20 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
   const [availableCenters, setAvailableCenters] = useState([]);
   const [availableOwners, setAvailableOwners] = useState([]);
 
-  // Utility function to capitalize the first letter
-  const capitalizeFirstLetter = (str) => {
-    if (!str || typeof str !== "string") return str;
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-  };
-
   useEffect(() => {
     const fetchData = async () => {
+      // Fetch Instructors
       const instructorSnapshot = await getDocs(collection(db, "Instructor"));
       setInstructors(instructorSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
 
+      // Fetch Centers from instituteSetup -> Center (only active ones)
       const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
       if (!instituteSnapshot.empty) {
-        const instituteId = instituteSnapshot.docs[0].id;
+        const instituteId = instituteSnapshot.docs[0].id; // Assuming single institute
         const centerSnapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
         const activeCenters = centerSnapshot.docs
           .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .filter((center) => center.isActive);
+          .filter((center) => center.isActive); // Filter only active centers
         setCenters(activeCenters);
         setAvailableCenters(activeCenters);
       }
@@ -62,6 +58,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
       setOwners(ownersList);
       setAvailableOwners(ownersList);
 
+      // Fetch student count and batch student counts if editing a course
       if (course) {
         // Calculate total students similar to LearnerList
         const enrollmentsRef = collection(db, "enrollments");
@@ -105,12 +102,12 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
     e.preventDefault();
 
     const courseData = {
-      name: capitalizeFirstLetter(courseName),
-      description: capitalizeFirstLetter(courseDescription),
-      fee: courseFee, // No capitalization needed for numeric fields
-      duration: courseDuration, // Duration might include numbers (e.g., "3 months"), so leave as is unless you want specific formatting
-      mode: capitalizeFirstLetter(courseMode),
-      status: capitalizeFirstLetter(courseStatus),
+      name: courseName,
+      description: courseDescription,
+      fee: courseFee,
+      duration: courseDuration,
+      mode: courseMode,
+      status: courseStatus,
       centers: centerAssignments,
       owners: selectedOwners,
       createdAt: serverTimestamp(),
@@ -161,7 +158,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
 
   const handleCenterStatusChange = (centerId, newStatus) => {
     setCenterAssignments(centerAssignments.map(ca => 
-      ca.centerId === centerId ? { ...ca, status: capitalizeFirstLetter(newStatus) } : ca
+      ca.centerId === centerId ? { ...ca, status: newStatus } : ca
     ));
   };
 

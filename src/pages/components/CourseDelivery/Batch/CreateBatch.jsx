@@ -3,7 +3,7 @@ import { db } from "../../../../config/firebase";
 import { getDocs, collection, addDoc, updateDoc, doc, serverTimestamp, query, where } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
-const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
+const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
   const navigate = useNavigate();
 
   // State variables
@@ -140,6 +140,33 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
         alert("Batch created successfully!");
       }
 
+    // const [students, setStudents] = useState([]);
+    // const [selectedStudents, setSelectedStudents] = useState([]);
+    // const [availableStudents, setAvailableStudents] = useState([]);
+
+    // useEffect hooks (updated course fetching)
+    // useEffect(() => {
+        const fetchData = async () => {
+            const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+            if(instituteSnapshot.empty){
+                console.error("No instituteSetup document found");
+                return;
+            }
+            const instituteId = instituteSnapshot.docs[0].id;
+            const centerQuery = query(
+                collection(db, "instituteSetup", instituteId, "Center"),
+                where ("isActive", "==", true)
+            );
+            const centerSnapshot = await getDocs(centerQuery);
+            const centersList = centerSnapshot.docs.map((doc)=>({id:doc.id, ...doc.data()}));
+            setCenters(centersList);
+            setAvailableCenters(centersList);
+          }
+            
+            // const centerSnapshot = await getDocs(collection(db, "Centers"));
+            // const centersList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            // setCenters(centersList);
+            // setAvailableCenters(centersList);
       for (const studentId of selectedStudents) {
         await updateDoc(doc(db, "student", studentId), {
           enrolledBatch: batchId,
@@ -718,4 +745,4 @@ const CreateBatches = ({ isOpen, toggleSidebar, batch }) => {
   );
 };
 
-export default CreateBatches;
+export default CreateBatch;

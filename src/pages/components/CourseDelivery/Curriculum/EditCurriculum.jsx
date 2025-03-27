@@ -7,7 +7,8 @@ import { s3Client } from '../../../../config/aws-config';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import AddSectionModal from './AddSectionalModel';
 import AddMaterialModal from './AddMaterialModal';
-import { Document, Page, pdfjs } from 'react-pdf';
+// import { Document, Page, pdfjs } from 'react-pdf';
+import {Document, Page, pdfjs} from 'react-pdf'
 
 // Set the worker for react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
