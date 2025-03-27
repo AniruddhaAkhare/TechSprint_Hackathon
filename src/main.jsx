@@ -2,26 +2,25 @@
 // import { createRoot } from 'react-dom/client'
 // import './index.css'
 // import App from './App.jsx'
-// import React from 'react';
-// import ReactDOM from 'react-dom/client';
-
-// const bucketName = process.env.REACT_APP_S3_BUCKET_NAME;
-// ReactDOM.render(<App bucketName={bucketName} />, document.getElementById('root'));
 
 // createRoot(document.getElementById('root')).render(
 //   <StrictMode>
 //     <App />
-//   </StrictMode>,
+//   </StrictMode>
 // )
 
 
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import App from './App.jsx';
+import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </StrictMode>
-)
+);

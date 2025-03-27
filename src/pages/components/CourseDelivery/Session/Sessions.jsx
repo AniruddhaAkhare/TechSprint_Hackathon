@@ -1,10 +1,7 @@
-
-
 import { useState, useEffect } from "react";
 import { db } from '../../../../config/firebase.js';
-import { getDocs, collection, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { getDocs, collection, deleteDoc, doc, query, orderBy, updateDoc } from 'firebase/firestore';
 import CreateSession from "./CreateSession.jsx";
-import SearchBar from '../../../../pages/components/SearchBar.jsx';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 import { Select, MenuItem, FormControl } from '@mui/material';
 
@@ -16,15 +13,12 @@ export default function Sessions() {
     const [isOpen, setIsOpen] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
+    const [statusFilter, setStatusFilter] = useState('Active'); 
 
     const SessionCollectionRef = collection(db, "Sessions");
 
     const toggleSidebar = () => {
-        setIsOpen(prev => {
-            const newValue = !prev;
-            console.log("isOpen toggled to:", newValue);
-            return newValue;
-        });
+        setIsOpen(prev => !prev);
     };
 
     const handleSearch = (e) => {
@@ -47,6 +41,12 @@ export default function Sessions() {
         }
     }, [searchTerm]);
 
+    const calculateSessionStatus = (session) => {
+        const sessionDateTime = new Date(`${session.date} ${session.endTime}`);
+        const currentDateTime = new Date();
+        return sessionDateTime < currentDateTime ? "Inactive" : "Active";
+    };
+
     const fetchSessions = async () => {
         try {
             const q = query(SessionCollectionRef, orderBy('createdAt', 'desc'));
@@ -55,7 +55,18 @@ export default function Sessions() {
                 id: doc.id,
                 ...doc.data(),
             }));
-            setSession(sessionData);
+
+            // Update status for each session if necessary
+            const updatedSessions = await Promise.all(sessionData.map(async (s) => {
+                const calculatedStatus = calculateSessionStatus(s);
+                if (s.status !== calculatedStatus) {
+                    await updateDoc(doc(db, "Sessions", s.id), { status: calculatedStatus });
+                    return { ...s, status: calculatedStatus };
+                }
+                return s;
+            }));
+
+            setSession(updatedSessions);
         } catch (error) {
             console.error("Error fetching sessions:", error);
         }
@@ -79,7 +90,6 @@ export default function Sessions() {
         setIsOpen(false);
         setCurrentSession(null);
         fetchSessions();
-        console.log("create session closed.");
     };
 
     const deleteSession = async () => {
@@ -95,17 +105,37 @@ export default function Sessions() {
         }
     };
 
+    // Filter sessions based on statusFilter
+    const filteredSessions = () => {
+        const baseSessions = searchResults.length > 0 ? searchResults : session;
+        if (statusFilter === 'All') return baseSessions;
+        return baseSessions.filter(s => s.status === statusFilter);
+    };
+
     return (
         <div className="flex flex-col w-full min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <h1 className="text-2xl font-semibold text-gray-800">Sessions</h1>
-                <button
-                    onClick={handleCreateSessionClick}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200"
-                >
-                    + Create Session
-                </button>
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                    <FormControl size="small" className="w-full sm:w-40">
+                        <Select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="bg-white border border-gray-300 rounded-md"
+                        >
+                            <MenuItem value="All">All</MenuItem>
+                            <MenuItem value="Active">Active</MenuItem>
+                            <MenuItem value="Inactive">Inactive</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <button
+                        onClick={handleCreateSessionClick}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200 w-full sm:w-auto"
+                    >
+                        + Create Session
+                    </button>
+                </div>
             </div>
 
             {/* Search Bar and Table Container */}
@@ -131,11 +161,12 @@ export default function Sessions() {
                                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Start Time</th>
                                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">End Time</th>
                                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Mode</th>
+                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Status</th>
                                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {(searchResults.length > 0 ? searchResults : session).map((s, index) => (
+                            {filteredSessions().map((s, index) => (
                                 <tr key={s.id} className="border-b hover:bg-gray-50">
                                     <td className="px-4 py-3 text-gray-600">{index + 1}</td>
                                     <td className="px-4 py-3 text-gray-800">{s.name || 'N/A'}</td>
@@ -143,6 +174,11 @@ export default function Sessions() {
                                     <td className="px-4 py-3 text-gray-600">{s.startTime || 'N/A'}</td>
                                     <td className="px-4 py-3 text-gray-600">{s.endTime || 'N/A'}</td>
                                     <td className="px-4 py-3 text-gray-600">{s.sessionMode || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-gray-600">
+                                        <span className={`px-2 py-1 rounded-full text-sm ${s.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            {s.status}
+                                        </span>
+                                    </td>
                                     <td className="px-4 py-3">
                                         <FormControl size="small">
                                             <Select
@@ -168,9 +204,9 @@ export default function Sessions() {
                                     </td>
                                 </tr>
                             ))}
-                            {(searchResults.length > 0 ? searchResults : session).length === 0 && (
+                            {filteredSessions().length === 0 && (
                                 <tr>
-                                    <td colSpan="7" className="px-4 py-3 text-center text-gray-500">
+                                    <td colSpan="8" className="px-4 py-3 text-center text-gray-500">
                                         No sessions found
                                     </td>
                                 </tr>
