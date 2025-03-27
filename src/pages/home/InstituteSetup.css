@@ -1170,3 +1170,26 @@
     background-color: #0056b3;
   }
 
+
+  .branch-table .table-header,
+.branch-table .table-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr; /* Adjusted for new columns */
+  align-items: center;
+  padding: 10px;
+}
+
+.branch-table .table-header span,
+.branch-table .table-row span {
+  padding: 0 5px;
+}
+
+/* Ensure the modal form row looks good */
+.modal-content .form-row {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-content .form-group {
+  flex: 1;
+}
