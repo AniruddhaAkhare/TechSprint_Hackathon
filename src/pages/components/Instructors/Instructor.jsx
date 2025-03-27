@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { db } from '../../../config/firebase';
 import { getDocs, collection, deleteDoc, doc, query, orderBy, where } from 'firebase/firestore';
@@ -13,7 +14,6 @@ export default function Instructor() {
     const [selectedInstructor, setSelectedInstructor] = useState(null);
 
     const instructorCollectionRef = collection(db, "Instructor");
-    // const centerCollectionRef = collection(db, "Centers");
     const roleCollectionRef = collection(db, "roles");
 
     useEffect(() => {
@@ -23,7 +23,7 @@ export default function Instructor() {
             setInstructorList(instructors.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
             const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
-            if(instituteSnapshot.empty){
+            if (instituteSnapshot.empty) {
                 console.error("No institute setup document found");
                 return;
             }
@@ -34,11 +34,7 @@ export default function Instructor() {
                 where("isActive", "==", true)
             );
             const centerData = await getDocs(centerQuery);
-            setCenters(centerData.docs.map(doc=>({id: doc.id, ...doc.data()})));
-
-            
-            // const centersData = await getDocs(centerCollectionRef);
-            // setCenters(centersData.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            setCenters(centerData.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
             const rolesData = await getDocs(roleCollectionRef);
             setRoles(rolesData.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -58,9 +54,14 @@ export default function Instructor() {
         }
     };
 
+    // Utility function to capitalize the first letter of a string
+    const capitalizeFirstLetter = (str) => {
+        if (!str) return str;
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
+
     return (
         <div className="p-20">
-        {/* <div className="min-h-screen bg-gray-50 p-6 ml-80 w-screen justify-between items-center"> */}
             <div className="max-w-8xl mx-auto">
                 {/* Header Section */}
                 <div className="flex justify-between items-center mb-6">
@@ -103,9 +104,13 @@ export default function Instructor() {
                                     .filter(i => i.f_name.toLowerCase().includes(searchTerm.toLowerCase()))
                                     .map(instructor => (
                                         <tr key={instructor.id} className="border-b hover:bg-gray-50">
-                                            <td className="p-3 text-gray-700">{instructor.f_name} {instructor.l_name}</td>
+                                            <td className="p-3 text-gray-700">
+                                                {capitalizeFirstLetter(instructor.f_name)} {capitalizeFirstLetter(instructor.l_name)}
+                                            </td>
                                             <td className="p-3 text-gray-700">{instructor.email || 'N/A'}</td>
-                                            <td className="p-3 text-gray-700">{instructor.phone || 'N/A'}</td>
+                                            <td className="p-3 text-gray-700">
+                                                {instructor.phone ? `+91 ${instructor.phone}` : 'N/A'}
+                                            </td>
                                             <td className="p-3 text-gray-700">{instructor.specialization || 'N/A'}</td>
                                             <td className="p-3 text-gray-700">{instructor.center || 'N/A'}</td>
                                             <td className="p-3 text-gray-700">{instructor.role || 'N/A'}</td>

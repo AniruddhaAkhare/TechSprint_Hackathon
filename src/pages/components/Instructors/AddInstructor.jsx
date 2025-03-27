@@ -1,3 +1,5 @@
+
+
 import { useState, useEffect } from "react";
 import { db } from '../../../config/firebase';
 import { addDoc, updateDoc, doc, collection } from 'firebase/firestore';
@@ -170,15 +172,20 @@ const AddInstructor = ({ open, onClose, instructor, centers, roles, setInstructo
                         {/* Phone */}
                         <div>
                             <label className="block text-sm font-medium text-gray-600">Phone</label>
-                            <input
-                                type="text"
-                                value={formData.phone}
-                                onChange={(e) => handleChange("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
-                                placeholder="Enter 10-digit phone number"
-                                className={`mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                    errors.phone ? "border-red-500" : "border-gray-300"
-                                }`}
-                            />
+                            <div className="relative flex items-center">
+                                <span className="inline-block px-3 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md text-gray-600">
+                                    +91
+                                </span>
+                                <input
+                                    type="text"
+                                    value={formData.phone}
+                                    onChange={(e) => handleChange("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                                    placeholder="Enter 10-digit phone number"
+                                    className={`mt-0 w-full px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        errors.phone ? "border-red-500" : "border-gray-300"
+                                    }`}
+                                />
+                            </div>
                             {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
                         </div>
 
