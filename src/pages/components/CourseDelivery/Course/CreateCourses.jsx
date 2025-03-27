@@ -1425,6 +1425,11 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
         setAvailableCenters(activeCenters);
       }
 
+      const batchSnapshot = await getDocs(collection(db, "Batch"));
+      const batchesList = batchSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setBatches(batchesList);
+      setAvailableBatches(batchesList.filter(batch => batch.status === "Ongoing" || !batch.status));
+
       const ownerSnapshot = await getDocs(collection(db, "Instructor"));
       const ownersList = ownerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setOwners(ownersList);
