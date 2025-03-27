@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { collection, getDocs, doc, writeBatch, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, writeBatch, updateDoc, deleteDoc, query, where } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -38,9 +38,31 @@ export default function StudentDetails() {
     };
 
     const fetchCenters = async () => {
-        const snapshot = await getDocs(collection(db, "Centers"));
-        const centerList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setCenters(centerList);
+        try {
+            // Fetch the instituteSetup document (assuming there's only one institute for simplicity)
+            const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+            if (instituteSnapshot.empty) {
+                console.error("No instituteSetup document found");
+                setCenters([]);
+                return;
+            }
+
+            // Use the first institute document's ID (adjust if multiple institutes exist)
+            const instituteId = instituteSnapshot.docs[0].id;
+
+            // Fetch active centers from the Center subcollection under instituteSetup/{instituteId}
+            const centerQuery = query(
+                collection(db, "instituteSetup", instituteId, "Center"),
+                where("isActive", "==", true) // Fetch only active centers
+            );
+            const centerSnapshot = await getDocs(centerQuery);
+            const centerList = centerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setCenters(centerList);
+        } catch (error) {
+            console.error("Error fetching centers:", error);
+            setCenters([]);
+            toast.error("Failed to fetch centers");
+        }
     };
 
     const handleSearch = (e) => {

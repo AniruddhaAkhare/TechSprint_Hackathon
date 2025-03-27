@@ -42,7 +42,6 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
   useEffect(() => {
     if (isOpen) {
       if (partner) {
-        // Edit mode: Populate form with partner data
         setPartnerName(partner.name || "");
         setContactPersons(partner.contactPersons || []);
         setScheme(partner.scheme || []);
@@ -56,7 +55,6 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
         });
         setStatus(partner.status || "Active");
       } else {
-        // Add mode: Reset form
         resetForm();
       }
     }
@@ -98,20 +96,28 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     setStatus("Active");
     setTransactionCount(0);
     setNewContact({ name: "", mobile: "", email: "" });
+    setNewScheme({ plan: "", total_tenure: "", ratio: "", subvention_rate: "", description: "" });
   };
 
   const handleAddContact = () => {
     if (newContact.name.trim() && newContact.mobile.trim() && newContact.email.trim()) {
       setContactPersons([...contactPersons, { ...newContact }]);
-      setNewContact({ name: "", mobile: "", email: "" }); // Clear inputs after adding
+      setNewContact({ name: "", mobile: "", email: "" });
     } else {
       alert("Please fill in all contact person details.");
     }
   };
+
   const handleAddScheme = () => {
-    if (newScheme.plan.trim() && newScheme.total_tenure.trim() && newScheme.ratio.trim() && newScheme.subvention_rate.trim() && newScheme.description.trim()) {
+    if (
+      newScheme.plan.trim() &&
+      newScheme.total_tenure.trim() &&
+      newScheme.ratio.trim() &&
+      newScheme.subvention_rate.trim() &&
+      newScheme.description.trim()
+    ) {
       setScheme([...scheme, { ...newScheme }]);
-      setNewScheme({ plan: "", total_tenure: "", ratio: "", subvention_rate: "", description: "" }); // Clear inputs after adding
+      setNewScheme({ plan: "", total_tenure: "", ratio: "", subvention_rate: "", description: "" });
     } else {
       alert("Please fill in all scheme details.");
     }
@@ -120,6 +126,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
   const handleRemoveContact = (index) => {
     setContactPersons(contactPersons.filter((_, i) => i !== index));
   };
+
   const handleRemoveScheme = (index) => {
     setScheme(scheme.filter((_, i) => i !== index));
   };
@@ -130,23 +137,31 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/5 shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
-        } p-6 overflow-y-auto`}
+      className={`fixed inset-y-0 right-0 z-50 bg-white w-full shadow-lg transform transition-transform duration-300 ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      } p-4 sm:p-6 overflow-y-auto`}
     >
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
+        <h1 className="text-lg sm:text-xl font-bold text-gray-800">
           {partner ? "Edit Finance Partner" : "Add Finance Partner"}
         </h1>
         <button
-          type="button"
           onClick={toggleSidebar}
-          className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition duration-200"
+          className="bg-blue-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200"
         >
-          Back
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Partner Name */}
         <div>
           <label htmlFor="partnerName" className="block text-sm font-medium text-gray-700">
@@ -159,7 +174,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
             onChange={(e) => setPartnerName(e.target.value)}
             placeholder="Enter partner name"
             required
-            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -167,66 +182,46 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Contact Persons</label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-            <div className="col">
-              <label className="text-xs mb-0">Name</label><br />
-              <input
-
-                type="text"
-                value={newContact.name}
-                onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                placeholder="Contact Name"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
-              />
-            </div>
-            <div className="col">
-              <label className="text-xs mb-0">Mobile Number</label><br />
-              <input
-                type="tel"
-                label="Phone"
-                value={newContact.mobile}
-                onChange={(e) => setNewContact({ ...newContact, mobile: e.target.value })}
-                placeholder="Mobile Number"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
-              />
-            </div>
-            <div className="col">
-              <label className="text-xs mb-0">Email</label><br />
-              <input
-                type="email"
-                value={newContact.email}
-                onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
-                placeholder="Email Address"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
-              />
-            </div>
+            <input
+              type="text"
+              value={newContact.name}
+              onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+              placeholder="Contact Name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="tel"
+              value={newContact.mobile}
+              onChange={(e) => setNewContact({ ...newContact, mobile: e.target.value })}
+              placeholder="Mobile Number"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="email"
+              value={newContact.email}
+              onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+              placeholder="Email Address"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
           <button
             type="button"
             onClick={handleAddContact}
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200 flex items-center"
+            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
             Add Contact
           </button>
 
-          {contactPersons.length > 0 ? (
-            <div className="mt-4">
+          {contactPersons.length > 0 && (
+            <div className="mt-4 max-h-40 overflow-y-auto border border-gray-300 rounded-md">
               <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="p-3 text-sm font-medium text-gray-700">Sr No</th>
-                    <th className="p-3 text-sm font-medium text-gray-700">Name</th>
-                    <th className="p-3 text-sm font-medium text-gray-700">Mobile</th>
-                    <th className="p-3 text-sm font-medium text-gray-700">Email</th>
-                    <th className="p-3 text-sm font-medium text-gray-700">Action</th>
+                <thead className="bg-gray-200 text-gray-700 sticky top-0">
+                  <tr>
+                    <th className="p-3 text-sm font-semibold">Sr No</th>
+                    <th className="p-3 text-sm font-semibold">Name</th>
+                    <th className="p-3 text-sm font-semibold">Mobile</th>
+                    <th className="p-3 text-sm font-semibold">Email</th>
+                    <th className="p-3 text-sm font-semibold">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -250,102 +245,69 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
                 </tbody>
               </table>
             </div>
-          ) : (
-            <p className="mt-2 text-sm text-gray-500">No contact persons added yet.</p>
           )}
         </div>
 
         {/* Scheme */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Scheme Details</label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="text-xs mb-0">Plan</label>
-              <input
-                type="text"
-                value={newScheme.plan}
-                onChange={(e) => setNewScheme({ ...newScheme, plan: e.target.value })}
-                placeholder="Plan"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
-              />
-            </div>
-            <div>
-              <label className="text-xs mb-0">Total Tenure</label>
-              <input
-                type="text"
-                value={newScheme.total_tenure}
-                onChange={(e) => setNewScheme({ ...newScheme, total_tenure: e.target.value })}
-                placeholder="Total Tenure"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-
-            <div>
-              <label className="text-xs mb-0">Ratio (Downpayment : Total tenure)</label>
-              <input
-                type="text"
-                value={newScheme.ratio}
-                onChange={(e) => setNewScheme({ ...newScheme, ratio: e.target.value })}
-                placeholder="Ratio (Downpayment : Total Tenure)"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs mb-0">Subvention Rate</label>
-              <input
-                type="text"
-                value={newScheme.subvention_rate}
-                onChange={(e) => setNewScheme({ ...newScheme, subvention_rate: e.target.value })}
-                placeholder="Subvention rate"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs mb-0">Description</label>
-              <input
-                type="text"
-                value={newScheme.description}
-                onChange={(e) => setNewScheme({ ...newScheme, description: e.target.value })}
-                placeholder="Description"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <input
+              type="text"
+              value={newScheme.plan}
+              onChange={(e) => setNewScheme({ ...newScheme, plan: e.target.value })}
+              placeholder="Plan"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              value={newScheme.total_tenure}
+              onChange={(e) => setNewScheme({ ...newScheme, total_tenure: e.target.value })}
+              placeholder="Total Tenure"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              value={newScheme.ratio}
+              onChange={(e) => setNewScheme({ ...newScheme, ratio: e.target.value })}
+              placeholder="Ratio (Downpayment : Total Tenure)"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              value={newScheme.subvention_rate}
+              onChange={(e) => setNewScheme({ ...newScheme, subvention_rate: e.target.value })}
+              placeholder="Subvention Rate"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              value={newScheme.description}
+              onChange={(e) => setNewScheme({ ...newScheme, description: e.target.value })}
+              placeholder="Description"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
           <button
             type="button"
             onClick={handleAddScheme}
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200 flex items-center"
+            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
             Add Scheme
           </button>
 
-          {scheme.length > 0 ? (
-            <div className="mt-4">
+          {scheme.length > 0 && (
+            <div className="mt-4 max-h-40 overflow-y-auto border border-gray-300 rounded-md">
               <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="p-3 text-sm font-medium text-gray-700">Sr No</th>
-                    <th className="p-3 text-sm font-medium text-gray-700">Plan</th>
-                    <th className="p-3 text-sm font-medium text-gray-700">Total tenure</th>
-                    <th className="p-3 text-sm font-medium text-gray-700">Ratio (Downpayment : Total Tenure)</th>
-                    <th className="p-3 text-sm font-medium text-gray-700">Subvention Rate</th>
-                    <th className="p-3 text-sm font-medium text-gray-700">Description</th>
-                    <th className="p-3 text-sm font-medium text-gray-700">Action</th>
+                <thead className="bg-gray-200 text-gray-700 sticky top-0">
+                  <tr>
+                    <th className="p-3 text-sm font-semibold">Sr No</th>
+                    <th className="p-3 text-sm font-semibold">Plan</th>
+                    <th className="p-3 text-sm font-semibold">Total Tenure</th>
+                    <th className="p-3 text-sm font-semibold">Ratio</th>
+                    <th className="p-3 text-sm font-semibold">Subvention Rate</th>
+                    <th className="p-3 text-sm font-semibold">Description</th>
+                    <th className="p-3 text-sm font-semibold">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -371,8 +333,6 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
                 </tbody>
               </table>
             </div>
-          ) : (
-            <p className="mt-2 text-sm text-gray-500">No scheme added yet.</p>
           )}
         </div>
 
@@ -380,73 +340,48 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs mb-0">Street</label>
-              <input
-                type="text"
-                value={address.street}
-                onChange={(e) => handleAddressChange("street", e.target.value)}
-                placeholder="Street"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="text-xs mb-0">Area</label>
-              <input
-                type="text"
-                value={address.area}
-                onChange={(e) => handleAddressChange("area", e.target.value)}
-                placeholder="Area"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="text-xs mb-0">City</label>
-              <input
-                type="text"
-                value={address.city}
-                onChange={(e) => handleAddressChange("city", e.target.value)}
-                placeholder="City"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs mb-0">State</label>
-              <input
-                type="text"
-                value={address.state}
-                onChange={(e) => handleAddressChange("state", e.target.value)}
-                placeholder="State"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs mb-0">Country</label>
-              <input
-                type="text"
-                value={address.country}
-                onChange={(e) => handleAddressChange("country", e.target.value)}
-                placeholder="Country"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs mb-0">Postal Code</label>
-              <input
-                type="text"
-                value={address.postalCode}
-                onChange={(e) => handleAddressChange("postalCode", e.target.value)}
-                placeholder="Postal Code"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-
-
-
+            <input
+              type="text"
+              value={address.street}
+              onChange={(e) => handleAddressChange("street", e.target.value)}
+              placeholder="Street"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              value={address.area}
+              onChange={(e) => handleAddressChange("area", e.target.value)}
+              placeholder="Area"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              value={address.city}
+              onChange={(e) => handleAddressChange("city", e.target.value)}
+              placeholder="City"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              value={address.state}
+              onChange={(e) => handleAddressChange("state", e.target.value)}
+              placeholder="State"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              value={address.country}
+              onChange={(e) => handleAddressChange("country", e.target.value)}
+              placeholder="Country"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              value={address.postalCode}
+              onChange={(e) => handleAddressChange("postalCode", e.target.value)}
+              placeholder="Postal Code"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         </div>
 
@@ -460,7 +395,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             required
-            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
@@ -475,12 +410,12 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
         )}
 
         {/* Submit Button */}
-        <div className="flex justify-end">
+        <div className="flex justify-end mt-4">
           <button
             type="submit"
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+            className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200 w-full sm:w-auto"
           >
-            {partner ? "Update Partner" : "Add Partner"}
+            {partner ? "Update Partner" : "Save Partner"}
           </button>
         </div>
       </form>

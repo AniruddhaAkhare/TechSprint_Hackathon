@@ -40,13 +40,14 @@ const AddCourse = () => {
         relationship: '',
         loanStatus: 'Pending',
         bankStatement: null,
+        paymentSlip: null, // Added Payment Slip field
         aadharCard: null,
         panCard: null,
         registration: { amount: '', date: '', receivedBy: '', paymentMethod: '', remark: '' },
-        discountType: '', // Added for Finance
-        discountValue: '', // Added for Finance
-        discountReason: '', // Added for Finance
-        feeAfterDiscount: 0, // Added for Finance
+        discountType: '',
+        discountValue: '',
+        discountReason: '',
+        feeAfterDiscount: 0,
     };
 
     const defaultEntry = {
@@ -59,7 +60,7 @@ const AddCourse = () => {
         fullFeesDetails: {
             discountType: '',
             discountValue: '',
-            discountReason: '', // Added for Full Fees
+            discountReason: '',
             feeAfterDiscount: 0,
             totalFees: 0,
             registration: { amount: '', date: '', receivedBy: '', paymentMethod: '', remark: '' },
@@ -67,7 +68,7 @@ const AddCourse = () => {
         },
         financeDetails: { ...defaultFinanceDetails },
         registration: { amount: '', date: '', receivedBy: '', paymentMethod: '', remark: '' },
-        freeReason: '', // Added for Free course reason
+        freeReason: '',
     };
 
     useEffect(() => {
@@ -83,7 +84,6 @@ const AddCourse = () => {
                     setPreferredCenters([]);
                 }
 
-                // Fetch centers from instituteSetup subcollection
                 const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
                 if (instituteSnapshot.empty) {
                     console.error("No instituteSetup document found");
@@ -117,7 +117,7 @@ const AddCourse = () => {
                         selectedCourse: fetchedCourses.find(c => c.id === course.selectedCourse?.id) || course.selectedCourse || '',
                         financeDetails: { ...defaultFinanceDetails, ...course.financeDetails, scheme: course.financeDetails?.scheme || '' },
                         registration: course.registration || defaultEntry.registration,
-                        freeReason: course.freeReason || '', // Load free reason if exists
+                        freeReason: course.freeReason || '',
                     }));
                     setCourseEntries(existingCourses);
                 } else {
@@ -147,10 +147,10 @@ const AddCourse = () => {
                         ...entry,
                         [field]: value,
                         fullFeesDetails: { ...entry.fullFeesDetails, totalFees: value.fee || 0 },
-                        financeDetails: { ...entry.financeDetails, feeAfterDiscount: value.fee || 0 }, // Update for Finance
+                        financeDetails: { ...entry.financeDetails, feeAfterDiscount: value.fee || 0 },
                     };
                 } else if (field === 'freeReason') {
-                    return { ...entry, freeReason: value }; // Handle free reason
+                    return { ...entry, freeReason: value };
                 }
                 return { ...entry, [field]: value };
             }
@@ -172,7 +172,7 @@ const AddCourse = () => {
                         ? totalFees - (totalFees * (Number(value) / 100))
                         : totalFees - Number(value);
                 } else if (field === 'discountReason') {
-                    fullFeesDetails.discountReason = value; // Handle discount reason
+                    fullFeesDetails.discountReason = value;
                 } else {
                     fullFeesDetails[field] = { ...fullFeesDetails[field], [subField]: value };
                 }
@@ -249,7 +249,7 @@ const AddCourse = () => {
                         ? totalFees - (totalFees * (Number(value) / 100))
                         : totalFees - Number(value);
                 } else if (field === 'discountReason') {
-                    financeDetails.discountReason = value; // Handle discount reason
+                    financeDetails.discountReason = value;
                 } else if (subField) {
                     financeDetails[field] = { ...financeDetails[field], [subField]: value };
                 } else {
@@ -268,26 +268,28 @@ const AddCourse = () => {
 
     const handleFileChange = (index, field, event) => {
         const file = event.target.files[0];
-        const updatedEntries = courseEntries.map((entry, i) => {
-            if (i === index) {
-                return {
-                    ...entry,
-                    financeDetails: { ...entry.financeDetails, [field]: file }
-                };
-            }
-            return entry;
-        });
-        setCourseEntries(updatedEntries);
+        if (file) {
+            const updatedEntries = courseEntries.map((entry, i) => {
+                if (i === index) {
+                    return {
+                        ...entry,
+                        financeDetails: { ...entry.financeDetails, [field]: file }
+                    };
+                }
+                return entry;
+            });
+            setCourseEntries(updatedEntries);
+        }
     };
 
     const saveEnrollmentData = async () => {
         try {
             const updatedEntries = courseEntries.map(entry => {
                 if (entry.feeTemplate === 'Finance') {
-                    const { bankStatement, aadharCard, panCard, ...restFinanceDetails } = entry.financeDetails;
+                    const { bankStatement, paymentSlip, aadharCard, panCard, ...restFinanceDetails } = entry.financeDetails;
                     return { ...entry, financeDetails: restFinanceDetails };
                 }
-                return { ...entry, freeReason: entry.freeReason || '' }; // Include freeReason in saved data
+                return { ...entry, freeReason: entry.freeReason || '' };
             });
             await setDoc(doc(db, 'enrollments', studentId), { courses: updatedEntries }, { merge: true });
             alert("Enrollment data saved successfully!");
@@ -507,14 +509,14 @@ const AddCourse = () => {
                                             <MenuItem value="percentage">%</MenuItem>
                                             <MenuItem value="value">₹</MenuItem>
                                         </Select>
-                                        <TextField
+                                        <TableCell><TextField
                                             label="Discount"
                                             value={entry.fullFeesDetails.discountValue || ''}
                                             onChange={(e) => handleFullFeesChange(courseIndex, 'discountValue', '', e.target.value)}
                                             className="w-32"
                                             variant="outlined"
                                             size="small"
-                                        />
+                                        /></TableCell>
                                         <TextField
                                             label="Discount Reason/Coupon"
                                             value={entry.fullFeesDetails.discountReason || ''}
@@ -817,47 +819,110 @@ const AddCourse = () => {
                                             </Select>
                                         </FormControl>
                                     </div>
-                                    <div className="space-y-4 mt-4">
-                                        <div>
-                                            <Typography variant="subtitle2" className="text-gray-700">6 Months Bank Statement</Typography>
-                                            <input
-                                                type="file"
-                                                onChange={(e) => handleFileChange(courseIndex, 'bankStatement', e)}
-                                                className="mt-1"
-                                            />
-                                            {entry.financeDetails.bankStatement && (
-                                                <Typography variant="body2" className="text-gray-600 mt-1">
-                                                    {entry.financeDetails.bankStatement.name}
-                                                </Typography>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <Typography variant="subtitle2" className="text-gray-700">Aadhar Card</Typography>
-                                            <input
-                                                type="file"
-                                                onChange={(e) => handleFileChange(courseIndex, 'aadharCard', e)}
-                                                className="mt-1"
-                                            />
-                                            {entry.financeDetails.aadharCard && (
-                                                <Typography variant="body2" className="text-gray-600 mt-1">
-                                                    {entry.financeDetails.aadharCard.name}
-                                                </Typography>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <Typography variant="subtitle2" className="text-gray-700">PAN Card</Typography>
-                                            <input
-                                                type="file"
-                                                onChange={(e) => handleFileChange(courseIndex, 'panCard', e)}
-                                                className="mt-1"
-                                            />
-                                            {entry.financeDetails.panCard && (
-                                                <Typography variant="body2" className="text-gray-600 mt-1">
-                                                    {entry.financeDetails.panCard.name}
-                                                </Typography>
-                                            )}
-                                        </div>
-                                    </div>
+                                    <Typography variant="subtitle1" className="text-gray-800 font-medium mt-4">Documents</Typography>
+                                    <TableContainer>
+                                        <Table>
+                                            <TableHead>
+                                                <TableRow className="bg-blue-50">
+                                                    <TableCell className="text-gray-800 font-medium min-w-40">Document Type</TableCell>
+                                                    <TableCell className="text-gray-800 font-medium min-w-40">File</TableCell>
+                                                    <TableCell className="text-gray-800 font-medium min-w-40">Status</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                <TableRow>
+                                                    <TableCell>6 Months Bank Statement</TableCell>
+                                                    <TableCell>
+                                                        <input
+                                                            type="file"
+                                                            onChange={(e) => handleFileChange(courseIndex, 'bankStatement', e)}
+                                                            className="mt-1"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {entry.financeDetails.bankStatement ? (
+                                                            <Typography variant="body2" className="text-green-600">
+                                                                Uploaded: {entry.financeDetails.bankStatement.name}
+                                                            </Typography>
+                                                        ) : (
+                                                            <Typography variant="body2" className="text-gray-600">
+                                                                Not Uploaded
+                                                            </Typography>
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                                {entry.financeDetails.bankStatement && (
+                                                    <TableRow>
+                                                        <TableCell>Payment Slip</TableCell>
+                                                        <TableCell>
+                                                            <input
+                                                                type="file"
+                                                                onChange={(e) => handleFileChange(courseIndex, 'paymentSlip', e)}
+                                                                className="mt-1"
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {entry.financeDetails.paymentSlip ? (
+                                                                <Typography variant="body2" className="text-green-600">
+                                                                    Uploaded: {entry.financeDetails.paymentSlip.name}
+                                                                </Typography>
+                                                            ) : (
+                                                                <Typography variant="body2" className="text-gray-600">
+                                                                    Not Uploaded
+                                                                </Typography>
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                                {entry.financeDetails.paymentSlip && (
+                                                    <TableRow>
+                                                        <TableCell>Aadhar Card</TableCell>
+                                                        <TableCell>
+                                                            <input
+                                                                type="file"
+                                                                onChange={(e) => handleFileChange(courseIndex, 'aadharCard', e)}
+                                                                className="mt-1"
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {entry.financeDetails.aadharCard ? (
+                                                                <Typography variant="body2" className="text-green-600">
+                                                                    Uploaded: {entry.financeDetails.aadharCard.name}
+                                                                </Typography>
+                                                            ) : (
+                                                                <Typography variant="body2" className="text-gray-600">
+                                                                    Not Uploaded
+                                                                </Typography>
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                                {entry.financeDetails.aadharCard && (
+                                                    <TableRow>
+                                                        <TableCell>PAN Card</TableCell>
+                                                        <TableCell>
+                                                            <input
+                                                                type="file"
+                                                                onChange={(e) => handleFileChange(courseIndex, 'panCard', e)}
+                                                                className="mt-1"
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {entry.financeDetails.panCard ? (
+                                                                <Typography variant="body2" className="text-green-600">
+                                                                    Uploaded: {entry.financeDetails.panCard.name}
+                                                                </Typography>
+                                                            ) : (
+                                                                <Typography variant="body2" className="text-gray-600">
+                                                                    Not Uploaded
+                                                                </Typography>
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
                                 </div>
                             )}
 
