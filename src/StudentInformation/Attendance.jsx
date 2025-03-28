@@ -1,9 +1,7 @@
-
-
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { db } from '../config/firebase';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore'; // Added 'query' and 'where'
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 
 export default function Attendance() {
   const [attendanceData, setAttendanceData] = useState([]);
@@ -14,6 +12,8 @@ export default function Attendance() {
   const [batchDetails, setBatchDetails] = useState({});
   const [centers, setCenters] = useState([]);
   const [selectedCenter, setSelectedCenter] = useState('');
+  const [batchStatusFilter, setBatchStatusFilter] = useState('Active'); 
+  const [startDateFilter, setStartDateFilter] = useState('');
 
   const fetchCenters = async () => {
     try {
@@ -25,7 +25,7 @@ export default function Attendance() {
           const branchesSnapshot = await getDocs(branchesCollection);
           return branchesSnapshot.docs.map(branchDoc => ({
             id: branchDoc.id,
-            ...branchDoc.data()
+            ...branchDoc.data(),
           }));
         })
       );
@@ -39,19 +39,33 @@ export default function Attendance() {
 
   const fetchBatchesAndStudents = async (centerId) => {
     try {
-      // Fetch only active batches
-      const batchesQuery = query(collection(db, 'Batch'), where("status", "==", "Active"));
+      // Fetch batches based on status filter
+      let batchesQuery;
+      if (batchStatusFilter === 'All') {
+        batchesQuery = collection(db, 'Batch'); // All batches
+      } else {
+        batchesQuery = query(collection(db, 'Batch'), where("status", "==", batchStatusFilter)); // Active or Inactive
+      }
       const batchesSnapshot = await getDocs(batchesQuery);
       let batchData = batchesSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
 
-      // Filter batches by selected center if centerId is provided
+      // Filter by center if selected
       if (centerId) {
         batchData = batchData.filter(batch => 
           batch.centers && Array.isArray(batch.centers) && batch.centers.includes(centerId)
         );
+      }
+
+      // Filter by start date if provided
+      if (startDateFilter) {
+        const start = new Date(startDateFilter);
+        batchData = batchData.filter(batch => {
+          const batchStart = new Date(batch.startDate);
+          return batchStart >= start;
+        });
       }
 
       const batchMap = {};
@@ -59,7 +73,8 @@ export default function Attendance() {
         batchMap[batch.batchName] = {
           startDate: new Date(batch.startDate),
           endDate: new Date(batch.endDate),
-          centers: batch.centers || [] // Store centers array for reference
+          centers: batch.centers || [],
+          status: batch.status || 'Active', // Include status for display
         };
       });
       setBatchDetails(batchMap);
@@ -77,7 +92,7 @@ export default function Attendance() {
         if (student.course_details && Array.isArray(student.course_details)) {
           student.course_details.forEach(course => {
             const batchName = course.batch;
-            if (batchMap[batchName]) { // Only include students from filtered batches
+            if (batchMap[batchName]) {
               if (!studentsByBatchMap[batchName]) {
                 studentsByBatchMap[batchName] = [];
               }
@@ -88,7 +103,7 @@ export default function Attendance() {
       });
 
       setStudentsByBatch(studentsByBatchMap);
-      console.log('Filtered Active Batches:', Object.keys(batchMap));
+      console.log('Filtered Batches:', Object.keys(batchMap));
       console.log('Students by batch:', studentsByBatchMap);
     } catch (error) {
       console.error('Error fetching batches and students:', error);
@@ -155,8 +170,6 @@ export default function Attendance() {
       }
 
       const headers = rawData[0].map(header => header.toString().trim());
-      console.log("Excel Headers:", headers);
-
       const studentNameIndex = headers.findIndex(h => h.toLowerCase().includes("name"));
       if (studentNameIndex === -1) {
         alert("No 'Student Name' column found in the Excel file.");
@@ -180,12 +193,11 @@ export default function Attendance() {
             date: new Date(date).toISOString(),
             student_name: studentName,
             status: status || "N/A",
-            centerId: selectedCenter
+            centerId: selectedCenter,
           };
         });
       }).filter(record => record.student_name !== "Unknown");
 
-      console.log("Processed attendance data:", formattedData);
       setAttendanceData(prevData => [...prevData, ...formattedData]);
     };
     reader.readAsBinaryString(file);
@@ -214,7 +226,7 @@ export default function Attendance() {
             date: new Date(record.date),
             student_name: record.student_name,
             status: record.status,
-            centerId: record.centerId
+            centerId: record.centerId,
           });
         })
       );
@@ -237,18 +249,17 @@ export default function Attendance() {
       date: doc.data().date.toDate(),
     }));
     setAttendanceData(fetchedData);
-    console.log('Fetched attendance data:', fetchedData);
   };
 
   useEffect(() => {
     fetchCenters();
-    fetchBatchesAndStudents(); // Initially fetch active batches
-  }, []);
+    fetchBatchesAndStudents(); // Fetch active batches by default
+  }, [batchStatusFilter, startDateFilter]); // Re-fetch when status or start date changes
 
   const handleCenterChange = (e) => {
     const centerId = e.target.value;
     setSelectedCenter(centerId);
-    fetchBatchesAndStudents(centerId); // Fetch active batches filtered by selected center
+    fetchBatchesAndStudents(centerId);
   };
 
   const toggleBatch = (batchName) => {
@@ -261,7 +272,6 @@ export default function Attendance() {
       record.batch_id === batchName && (!selectedCenter || record.centerId === selectedCenter)
     );
     if (!batchAttendance.length) {
-      console.log(`No attendance data found for batch: ${batchName}`);
       return { students: [], dates: [], attendanceMap: {} };
     }
 
@@ -277,112 +287,161 @@ export default function Attendance() {
       attendanceMap[`${record.student_name}-${dateStr}`] = record.status;
     });
 
-    console.log('Attendance table data:', { batchName, students, dates, attendanceMap });
     return { students, dates, attendanceMap };
   };
 
   return (
-    <div className="p-20">
-      <h2 className="text-xl font-bold mb-4">Attendance Management</h2>
-      <div className="mb-4">
-        <label htmlFor="centerSelect" className="block text-sm font-medium text-gray-700">Select Center</label>
-        <select
-          id="centerSelect"
-          value={selectedCenter}
-          onChange={handleCenterChange}
-          className="mt-1 block w-1/4 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-        >
-          <option value="">All Centers</option>
-          {centers.map(center => (
-            <option key={center.id} value={center.id}>{center.name}</option>
-          ))}
-        </select>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Attendance Management</h2>
+
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Center Selector */}
+          <div>
+            <label htmlFor="centerSelect" className="block text-sm font-medium text-gray-700">Select Center</label>
+            <select
+              id="centerSelect"
+              value={selectedCenter}
+              onChange={handleCenterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            >
+              <option value="">All Centers</option>
+              {centers.map(center => (
+                <option key={center.id} value={center.id}>{center.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status Dropdown */}
+          <div>
+            <label htmlFor="statusFilter" className="block text-sm font-medium text-gray-700">Batch Status</label>
+            <select
+              id="statusFilter"
+              value={batchStatusFilter}
+              onChange={(e) => setBatchStatusFilter(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+              <option value="All">All</option>
+            </select>
+          </div>
+
+          {/* Start Date Filter */}
+          <div>
+            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date From</label>
+            <input
+              type="date"
+              id="startDate"
+              value={startDateFilter}
+              onChange={(e) => setStartDateFilter(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            />
+          </div>
+        </div>
       </div>
-      <h3 className="text-lg font-semibold mb-2">Active Batch List</h3> {/* Updated label */}
-      <div className="space-y-2 batch-container">
-        {batches.length > 0 ? (
-          batches.map(batchName => (
-            <div key={batchName} className="border rounded-md">
-              <button
-                onClick={() => toggleBatch(batchName)}
-                className="w-full text-left p-2 bg-blue-100 hover:bg-blue-200 flex justify-between items-center"
-              >
-                <span>{batchName}</span>
-                <span>{expandedBatch === batchName ? '▼' : '▶'}</span>
-              </button>
-              {expandedBatch === batchName && (
-                <div className="p-4 bg-white">
-                  <button
-                    onClick={() => generateTemplate(batchName)}
-                    className="mb-4 btn btn-secondary bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 transition duration-200"
-                  >
-                    Download Attendance Template
-                  </button>
-                  <div className="mt-4 mb-4">
-                    <input
-                      type="file"
-                      accept=".xlsx, .xls"
-                      onChange={handleFileChange}
-                      className="mb-2"
-                    />
-                    <button
-                      onClick={uploadToFirestore}
-                      className="ml-2 btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
-                    >
-                      Upload to Database
-                    </button>
+
+      {/* Batch List */}
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          {batchStatusFilter === 'All' ? 'All Batches' : `${batchStatusFilter} Batches`}
+        </h3>
+        <div className="space-y-4">
+          {batches.length > 0 ? (
+            batches.map(batchName => (
+              <div key={batchName} className="border rounded-md">
+                <button
+                  onClick={() => toggleBatch(batchName)}
+                  className="w-full text-left p-3 bg-blue-50 hover:bg-blue-100 flex justify-between items-center rounded-t-md transition duration-200"
+                >
+                  <span className="font-medium text-gray-700">{batchName}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-sm ${batchDetails[batchName]?.status === 'Active' ? 'text-green-600' : 'text-red-600'}`}>
+                      {batchDetails[batchName]?.status}
+                    </span>
+                    <span>{expandedBatch === batchName ? '▼' : '▶'}</span>
                   </div>
-                  <h3 className="font-semibold mb-2">Attendance Data for {batchName}</h3>
-                  <table className="table-data table w-full">
-                    <thead className="table-secondary">
-                      <tr>
-                        <th>Student Name</th>
-                        {batchDetails[batchName] ? (
-                          generateDateRange(batchDetails[batchName].startDate, batchDetails[batchName].endDate).map((date, index) => (
-                            <th key={index}>{date}</th>
-                          ))
-                        ) : (
-                          <th>No dates available</th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(() => {
-                        const { students, dates, attendanceMap } = getAttendanceTableData(batchName);
-                        console.log('Rendering table with:', { students, dates, attendanceMap });
-                        if (!batchDetails[batchName]) {
-                          return (
-                            <tr>
-                              <td colSpan="2">Batch details not found.</td>
-                            </tr>
-                          );
-                        }
-                        return students.length > 0 ? (
-                          students.map((student, index) => (
-                            <tr key={index}>
-                              <td>{student || 'Unknown Student'}</td>
-                              {dates.map((date, dateIndex) => (
-                                <td key={dateIndex}>
-                                  {attendanceMap[`${student}-${date}`] || '-'}
-                                </td>
-                              ))}
-                            </tr>
-                          ))
-                        ) : (
+                </button>
+                {expandedBatch === batchName && (
+                  <div className="p-4 bg-gray-50 rounded-b-md">
+                    <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                      <button
+                        onClick={() => generateTemplate(batchName)}
+                        className="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
+                      >
+                        Download Template
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="file"
+                          accept=".xlsx, .xls"
+                          onChange={handleFileChange}
+                          className="text-sm text-gray-600"
+                        />
+                        <button
+                          onClick={uploadToFirestore}
+                          className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200"
+                        >
+                          Upload
+                        </button>
+                      </div>
+                    </div>
+                    <h4 className="font-semibold text-gray-700 mb-2">Attendance for {batchName}</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead className="bg-gray-200">
                           <tr>
-                            <td colSpan={dates.length + 1}>No attendance data available for this batch.</td>
+                            <th className="p-3 text-left text-sm font-semibold text-gray-700">Student Name</th>
+                            {batchDetails[batchName] ? (
+                              generateDateRange(batchDetails[batchName].startDate, batchDetails[batchName].endDate).map((date, index) => (
+                                <th key={index} className="p-3 text-left text-sm font-semibold text-gray-700">{date}</th>
+                              ))
+                            ) : (
+                              <th className="p-3 text-left text-sm font-semibold text-gray-700">No dates available</th>
+                            )}
                           </tr>
-                        );
-                      })()}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          ))
-        ) : (
-          <p>No active batches available for the selected center.</p>
-        )}
+                        </thead>
+                        <tbody>
+                          {(() => {
+                            const { students, dates, attendanceMap } = getAttendanceTableData(batchName);
+                            if (!batchDetails[batchName]) {
+                              return (
+                                <tr>
+                                  <td colSpan="2" className="p-3 text-gray-600">Batch details not found.</td>
+                                </tr>
+                              );
+                            }
+                            return students.length > 0 ? (
+                              students.map((student, index) => (
+                                <tr key={index} className="border-b hover:bg-gray-50">
+                                  <td className="p-3 text-gray-600">{student || 'Unknown Student'}</td>
+                                  {dates.map((date, dateIndex) => (
+                                    <td key={dateIndex} className="p-3 text-gray-600">
+                                      {attendanceMap[`${student}-${date}`] || '-'}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={dates.length + 1} className="p-3 text-gray-600 text-center">
+                                  No attendance data available for this batch.
+                                </td>
+                              </tr>
+                            );
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-600">No batches available for the selected filters.</p>
+          )}
+        </div>
       </div>
     </div>
   );

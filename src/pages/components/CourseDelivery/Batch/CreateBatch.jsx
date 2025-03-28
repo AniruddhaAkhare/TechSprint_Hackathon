@@ -10,7 +10,7 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
   const [batchName, setBatchName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [status, setStatus] = useState("Active"); // Changed default from "Ongoing" to "Active"
+  const [status, setStatus] = useState("Active");
 
   const [centers, setCenters] = useState([]);
   const [selectedCenters, setSelectedCenters] = useState([]);
@@ -94,7 +94,7 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
       setBatchName(batch.batchName || "");
       setStartDate(batch.startDate || "");
       setEndDate(batch.endDate || "");
-      setStatus(batch.status || "Active"); // Default to "Active" if status is undefined
+      setStatus(batch.status || "Active");
       setSelectedCenters(batch.centers || []);
       setAvailableCenters(centers.filter((c) => !batch.centers?.includes(c.id)));
       setSelectedCourses(batch.courses || []);
@@ -118,7 +118,7 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
       batchName: capitalizeFirstLetter(batchName),
       startDate,
       endDate,
-      status, // Will be "Active" or "Inactive"
+      status,
       centers: selectedCenters,
       courses: selectedCourses,
       curriculum: selectedCurriculum,
@@ -140,33 +140,6 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
         alert("Batch created successfully!");
       }
 
-    // const [students, setStudents] = useState([]);
-    // const [selectedStudents, setSelectedStudents] = useState([]);
-    // const [availableStudents, setAvailableStudents] = useState([]);
-
-    // useEffect hooks (updated course fetching)
-    // useEffect(() => {
-        const fetchData = async () => {
-            const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
-            if(instituteSnapshot.empty){
-                console.error("No instituteSetup document found");
-                return;
-            }
-            const instituteId = instituteSnapshot.docs[0].id;
-            const centerQuery = query(
-                collection(db, "instituteSetup", instituteId, "Center"),
-                where ("isActive", "==", true)
-            );
-            const centerSnapshot = await getDocs(centerQuery);
-            const centersList = centerSnapshot.docs.map((doc)=>({id:doc.id, ...doc.data()}));
-            setCenters(centersList);
-            setAvailableCenters(centersList);
-          }
-            
-            // const centerSnapshot = await getDocs(collection(db, "Centers"));
-            // const centersList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            // setCenters(centersList);
-            // setAvailableCenters(centersList);
       for (const studentId of selectedStudents) {
         await updateDoc(doc(db, "student", studentId), {
           enrolledBatch: batchId,
@@ -185,7 +158,7 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
     setBatchName("");
     setStartDate("");
     setEndDate("");
-    setStatus("Active"); // Changed from "Ongoing" to "Active"
+    setStatus("Active");
     setSelectedCenters([]);
     setAvailableCenters(centers);
     setSelectedCourses([]);
@@ -263,6 +236,12 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
     setSelectedStudents(selectedStudents.filter((id) => id !== studentId));
     const removedStudent = students.find((s) => s.id === studentId);
     if (removedStudent) setAvailableStudents([...availableStudents, removedStudent]);
+  };
+
+  const handleSelectAllStudents = () => {
+    const allStudentIds = availableStudents.map((student) => student.id);
+    setSelectedStudents((prev) => [...new Set([...prev, ...allStudentIds])]); // Avoid duplicates
+    setAvailableStudents([]); // Clear available students since all are selected
   };
 
   const handleAddBatchFaculty = (batchFacultyId) => {
@@ -678,17 +657,28 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
             <label className="block text-base font-medium text-gray-700 mb-1">
               Select Students
             </label>
-            <select
-              onChange={(e) => handleAddStudent(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-            >
-              <option value="">Select Students</option>
-              {availableStudents.map((student) => (
-                <option key={student.id} value={student.id}>
-                  {student.first_name} {student.last_name} ({student.email})
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center space-x-4">
+              <select
+                onChange={(e) => handleAddStudent(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
+              >
+                <option value="">Select Students</option>
+                {availableStudents.map((student) => (
+                  <option key={student.id} value={student.id}>
+                    {student.first_name} {student.last_name} ({student.email})
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={handleSelectAllStudents}
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200 text-base font-medium min-w-40"
+                disabled={availableStudents.length === 0}
+
+              >
+                Select All
+              </button>
+            </div>
 
             {selectedStudents.length > 0 && (
               <div className="mt-4">
