@@ -1,105 +1,118 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { auth, db } from '../../config/firebase'; // Ensure this points to your firebase config
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import React, { useState } from 'react';
 import { setDoc, doc } from 'firebase/firestore';
-import { db } from "../../config/firebase.js"; // Correct path
-import { auth } from '../../config/firebase.js';
 
 export default function RegisterForm() {
-    const [f_name, setFirstName] = useState('');
-    const [l_name, setLastName] = useState('');
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [phone, setPhone] = useState('');
-    const [specialization, setSpecialization] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (!f_name || !email || !phone || !password || !phone || !l_name) {
-            console.error("All fields are required.");
-            return;
-        }
+        setError('');
 
         try {
-            const adminCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const admin = adminCredential.user;
+            // Create user with email and password
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-            console.log("Admin registered:", admin);
+            // Create user data to store in Firestore
+            const userData = {
+                displayName: name,
+                email: email,
+                role: 'kPlDMnmI8YBXQLhJLas1', // Default role ID
+                createdAt: new Date().toISOString(),
+            };
 
-            if (admin) {
-                await setDoc(doc(db, "Instructor", admin.uid), {
-                    f_name: f_name,
-                    l_name: l_name,
-                    email: admin.email,
-                    phone: phone,
-                    specialization: specialization
-                });
-                console.log("Admin data stored in Firestore.");
-            }
-            alert("Admin registered successfully");
-            window.location.href = "/";
-            console.log("Admin registered successfully");
+            // Store user data in Firestore with user UID as document ID
+            await setDoc(doc(db, 'Users', user.uid), userData);
 
-        } catch (err) {
-            alert("Admin already registered")
-            console.log("Admin already registered");
+            // Navigate to a different page after registration (e.g. `/users`)
+            navigate('/dashboard');
+        } catch (error) {
+            setError('Failed to register: ' + error.message);
         }
     };
 
     return (
-        <div className='h-screen flex items-center justify-center min-h-screen bg-gray-100 w-screen'>
-            <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md w-96">
-                <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
-                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                <input
-                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    type="text"
-                    value={f_name}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required
-                />
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                <input
-                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    type="text"
-                    value={l_name}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required
-                />
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input
-                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                />
-                <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
-                <input
-                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    type="text"
-                    value={specialization}
-                    onChange={(e) => setSpecialization(e.target.value)}
-                />
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input
-                    className="border border-gray-300 bg-white p-2 w-full rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-                <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition duration-200">Register</button>
-                <p className="mt-4 text-center text-sm text-gray-600">Already have an account? <a href="/login" className="text-blue-500 hover:underline">Login here</a></p>
-            </form>
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
+                <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
+                    Register
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                            Name
+                        </label>
+                        <input
+                            id="name"
+                            name="name"
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter your name"
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                            Email
+                        </label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter your email"
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                            Password
+                        </label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter your password"
+                        />
+                    </div>
+
+                    {error && (
+                        <div className="text-red-600 text-sm text-center">{error}</div>
+                    )}
+
+                    <button
+                        type="submit"
+                        className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+                    >
+                        Register
+                    </button>
+                </form>
+
+                {/* Link to login page */}
+                <div className="mt-4 text-center">
+                    <p className="text-sm text-gray-600">
+                        Already have an account?{' '}
+                        <a href="/login" className="text-blue-500 hover:underline">Log In</a>
+                    </p>
+                </div>
+            </div>
         </div>
     );
 }

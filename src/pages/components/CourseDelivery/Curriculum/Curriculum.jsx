@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import CreateCurriculum from './CreateCurriculum'; // Import the CreateCurriculum modal
-import { db } from '../../../../config/firebase'; // Import Firestore
-import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore'; // Firestore methods
+import CreateCurriculum from './CreateCurriculum';
+import { db } from '../../../../config/firebase';
+import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { useAuth } from '../../../../context/AuthContext';
 
 const Curriculum = () => {
+  const { user, rolePermissions } = useAuth();
   const [curriculums, setCurriculums] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
@@ -13,12 +15,19 @@ const Curriculum = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedCurriculumId, setSelectedCurriculumId] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
-  const [curriculumToEdit, setCurriculumToEdit] = useState(null); // Track the curriculum to edit
+  const [curriculumToEdit, setCurriculumToEdit] = useState(null);
 
   const navigate = useNavigate();
 
+  // Permission checks for 'Curriculum' section
+  const canCreate = rolePermissions.Curriculum?.create || false;
+  const canUpdate = rolePermissions.Curriculum?.update || false;
+  const canDelete = rolePermissions.Curriculum?.delete || false;
+  const canDisplay = rolePermissions.Curriculum?.display || false;
+
   // Fetch curriculums from Firestore
   useEffect(() => {
+    if (!canDisplay) return;
     const unsubscribe = onSnapshot(collection(db, 'curriculums'), (snapshot) => {
       const curriculumData = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -27,7 +36,7 @@ const Curriculum = () => {
       setCurriculums(curriculumData);
     });
     return () => unsubscribe();
-  }, []);
+  }, [canDisplay]);
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -50,40 +59,48 @@ const Curriculum = () => {
     setCurrentPage(page);
   };
 
-  // Handle items per page change
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
     setCurrentPage(1);
   };
 
-  // Handle row click to navigate to the edit page
   const handleRowClick = (id) => {
-        navigate(`/edit-curriculum/${id}`);
-      };
-
-  // Toggle dropdown for a specific row
-  const toggleDropdown = (id) => {
-    setDropdownOpen(dropdownOpen === id ? null : id);
+    if (canUpdate) {
+      navigate(`/edit-curriculum/${id}`);
+    } else {
+      alert("You do not have permission to update curriculums.");
+    }
   };
 
-  // Handle edit button click
+  const toggleDropdown = (id) => {
+    if (canUpdate || canDelete) {
+      setDropdownOpen(dropdownOpen === id ? null : id);
+    }
+  };
+
   const handleEditClick = (id) => {
+    if (!canUpdate) {
+      alert("You do not have permission to update curriculums.");
+      return;
+    }
     const curriculum = curriculums.find((c) => c.id === id);
     setCurriculumToEdit(curriculum);
     setIsModalOpen(true);
     setDropdownOpen(null);
   };
 
-  // Handle delete button click
   const handleDeleteClick = (id) => {
+    if (!canDelete) {
+      alert("You do not have permission to delete curriculums.");
+      return;
+    }
     setSelectedCurriculumId(id);
     setIsDeleteModalOpen(true);
     setDropdownOpen(null);
   };
 
-  // Confirm deletion
   const confirmDelete = async () => {
-    if (selectedCurriculumId) {
+    if (selectedCurriculumId && canDelete) {
       try {
         await deleteDoc(doc(db, 'curriculums', selectedCurriculumId));
         setIsDeleteModalOpen(false);
@@ -94,36 +111,42 @@ const Curriculum = () => {
     }
   };
 
-  // Close delete modal
   const closeDeleteModal = () => {
     setIsDeleteModalOpen(false);
     setSelectedCurriculumId(null);
   };
 
-  // Open the create curriculum modal
   const handleAddCurriculum = () => {
-    setCurriculumToEdit(null); // Clear any existing curriculum data for adding new
+    if (!canCreate) {
+      alert("You do not have permission to create curriculums.");
+      return;
+    }
+    setCurriculumToEdit(null);
     setIsModalOpen(true);
   };
 
-  // Close the create curriculum modal
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setCurriculumToEdit(null);
   };
 
-  // Handle form submission from the modal
   const handleAddCurriculumSubmit = (formData) => {
     handleCloseModal();
   };
 
+  if (!canDisplay) {
+    return (
+      <div style={{ ...styles.container, textAlign: 'center', color: '#ff0000' }}>
+        Access Denied: You do not have permission to view curriculums.
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container}>
-      {/* Header */}
       <h2 style={styles.header}>Curriculum</h2>
       <p style={styles.subHeader}>Manage all your course curriculum in one place.</p>
 
-      {/* Filters and Actions */}
       <div style={styles.filters}>
         <div style={styles.filterItem}>
           <select style={styles.select}>
@@ -139,13 +162,14 @@ const Curriculum = () => {
             onChange={handleSearchChange}
             style={styles.searchInput}
           />
-          <button onClick={handleAddCurriculum} style={styles.addButton}>
-            + Add Curriculum
-          </button>
+          {canCreate && (
+            <button onClick={handleAddCurriculum} style={styles.addButton}>
+              + Add Curriculum
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Table */}
       <table style={styles.table}>
         <thead>
           <tr style={styles.tableHeader}>
@@ -171,30 +195,36 @@ const Curriculum = () => {
                   </span>
                 </td>
                 <td style={styles.tableCell} onClick={(e) => e.stopPropagation()}>
-                  <div style={styles.actionContainer}>
-                    <button
-                      style={styles.actionButton}
-                      onClick={() => toggleDropdown(curriculum.id)}
-                    >
-                      ⋮
-                    </button>
-                    {dropdownOpen === curriculum.id && (
-                      <div style={styles.dropdown}>
-                        <button
-                          style={styles.dropdownButton}
-                          onClick={() => handleEditClick(curriculum.id)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          style={{ ...styles.dropdownButton, color: '#ff0000' }}
-                          onClick={() => handleDeleteClick(curriculum.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  {(canUpdate || canDelete) && (
+                    <div style={styles.actionContainer}>
+                      <button
+                        style={styles.actionButton}
+                        onClick={() => toggleDropdown(curriculum.id)}
+                      >
+                        ⋮
+                      </button>
+                      {dropdownOpen === curriculum.id && (
+                        <div style={styles.dropdown}>
+                          {canUpdate && (
+                            <button
+                              style={styles.dropdownButton}
+                              onClick={() => handleEditClick(curriculum.id)}
+                            >
+                              Edit
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              style={{ ...styles.dropdownButton, color: '#ff0000' }}
+                              onClick={() => handleDeleteClick(curriculum.id)}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
             ))
@@ -208,7 +238,6 @@ const Curriculum = () => {
         </tbody>
       </table>
 
-      {/* Pagination */}
       <div style={styles.pagination}>
         <button
           onClick={() => handlePageChange(currentPage - 1)}
@@ -236,16 +265,16 @@ const Curriculum = () => {
         </select>
       </div>
 
-      {/* Create Curriculum Modal */}
-      <CreateCurriculum
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSubmit={handleAddCurriculumSubmit}
-        curriculumToEdit={curriculumToEdit} // Pass the curriculum to edit
-      />
+      {canCreate && (
+        <CreateCurriculum
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSubmit={handleAddCurriculumSubmit}
+          curriculumToEdit={curriculumToEdit}
+        />
+      )}
 
-      {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && (
+      {canDelete && isDeleteModalOpen && (
         <div style={styles.modalOverlay}>
           <div style={styles.deleteModal}>
             <div style={styles.modalHeader}>
@@ -270,7 +299,7 @@ const Curriculum = () => {
   );
 };
 
-// Styles (unchanged)
+// Styles remain unchanged
 const styles = {
   container: {
     padding: '20px',

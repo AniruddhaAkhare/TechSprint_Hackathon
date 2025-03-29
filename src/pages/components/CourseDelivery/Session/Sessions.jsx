@@ -4,22 +4,30 @@ import { getDocs, collection, deleteDoc, doc, query, orderBy, updateDoc } from '
 import CreateSession from "./CreateSession.jsx";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 import { Select, MenuItem, FormControl } from '@mui/material';
+import { useAuth } from "../../../../context/AuthContext.jsx";
 
 export default function Sessions() {
+    const { rolePermissions } = useAuth();
+
+    // Permission checks (already present, renamed to match previous examples)
+    const canCreate = rolePermissions.Sessions?.create || false;
+    const canUpdate = rolePermissions.Sessions?.update || false;
+    const canDelete = rolePermissions.Sessions?.delete || false;
+    const canDisplay = rolePermissions.Sessions?.display || false;
+
     const [currentSession, setCurrentSession] = useState(null);
-    const [session, setSession] = useState([]);
+    const [sessions, setSessions] = useState([]); // Renamed 'session' to 'sessions' for clarity
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
-    const [statusFilter, setStatusFilter] = useState('Active'); 
+    const [statusFilter, setStatusFilter] = useState('Active');
+    const [deleteMessage, setDeleteMessage] = useState("Are you sure you want to delete this session? This action cannot be undone."); // Added for consistency
 
     const SessionCollectionRef = collection(db, "Sessions");
 
-    const toggleSidebar = () => {
-        setIsOpen(prev => !prev);
-    };
+    const toggleSidebar = () => setIsOpen(prev => !prev);
 
     const handleSearch = (e) => {
         if (e) e.preventDefault();
@@ -27,7 +35,7 @@ export default function Sessions() {
             setSearchResults([]);
             return;
         }
-        const results = session.filter(s =>
+        const results = sessions.filter(s =>
             s.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
         setSearchResults(results);
@@ -39,7 +47,7 @@ export default function Sessions() {
         } else {
             setSearchResults([]);
         }
-    }, [searchTerm]);
+    }, [searchTerm, sessions]); // Added 'sessions' dependency for real-time updates
 
     const calculateSessionStatus = (session) => {
         const sessionDateTime = new Date(`${session.date} ${session.endTime}`);
@@ -48,6 +56,7 @@ export default function Sessions() {
     };
 
     const fetchSessions = async () => {
+        if (!canDisplay) return;
         try {
             const q = query(SessionCollectionRef, orderBy('createdAt', 'desc'));
             const snapshot = await getDocs(q);
@@ -56,17 +65,16 @@ export default function Sessions() {
                 ...doc.data(),
             }));
 
-            // Update status for each session if necessary
             const updatedSessions = await Promise.all(sessionData.map(async (s) => {
                 const calculatedStatus = calculateSessionStatus(s);
-                if (s.status !== calculatedStatus) {
+                if (s.status !== calculatedStatus && canUpdate) {
                     await updateDoc(doc(db, "Sessions", s.id), { status: calculatedStatus });
                     return { ...s, status: calculatedStatus };
                 }
                 return s;
             }));
 
-            setSession(updatedSessions);
+            setSessions(updatedSessions);
         } catch (error) {
             console.error("Error fetching sessions:", error);
         }
@@ -74,14 +82,22 @@ export default function Sessions() {
 
     useEffect(() => {
         fetchSessions();
-    }, []);
+    }, [canDisplay, canUpdate]);
 
     const handleCreateSessionClick = () => {
+        if (!canCreate) {
+            alert("You do not have permission to create sessions.");
+            return;
+        }
         setCurrentSession(null);
         toggleSidebar();
     };
 
     const handleEditClick = (session) => {
+        if (!canUpdate) {
+            alert("You do not have permission to update sessions.");
+            return;
+        }
         setCurrentSession(session);
         setIsOpen(true);
     };
@@ -93,28 +109,37 @@ export default function Sessions() {
     };
 
     const deleteSession = async () => {
-        if (!deleteId) return;
+        if (!deleteId || !canDelete) {
+            if (!canDelete) alert("You do not have permission to delete sessions.");
+            return;
+        }
         try {
-            const sessionDoc = doc(db, "Sessions", deleteId);
-            await deleteDoc(sessionDoc);
-            alert("Session deleted successfully");
+            await deleteDoc(doc(db, "Sessions", deleteId));
             setOpenDelete(false);
+            setDeleteMessage("Are you sure you want to delete this session? This action cannot be undone.");
             fetchSessions();
         } catch (error) {
             console.error("Error deleting session:", error);
+            setDeleteMessage("Failed to delete session. Please try again.");
         }
     };
 
-    // Filter sessions based on statusFilter
     const filteredSessions = () => {
-        const baseSessions = searchResults.length > 0 ? searchResults : session;
+        const baseSessions = searchResults.length > 0 ? searchResults : sessions;
         if (statusFilter === 'All') return baseSessions;
         return baseSessions.filter(s => s.status === statusFilter);
     };
 
+    if (!canDisplay) {
+        return (
+            <div className="p-4 text-red-600 text-center">
+                Access Denied: You do not have permission to view sessions.
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col w-full min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
-            {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <h1 className="text-2xl font-semibold text-gray-800">Sessions</h1>
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -129,16 +154,17 @@ export default function Sessions() {
                             <MenuItem value="Inactive">Inactive</MenuItem>
                         </Select>
                     </FormControl>
-                    <button
-                        onClick={handleCreateSessionClick}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200 w-full sm:w-auto"
-                    >
-                        + Create Session
-                    </button>
+                    {canCreate && (
+                        <button
+                            onClick={handleCreateSessionClick}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200 w-full sm:w-auto"
+                        >
+                            + Create Session
+                        </button>
+                    )}
                 </div>
             </div>
 
-            {/* Search Bar and Table Container */}
             <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="mb-6">
                     <input
@@ -150,7 +176,6 @@ export default function Sessions() {
                     />
                 </div>
 
-                {/* Sessions Table */}
                 <div className="rounded-lg shadow-md overflow-x-auto">
                     <table className="w-full table-auto">
                         <thead className="bg-gray-100">
@@ -180,27 +205,31 @@ export default function Sessions() {
                                         </span>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <FormControl size="small">
-                                            <Select
-                                                value=""
-                                                onChange={(e) => {
-                                                    const action = e.target.value;
-                                                    if (action === 'edit') {
-                                                        handleEditClick(s);
-                                                    } else if (action === 'delete') {
-                                                        setDeleteId(s.id);
-                                                        setOpenDelete(true);
-                                                    }
-                                                }}
-                                                displayEmpty
-                                                renderValue={() => "Actions"}
-                                                className="text-sm"
-                                            >
-                                                <MenuItem value="" disabled>Actions</MenuItem>
-                                                <MenuItem value="edit">Edit</MenuItem>
-                                                <MenuItem value="delete">Delete</MenuItem>
-                                            </Select>
-                                        </FormControl>
+                                        {(canUpdate || canDelete) && (
+                                            <FormControl size="small">
+                                                <Select
+                                                    value=""
+                                                    onChange={(e) => {
+                                                        const action = e.target.value;
+                                                        if (action === 'edit' && canUpdate) {
+                                                            handleEditClick(s);
+                                                        } else if (action === 'delete' && canDelete) {
+                                                            setDeleteId(s.id);
+                                                            setOpenDelete(true);
+                                                            setDeleteMessage("Are you sure you want to delete this session? This action cannot be undone.");
+                                                        }
+                                                    }}
+                                                    displayEmpty
+                                                    renderValue={() => "Actions"}
+                                                    className="text-sm"
+                                                    disabled={!canUpdate && !canDelete}
+                                                >
+                                                    <MenuItem value="" disabled>Actions</MenuItem>
+                                                    {canUpdate && <MenuItem value="edit">Edit</MenuItem>}
+                                                    {canDelete && <MenuItem value="delete">Delete</MenuItem>}
+                                                </Select>
+                                            </FormControl>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
@@ -216,54 +245,53 @@ export default function Sessions() {
                 </div>
             </div>
 
-            {/* Backdrop for Sidebar */}
-            {isOpen && (
+            {isOpen && canCreate && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40"
                     onClick={handleClose}
                 />
             )}
 
-            {/* Sidebar (CreateSession) */}
-            <div
-                className={`fixed top-0 right-0 h-full w-full sm:w-3/4 md:w-2/5 bg-white shadow-lg transform transition-transform duration-300 ${
-                    isOpen ? "translate-x-0" : "translate-x-full"
-                } z-50 overflow-y-auto`}
-            >
-                <CreateSession
-                    isOpen={isOpen}
-                    toggleSidebar={handleClose}
-                    sessionToEdit={currentSession}
-                />
-            </div>
+            {canCreate && (
+                <div
+                    className={`fixed top-0 right-0 h-full w-full sm:w-3/4 md:w-2/5 bg-white shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} z-50 overflow-y-auto`}
+                >
+                    <CreateSession
+                        isOpen={isOpen}
+                        toggleSidebar={handleClose}
+                        sessionToEdit={currentSession}
+                    />
+                </div>
+            )}
 
-            {/* Delete Confirmation Dialog */}
-            <Dialog
-                open={openDelete}
-                handler={() => setOpenDelete(false)}
-                className="rounded-lg shadow-lg"
-            >
-                <DialogHeader className="text-gray-800 font-semibold">Confirm Deletion</DialogHeader>
-                <DialogBody className="text-gray-600">
-                    Are you sure you want to delete this session? This action cannot be undone.
-                </DialogBody>
-                <DialogFooter className="space-x-4">
-                    <Button
-                        variant="text"
-                        color="gray"
-                        onClick={() => setOpenDelete(false)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="filled"
-                        color="red"
-                        onClick={deleteSession}
-                    >
-                        Yes, Delete
-                    </Button>
-                </DialogFooter>
-            </Dialog>
+            {canDelete && (
+                <Dialog
+                    open={openDelete}
+                    handler={() => setOpenDelete(false)}
+                    className="rounded-lg shadow-lg"
+                >
+                    <DialogHeader className="text-gray-800 font-semibold">Confirm Deletion</DialogHeader>
+                    <DialogBody className="text-gray-600">{deleteMessage}</DialogBody>
+                    <DialogFooter className="space-x-4">
+                        <Button
+                            variant="text"
+                            color="gray"
+                            onClick={() => setOpenDelete(false)}
+                        >
+                            Cancel
+                        </Button>
+                        {deleteMessage === "Are you sure you want to delete this session? This action cannot be undone." && (
+                            <Button
+                                variant="filled"
+                                color="red"
+                                onClick={deleteSession}
+                            >
+                                Yes, Delete
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </Dialog>
+            )}
         </div>
     );
 }

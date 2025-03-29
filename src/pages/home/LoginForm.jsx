@@ -437,92 +437,185 @@
 // }
 
 
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { auth } from '../../config/firebase';
-import { Form, Input, Checkbox, Button } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+// import { signInWithEmailAndPassword } from 'firebase/auth';
+// import React, { useState } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import { auth } from '../../config/firebase';
+// import { Form, Input, Checkbox, Button } from 'antd';
+// import { UserOutlined, LockOutlined } from '@ant-design/icons';
+
+// export default function LoginForm() {
+//     const [email, setEmail] = useState('');
+//     const [password, setPassword] = useState('');
+//     const navigate = useNavigate();
+
+//     const handleSubmit = async (values) => {
+//         try {
+//             await signInWithEmailAndPassword(auth, values.email, values.password);
+//             console.log('Signed in successfully');
+//             navigate('/'); // Redirect to dashboard or home
+//         } catch (err) {
+//             alert('Admin not registered');
+//             console.error('Admin not registered', err);
+//         }
+//     };
+
+//     return (
+//         // <div className='p-20'>
+//         <div className="flex items-center justify-center min-h-screen bg-gray-100 w-screen">
+//             <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+//                 <h2 className="text-2xl font-semibold text-center text-gray-700 mb-6">Login</h2>
+//                 <Form
+//                     className="login-form"
+//                     onFinish={handleSubmit} // Use onFinish instead of onSubmitCapture
+//                     initialValues={{ email, password }}
+//                 >
+//                     <Form.Item
+//                         label="Email"
+//                         name="email"
+//                         rules={[
+//                             { required: true, message: 'Please enter your email!' },
+//                             { type: 'email', message: 'Enter a valid email!' },
+//                         ]}
+//                     >
+//                         <Input
+//                             prefix={<UserOutlined className="site-form-item-icon" />}
+//                             placeholder="admin@demo.com"
+//                             type="email"
+//                             size="large"
+//                             value={email}
+//                             onChange={(e) => setEmail(e.target.value)}
+//                         />
+//                     </Form.Item>
+
+//                     <Form.Item
+//                         label="Password"
+//                         name="password"
+//                         rules={[{ required: true, message: 'Please enter your password!' }]}
+//                     >
+//                         <Input.Password
+//                             prefix={<LockOutlined className="site-form-item-icon" />}
+//                             placeholder="admin123"
+//                             size="large"
+//                             value={password}
+//                             onChange={(e) => setPassword(e.target.value)}
+//                             className="border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                         />
+//                     </Form.Item>
+
+//                     <Form.Item>
+//                         <div className="flex items-center justify-between">
+//                             <Checkbox>Remember me</Checkbox>
+//                             <a className="text-blue-500 hover:underline" href="/forgetpassword">
+//                                 Forgot password?
+//                             </a>
+//                         </div>
+//                     </Form.Item>
+
+//                     <Form.Item>
+//                         <Button
+//                             type="primary"
+//                             htmlType="submit"
+//                             block
+//                             className="bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+//                         >
+//                             Login
+//                         </Button>
+//                     </Form.Item>
+//                 </Form>
+//             </div>
+//         </div>
+//     );
+// }
+
+
+
+
+
+// src/components/LoginForm.jsx
+import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext'; // Adjust path
+import { Navigate, useNavigate } from 'react-router-dom';
 
 export default function LoginForm() {
+    const { user, login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = async (values) => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
         try {
-            await signInWithEmailAndPassword(auth, values.email, values.password);
-            console.log('Signed in successfully');
-            navigate('/'); // Redirect to dashboard or home
-        } catch (err) {
-            alert('Admin not registered');
-            console.error('Admin not registered', err);
+            await login(email, password);
+            navigate('/users');
+        } catch (error) {
+            setError('Failed to log in: ' + error.message);
         }
     };
 
+    if (user) return <Navigate to="/dashboard" />;
+
     return (
-        // <div className='p-20'>
-        <div className="flex items-center justify-center min-h-screen bg-gray-100 w-screen">
-            <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-                <h2 className="text-2xl font-semibold text-center text-gray-700 mb-6">Login</h2>
-                <Form
-                    className="login-form"
-                    onFinish={handleSubmit} // Use onFinish instead of onSubmitCapture
-                    initialValues={{ email, password }}
-                >
-                    <Form.Item
-                        label="Email"
-                        name="email"
-                        rules={[
-                            { required: true, message: 'Please enter your email!' },
-                            { type: 'email', message: 'Enter a valid email!' },
-                        ]}
-                    >
-                        <Input
-                            prefix={<UserOutlined className="site-form-item-icon" />}
-                            placeholder="admin@demo.com"
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
+                <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
+                    Sign In
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                            Email
+                        </label>
+                        <input
+                            id="email"
+                            name="email"
                             type="email"
-                            size="large"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter your email"
                         />
-                    </Form.Item>
+                    </div>
 
-                    <Form.Item
-                        label="Password"
-                        name="password"
-                        rules={[{ required: true, message: 'Please enter your password!' }]}
-                    >
-                        <Input.Password
-                            prefix={<LockOutlined className="site-form-item-icon" />}
-                            placeholder="admin123"
-                            size="large"
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                            Password
+                        </label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter your password"
                         />
-                    </Form.Item>
+                    </div>
 
-                    <Form.Item>
-                        <div className="flex items-center justify-between">
-                            <Checkbox>Remember me</Checkbox>
-                            <a className="text-blue-500 hover:underline" href="/forgetpassword">
-                                Forgot password?
-                            </a>
-                        </div>
-                    </Form.Item>
+                    {error && (
+                        <div className="text-red-600 text-sm text-center">{error}</div>
+                    )}
 
-                    <Form.Item>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            block
-                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-                        >
-                            Login
-                        </Button>
-                    </Form.Item>
-                </Form>
+                    <button
+                        type="submit"
+                        className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+                    >
+                        Sign In
+                    </button>
+                </form>
+
+                {/* Link to registration page */}
+                <div className="mt-4 text-center">
+                    <p className="text-sm text-gray-600">
+                        Don’t have an account?{' '}
+                        <a href="/register" className="text-blue-500 hover:underline">Register</a>
+                    </p>
+                </div>
             </div>
         </div>
     );

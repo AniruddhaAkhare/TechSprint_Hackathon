@@ -1221,10 +1221,10 @@
 // // //     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
 // // //       if (authUser) {
 // // //         console.log("Authenticated user:", authUser.email); // Debugging
-  
+
 // // //         const userDocRef = doc(db, "Instructor", authUser.email);
 // // //         const userDocSnap = await getDoc(userDocRef);
-  
+
 // // //         if (userDocSnap.exists()) {
 // // //           const userData = userDocSnap.data();
 // // //           console.log("Fetched user data:", userData); // Debugging
@@ -1242,7 +1242,7 @@
 // // //         setUser(null);
 // // //       }
 // // //     });
-  
+
 // // //     return () => unsubscribe();
 // // //   }, [auth, db]);
 
@@ -1937,74 +1937,57 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 import { FaGraduationCap, FaTachometerAlt, FaBook, FaClipboardList, FaCalendarAlt, FaUsers, FaUserGraduate, FaQuestionCircle, FaMoneyBillAlt, FaUser, FaEllipsisV } from 'react-icons/fa';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const auth = getAuth();
   const db = getFirestore();
-  const [user, setUser] = useState(null);
+  const { user, rolePermissions } = useAuth(); // Use AuthContext
   const [showMenu, setShowMenu] = useState(false);
   const [instituteLogo, setInstituteLogo] = useState('/img/fireblaze.jpg'); // Default logo
-  const [logoError, setLogoError] = useState(null); // State to track logo loading errors
+  const [logoError, setLogoError] = useState(null);
+
+  // Permission checks
+  const canViewCourses = rolePermissions.Course?.display || false;
+  const canViewInstitute = rolePermissions.instituteSetup?.display || false;
+  const canViewCurriculum = rolePermissions.Curriculum?.display || false;
+  const canViewBatches = rolePermissions.Batch?.display || false;
+  const canViewSessions = rolePermissions.Sessions?.display || false;
+  const canViewAttendance = rolePermissions.attendance?.display || false;
+  const canViewAssignments = rolePermissions.assignments?.display || false;
+  const canViewPerformance = rolePermissions.performance?.display || false;
+  const canViewUsers = rolePermissions.Users?.display || false;
+  const canViewStudents = rolePermissions.student?.display || false;
+  const canViewInstructors = rolePermissions.Instructor?.display || false;
+  const canViewRoles = rolePermissions.roles?.display || false; // Assuming roles fall under users
+  const canViewFees = rolePermissions.reports?.display || false;
+  const canViewInvoices = rolePermissions.invoice?.display || false;
+  const canViewFee = rolePermissions.fee?.display || false;
+  const canViewFinancePartners = rolePermissions.FinancePartner?.display || false;
 
   useEffect(() => {
-    // Fetch user data
-    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-      if (authUser) {
-        console.log("Authenticated user:", authUser.email);
-
-        const userDocRef = doc(db, "Instructor", authUser.email);
-        const userDocSnap = await getDoc(userDocRef);
-
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
-          console.log("Fetched user data:", userData);
-          setUser({
-            f_name: userData.f_name || '',
-            l_name: userData.l_name || '',
-            initials: `${userData.f_name?.charAt(0) || ''}${userData.l_name?.charAt(0) || ''}`.toUpperCase(),
-          });
-        } else {
-          console.log("No user document found in Firestore.");
-          setUser({ f_name: "User", l_name: "", initials: "U" });
-        }
-      } else {
-        console.log("No authenticated user.");
-        setUser(null);
-      }
-    });
-
-    // Fetch institute logo
     const fetchInstituteLogo = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "instituteSetup"));
         if (!querySnapshot.empty) {
           const instituteData = querySnapshot.docs[0].data();
-          console.log("Fetched institute data:", instituteData); // Debug: Log the fetched data
           if (instituteData.logoUrl) {
-            console.log("Setting institute logo to:", instituteData.logoUrl); // Debug: Log the logo URL
             setInstituteLogo(instituteData.logoUrl);
-          } else {
-            console.log("No logoUrl found in instituteSetup document.");
           }
-        } else {
-          console.log("No documents found in instituteSetup collection.");
         }
       } catch (error) {
         console.error("Error fetching institute logo:", error);
-        setLogoError("Failed to fetch institute logo.");
+        setLogoError("Failed to fetch institute logo due to permissions or data issue.");
       }
     };
 
-    fetchInstituteLogo();
-
-    return () => unsubscribe();
-  }, [auth, db]);
+    if (user) fetchInstituteLogo(); // Only fetch if user is authenticated
+  }, [user, db]);
 
   const toggleMenu = () => {
-    console.log('Toggling menu, current showMenu:', showMenu);
     setShowMenu(!showMenu);
   };
 
@@ -2018,17 +2001,13 @@ const Sidebar = () => {
     }
   };
 
-  const handleLogin = () => {
-    setShowMenu(false);
-    navigate('/login');
-  };
-
-  // Handle image load error
   const handleImageError = (e) => {
     console.error("Error loading image:", instituteLogo);
     setLogoError("Failed to load logo image.");
     e.target.src = '/img/fireblaze.jpg'; // Fallback to default logo
   };
+
+  if (!user) return null; // Don't render sidebar if no user is logged in
 
   return (
     <div className="sidebar">
@@ -2038,7 +2017,7 @@ const Sidebar = () => {
           alt="Institute Logo"
           className="logo-icon"
           onError={handleImageError}
-          onLoad={() => setLogoError(null)} // Clear error on successful load
+          onLoad={() => setLogoError(null)}
         />
         <span>Fireblaze</span>
         {logoError && <div style={{ color: 'red', fontSize: '12px' }}>{logoError}</div>}
@@ -2052,138 +2031,166 @@ const Sidebar = () => {
           </li>
         </Link>
 
+        {canViewInstitute && 
         <Link to="/instituteSetup" className="nav-link">
           <li className="nav-item">
             <i className="fa-solid fa-building-columns nav-icon"></i>
             <span>Institute Setup</span>
           </li>
         </Link>
+        }
 
         <li className="nav-section">Academic</li>
-        <Link to="/courses" className="nav-link">
-          <li className="nav-item">
-            <FaBook className="nav-icon" />
-            <span>Course Management</span>
-          </li>
-        </Link>
+        {canViewCourses && (
+          <Link to="/courses" className="nav-link">
+            <li className="nav-item">
+              <FaBook className="nav-icon" />
+              <span>Course Management</span>
+            </li>
+          </Link>
+         )} 
 
-        <Link to="/curriculum" className="nav-link">
-          <li className="nav-item">
-            <FaClipboardList className="nav-icon" />
-            <span>Curriculum Management</span>
-          </li>
-        </Link>
+        {canViewCurriculum && (
+          <Link to="/curriculum" className="nav-link">
+            <li className="nav-item">
+              <FaClipboardList className="nav-icon" />
+              <span>Curriculum Management</span>
+            </li>
+          </Link>
+        )}
 
-        <Link to="/batches" className="nav-link">
-          <li className="nav-item">
-            <FaCalendarAlt className="nav-icon" />
-            <span>Batch Management</span>
-          </li>
-        </Link>
+        {canViewBatches && (
+          <Link to="/batches" className="nav-link">
+            <li className="nav-item">
+              <FaCalendarAlt className="nav-icon" />
+              <span>Batch Management</span>
+            </li>
+          </Link>
+        )}
 
-        <Link to="/sessions" className="nav-link">
-          <li className="nav-item">
-            <FaCalendarAlt className="nav-icon" />
-            <span>Session Management</span>
-          </li>
-        </Link>
+        {canViewSessions && (
+          <Link to="/sessions" className="nav-link">
+            <li className="nav-item">
+              <FaCalendarAlt className="nav-icon" />
+              <span>Session Management</span>
+            </li>
+          </Link>
+        )}
 
-        <Link to="/attendance" className="nav-link">
-          <li className="nav-item">
-            <i className="fa-solid fa-clipboard-user nav-icon"></i>
-            <span>Attendance Management</span>
-          </li>
-        </Link>
+        {canViewAttendance && (
+          <Link to="/attendance" className="nav-link">
+            <li className="nav-item">
+              <i className="fa-solid fa-clipboard-user nav-icon"></i>
+              <span>Attendance Management</span>
+            </li>
+          </Link>
+        )}
 
-        <Link to="/assignment" className="nav-link">
-          <li className="nav-item">
-            <i className="fa-solid fa-book nav-icon"></i>
-            <span>Assignment Management</span>
-          </li>
-        </Link>
+        {canViewAssignments && (
+          <Link to="/assignment" className="nav-link">
+            <li className="nav-item">
+              <i className="fa-solid fa-book nav-icon"></i>
+              <span>Assignment Management</span>
+            </li>
+          </Link>
+        )}
 
-        <Link to="/addPerformance" className="nav-link">
-          <li className="nav-item">
-            <i className="fa-solid fa-chart-simple nav-icon"></i>
-            <span>Performance Management</span>
-          </li>
-        </Link>
+        {canViewPerformance && (
+          <Link to="/addPerformance" className="nav-link">
+            <li className="nav-item">
+              <i className="fa-solid fa-chart-simple nav-icon"></i>
+              <span>Performance Management</span>
+            </li>
+          </Link>
+        )}
 
         <li className="nav-section">Users</li>
-        <li className="nav-item">
-          <FaUsers className="nav-icon" />
-          <span>User Management</span>
-        </li>
-
-        <Link to="/studentdetails" className="nav-link">
+        {canViewUsers && (
+          <Link to="/users" className="nav-link">
           <li className="nav-item">
-            <FaUserGraduate className="nav-icon" />
-            <span>Learner Management</span>
+            <FaUsers className="nav-icon" />
+            <span>User Management</span>
           </li>
-        </Link>
+          </Link>
+        )}
+
+        {canViewStudents && (
+          <Link to="/studentdetails" className="nav-link">
+            <li className="nav-item">
+              <FaUserGraduate className="nav-icon" />
+              <span>Learner Management</span>
+            </li>
+          </Link>
+        )}
 
         <li className="nav-item">
           <FaQuestionCircle className="nav-icon" />
           <span>Enquiry Management</span>
         </li>
 
-        <Link to="/instructor" className="nav-link">
-          <li className="nav-item">
-            <FaUserGraduate className="nav-icon" />
-            <span>Staff Management</span>
-          </li>
-        </Link>
+        {canViewInstructors && (
+          <Link to="/instructor" className="nav-link">
+            <li className="nav-item">
+              <FaUserGraduate className="nav-icon" />
+              <span>Staff Management</span>
+            </li>
+          </Link>
+        )}
 
-        <Link to="/roles" className="nav-link">
-          <li className="nav-item">
-            <i className="fa-solid fa-user nav-icon"></i>
-            <span>Roles Management</span>
-          </li>
-        </Link>
+        {canViewRoles && (
+          <Link to="/roles" className="nav-link">
+            <li className="nav-item">
+              <i className="fa-solid fa-user nav-icon"></i>
+              <span>Roles Management</span>
+            </li>
+          </Link>
+        )}
 
         <li className="nav-section">Finance</li>
-        <Link to="/reports" className="nav-link">
-          <li className="nav-item">
-            <FaMoneyBillAlt className="nav-icon" />
-            <span>Fee Management</span>
-          </li>
-        </Link>
+        {canViewFee && (
+          <Link to="/reports" className="nav-link">
+            <li className="nav-item">
+              <FaMoneyBillAlt className="nav-icon" />
+              <span>Fee Management</span>
+            </li>
+          </Link>
+        )}
 
-        <Link to="/invoices" className="nav-link">
-          <li className="nav-item">
-            <i className="fa-solid fa-money-bill-trend-up nav-icon"></i>
-            <span>Invoice Management</span>
-          </li>
-        </Link>
+        {canViewInvoices && (
+          <Link to="/invoices" className="nav-link">
+            <li className="nav-item">
+              <i className="fa-solid fa-money-bill-trend-up nav-icon"></i>
+              <span>Invoice Management</span>
+            </li>
+          </Link>
+        )}
 
-        <Link to="/financePartners" className="nav-link">
-          <li className="nav-item">
-            <i className="fa-solid fa-money-check-dollar nav-icon"></i>
-            <span>Finance Partner</span>
-          </li>
-        </Link>
+        {canViewFinancePartners && (
+          <Link to="/financePartners" className="nav-link">
+            <li className="nav-item">
+              <i className="fa-solid fa-money-check-dollar nav-icon"></i>
+              <span>Finance Partner</span>
+            </li>
+          </Link>
+        )}
 
         <li className="nav-section">Setting</li>
 
         <div className="admin-profile" onClick={toggleMenu}>
           <FaUser className="nav-icon" />
-          <span>{user ? `${user.f_name} ${user.l_name}` : "Admin Profile"}</span>
-          <span className="admin-initials">{user ? user.initials : "AD"}</span>
+          <span>{user?.displayName || "Admin Profile"}</span>
+          <span className="admin-initials">
+            {user?.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : "AD"}
+          </span>
           <FaEllipsisV className="menu-icon" />
 
           <div className={`dropdown-menu ${showMenu ? "show-dropdown" : ""}`}>
             <Link to="/settings" className="dropdown-item nav-link" onClick={() => setShowMenu(false)}>
               Settings
             </Link>
-            {user ? (
-              <div className="dropdown-item" onClick={handleLogout}>
-                Logout
-              </div>
-            ) : (
-              <Link to="/login" className="dropdown-item nav-link" onClick={() => setShowMenu(false)}>
-                Login
-              </Link>
-            )}
+            <div className="dropdown-item" onClick={handleLogout}>
+              Logout
+            </div>
           </div>
         </div>
       </ul>

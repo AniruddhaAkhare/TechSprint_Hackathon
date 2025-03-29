@@ -1,14 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
-import { db } from '../../../../config/firebase'; // Import Firestore
-import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore'; // Firestore methods
+import { db } from '../../../../config/firebase';
+import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../../../../context/AuthContext';
 
 const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
+  const { rolePermissions } = useAuth();
+
+  // Permission checks for 'Curriculum' section
+  const canCreate = rolePermissions.Curriculum?.create || false;
+  const canUpdate = rolePermissions.Curriculum?.update || false;
+
   // State for form data
   const [formData, setFormData] = useState({
     name: '',
-    branch: 'Fireblaze', // Default value
-    maxViewDuration: 'Unlimited', // Default value
+    branch: 'Fireblaze',
+    maxViewDuration: 'Unlimited',
   });
 
   // State for loading and error handling
@@ -24,7 +30,6 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
         maxViewDuration: curriculumToEdit.maxViewDuration || 'Unlimited',
       });
     } else {
-      // Reset form for adding new curriculum
       setFormData({
         name: '',
         branch: 'Fireblaze',
@@ -47,34 +52,40 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
       return;
     }
 
+    // Check permissions before proceeding
+    if (curriculumToEdit && !canUpdate) {
+      alert("You do not have permission to update curriculums.");
+      return;
+    }
+    if (!curriculumToEdit && !canCreate) {
+      alert("You do not have permission to create curriculums.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
       if (curriculumToEdit) {
-        // Update existing curriculum
         const curriculumRef = doc(db, 'curriculums', curriculumToEdit.id);
         await updateDoc(curriculumRef, {
           name: formData.name,
           branch: formData.branch,
           maxViewDuration: formData.maxViewDuration,
         });
-        // Pass the updated data to the parent component
         onSubmit({
           id: curriculumToEdit.id,
           ...formData,
           sections: curriculumToEdit.sections || 0,
         });
       } else {
-        // Add new curriculum
         const docRef = await addDoc(collection(db, 'curriculums'), {
           name: formData.name,
           branch: formData.branch,
           maxViewDuration: formData.maxViewDuration,
-          sections: 0, // Default value for sections
+          sections: 0,
           createdAt: serverTimestamp(),
         });
-        // Pass the form data to the parent component, including the Firestore document ID
         onSubmit({
           id: docRef.id,
           ...formData,
@@ -82,7 +93,6 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
         });
       }
 
-      // Reset form and close modal
       setFormData({ name: '', branch: 'Fireblaze', maxViewDuration: 'Unlimited' });
       setLoading(false);
       onClose();
@@ -93,13 +103,28 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
     }
   };
 
-  // If the modal is not open, return null
   if (!isOpen) return null;
+
+  // If user lacks permission to create or update, show access denied message
+  if ((!curriculumToEdit && !canCreate) || (curriculumToEdit && !canUpdate)) {
+    return (
+      <div style={styles.modalOverlay}>
+        <div style={styles.modal}>
+          <div style={styles.modalHeader}>
+            <h3>{curriculumToEdit ? 'Edit Curriculum' : 'Add Curriculum'}</h3>
+            <button onClick={onClose} style={styles.closeButton}>✕</button>
+          </div>
+          <div style={styles.errorMessage}>
+            Access Denied: You do not have permission to {curriculumToEdit ? 'update' : 'create'} curriculums.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.modalOverlay}>
       <div style={styles.modal}>
-        {/* Modal Header */}
         <div style={styles.modalHeader}>
           <h3>{curriculumToEdit ? 'Edit Curriculum' : 'Add Curriculum'}</h3>
           <button onClick={onClose} style={styles.closeButton} disabled={loading}>
@@ -107,9 +132,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
-          {/* Name Field */}
           <div style={styles.formGroup}>
             <label style={styles.label}>
               Name <span style={styles.required}>*</span>
@@ -127,7 +150,6 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
             <span style={styles.charCount}>{formData.name.length}/100</span>
           </div>
 
-          {/* Branch Field */}
           <div style={styles.formGroup}>
             <label style={styles.label}>Branch</label>
             <select
@@ -142,7 +164,6 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
             </select>
           </div>
 
-          {/* Maximum View Duration Field */}
           <div style={styles.formGroup}>
             <label style={styles.label}>Maximum View Duration</label>
             <div>
@@ -173,10 +194,8 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
             </div>
           </div>
 
-          {/* Error Message */}
           {error && <div style={styles.errorMessage}>{error}</div>}
 
-          {/* Form Actions */}
           <div style={styles.formActions}>
             <button
               type="button"
