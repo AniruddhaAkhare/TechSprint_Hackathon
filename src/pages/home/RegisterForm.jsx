@@ -16,11 +16,9 @@ export default function RegisterForm() {
         setError('');
 
         try {
-            // Create user with email and password
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Create user data to store in Firestore
             const userData = {
                 displayName: name,
                 email: email,
@@ -28,10 +26,8 @@ export default function RegisterForm() {
                 createdAt: new Date().toISOString(),
             };
 
-            // Store user data in Firestore with user UID as document ID
             await setDoc(doc(db, 'Users', user.uid), userData);
 
-            // Navigate to a different page after registration (e.g. `/users`)
             navigate('/dashboard');
         } catch (error) {
             setError('Failed to register: ' + error.message);
