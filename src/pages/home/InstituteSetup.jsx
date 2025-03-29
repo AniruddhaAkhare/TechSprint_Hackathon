@@ -290,8 +290,6 @@ const InstituteSetup = () => {
     }
   };
 
-<<<<<<< HEAD
-=======
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -378,7 +376,6 @@ const InstituteSetup = () => {
   //   }));
   // };
 
->>>>>>> 719bf92d345788f0edf016820a13578e59b9d9bb
   const handleBranchChange = (e) => {
     if (!canUpdate) return; // Prevent updates if no permission
     const { name, value, type, checked } = e.target;
@@ -644,9 +641,7 @@ const InstituteSetup = () => {
             </>
           )}
 
-<<<<<<< HEAD
           {/* Other steps similarly modified */}
-=======
     {/* {activeStep === "Contact Information" && (
             <>
               <div className="edit-section">
@@ -886,7 +881,6 @@ const InstituteSetup = () => {
               </form>
             </>
           )}
->>>>>>> 719bf92d345788f0edf016820a13578e59b9d9bb
         </div>
       </div>
 
@@ -906,9 +900,7 @@ const InstituteSetup = () => {
                   required
                 />
               </div>
-<<<<<<< HEAD
               {/* Other branch form fields */}
-=======
               <div className="form-group">
                 <label>Address Line 1 <span className="form-group-required">*</span></label>
                 <input
@@ -1033,7 +1025,6 @@ const InstituteSetup = () => {
                   Center is active
                 </label>
               </div>
->>>>>>> 719bf92d345788f0edf016820a13578e59b9d9bb
               <div className="modal-actions">
                 <button type="button" onClick={() => setShowModal(false)}>
                   Cancel
