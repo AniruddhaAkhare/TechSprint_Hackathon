@@ -62,11 +62,16 @@ export default function Batches() {
         id: doc.id,
         ...doc.data(),
       }));
-
+  
       const currentDate = new Date();
+      
       const updatedBatches = await Promise.all(
         batchData.map(async (batch) => {
-          const batchEndDate = new Date(batch.endDate);
+          // Convert endDate safely: if it's a firestore Timestamp, use .toDate(), otherwise use new Date()
+          const batchEndDate = batch.endDate && batch.endDate.toDate 
+            ? batch.endDate.toDate() 
+            : new Date(batch.endDate);
+            
           if (currentDate > batchEndDate && batch.status !== "Inactive") {
             const batchRef = doc(db, "Batch", batch.id);
             await updateDoc(batchRef, { status: "Inactive" });
@@ -75,12 +80,13 @@ export default function Batches() {
           return batch;
         })
       );
-
+  
       setBatches(updatedBatches);
     } catch (err) {
       console.error("Error fetching batches:", err);
     }
   };
+  
 
   const applyFilters = () => {
     let filteredBatches = [...batches];

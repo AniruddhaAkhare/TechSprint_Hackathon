@@ -292,6 +292,7 @@ import FinancePartner from './pages/components/FinancePartner/FinancePartner.jsx
 import AddFinancePartner from './pages/components/FinancePartner/AddFinancePartner.jsx';
 import Attendance from './StudentInformation/Attendance.jsx';
 import User from './pages/components/UsersAndRoles/User.jsx';
+import LandingPage from './pages/Landing/LandingPage.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth(); // Use context instead of local state
@@ -331,7 +332,7 @@ export default function App() {
             )} */}
             <Routes>
               {/* Public Routes */}
-              <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Welcome />} />
+              <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
               <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/dashboard" />} />
               <Route path="/register" element={!user ? <RegisterForm /> : <Navigate to="/dashboard" />} />
               <Route path="/forgetPassword" element={!user ? <ForgetPasswordForm /> : <Navigate to="/dashboard" />} />
@@ -339,6 +340,12 @@ export default function App() {
               <Route path="/roles" element={<ProtectedRoute permissionSection="roles"><Roles /></ProtectedRoute>} />
               
               {/* Protected Routes */}
+
+
+              <Route
+                path="/landing"
+                element={<ProtectedRoute><LandingPage /></ProtectedRoute>}
+              />
 
 
               <Route path="/instituteSetup" element={<ProtectedRoute permissionSection="instituteSetup"><InstituteSetup /></ProtectedRoute>} />

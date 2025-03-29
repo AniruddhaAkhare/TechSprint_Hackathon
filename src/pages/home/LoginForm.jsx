@@ -534,29 +534,43 @@
 
 // src/components/LoginForm.jsx
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext'; // Adjust path
+import { useAuth } from '../../context/AuthContext'; // Make sure this path is correct
 import { Navigate, useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../config/firebase';
+
 
 export default function LoginForm() {
     const { user, login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setIsLoading(true);
 
         try {
-            await login(email, password);
-            navigate('/users');
+            await signInWithEmailAndPassword(auth, email, password);
+            // await (email, password);
+            // Only navigate if login is successful
+            // Remove the navigate('/users') if you want to use the redirect below
+            navigate('/dashboard');
         } catch (error) {
-            setError('Failed to log in: ' + error.message);
+            console.error('Login error:', error);
+            setError(error.message || 'Failed to log in. Please check your credentials and try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    if (user) return <Navigate to="/dashboard" />;
+    // If user is already logged in, redirect to dashboard
+    if (user) {
+        return <Navigate to="/dashboard" replace />;
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -564,6 +578,13 @@ export default function LoginForm() {
                 <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
                     Sign In
                 </h2>
+                
+                {error && (
+                    <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
+                        {error}
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -597,22 +618,18 @@ export default function LoginForm() {
                         />
                     </div>
 
-                    {error && (
-                        <div className="text-red-600 text-sm text-center">{error}</div>
-                    )}
-
                     <button
                         type="submit"
-                        className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+                        disabled={isLoading}
+                        className={`w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
                     >
-                        Sign In
+                        {isLoading ? 'Signing In...' : 'Sign In'}
                     </button>
                 </form>
 
-                {/* Link to registration page */}
                 <div className="mt-4 text-center">
                     <p className="text-sm text-gray-600">
-                        Don’t have an account?{' '}
+                        Don't have an account?{' '}
                         <a href="/register" className="text-blue-500 hover:underline">Register</a>
                     </p>
                 </div>
@@ -620,3 +637,4 @@ export default function LoginForm() {
         </div>
     );
 }
+                        

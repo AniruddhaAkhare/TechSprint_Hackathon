@@ -7,15 +7,15 @@ import { FaBook, FaEdit, FaTrash } from "react-icons/fa";
 import { s3Client } from "../../config/aws-config";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { debugS3Config } from "../../config/aws-config";
-import { useAuth } from "../../context/AuthContext"; // Assuming this is where useAuth comes from
+import { useAuth } from "../../context/AuthContext"; 
 
 const InstituteSetup = () => {
   const navigate = useNavigate();
-  const { rolePermissions } = useAuth(); // Fetch permissions from useAuth hook
+  const { rolePermissions } = useAuth(); 
   const [activeStep, setActiveStep] = useState("Basic Information");
   const [showModal, setShowModal] = useState(false);
-  const [countryCode, setCountryCode] = useState("+91"); // Renamed from centerCode to countryCode
-  const [branchCountryCode, setBranchCountryCode] = useState("+91"); // Separate state for branch modal
+  const [countryCode, setCountryCode] = useState("+91"); 
+  const [branchCountryCode, setBranchCountryCode] = useState("+91"); 
   const [formData, setFormData] = useState({
     instituteName: "",
     instituteType: "",

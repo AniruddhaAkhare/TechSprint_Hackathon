@@ -6,11 +6,10 @@ import { useNavigate } from "react-router-dom";
 const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
   const navigate = useNavigate();
 
-  // State variables
   const [batchName, setBatchName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [status, setStatus] = useState("Active");
+  const [status, setStatus] = useState(batch?.status || "Active");
 
   const [centers, setCenters] = useState([]);
   const [selectedCenters, setSelectedCenters] = useState([]);
@@ -94,7 +93,7 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
       setBatchName(batch.batchName || "");
       setStartDate(batch.startDate || "");
       setEndDate(batch.endDate || "");
-      setStatus(batch.status || "Active");
+      setStatus(batch?.status || "Active");
       setSelectedCenters(batch.centers || []);
       setAvailableCenters(centers.filter((c) => !batch.centers?.includes(c.id)));
       setSelectedCourses(batch.courses || []);
@@ -110,6 +109,11 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
     }
   }, [batch, centers, courses, curriculum, batchManager, batchFaculty, students]);
 
+
+  const handleStatusChange = (newStatus) => {
+    setStatus(newStatus);
+  };
+
   // Handler functions
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -118,26 +122,30 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
       batchName: capitalizeFirstLetter(batchName),
       startDate,
       endDate,
-      status,
+      status: status,
       centers: selectedCenters,
       courses: selectedCourses,
       curriculum: selectedCurriculum,
       batchManager: selectedBatchManager,
       batchFaculty: selectedBatchFaculty,
       students: selectedStudents,
-      createdAt: serverTimestamp(),
+      lastUpdated: serverTimestamp(),
     };
 
     try {
       let batchId;
       if (batch) {
-        await updateDoc(doc(db, "Batch", batch.id), batchData);
+        await updateDoc(doc(db, "Batch", batch.id),{ ...batchData, statusChangeDate: serverTimestamp(),});
         batchId = batch.id;
         alert("Batch updated successfully!");
       } else {
-        const docRef = await addDoc(collection(db, "Batch"), batchData);
+        const docRef = await addDoc(collection(db, "Batch"), {...batchData, caretedAt: serverTimestamp(),});
         batchId = docRef.id;
         alert("Batch created successfully!");
+      }
+
+      if (typeof onStatusChange === 'function') {
+        onStatusChange(status);
       }
 
       for (const studentId of selectedStudents) {
@@ -333,7 +341,7 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch }) => {
             </label>
             <select
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => handleStatusChange(e.target.value)}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
             >
