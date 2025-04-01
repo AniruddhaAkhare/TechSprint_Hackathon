@@ -310,3 +310,38 @@
     background: #f5f5f5;
   }
   
+
+  
+/* Trial Banner Styling */
+.trial-banner {
+  background-color: #6b46c1; /* Purple background */
+  color: white;
+  padding: 10px 15px;
+  margin: 10px 0;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  position: sticky; 
+  bottom: 0; 
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  width: 100%; /* Ensures full width */
+    z-index: 10; 
+}
+
+.trial-banner span {
+  flex: 1;
+}
+
+.choose-plan-link {
+  color: #f6ad55; /* Orange color for the link */
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1px dashed #f6ad55; /* Dashed underline */
+}
+
+.choose-plan-link:hover {
+  color: #ed8936;
+  border-bottom: 1px dashed #ed8936;
+}
