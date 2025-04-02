@@ -22,7 +22,7 @@ export default function RegisterForm() {
             const userData = {
                 displayName: name,
                 email: email,
-                role: 'kPlDMnmI8YBXQLhJLas1', // Default role ID
+                role: 'nBDIYo7v1xUOxn97RcXP', // Admin role ID
                 createdAt: new Date().toISOString(),
             };
 

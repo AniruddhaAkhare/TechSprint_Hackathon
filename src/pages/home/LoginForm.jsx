@@ -567,7 +567,6 @@ export default function LoginForm() {
         }
     };
 
-    // If user is already logged in, redirect to dashboard
     if (user) {
         return <Navigate to="/dashboard" replace />;
     }

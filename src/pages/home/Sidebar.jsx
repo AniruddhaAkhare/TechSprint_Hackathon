@@ -1945,12 +1945,11 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const auth = getAuth();
   const db = getFirestore();
-  const { user, rolePermissions } = useAuth(); // Use AuthContext
+  const { user, rolePermissions } = useAuth(); 
   const [showMenu, setShowMenu] = useState(false);
-  const [instituteLogo, setInstituteLogo] = useState('/img/fireblaze.jpg'); // Default logo
+  const [instituteLogo, setInstituteLogo] = useState('/img/fireblaze.jpg'); 
   const [logoError, setLogoError] = useState(null);
 
-  // Permission checks
   const canViewCourses = rolePermissions.Course?.display || false;
   const canViewInstitute = rolePermissions.instituteSetup?.display || false;
   const canViewCurriculum = rolePermissions.Curriculum?.display || false;
@@ -1962,7 +1961,7 @@ const Sidebar = () => {
   const canViewUsers = rolePermissions.Users?.display || false;
   const canViewStudents = rolePermissions.student?.display || false;
   const canViewInstructors = rolePermissions.Instructor?.display || false;
-  const canViewRoles = rolePermissions.roles?.display || false; // Assuming roles fall under users
+  const canViewRoles = rolePermissions.roles?.display || false; 
   const canViewFees = rolePermissions.reports?.display || false;
   const canViewInvoices = rolePermissions.invoice?.display || false;
   const canViewFee = rolePermissions.fee?.display || false;
@@ -1984,7 +1983,7 @@ const Sidebar = () => {
       }
     };
 
-    if (user) fetchInstituteLogo(); // Only fetch if user is authenticated
+    if (user) fetchInstituteLogo(); 
   }, [user, db]);
 
   const toggleMenu = () => {
@@ -2004,10 +2003,10 @@ const Sidebar = () => {
   const handleImageError = (e) => {
     console.error("Error loading image:", instituteLogo);
     setLogoError("Failed to load logo image.");
-    e.target.src = '/img/fireblaze.jpg'; // Fallback to default logo
+    e.target.src = '/img/fireblaze.jpg'; 
   };
 
-  if (!user) return null; // Don't render sidebar if no user is logged in
+  if (!user) return null; 
 
   return (
     <div className="sidebar">
@@ -2131,7 +2130,7 @@ const Sidebar = () => {
         {canViewInstructors && (
           <Link to="/instructor" className="nav-link">
             <li className="nav-item">
-              <FaUserGraduate className="nav-icon" />
+              <FaUserGraduate className="nav-icon" /> 
               <span>Staff Management</span>
             </li>
           </Link>
@@ -2178,7 +2177,7 @@ const Sidebar = () => {
 
         <div className="admin-profile" onClick={toggleMenu}>
           <FaUser className="nav-icon" />
-          <span>{user?.displayName || "Admin Profile"}</span>
+          <span>{user?.displayName || "User Profile"}</span>
           <span className="admin-initials">
             {user?.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : "AD"}
           </span>

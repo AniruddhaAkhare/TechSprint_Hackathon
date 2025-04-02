@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { db, auth } from '../../../config/firebase'; // Ensure auth is imported
-import { collection, getDocs, doc, setDoc, addDoc, deleteDoc } from 'firebase/firestore';
+import { db, auth } from '../../../config/firebase';
+import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { useAuth } from '../../../context/AuthContext';
 
 export default function User() {
-  const { user, rolePermissions } = useAuth();
+  const { user: currentUser, rolePermissions } = useAuth();
 
   // Permission checks
   const canDisplay = rolePermissions.Users?.display || false;
@@ -17,22 +18,28 @@ export default function User() {
   const [roles, setRoles] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRoleId, setSelectedRoleId] = useState('');
-  const [newUser, setNewUser] = useState({ uid: '', displayName: '', email: '', role: '' }); // Added uid
+  const [newUser, setNewUser] = useState({ 
+    name: '', 
+    email: '', 
+    password: '', 
+    role: '' 
+  });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-  const [authUsers, setAuthUsers] = useState([]); // To store users for dropdown
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       if (!canDisplay) return;
 
       try {
+        setLoading(true);
         // Fetch existing Users collection
         const usersSnapshot = await getDocs(collection(db, 'Users'));
         const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setUsers(usersData);
-        setAuthUsers(usersData); // Use Users collection as source for dropdown
 
         // Fetch roles
         const rolesSnapshot = await getDocs(collection(db, 'roles'));
@@ -40,6 +47,9 @@ export default function User() {
         setRoles(rolesData);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setError('Failed to fetch data');
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -55,7 +65,11 @@ export default function User() {
       return;
     }
     try {
-      await setDoc(doc(db, 'Users', selectedUser.id), { role: selectedRoleId }, { merge: true });
+      await setDoc(
+        doc(db, 'Users', selectedUser.id), 
+        { role: selectedRoleId }, 
+        { merge: true }
+      );
       setUsers(users.map(u => u.id === selectedUser.id ? { ...u, role: selectedRoleId } : u));
       setSelectedUser(null);
       setSelectedRoleId('');
@@ -66,36 +80,47 @@ export default function User() {
   };
 
   const handleCreateUser = async () => {
-    if (!newUser.uid || !newUser.role) {
-      alert('Please select a user and a role.');
+    if (!newUser.name || !newUser.email || !newUser.password || !newUser.role) {
+      alert('Please fill all fields.');
       return;
     }
     if (!canCreate) {
       alert('You do not have permission to create users.');
       return;
     }
-    try {
-      // Check if user already exists in Users collection
-      const existingUser = users.find(u => u.id === newUser.uid);
-      if (existingUser) {
-        alert('This user already exists in the database.');
-        return;
-      }
 
+    try {
+      setLoading(true);
+      setError('');
+
+      // 1. Create authentication user
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        newUser.email,
+        newUser.password
+      );
+      
+      const authUser = userCredential.user;
+      
+      // 2. Create user document in Firestore with same UID
       const userData = {
-        displayName: newUser.displayName,
+        displayName: newUser.name,
         email: newUser.email,
         role: newUser.role,
         createdAt: new Date().toISOString(),
       };
 
-      await setDoc(doc(db, 'Users', newUser.uid), userData); // Use uid as document ID
-      setUsers([...users, { id: newUser.uid, ...userData }]);
-      setNewUser({ uid: '', displayName: '', email: '', role: '' });
+      await setDoc(doc(db, 'Users', authUser.uid), userData);
+      
+      // 3. Update local state
+      setUsers([...users, { id: authUser.uid, ...userData }]);
+      setNewUser({ name: '', email: '', password: '', role: '' });
       setIsCreateModalOpen(false);
     } catch (error) {
       console.error('Error creating user:', error);
-      alert('Failed to create user. Please try again.');
+      setError(error.message || 'Failed to create user');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,30 +129,32 @@ export default function User() {
       if (!canDelete) alert('You do not have permission to delete users.');
       return;
     }
+    
     try {
+      setLoading(true);
+      
       await deleteDoc(doc(db, 'Users', userToDelete.id));
+      
+      try {
+        
+        await deleteUser(auth.currentUser); 
+      } catch (authError) {
+        console.warn('Could not delete auth user:', authError);
+      }
+      
+      // 3. Update local state
       setUsers(users.filter(u => u.id !== userToDelete.id));
       setIsDeleteModalOpen(false);
       setUserToDelete(null);
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Failed to delete user. Please try again.');
+      setError(error.message || 'Failed to delete user');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUserSelect = (uid) => {
-    const selected = authUsers.find(u => u.id === uid);
-    if (selected) {
-      setNewUser({
-        uid: selected.id,
-        displayName: selected.displayName || '',
-        email: selected.email || '',
-        role: newUser.role, // Preserve role selection
-      });
-    }
-  };
-
-  if (!user) return <Navigate to="/login" />;
+  if (!currentUser) return <Navigate to="/login" />;
   if (!canDisplay) {
     return (
       <div className="p-4 text-red-600 text-center">
@@ -149,6 +176,10 @@ export default function User() {
           </button>
         )}
       </div>
+
+      {loading && <div className="text-center py-4">Loading...</div>}
+      {/* {error && <div className="text-red-600 text-center py-4">{error}</div>} */}
+
       <div className="bg-white p-6 rounded-lg shadow-md">
         {/* Users Table */}
         <div className="overflow-x-auto">
@@ -240,29 +271,13 @@ export default function User() {
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Add New User</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Select User</label>
-                <select
-                  value={newUser.uid}
-                  onChange={(e) => handleUserSelect(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select User</option>
-                  {authUsers.map(authUser => (
-                    <option key={authUser.id} value={authUser.id}>
-                      {authUser.displayName || authUser.email || authUser.id}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-gray-700">Name</label>
                 <input
                   type="text"
-                  value={newUser.displayName}
-                  onChange={(e) => setNewUser({ ...newUser, displayName: e.target.value })}
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter user name"
-                  disabled // Read-only, populated from selection
                 />
               </div>
               <div>
@@ -273,7 +288,16 @@ export default function User() {
                   onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter user email"
-                  disabled // Read-only, populated from selection
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <input
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter password (min 6 characters)"
                 />
               </div>
               <div>
@@ -294,14 +318,16 @@ export default function User() {
               <button
                 onClick={() => setIsCreateModalOpen(false)}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                disabled={loading}
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateUser}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+                disabled={loading}
               >
-                Create User
+                {loading ? 'Creating...' : 'Create User'}
               </button>
             </div>
           </div>
@@ -314,20 +340,23 @@ export default function User() {
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Confirm Deletion</h2>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete {userToDelete?.displayName}? This action cannot be undone.
+              Are you sure you want to permanently delete {userToDelete?.displayName}? 
+              This will remove the user from both the database and authentication system.
             </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                disabled={loading}
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteUser}
                 className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                disabled={loading}
               >
-                Delete
+                {loading ? 'Deleting...' : 'Delete Permanently'}
               </button>
             </div>
           </div>
