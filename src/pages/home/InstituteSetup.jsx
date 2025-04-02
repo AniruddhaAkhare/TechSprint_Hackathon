@@ -578,6 +578,51 @@ const InstituteSetup = () => {
             </>
           )}
 
+
+{activeStep === "Logo Upload" && (
+            <>
+              <h2>Logo Upload</h2>
+              <p>Upload your institute's logo</p>
+              <form onSubmit={(e) => handleSubmit(e, "Branch Setup")}>
+                <div className="logo-upload-section">
+                  <div className="upload-box">
+                    <input type="file" accept="image/jpeg,image/png,image/svg+xml" onChange={handleLogoChange} />
+                    <button type="button" className="upload-btn">
+                      Upload Logo
+                    </button>
+                    {logoFile && <p>Selected file: {logoFile.name}</p>}
+                    {logoError && <p className="error">{logoError}</p>}
+                    {formData.logoUrl && (
+                      <div className="logo-preview">
+                        <p>Current Logo:</p>
+                        <img
+                          src={formData.logoUrl || "/placeholder.svg"}
+                          alt="Institute Logo"
+                          style={{ maxWidth: "200px" }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <p>
+                    Upload a logo that represents your institute. This will appear in the header of the application.
+                  </p>
+                  <div className="logo-requirements">
+                    <h4>Logo Requirements:</h4>
+                    <ul>
+                      <li>Width: Between 100px and 400px</li>
+                      <li>Height: Between 50px and 200px</li>
+                      <li>Maximum file size: 500KB</li>
+                      <li>Supported formats: JPG, PNG, SVG</li>
+                      <li>Recommended: Use a transparent background for better integration</li>
+                    </ul>
+                  </div>
+                </div>
+                <button type="submit" className="next-btn">
+                  Next →
+                </button>
+              </form>
+            </>
+          )}
           {activeStep === "Branch Setup" && (
             <>
               <h2>Center Management</h2>

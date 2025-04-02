@@ -293,7 +293,8 @@ import AddFinancePartner from './pages/components/FinancePartner/AddFinancePartn
 import Attendance from './StudentInformation/Attendance.jsx';
 import User from './pages/components/UsersAndRoles/User.jsx';
 import LandingPage from './pages/Landing/LandingPage.jsx';
-
+import KanbanBoard from "./pages/components/EnquiryManagement/kanbanBoard.jsx"
+import Subscribe from "./pages/home/Subscribe.jsx";
 export default function App() {
   const { user, rolePermissions, loading } = useAuth(); // Use context instead of local state
   const auth = getAuth();
@@ -338,7 +339,7 @@ export default function App() {
               <Route path="/forgetPassword" element={!user ? <ForgetPasswordForm /> : <Navigate to="/dashboard" />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/roles" element={<ProtectedRoute permissionSection="roles"><Roles /></ProtectedRoute>} />
-              
+              <Route path='/subscribe' element={<ProtectedRoute><Subscribe/></ProtectedRoute>} />
               {/* Protected Routes */}
 
 
@@ -449,6 +450,9 @@ export default function App() {
                 path="/instructor"
                 element={<ProtectedRoute permissionSection="Instructor"><Instructor /></ProtectedRoute>}
               />
+
+              {/* Enquiry  */}
+              <Route path='/kanbanBoard' element={<KanbanBoard />} />
 
               {/* Student Routes */}
               <Route
