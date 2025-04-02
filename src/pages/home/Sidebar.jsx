@@ -2440,10 +2440,12 @@ const Sidebar = () => {
         </Link>
 
         <li className="nav-section">Users</li>
+        <Link to='/users' className='nav-link'>
         <li className="nav-item">
           <FaUsers className="nav-icon" />
           <span>User Management</span>
         </li>
+        </Link>
 
         <Link to="/studentdetails" className="nav-link">
           <li className="nav-item">
