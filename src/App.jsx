@@ -295,11 +295,11 @@ import User from './pages/components/UsersAndRoles/User.jsx';
 import LandingPage from './pages/Landing/LandingPage.jsx';
 import KanbanBoard from "./pages/components/EnquiryManagement/kanbanBoard.jsx"
 import Subscribe from "./pages/home/Subscribe.jsx";
+import QuestionBank from './pages/components/QuestionBank/QuestionBank.jsx';
 export default function App() {
-  const { user, rolePermissions, loading } = useAuth(); // Use context instead of local state
+  const { user, rolePermissions, loading } = useAuth(); 
   const auth = getAuth();
 
-  // Protected Route Component
   const ProtectedRoute = ({ children, permissionSection, action = 'display' }) => {
     if (loading) return <div className="text-center p-4">Loading...</div>;
     if (!user) return <Navigate to="/login" />;
@@ -390,27 +390,27 @@ export default function App() {
               />
               <Route
                 path="/curriculum"
-                element={<ProtectedRoute permissionSection="Curriculum"><Curriculum /></ProtectedRoute>}
+                element={<ProtectedRoute permissionSection="curriculums"><Curriculum /></ProtectedRoute>}
               />
               <Route
                 path="/createCurriculum"
-                element={<ProtectedRoute permissionSection="Curriculum" action="create"><CreateCurriculum /></ProtectedRoute>}
+                element={<ProtectedRoute permissionSection="curriculums" action="create"><CreateCurriculum /></ProtectedRoute>}
               />
               <Route
                 path="/curriculum/:curriculumId"
-                element={<ProtectedRoute permissionSection="Curriculum" action="update"><CurriculumEditor /></ProtectedRoute>}
+                element={<ProtectedRoute permissionSection="curriculums" action="update"><CurriculumEditor /></ProtectedRoute>}
               />
               <Route
                 path="/curriculum/:curriculumId/section/:sectionId"
-                element={<ProtectedRoute permissionSection="Curriculum"><SectionMaterials /></ProtectedRoute>}
+                element={<ProtectedRoute permissionSection="curriculums"><SectionMaterials /></ProtectedRoute>}
               />
               <Route
                 path="/curriculum/:curriculumId/section/:sectionId/add-material"
-                element={<ProtectedRoute permissionSection="Curriculum" action="create"><AddMaterial /></ProtectedRoute>}
+                element={<ProtectedRoute permissionSection="curriculums" action="create"><AddMaterial /></ProtectedRoute>}
               />
               <Route
                 path="/edit-curriculum/:id"
-                element={<ProtectedRoute permissionSection="Curriculum" action="update"><EditCurriculum /></ProtectedRoute>}
+                element={<ProtectedRoute permissionSection="curriculums" action="update"><EditCurriculum /></ProtectedRoute>}
               />
               <Route
                 path="/calendar"
@@ -453,11 +453,10 @@ export default function App() {
 
               {/* Enquiry  */}
               <Route
-                path='/kanbanBoard'
+                path='/enquiry'
                 element={
                    <ProtectedRoute
-                     permissionSection="enquiry"
-                  //   //action={["create", "update", "delete", "display"]}
+                     permissionSection="enquiries"
                    >
                     <KanbanBoard />
                    </ProtectedRoute>
@@ -467,6 +466,10 @@ export default function App() {
               <Route
                 path="/studentdetails"
                 element={<ProtectedRoute permissionSection="student"><StudentDetails /></ProtectedRoute>}
+              />
+              <Route
+                path="/question-bank"
+                element={<QuestionBank />}
               />
               <Route
                 path="/studentdetails/addstudent"

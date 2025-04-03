@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../../../config/firebase';
@@ -7,10 +6,8 @@ import { s3Client } from '../../../../config/aws-config';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import AddSectionModal from './AddSectionalModel';
 import AddMaterialModal from './AddMaterialModal';
-// import { Document, Page, pdfjs } from 'react-pdf';
-import {Document, Page, pdfjs} from 'react-pdf'
+import { Document, Page, pdfjs } from 'react-pdf';
 
-// Set the worker for react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const EditCurriculum = () => {
@@ -21,15 +18,14 @@ const EditCurriculum = () => {
   const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
   const [selectedSectionId, setSelectedSectionId] = useState(null);
-  const [sectionToEdit, setSectionToEdit] = useState(null); // Track section to edit
+  const [sectionToEdit, setSectionToEdit] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewError, setPreviewError] = useState(null);
-  const [sectionDropdownOpen, setSectionDropdownOpen] = useState(null); // Track section dropdown
-  const [materialDropdownOpen, setMaterialDropdownOpen] = useState(null); // Track material dropdown
+  const [sectionDropdownOpen, setSectionDropdownOpen] = useState(null);
+  const [materialDropdownOpen, setMaterialDropdownOpen] = useState(null);
 
-  // Fetch curriculum data
   useEffect(() => {
     const fetchCurriculum = async () => {
       const docRef = doc(db, 'curriculums', id);
@@ -44,7 +40,6 @@ const EditCurriculum = () => {
     fetchCurriculum();
   }, [id, navigate]);
 
-  // Fetch sections and their materials in real-time
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, `curriculums/${id}/sections`), (snapshot) => {
       const sectionData = snapshot.docs.map((doc) => ({
@@ -88,9 +83,8 @@ const EditCurriculum = () => {
     return () => unsubscribe();
   }, [id]);
 
-  if (!curriculum) return <div>Loading...</div>;
+  if (!curriculum) return <div className="p-6 text-center text-gray-600">Loading...</div>;
 
-  // Toggle section expansion
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -98,37 +92,31 @@ const EditCurriculum = () => {
     }));
   };
 
-  // Toggle dropdown for sections
   const toggleSectionDropdown = (sectionId) => {
     setSectionDropdownOpen(sectionDropdownOpen === sectionId ? null : sectionId);
-    setMaterialDropdownOpen(null); // Close material dropdown if open
+    setMaterialDropdownOpen(null);
   };
 
-  // Toggle dropdown for materials
   const toggleMaterialDropdown = (materialId) => {
     setMaterialDropdownOpen(materialDropdownOpen === materialId ? null : materialId);
-    setSectionDropdownOpen(null); // Close section dropdown if open
+    setSectionDropdownOpen(null);
   };
 
-  // Open the section modal for adding
   const handleAddSection = () => {
-    setSectionToEdit(null); // Clear any existing section data for adding new
+    setSectionToEdit(null);
     setIsSectionModalOpen(true);
   };
 
-  // Open the section modal for editing
   const handleEditSection = (section) => {
     setSectionToEdit(section);
     setIsSectionModalOpen(true);
     setSectionDropdownOpen(null);
   };
 
-  // Delete a section and its materials
   const handleDeleteSection = async (sectionId) => {
     if (!window.confirm('Are you sure you want to delete this section and all its materials?')) return;
 
     try {
-      // Fetch all materials in the section
       const materialsSnapshot = await new Promise((resolve) => {
         onSnapshot(collection(db, `curriculums/${id}/sections/${sectionId}/materials`), (snap) => {
           resolve(snap);
@@ -136,15 +124,11 @@ const EditCurriculum = () => {
       });
       const materials = materialsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-      // Delete each material and its S3 file
       const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
       for (const material of materials) {
         if (material.url) {
           const fileKey = material.url.split(`https://${bucketName}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/`)[1];
-          const params = {
-            Bucket: bucketName,
-            Key: fileKey,
-          };
+          const params = { Bucket: bucketName, Key: fileKey };
           await s3Client.send(new DeleteObjectCommand(params));
           console.log('File deleted from S3:', fileKey);
         }
@@ -153,7 +137,6 @@ const EditCurriculum = () => {
         console.log('Material deleted from Firestore:', material.id);
       }
 
-      // Delete the section
       const sectionRef = doc(db, `curriculums/${id}/sections`, sectionId);
       await deleteDoc(sectionRef);
       console.log('Section deleted from Firestore:', sectionId);
@@ -163,25 +146,21 @@ const EditCurriculum = () => {
     }
   };
 
-  // Close the section modal
   const handleCloseSectionModal = () => {
     setIsSectionModalOpen(false);
     setSectionToEdit(null);
   };
 
-  // Open the material modal for adding
   const handleAddMaterial = (sectionId) => {
     setSelectedSectionId(sectionId);
     setIsMaterialModalOpen(true);
   };
 
-  // Close the material modal
   const handleCloseMaterialModal = () => {
     setIsMaterialModalOpen(false);
     setSelectedSectionId(null);
   };
 
-  // Open the preview modal
   const handlePreviewMaterial = (material) => {
     console.log('Previewing material:', material);
     setSelectedMaterial(material);
@@ -189,14 +168,12 @@ const EditCurriculum = () => {
     setIsPreviewModalOpen(true);
   };
 
-  // Close the preview modal
   const handleClosePreviewModal = () => {
     setSelectedMaterial(null);
     setIsPreviewModalOpen(false);
     setPreviewError(null);
   };
 
-  // Delete a material
   const handleDeleteMaterial = async (sectionId, materialId, materialUrl) => {
     if (!window.confirm('Are you sure you want to delete this material?')) return;
 
@@ -208,10 +185,7 @@ const EditCurriculum = () => {
       if (materialUrl) {
         const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
         const fileKey = materialUrl.split(`https://${bucketName}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/`)[1];
-        const params = {
-          Bucket: bucketName,
-          Key: fileKey,
-        };
+        const params = { Bucket: bucketName, Key: fileKey };
         await s3Client.send(new DeleteObjectCommand(params));
         console.log('File deleted from S3:', fileKey);
       }
@@ -221,45 +195,56 @@ const EditCurriculum = () => {
     }
   };
 
-  // Handle cloning a section (placeholder function)
   const handleCloneSection = () => {
     alert('Clone Section functionality to be implemented!');
   };
 
-  // Handle rearranging sections (placeholder function)
   const handleRearrangeSections = () => {
     alert('Rearrange Sections functionality to be implemented!');
   };
 
-  // Handle going back to the curriculum table
   const handleBack = () => {
     navigate('/curriculum');
   };
 
   return (
-    <div style={styles.container}>
+    <div className="p-6 bg-gray-100 min-h-screen">
       {/* Header */}
-      <div style={styles.header}>
-        <button onClick={handleBack} style={styles.backButton}>
+      <div className="flex items-center mb-4">
+        <button
+          onClick={handleBack}
+          className="text-gray-600 hover:text-gray-800 text-2xl mr-4"
+        >
           ←
         </button>
-        <h2 style={styles.title}>Create and Edit Your Curriculum</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          Create and Edit Your Curriculum
+        </h2>
       </div>
-      <p style={styles.subTitle}>{curriculum.name}</p>
+      <p className="text-sm text-gray-600 mb-6">{curriculum.name}</p>
 
       {/* Section Info and Actions */}
-      <div style={styles.sectionInfo}>
-        <span style={styles.sectionCount}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <span className="text-sm text-gray-700 mb-4 sm:mb-0">
           Sections {sections.length} Sections, {curriculum.materials || 0} materials
         </span>
-        <div style={styles.actions}>
-          <button onClick={handleCloneSection} style={styles.actionButton}>
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <button
+            onClick={handleCloneSection}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+          >
             🗂 Clone Section
           </button>
-          <button onClick={handleRearrangeSections} style={styles.actionButton}>
+          <button
+            onClick={handleRearrangeSections}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+          >
             ⇅ Rearrange sections
           </button>
-          <button onClick={handleAddSection} style={styles.addButton}>
+          <button
+            onClick={handleAddSection}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+          >
             + Add Section
           </button>
         </div>
@@ -267,86 +252,92 @@ const EditCurriculum = () => {
 
       {/* Display Sections or Placeholder */}
       {sections.length > 0 ? (
-        <div style={styles.sectionsList}>
+        <div className="space-y-4">
           {sections.map((section, index) => (
-            <div key={section.id} style={styles.sectionItem}>
-              <div style={styles.sectionHeader}>
-                <span style={styles.sectionCaret} onClick={() => toggleSection(section.id)}>
-                  {expandedSections[section.id] ? '▼' : '▶'}
-                </span>
-                <span style={styles.sectionNumber}>{index + 1}</span>
-                <h4 style={styles.sectionTitle}>{section.name}</h4>
-                <span style={styles.materialCount}>
-                  {section.materials.length} material(s)
-                </span>
-                <button
-                  onClick={() => handleAddMaterial(section.id)}
-                  style={styles.addMaterialButton}
-                >
-                  + Add Material
-                </button>
-                <div style={styles.actionContainer}>
-                  <button
-                    style={styles.actionButton}
-                    onClick={() => toggleSectionDropdown(section.id)}
+            <div key={section.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <div className="flex items-center gap-4 flex-1">
+                  <span
+                    onClick={() => toggleSection(section.id)}
+                    className="text-gray-600 cursor-pointer"
                   >
-                    ⋮
+                    {expandedSections[section.id] ? '▼' : '▶'}
+                  </span>
+                  <span className="text-gray-700 font-medium">{index + 1}</span>
+                  <h4 className="text-gray-900 font-semibold">{section.name}</h4>
+                  <span className="text-sm text-gray-500">
+                    {section.materials.length} material(s)
+                  </span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => handleAddMaterial(section.id)}
+                    className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                  >
+                    + Add Material
                   </button>
-                  {sectionDropdownOpen === section.id && (
-                    <div style={styles.dropdown}>
-                      <button
-                        style={styles.dropdownButton}
-                        onClick={() => handleEditSection(section)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        style={{ ...styles.dropdownButton, color: '#dc3545' }}
-                        onClick={() => handleDeleteSection(section.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
+                  <div className="relative">
+                    <button
+                      onClick={() => toggleSectionDropdown(section.id)}
+                      className="text-gray-600 hover:text-gray-800 text-lg"
+                    >
+                      ⋮
+                    </button>
+                    {sectionDropdownOpen === section.id && (
+                      <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                        <button
+                          onClick={() => handleEditSection(section)}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSection(section.id)}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               {expandedSections[section.id] && (
-                <div style={styles.sectionContent}>
+                <div className="p-4">
                   {section.materials.length > 0 ? (
                     section.materials.map((material) => (
-                      <div key={material.id} style={styles.materialItem}>
-                        <div style={styles.materialContent}>
-                          <p
-                            style={styles.materialName}
-                            onClick={() => handlePreviewMaterial(material)}
+                      <div
+                        key={material.id}
+                        className="flex items-center justify-between p-2 border-b border-gray-200 hover:bg-gray-50"
+                      >
+                        <p
+                          onClick={() => handlePreviewMaterial(material)}
+                          className="text-gray-700 cursor-pointer hover:text-indigo-600 flex-1"
+                        >
+                          {material.name}
+                        </p>
+                        <div className="relative">
+                          <button
+                            onClick={() => toggleMaterialDropdown(material.id)}
+                            className="text-gray-600 hover:text-gray-800 text-lg"
                           >
-                            {material.name}
-                          </p>
-                          <div style={styles.actionContainer}>
-                            <button
-                              style={styles.actionButton}
-                              onClick={() => toggleMaterialDropdown(material.id)}
-                            >
-                              ⋮
-                            </button>
-                            {materialDropdownOpen === material.id && (
-                              <div style={styles.dropdown}>
-                                <button
-                                  style={{ ...styles.dropdownButton, color: '#dc3545' }}
-                                  onClick={() =>
-                                    handleDeleteMaterial(section.id, material.id, material.url)
-                                  }
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                            ⋮
+                          </button>
+                          {materialDropdownOpen === material.id && (
+                            <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                              <button
+                                onClick={() => handleDeleteMaterial(section.id, material.id, material.url)}
+                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p style={styles.noMaterials}>No materials added here</p>
+                    <p className="text-gray-500 text-sm italic">No materials added here</p>
                   )}
                 </div>
               )}
@@ -354,19 +345,24 @@ const EditCurriculum = () => {
           ))}
         </div>
       ) : (
-        <div style={styles.placeholder}>
-          <div style={styles.icon}>
-            <div style={styles.iconBox}>
-              <div style={styles.iconLine}></div>
-              <div style={styles.iconLine}></div>
-              <div style={styles.iconLine}></div>
+        <div className="bg-white p-6 rounded-lg shadow-md text-center">
+          <div className="flex justify-center mb-4">
+            <div className="w-12 h-12 bg-gray-200 rounded-md flex flex-col justify-center items-center gap-1">
+              <div className="w-8 h-1 bg-gray-400"></div>
+              <div className="w-8 h-1 bg-gray-400"></div>
+              <div className="w-8 h-1 bg-gray-400"></div>
             </div>
           </div>
-          <h3 style={styles.placeholderTitle}>Start by adding your first section</h3>
-          <p style={styles.placeholderText}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Start by adding your first section
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
             Ready to create? Start shaping your curriculum. Add the first section to begin
           </p>
-          <button onClick={handleAddSection} style={styles.addButton}>
+          <button
+            onClick={handleAddSection}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+          >
             + Add Section
           </button>
         </div>
@@ -390,25 +386,28 @@ const EditCurriculum = () => {
 
       {/* Preview Material Modal */}
       {isPreviewModalOpen && selectedMaterial && (
-        <div style={styles.previewModalOverlay}>
-          <div style={styles.previewModal}>
-            <div style={styles.previewModalHeader}>
-              <h3>Preview Material</h3>
-              <button onClick={handleClosePreviewModal} style={styles.closeButton}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Preview Material</h3>
+              <button
+                onClick={handleClosePreviewModal}
+                className="text-gray-500 hover:text-gray-700 text-xl"
+              >
                 ✕
               </button>
             </div>
-            <div style={styles.previewModalContent}>
-              <h4>{selectedMaterial.name}</h4>
+            <div className="space-y-4">
+              <h4 className="text-md font-medium text-gray-900">{selectedMaterial.name}</h4>
               {selectedMaterial.description && (
-                <p style={styles.previewDescription}>{selectedMaterial.description}</p>
+                <p className="text-sm text-gray-600">{selectedMaterial.description}</p>
               )}
               {selectedMaterial.url ? (
                 <>
                   {selectedMaterial.type === 'Video' ? (
                     <video
                       controls
-                      style={styles.previewVideo}
+                      className="w-full max-h-64 rounded-md"
                       src={selectedMaterial.url}
                       onError={(e) => {
                         console.error('Video load error:', e);
@@ -429,268 +428,53 @@ const EditCurriculum = () => {
                     </Document>
                   ) : (
                     <p>
-                      <a href={selectedMaterial.url} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={selectedMaterial.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:underline"
+                      >
                         View File
                       </a>
                     </p>
                   )}
                 </>
               ) : (
-                <p>No file URL available for preview.</p>
+                <p className="text-gray-500">No file URL available for preview.</p>
               )}
-              {previewError && <p style={styles.errorMessage}>{previewError}</p>}
-              <p><strong>Type:</strong> {selectedMaterial.type}</p>
-              <p><strong>Max Views:</strong> {selectedMaterial.maxViews || 'Unlimited'}</p>
-              <p><strong>Prerequisite:</strong> {selectedMaterial.isPrerequisite ? 'Yes' : 'No'}</p>
-              <p><strong>Allow Download:</strong> {selectedMaterial.allowDownload ? 'Yes' : 'No'}</p>
-              <p><strong>Access On:</strong> {selectedMaterial.accessOn}</p>
-              <p><strong>URL:</strong> <a href={selectedMaterial.url} target="_blank" rel="noopener noreferrer">{selectedMaterial.url}</a></p>
+              {previewError && <p className="text-red-600 text-sm">{previewError}</p>}
+              <p className="text-sm text-gray-700">
+                <strong>Type:</strong> {selectedMaterial.type}
+              </p>
+              <p className="text-sm text-gray-700">
+                <strong>Max Views:</strong> {selectedMaterial.maxViews || 'Unlimited'}
+              </p>
+              <p className="text-sm text-gray-700">
+                <strong>Prerequisite:</strong> {selectedMaterial.isPrerequisite ? 'Yes' : 'No'}
+              </p>
+              <p className="text-sm text-gray-700">
+                <strong>Allow Download:</strong> {selectedMaterial.allowDownload ? 'Yes' : 'No'}
+              </p>
+              <p className="text-sm text-gray-700">
+                <strong>Access On:</strong> {selectedMaterial.accessOn}
+              </p>
+              <p className="text-sm text-gray-700">
+                <strong>URL:</strong>{' '}
+                <a
+                  href={selectedMaterial.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 hover:underline break-all"
+                >
+                  {selectedMaterial.url}
+                </a>
+              </p>
             </div>
           </div>
         </div>
       )}
     </div>
   );
-};
-
-// Inline styles (unchanged)
-const styles = {
-  container: {
-    padding: '20px',
-    fontFamily: 'Arial, sans-serif',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: '10px',
-  },
-  backButton: {
-    background: 'none',
-    border: '1px solid #ddd',
-    borderRadius: '5px',
-    padding: '5px 10px',
-    cursor: 'pointer',
-    marginRight: '10px',
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-  },
-  subTitle: {
-    fontSize: '14px',
-    color: '#666',
-    marginBottom: '20px',
-  },
-  sectionInfo: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-  },
-  sectionCount: {
-    fontSize: '14px',
-    color: '#666',
-  },
-  actions: {
-    display: 'flex',
-    gap: '10px',
-  },
-  actionButton: {
-    padding: '5px 15px',
-    backgroundColor: '#fff',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
-  addButton: {
-    padding: '5px 15px',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
-  placeholder: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '50vh',
-    textAlign: 'center',
-  },
-  icon: {
-    marginBottom: '20px',
-  },
-  iconBox: {
-    width: '100px',
-    height: '100px',
-    backgroundColor: '##f0f0f0',
-    borderRadius: '10px',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    gap: '10px',
-    padding: '10px',
-  },
-  iconLine: {
-    width: '80%',
-    height: '10px',
-    backgroundColor: '#ddd',
-    borderRadius: '5px',
-  },
-  placeholderTitle: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    marginBottom: '10px',
-  },
-  placeholderText: {
-    fontSize: '14px',
-    color: '#666',
-    marginBottom: '20px',
-  },
-  sectionsList: {
-    marginTop: '20px',
-  },
-  sectionItem: {
-    marginBottom: '10px',
-    backgroundColor: '#f5f7fa',
-    borderRadius: '5px',
-  },
-  sectionHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '10px 15px',
-    backgroundColor: '#f5f7fa',
-    borderRadius: '5px',
-  },
-  sectionCaret: {
-    cursor: 'pointer',
-    marginRight: '10px',
-  },
-  sectionNumber: {
-    marginRight: '10px',
-    fontWeight: 'bold',
-  },
-  sectionTitle: {
-    flex: 1,
-    margin: 0,
-    fontSize: '16px',
-  },
-  materialCount: {
-    marginRight: '15px',
-    fontSize: '14px',
-    color: '#666',
-  },
-  addMaterialButton: {
-    padding: '5px 10px',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    marginRight: '10px',
-  },
-  sectionContent: {
-    padding: '15px',
-    backgroundColor: '#fff',
-    borderTop: '1px solid #ddd',
-    borderRadius: '0 0 5px 5px',
-  },
-  noMaterials: {
-    color: '#666',
-    textAlign: 'center',
-    margin: '0',
-  },
-  materialItem: {
-    padding: '10px',
-    border: '1px solid #ddd',
-    borderRadius: '5px',
-    marginBottom: '5px',
-  },
-  materialContent: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  materialName: {
-    margin: '0',
-    cursor: 'pointer',
-    color: '#007bff',
-    textDecoration: 'underline',
-  },
-  actionContainer: {
-    position: 'relative',
-  },
-  dropdown: {
-    position: 'absolute',
-    right: '0',
-    top: '20px',
-    backgroundColor: '#fff',
-    border: '1px solid #ddd',
-    borderRadius: '5px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-    zIndex: 10,
-  },
-  dropdownButton: {
-    display: 'block',
-    width: '100px',
-    padding: '8px',
-    background: 'none',
-    border: 'none',
-    textAlign: 'left',
-    cursor: 'pointer',
-    color: '#000',
-  },
-  previewModalOverlay: {
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    right: '0',
-    bottom: '0',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  previewModal: {
-    backgroundColor: '#fff',
-    width: '600px',
-    maxHeight: '80vh',
-    padding: '20px',
-    borderRadius: '5px',
-    boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
-    overflowY: 'auto',
-  },
-  previewModalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-  },
-  closeButton: {
-    background: 'none',
-    border: 'none',
-    fontSize: '16px',
-    cursor: 'pointer',
-  },
-  previewModalContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
-  previewDescription: {
-    color: '#666',
-  },
-  previewVideo: {
-    width: '100%',
-    maxHeight: '300px',
-    borderRadius: '5px',
-  },
-  errorMessage: {
-    color: 'red',
-    fontSize: '14px',
-  },
 };
 
 export default EditCurriculum;

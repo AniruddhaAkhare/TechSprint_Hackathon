@@ -54,10 +54,10 @@ const KanbanBoard = () => {
   const [editingEnquiryId, setEditingEnquiryId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const canCreate = rolePermissions?.enquiry?.create || false;
-  const canUpdate = rolePermissions?.enquiry?.update || false;
-  const canDelete = rolePermissions?.enquiry?.delete || false;
-  const canDisplay = rolePermissions?.enquiry?.display || false;
+  const canCreate = rolePermissions.enquiries?.create || false;
+  const canUpdate = rolePermissions.enquiries?.update || false;
+  const canDelete = rolePermissions.enquiries?.delete || false;
+  const canDisplay = rolePermissions.enquiries?.display || false;
 
   // console.log("Permissions from AuthContext:", rolePermissions);
   // console.log("Permission flags:", { canCreate, canUpdate, canDelete, canDisplay });
@@ -358,198 +358,200 @@ const KanbanBoard = () => {
   console.log("Current columns state:", columns); // Log state before rendering
 
   return (
-    <div className="p-4 sm:p-6 bg-gray-100 min-h-screen">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-semibold">Enquiry Management</h1>
-          <p className="text-gray-500 text-sm sm:text-base">Manage and track enquiries from initial contact to conversion.</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto">
-            <FaCircle className="text-gray-400" />
-            Manage Tags
-          </button>
-          {canCreate && (
-            <button
-              onClick={() => {
-                console.log("Add Enquiry clicked, canCreate:", canCreate);
-                setIsModalOpen(true);
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md w-full sm:w-auto"
-            >
-              + Add Enquiry
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Controls Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-        <div className="flex gap-2 w-full sm:w-auto">
-          <button
-            onClick={() => setView("kanban")}
-            className={`px-4 py-2 border border-gray-300 rounded-md w-full sm:w-auto ${view === "kanban" ? "bg-white text-gray-700" : "bg-gray-100 text-gray-500"}`}
-          >
-            Kanban View
-          </button>
-          <button
-            onClick={() => setView("list")}
-            className={`px-4 py-2 border border-gray-300 rounded-md w-full sm:w-auto ${view === "list" ? "bg-white text-gray-700" : "bg-gray-100 text-gray-500"}`}
-          >
-            List View
-          </button>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <div className="relative w-full sm:w-auto">
-            <FaSearch className="absolute left-3 top-3 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search enquiries..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <div className="h-screen flex flex-col bg-gray-100 w-[calc(100vw-360px)]">
+      {/* Fixed Header and Controls Section */}
+      <div className="p-4 sm:p-6 shrink-0">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-semibold">Enquiry Management</h1>
+            <p className="text-gray-500 text-sm sm:text-base">Manage and track enquiries from initial contact to conversion.</p>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto">
-            <FaFilter />
-            Filters
-          </button>
-          {view === "kanban" && (
-            <div className="relative w-full sm:w-auto" ref={stageVisibilityRef}>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto hover:bg-gray-100">
+              <FaCircle className="text-gray-400" />
+              Manage Tags
+            </button>
+            {canCreate && (
               <button
-                onClick={() => setIsStageVisibilityOpen(!isStageVisibilityOpen)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full"
+                onClick={() => {
+                  console.log("Add Enquiry clicked, canCreate:", canCreate);
+                  setIsModalOpen(true);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md w-full sm:w-auto hover:bg-blue-700 transition-colors"
               >
-                <FaChevronDown />
-                Stage Visibility
+                + Add Enquiry
               </button>
-              {isStageVisibilityOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                  <div className="p-4">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Show/Hide Stages</h3>
-                    {Object.keys(initialColumns).map((stage) => (
-                      <div key={stage} className="flex items-center justify-between py-2">
-                        <div className="flex items-center gap-2">
-                          {initialColumns[stage].icon}
-                          <span>{initialColumns[stage].name}</span>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={stageVisibility[stage]}
-                            onChange={() => toggleStageVisibility(stage)}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600">
-                            <div
-                              className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${stageVisibility[stage] ? "translate-x-5" : "translate-x-1"}`}
-                            ></div>
-                          </div>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Kanban View */}
-      {view === "kanban" && (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            {Object.entries(columns).map(([columnId, column]) => (
-              <Droppable droppableId={columnId} key={columnId}>
-                {(provided) => (
-                  <div
-                    className={`bg-white rounded-lg shadow-md w-full sm:w-64 min-w-[250px] flex-shrink-0 ${stageVisibility[columnId] ? "block" : "hidden"}`}
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                  >
-                    <div className="flex items-center gap-2 p-4 border-b border-gray-200">
-                      {column.icon}
-                      <h2 className="text-base sm:text-lg font-medium truncate">{column.name}</h2>
-                      <span className="ml-auto text-gray-500">{column.items.length}</span>
-                    </div>
-                    <div className="p-4 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
-                      {column.items.length === 0 ? (
-                        <p className="text-gray-500 text-center">No enquiries in this stage</p>
-                      ) : (
-                        filteredEnquiries(column.items).map((item, index) => {
-                          console.log("Rendering item in column", columnId, ":", item);
-                          return (
-                            <Draggable key={item.id} draggableId={String(item.id)} index={index}>
-                              {(provided) => (
-                                <div
-                                  className="bg-white border border-gray-200 rounded-md p-4 mb-2 shadow-sm"
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  onClick={() => canUpdate && handleEditEnquiry(item)}
-                                  style={{ cursor: "pointer", ...provided.draggableProps.style }}
-                                >
-                                  <p className="font-medium truncate">{item.name || "Unnamed"}</p>
-                                  <p className="text-gray-700">₹{item.amount?.toLocaleString() || "0"}</p>
-                                  <p className="text-gray-500 truncate">{item.phone || "No phone"}</p>
-                                  <p className="text-gray-500 truncate">{item.email || "No email"}</p>
-                                  <div className="flex flex-wrap gap-2 mt-2 min-h-[40px]">
-                                    {item.tags?.map((tag) => (
-                                      <span
-                                        key={tag}
-                                        className="flex items-center gap-1 text-orange-500 px-2 py-1 bg-orange-50 rounded-full text-sm whitespace-nowrap"
-                                      >
-                                        <FaCircle className="text-orange-500 text-xs" />
-                                        {tag}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </Draggable>
-                          );
-                        })
-                      )}
-                      {provided.placeholder}
+        {/* Controls Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => setView("kanban")}
+              className={`px-4 py-2 border border-gray-300 rounded-md w-full sm:w-auto ${view === "kanban" ? "bg-white text-gray-700" : "bg-gray-100 text-gray-500"} hover:bg-white`}
+            >
+              Kanban View
+            </button>
+            <button
+              onClick={() => setView("list")}
+              className={`px-4 py-2 border border-gray-300 rounded-md w-full sm:w-auto ${view === "list" ? "bg-white text-gray-700" : "bg-gray-100 text-gray-500"} hover:bg-white`}
+            >
+              List View
+            </button>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search enquiries..."
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto hover:bg-gray-100">
+              <FaFilter />
+              Filters
+            </button>
+            {view === "kanban" && (
+              <div className="relative w-full sm:w-auto" ref={stageVisibilityRef}>
+                <button
+                  onClick={() => setIsStageVisibilityOpen(!isStageVisibilityOpen)}
+                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full hover:bg-gray-100"
+                >
+                  <FaChevronDown />
+                  Stage Visibility
+                </button>
+                {isStageVisibilityOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                    <div className="p-4">
+                      <h3 className="text-sm font-medium text-gray-700 mb-2">Show/Hide Stages</h3>
+                      {Object.keys(initialColumns).map((stage) => (
+                        <div key={stage} className="flex items-center justify-between py-2">
+                          <div className="flex items-center gap-2">
+                            {initialColumns[stage].icon}
+                            <span>{initialColumns[stage].name}</span>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={stageVisibility[stage]}
+                              onChange={() => toggleStageVisibility(stage)}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600">
+                              <div
+                                className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${stageVisibility[stage] ? "translate-x-5" : "translate-x-1"}`}
+                              ></div>
+                            </div>
+                          </label>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
-              </Droppable>
-            ))}
+              </div>
+            )}
           </div>
-        </DragDropContext>
-      )}
+        </div>
+      </div>
 
-      {/* List View */}
-      {view === "list" && (
-        <div className="bg-white rounded-lg shadow-md overflow-x-auto">
-          <table className="w-full text-left min-w-[640px]">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="p-4">Name</th>
-                <th className="p-4">Amount</th>
-                <th className="p-4">Phone</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Stage</th>
-                <th className="p-4">Tags</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEnquiries(allEnquiries).length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="p-4 text-center text-gray-500">
-                    No enquiries found
-                  </td>
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
+        {/* Kanban View */}
+        {view === "kanban" && (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div className="flex overflow-x-auto gap-4 h-full">
+              {Object.entries(columns)
+                .filter(([columnId]) => stageVisibility[columnId])
+                .map(([columnId, column]) => (
+                  <Droppable droppableId={columnId} key={columnId}>
+                    {(provided) => (
+                      <div
+                        className="bg-white rounded-lg shadow-md w-72 flex-shrink-0"
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                      >
+                        <div className="flex items-center gap-2 p-4 border-b border-gray-200">
+                          {column.icon}
+                          <h2 className="text-base font-medium truncate">{column.name}</h2>
+                          <span className="ml-auto text-gray-500">{column.items.length}</span>
+                        </div>
+                        <div className="p-4 h-[calc(100%-4rem)] overflow-y-auto">
+                          {column.items.length === 0 ? (
+                            <p className="text-gray-500 text-center">No enquiries in this stage</p>
+                          ) : (
+                            filteredEnquiries(column.items).map((item, index) => (
+                              <Draggable key={item.id} draggableId={String(item.id)} index={index}>
+                                {(provided) => (
+                                  <div
+                                    className="bg-white border border-gray-200 rounded-md p-4 mb-2 shadow-sm"
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    onClick={() => canUpdate && handleEditEnquiry(item)}
+                                    style={{ cursor: "pointer", ...provided.draggableProps.style }}
+                                  >
+                                    <p className="font-medium truncate">{item.name || "Unnamed"}</p>
+                                    <p className="text-gray-700">₹{item.amount?.toLocaleString() || "0"}</p>
+                                    <p className="text-gray-500 truncate">{item.phone || "No phone"}</p>
+                                    <p className="text-gray-500 truncate">{item.email || "No email"}</p>
+                                    <div className="flex flex-wrap gap-2 mt-2 min-h-[40px]">
+                                      {item.tags?.map((tag) => (
+                                        <span
+                                          key={tag}
+                                          className="flex items-center gap-1 text-orange-500 px-2 py-1 bg-orange-50 rounded-full text-sm whitespace-nowrap"
+                                        >
+                                          <FaCircle className="text-orange-500 text-xs" />
+                                          {tag}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))
+                          )}
+                          {provided.placeholder}
+                        </div>
+                      </div>
+                    )}
+                  </Droppable>
+                ))}
+            </div>
+          </DragDropContext>
+        )}
+
+        {/* List View */}
+        {view === "list" && (
+          <div className="bg-white rounded-lg shadow-md overflow-x-auto h-full">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="p-4">Name</th>
+                  <th className="p-4">Amount</th>
+                  <th className="p-4">Phone</th>
+                  <th className="p-4">Email</th>
+                  <th className="p-4">Stage</th>
+                  <th className="p-4">Tags</th>
                 </tr>
-              ) : (
-                filteredEnquiries(allEnquiries).map((item) => {
-                  console.log("Rendering item in list view:", item);
-                  return (
+              </thead>
+              <tbody>
+                {filteredEnquiries(allEnquiries).length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="p-4 text-center text-gray-500">
+                      No enquiries found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredEnquiries(allEnquiries).map((item) => (
                     <tr
                       key={item.id}
-                      className="border-b border-gray-200"
+                      className="border-b border-gray-200 hover:bg-gray-50"
                       onClick={() => canUpdate && handleEditEnquiry(item)}
                       style={{ cursor: "pointer" }}
                     >
@@ -572,13 +574,13 @@ const KanbanBoard = () => {
                         </div>
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Modal */}
       <Modal
@@ -602,7 +604,7 @@ const KanbanBoard = () => {
                 value={newEnquiry.name}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, name: e.target.value })}
                 placeholder="Enter name"
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <div className="mb-4">
@@ -614,7 +616,7 @@ const KanbanBoard = () => {
                 value={newEnquiry.email}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, email: e.target.value })}
                 placeholder="Enter email"
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <div className="mb-4">
@@ -626,7 +628,7 @@ const KanbanBoard = () => {
                 value={newEnquiry.phone}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, phone: e.target.value })}
                 placeholder="Enter phone number"
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <div className="mb-4">
@@ -635,7 +637,7 @@ const KanbanBoard = () => {
                 value={newEnquiry.address}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, address: e.target.value })}
                 placeholder="Enter address"
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 rows="3"
               />
             </div>
@@ -649,7 +651,7 @@ const KanbanBoard = () => {
               <select
                 value={newEnquiry.branch}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, branch: e.target.value })}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select branch</option>
                 {branches.map((branch) => (
@@ -666,7 +668,7 @@ const KanbanBoard = () => {
               <select
                 value={newEnquiry.course}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, course: e.target.value })}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select course</option>
                 {courses.map((course) => (
@@ -683,7 +685,7 @@ const KanbanBoard = () => {
               <select
                 value={newEnquiry.source}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, source: e.target.value })}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select source</option>
                 {sourceOptions.map((option) => (
@@ -698,7 +700,7 @@ const KanbanBoard = () => {
               <select
                 value={newEnquiry.assignTo}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, assignTo: e.target.value })}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select instructor</option>
                 {instructors.map((instructor) => (
@@ -714,7 +716,7 @@ const KanbanBoard = () => {
                 value={newEnquiry.notes}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, notes: e.target.value })}
                 placeholder="Enter notes"
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 rows="3"
               />
             </div>
@@ -723,30 +725,27 @@ const KanbanBoard = () => {
         <div className="mt-4">
           <h3 className="text-base sm:text-lg font-medium mb-2">Tags</h3>
           <div className="flex flex-wrap gap-2">
-            {["High Priority", "Follow Up", "Hot Lead", "Career Change", "Corporate Enquiry", "International"].map(
-              (tag) => (
-                <button
-                  key={tag}
-                  onClick={() => handleTagToggle(tag)}
-                  className={`px-3 py-1 sm:px-4 sm:py-2 border rounded-full text-sm ${newEnquiry.tags.includes(tag) ? "bg-blue-100 border-blue-500 text-blue-700" : "border-gray-300 text-gray-700"
-                    }`}
-                >
-                  {tag}
-                </button>
-              )
-            )}
+            {["High Priority", "Follow Up", "Hot Lead", "Career Change", "Corporate Enquiry", "International"].map((tag) => (
+              <button
+                key={tag}
+                onClick={() => handleTagToggle(tag)}
+                className={`px-3 py-1 sm:px-4 sm:py-2 border rounded-full text-sm ${newEnquiry.tags.includes(tag) ? "bg-blue-100 border-blue-500 text-blue-700" : "border-gray-300 text-gray-700 hover:bg-gray-100"}`}
+              >
+                {tag}
+              </button>
+            ))}
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <button
             onClick={() => setIsModalOpen(false)}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700"
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
           >
             Cancel
           </button>
           <button
             onClick={handleAddEnquiry}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={editingEnquiryId ? !canUpdate : !canCreate}
           >
             {editingEnquiryId ? "Update Enquiry" : "Create Enquiry"}
