@@ -339,7 +339,7 @@ export default function App() {
               <Route path="/forgetPassword" element={!user ? <ForgetPasswordForm /> : <Navigate to="/dashboard" />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/roles" element={<ProtectedRoute permissionSection="roles"><Roles /></ProtectedRoute>} />
-              <Route path='/subscribe' element={<ProtectedRoute><Subscribe/></ProtectedRoute>} />
+              <Route path='/subscribe' element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
               {/* Protected Routes */}
 
 
@@ -398,7 +398,7 @@ export default function App() {
               />
               <Route
                 path="/curriculum/:curriculumId"
-                element={<ProtectedRoute permissionSection="Curriculum"><CurriculumEditor /></ProtectedRoute>}
+                element={<ProtectedRoute permissionSection="Curriculum" action="update"><CurriculumEditor /></ProtectedRoute>}
               />
               <Route
                 path="/curriculum/:curriculumId/section/:sectionId"
@@ -452,8 +452,17 @@ export default function App() {
               />
 
               {/* Enquiry  */}
-              <Route path='/kanbanBoard' element={<KanbanBoard />} />
-
+              <Route
+                path='/kanbanBoard'
+                element={
+                   <ProtectedRoute
+                     permissionSection="enquiry"
+                  //   //action={["create", "update", "delete", "display"]}
+                   >
+                    <KanbanBoard />
+                   </ProtectedRoute>
+                }
+              />
               {/* Student Routes */}
               <Route
                 path="/studentdetails"

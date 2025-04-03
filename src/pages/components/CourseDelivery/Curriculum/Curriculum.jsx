@@ -28,7 +28,7 @@ const Curriculum = () => {
   // Fetch curriculums from Firestore
   useEffect(() => {
     if (!canDisplay) return;
-    const unsubscribe = onSnapshot(collection(db, 'curriculums'), (snapshot) => {
+    const unsubscribe = onSnapshot(collection(db, 'Curriculum'), (snapshot) => {
       const curriculumData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -102,7 +102,7 @@ const Curriculum = () => {
   const confirmDelete = async () => {
     if (selectedCurriculumId && canDelete) {
       try {
-        await deleteDoc(doc(db, 'curriculums', selectedCurriculumId));
+        await deleteDoc(doc(db, 'Curriculum', selectedCurriculumId));
         setIsDeleteModalOpen(false);
         setSelectedCurriculumId(null);
       } catch (error) {

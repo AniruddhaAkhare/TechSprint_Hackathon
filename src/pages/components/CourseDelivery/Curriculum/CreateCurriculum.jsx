@@ -79,7 +79,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
           sections: curriculumToEdit.sections || 0,
         });
       } else {
-        const docRef = await addDoc(collection(db, 'curriculums'), {
+        const docRef = await addDoc(collection(db, 'Curriculum'), {
           name: formData.name,
           branch: formData.branch,
           maxViewDuration: formData.maxViewDuration,
