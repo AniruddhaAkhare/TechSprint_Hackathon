@@ -467,9 +467,10 @@ export default function App() {
                 path="/studentdetails"
                 element={<ProtectedRoute permissionSection="student"><StudentDetails /></ProtectedRoute>}
               />
+              
               <Route
                 path="/question-bank"
-                element={<QuestionBank />}
+                element={<ProtectedRoute permissionSection="questions"><QuestionBank /></ProtectedRoute>}
               />
               <Route
                 path="/studentdetails/addstudent"

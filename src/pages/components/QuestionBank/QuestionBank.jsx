@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../config/firebase';
 import { collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import QuestionList from './QusetionList'
 import QuestionForm from './QuestionForm';
-import QuestionList from './QusetionList';
+import { useAuth } from '../../../context/AuthContext';
 
 const QuestionBank = () => {
+  const { user } = useAuth(); // Assuming useAuth provides user object with permissions
+  const permissions = user?.permissions || { canCreate: false, canUpdate: false, canDelete: false }; // Default to false if no permissions
+  const { canCreate, canUpdate, canDelete } = permissions;
+
   const [questions, setQuestions] = useState([]);
   const [filterType, setFilterType] = useState('');
   const [filterSubject, setFilterSubject] = useState('');
@@ -18,7 +23,7 @@ const QuestionBank = () => {
       const querySnapshot = await getDocs(q);
       const questionsData = querySnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
       setQuestions(questionsData);
     };
@@ -27,13 +32,13 @@ const QuestionBank = () => {
 
   const addQuestion = async (questionData) => {
     try {
-      if (editingQuestion) {
+      if (editingQuestion && canUpdate) {
         // Update existing question
         const questionRef = doc(db, 'questions', editingQuestion.id);
         await updateDoc(questionRef, questionData);
         setQuestions(questions.map(q => (q.id === editingQuestion.id ? { id: q.id, ...questionData } : q)));
         setEditingQuestion(null);
-      } else {
+      } else if (canCreate) {
         // Add new question
         const docRef = await addDoc(collection(db, 'questions'), questionData);
         setQuestions([...questions, { id: docRef.id, ...questionData }]);
@@ -45,6 +50,7 @@ const QuestionBank = () => {
   };
 
   const deleteQuestion = async (id) => {
+    if (!canDelete) return; // Early return if no delete permission
     try {
       await deleteDoc(doc(db, 'questions', id));
       setQuestions(questions.filter(q => q.id !== id));
@@ -54,6 +60,7 @@ const QuestionBank = () => {
   };
 
   const editQuestion = (question) => {
+    if (!canUpdate) return; // Early return if no update permission
     setEditingQuestion(question);
     setIsPanelOpen(true);
   };
@@ -69,18 +76,20 @@ const QuestionBank = () => {
     <div className="max-w-6xl mx-auto p-6 bg-gray-100 min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-semibold text-gray-900">Question Bank</h1>
-        <button
-          onClick={() => {
-            setEditingQuestion(null);
-            setIsPanelOpen(true);
-          }}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Add Question
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => {
+              setEditingQuestion(null);
+              setIsPanelOpen(true);
+            }}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Question
+          </button>
+        )}
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -116,14 +125,23 @@ const QuestionBank = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-2.5 pl-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
-            <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
         </div>
       </div>
 
-      <QuestionList questions={filteredQuestions} onEdit={editQuestion} onDelete={deleteQuestion} />
+      <QuestionList
+        questions={filteredQuestions}
+        onEdit={canUpdate ? editQuestion : null} // Pass null if no update permission
+        onDelete={canDelete ? deleteQuestion : null} // Pass null if no delete permission
+      />
 
       <div
         className={`fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
@@ -135,10 +153,7 @@ const QuestionBank = () => {
             <h2 className="text-xl font-semibold text-gray-900">
               {editingQuestion ? 'Edit Question' : 'Add New Question'}
             </h2>
-            <button
-              onClick={() => setIsPanelOpen(false)}
-              className="text-gray-500 hover:text-gray-700"
-            >
+            <button onClick={() => setIsPanelOpen(false)} className="text-gray-500 hover:text-gray-700">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
