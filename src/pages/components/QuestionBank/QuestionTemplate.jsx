@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../config/firebase'; // Adjust path as needed
 import { collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { useAuth } from '../../../context/AuthContext';
 
 const QuestionTemplate = () => {
+    const { user, rolePermissions } = useAuth();
+
+  const canCreate = rolePermissions.templates?.create || false;
+  const canUpdate = rolePermissions.templates?.update || false;
+  const canDelete = rolePermissions.templates?.delete || false;
+  const canDisplay = rolePermissions.templates?.display || false;
+
+
   const [templates, setTemplates] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -64,12 +73,12 @@ const QuestionTemplate = () => {
   // Save template (create or update)
   const saveTemplate = async () => {
     try {
-      if (editingTemplate) {
+      if (editingTemplate && canUpdate) {
         const templateRef = doc(db, 'templates', editingTemplate.id);
         await updateDoc(templateRef, templateData);
         setTemplates(templates.map(t => (t.id === editingTemplate.id ? { id: t.id, ...templateData } : t)));
         setEditingTemplate(null);
-      } else {
+      } else if (canCreate) {
         const docRef = await addDoc(collection(db, 'templates'), templateData);
         setTemplates([...templates, { id: docRef.id, ...templateData }]);
       }
@@ -82,6 +91,7 @@ const QuestionTemplate = () => {
 
   // Edit existing template
   const editTemplate = (template) => {
+    if (!canUpdate) return; // Prevent edit if no permission
     setEditingTemplate(template);
     setTemplateData(template);
     setIsDialogOpen(true);
@@ -89,6 +99,7 @@ const QuestionTemplate = () => {
 
   // Delete template
   const deleteTemplate = async (id) => {
+    if (!canDelete) return; // Prevent delete if no permission
     try {
       await deleteDoc(doc(db, 'templates', id));
       setTemplates(templates.filter(t => t.id !== id));
@@ -113,19 +124,21 @@ const QuestionTemplate = () => {
       {/* Header and Create Button */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-semibold text-gray-900">Question Templates</h1>
-        <button
-          onClick={() => {
-            setEditingTemplate(null);
-            setTemplateData({ name: '', subject: '', type: '', selectedQuestions: [] });
-            setIsDialogOpen(true);
-          }}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Create Template
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => {
+              setEditingTemplate(null);
+              setTemplateData({ name: '', subject: '', type: '', selectedQuestions: [] });
+              setIsDialogOpen(true);
+            }}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Template
+          </button>
+         )}
       </div>
 
       {/* Filters and Search */}
@@ -192,18 +205,22 @@ const QuestionTemplate = () => {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => editTemplate(template)}
-                    className="text-indigo-600 hover:text-indigo-800"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteTemplate(template.id)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Delete
-                  </button>
+                  {canUpdate && (
+                    <button
+                      onClick={() => editTemplate(template)}
+                      className="text-indigo-600 hover:text-indigo-800"
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      onClick={() => deleteTemplate(template.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               </li>
             ))}
@@ -330,8 +347,8 @@ const QuestionTemplate = () => {
             </button>
             <button
               onClick={saveTemplate}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-              disabled={!templateData.name || !templateData.type}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={!templateData.name || !templateData.type || (!canCreate && !editingTemplate) || (!canUpdate && editingTemplate)}
             >
               {editingTemplate ? 'Update' : 'Save'}
             </button>

@@ -6,9 +6,8 @@ import QuestionForm from './QuestionForm';
 import { useAuth } from '../../../context/AuthContext';
 
 const QuestionBank = () => {
-  const { user } = useAuth(); // Assuming useAuth provides user object with permissions
-  const permissions = user?.permissions || { canCreate: false, canUpdate: false, canDelete: false }; // Default to false if no permissions
-  const { canCreate, canUpdate, canDelete } = permissions;
+  
+  
 
   const [questions, setQuestions] = useState([]);
   const [filterType, setFilterType] = useState('');
@@ -16,6 +15,12 @@ const QuestionBank = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
+  const { user, rolePermissions } = useAuth();
+  
+    const canCreate = rolePermissions.templates?.create || false;
+    const canUpdate = rolePermissions.templates?.update || false;
+    const canDelete = rolePermissions.templates?.delete || false;
+    const canDisplay = rolePermissions.templates?.display || false;
 
   useEffect(() => {
     const fetchQuestions = async () => {
