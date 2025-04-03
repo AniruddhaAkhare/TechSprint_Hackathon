@@ -296,6 +296,7 @@ import LandingPage from './pages/Landing/LandingPage.jsx';
 import KanbanBoard from "./pages/components/EnquiryManagement/kanbanBoard.jsx"
 import Subscribe from "./pages/home/Subscribe.jsx";
 import QuestionBank from './pages/components/QuestionBank/QuestionBank.jsx';
+import QuestionTemplate from './pages/components/QuestionBank/QuestionTemplate.jsx';
 export default function App() {
   const { user, rolePermissions, loading } = useAuth(); 
   const auth = getAuth();
@@ -471,6 +472,10 @@ export default function App() {
               <Route
                 path="/question-bank"
                 element={<ProtectedRoute permissionSection="questions"><QuestionBank /></ProtectedRoute>}
+              />
+              <Route
+                path="/question-template"
+                element={<ProtectedRoute permissionSection="templates"><QuestionTemplate /></ProtectedRoute>}
               />
               <Route
                 path="/studentdetails/addstudent"

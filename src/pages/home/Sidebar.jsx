@@ -1965,6 +1965,7 @@ const Sidebar = () => {
   const canViewRoles = rolePermissions.roles?.display || false; // Assuming roles fall under users
   const canViewFees = rolePermissions.reports?.display || false;
   const canViewQuestionBank = rolePermissions.questions?.display || false;
+  const canViewQuestionTemplate = rolePermissions.templates?.display || false;
   const canViewInvoices = rolePermissions.invoice?.display || false;
   const canViewFee = rolePermissions.fee?.display || false;
   const canViewEnquiry = rolePermissions.enquiries?.display || false;
@@ -2105,6 +2106,17 @@ const Sidebar = () => {
             </li>
           </Link>
         )}
+
+{canViewQuestionTemplate && (
+          <Link to="/question-template" className="nav-link">
+            <li className="nav-item">
+              <i className="fa-solid fa-book nav-icon"></i>
+              <span>Question Template</span>
+            </li>
+          </Link>
+        )}
+
+
         {canViewPerformance && (
           <Link to="/addPerformance" className="nav-link">
             <li className="nav-item">
