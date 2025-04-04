@@ -315,7 +315,7 @@ const AddInstructor = ({ open, onClose, instructor, centers, roles, setInstructo
                 <div className="p-6">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-semibold text-gray-800">
-                            {formData.id ? "Edit Instructor" : "Add Instructor"}
+                            {formData.id ? "Edit Staff" : "Add Staff"}
                         </h2>
                         <button
                             onClick={onClose}

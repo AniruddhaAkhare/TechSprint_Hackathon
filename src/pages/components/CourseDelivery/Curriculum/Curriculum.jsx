@@ -19,13 +19,11 @@ const Curriculum = () => {
 
   const navigate = useNavigate();
 
-  // Permission checks for 'Curriculum' section
-  const canCreate = rolePermissions.Curriculum?.create || false;
-  const canUpdate = rolePermissions.Curriculum?.update || false;
-  const canDelete = rolePermissions.Curriculum?.delete || false;
-  const canDisplay = rolePermissions.Curriculum?.display || false;
+  const canCreate = rolePermissions.curriculums?.create || false;
+  const canUpdate = rolePermissions.curriculums?.update || false;
+  const canDelete = rolePermissions.curriculums?.delete || false;
+  const canDisplay = rolePermissions.curriculums?.display || false;
 
-  // Fetch curriculums from Firestore
   useEffect(() => {
     if (!canDisplay) return;
     const unsubscribe = onSnapshot(collection(db, 'curriculums'), (snapshot) => {
@@ -38,27 +36,19 @@ const Curriculum = () => {
     return () => unsubscribe();
   }, [canDisplay]);
 
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
+  const handleSearchChange = (e) => setSearchTerm(e.target.value);
 
-  // Filter curriculums based on search term
   const filteredCurriculums = curriculums.filter((curriculum) =>
     curriculum.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Handle pagination
   const totalPages = Math.ceil(filteredCurriculums.length / itemsPerPage);
   const paginatedCurriculums = filteredCurriculums.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
+  const handlePageChange = (page) => setCurrentPage(page);
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
     setCurrentPage(1);
@@ -136,128 +126,140 @@ const Curriculum = () => {
 
   if (!canDisplay) {
     return (
-      <div style={{ ...styles.container, textAlign: 'center', color: '#ff0000' }}>
+      <div className="p-6 text-center text-red-600 font-semibold">
         Access Denied: You do not have permission to view curriculums.
       </div>
     );
   }
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.header}>Curriculum</h2>
-      <p style={styles.subHeader}>Manage all your course curriculum in one place.</p>
+    <div className="p-6 bg-gray-100 min-h-screen font-sans">
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">Curriculum</h2>
+      <p className="text-sm text-gray-600 mb-6">Manage all your course curriculum in one place.</p>
 
-      <div style={styles.filters}>
-        <div style={styles.filterItem}>
-          <select style={styles.select}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <div className="flex items-center mb-4 sm:mb-0">
+          <select className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
             <option>All Curriculum</option>
           </select>
-          <span style={styles.badge}>{curriculums.length.toString().padStart(2, '0')}</span>
+          <span className="ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs">
+            {curriculums.length.toString().padStart(2, '0')}
+          </span>
         </div>
-        <div style={styles.searchAndAdd}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
           <input
             type="text"
             placeholder="Search"
             value={searchTerm}
             onChange={handleSearchChange}
-            style={styles.searchInput}
+            className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
           {canCreate && (
-            <button onClick={handleAddCurriculum} style={styles.addButton}>
-              + Add Curriculum
+            <button
+              onClick={handleAddCurriculum}
+              className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Curriculum
             </button>
           )}
         </div>
       </div>
 
-      <table style={styles.table}>
-        <thead>
-          <tr style={styles.tableHeader}>
-            <th style={styles.tableCell}>Sr.</th>
-            <th style={styles.tableCell}>Curriculum Name</th>
-            <th style={styles.tableCell}>Content</th>
-            <th style={styles.tableCell}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedCurriculums.length > 0 ? (
-            paginatedCurriculums.map((curriculum, index) => (
-              <tr
-                key={curriculum.id}
-                style={styles.tableRow}
-                onClick={() => handleRowClick(curriculum.id)}
-              >
-                <td style={styles.tableCell}>{index + 1}</td>
-                <td style={styles.tableCell}>{curriculum.name}</td>
-                <td style={styles.tableCell}>
-                  <span style={styles.sections}>
-                    ≡ {curriculum.sections || 0} Sections
-                  </span>
-                </td>
-                <td style={styles.tableCell} onClick={(e) => e.stopPropagation()}>
-                  {(canUpdate || canDelete) && (
-                    <div style={styles.actionContainer}>
-                      <button
-                        style={styles.actionButton}
-                        onClick={() => toggleDropdown(curriculum.id)}
-                      >
-                        ⋮
-                      </button>
-                      {dropdownOpen === curriculum.id && (
-                        <div style={styles.dropdown}>
-                          {canUpdate && (
-                            <button
-                              style={styles.dropdownButton}
-                              onClick={() => handleEditClick(curriculum.id)}
-                            >
-                              Edit
-                            </button>
-                          )}
-                          {canDelete && (
-                            <button
-                              style={{ ...styles.dropdownButton, color: '#ff0000' }}
-                              onClick={() => handleDeleteClick(curriculum.id)}
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="p-3 text-left text-sm font-semibold text-gray-700">Sr.</th>
+              <th className="p-3 text-left text-sm font-semibold text-gray-700">Curriculum Name</th>
+              <th className="p-3 text-left text-sm font-semibold text-gray-700">Content</th>
+              <th className="p-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedCurriculums.length > 0 ? (
+              paginatedCurriculums.map((curriculum, index) => (
+                <tr
+                  key={curriculum.id}
+                  className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleRowClick(curriculum.id)}
+                >
+                  <td className="p-3 text-gray-700">{index + 1}</td>
+                  <td className="p-3 text-gray-700">{curriculum.name}</td>
+                  <td className="p-3 text-gray-700">
+                    <span className="inline-flex items-center">
+                      ≡ {curriculum.sections || 0} Sections
+                    </span>
+                  </td>
+                  <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                    {(canUpdate || canDelete) && (
+                      <div className="relative">
+                        <button
+                          className="text-gray-600 hover:text-gray-800 text-lg"
+                          onClick={() => toggleDropdown(curriculum.id)}
+                        >
+                          ⋮
+                        </button>
+                        {dropdownOpen === curriculum.id && (
+                          <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                            {canUpdate && (
+                              <button
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => handleEditClick(curriculum.id)}
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                                onClick={() => handleDeleteClick(curriculum.id)}
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="p-6 text-center text-gray-500">
+                  No curriculums found.
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="4" style={styles.noData}>
-                No curriculums found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      <div style={styles.pagination}>
+      <div className="flex justify-end items-center mt-6 gap-4">
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          style={styles.pageButton}
+          className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           &lt;
         </button>
-        <span style={styles.pageNumber}>{currentPage}</span>
+        <span className="px-3 py-1 bg-indigo-600 text-white rounded-md">
+          {currentPage}
+        </span>
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          style={styles.pageButton}
+          className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           &gt;
         </button>
         <select
           value={itemsPerPage}
           onChange={handleItemsPerPageChange}
-          style={styles.itemsPerPage}
+          className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
         >
           <option value={50}>50/page</option>
           <option value={25}>25/page</option>
@@ -275,20 +277,31 @@ const Curriculum = () => {
       )}
 
       {canDelete && isDeleteModalOpen && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.deleteModal}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>Delete Curriculum</h3>
-              <button onClick={closeDeleteModal} style={styles.closeButton}>×</button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Delete Curriculum</h3>
+              <button
+                onClick={closeDeleteModal}
+                className="text-gray-500 hover:text-gray-700 text-xl"
+              >
+                ×
+              </button>
             </div>
-            <p style={styles.modalMessage}>
+            <p className="text-red-600 mb-6">
               Warning! Are you sure you want to delete this curriculum? This action cannot be undone.
             </p>
-            <div style={styles.modalButtons}>
-              <button onClick={closeDeleteModal} style={styles.cancelButton}>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={closeDeleteModal}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+              >
                 Cancel
               </button>
-              <button onClick={confirmDelete} style={styles.deleteButton}>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 border border-red-600 text-red-600 rounded-md hover:bg-red-50"
+              >
                 Delete Curriculum
               </button>
             </div>
@@ -297,203 +310,6 @@ const Curriculum = () => {
       )}
     </div>
   );
-};
-
-// Styles remain unchanged
-const styles = {
-  container: {
-    padding: '20px',
-    fontFamily: 'Arial, sans-serif',
-  },
-  header: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    marginBottom: '5px',
-  },
-  subHeader: {
-    fontSize: '14px',
-    color: '#666',
-    marginBottom: '20px',
-  },
-  filters: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: '20px',
-  },
-  filterItem: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  select: {
-    padding: '5px',
-    borderRadius: '5px',
-    border: '1px solid #ddd',
-    marginRight: '10px',
-  },
-  badge: {
-    backgroundColor: '#f0f0f0',
-    padding: '2px 8px',
-    borderRadius: '10px',
-    fontSize: '12px',
-  },
-  searchAndAdd: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  searchInput: {
-    padding: '5px',
-    borderRadius: '5px',
-    border: '1px solid #ddd',
-    marginRight: '10px',
-  },
-  addButton: {
-    padding: '5px 15px',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    backgroundColor: '#f9f9f9',
-  },
-  tableHeader: {
-    backgroundColor: '#f0f0f0',
-    textAlign: 'left',
-  },
-  tableCell: {
-    padding: '10px',
-    borderBottom: '1px solid #ddd',
-  },
-  tableRow: {
-    backgroundColor: '#fff',
-    cursor: 'pointer',
-  },
-  sections: {
-    display: 'inline-flex',
-    alignItems: 'center',
-  },
-  actionContainer: {
-    position: 'relative',
-  },
-  actionButton: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '16px',
-  },
-  dropdown: {
-    position: 'absolute',
-    right: '0',
-    top: '20px',
-    backgroundColor: '#fff',
-    border: '1px solid #ddd',
-    borderRadius: '5px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-    zIndex: 10,
-  },
-  dropdownButton: {
-    display: 'block',
-    width: '100px',
-    padding: '8px',
-    background: 'none',
-    border: 'none',
-    textAlign: 'left',
-    cursor: 'pointer',
-    color: '#000',
-  },
-  noData: {
-    textAlign: 'center',
-    padding: '20px',
-    color: '#666',
-  },
-  pagination: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginTop: '20px',
-  },
-  pageButton: {
-    padding: '5px 10px',
-    border: '1px solid #ddd',
-    backgroundColor: '#fff',
-    cursor: 'pointer',
-    margin: '0 5px',
-  },
-  pageNumber: {
-    padding: '5px 10px',
-    border: '1px solid #007bff',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    borderRadius: '5px',
-  },
-  itemsPerPage: {
-    padding: '5px',
-    borderRadius: '5px',
-    border: '1px solid #ddd',
-    marginLeft: '10px',
-  },
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  deleteModal: {
-    backgroundColor: '#fff',
-    padding: '20px',
-    borderRadius: '8px',
-    width: '400px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '15px',
-  },
-  modalTitle: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-  },
-  closeButton: {
-    background: 'none',
-    border: 'none',
-    fontSize: '18px',
-    cursor: 'pointer',
-  },
-  modalMessage: {
-    color: '#ff0000',
-    marginBottom: '20px',
-  },
-  modalButtons: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '10px',
-  },
-  cancelButton: {
-    padding: '8px 16px',
-    border: '1px solid #ddd',
-    backgroundColor: '#fff',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
-  deleteButton: {
-    padding: '8px 16px',
-    border: '1px solid #ff0000',
-    backgroundColor: '#fff',
-    color: '#ff0000',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
 };
 
 export default Curriculum;

@@ -275,7 +275,7 @@ export default function Instructor() {
           <div className="max-w-8xl mx-auto">
             {/* Header Section */}
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-semibold text-gray-800">Admin & Staff Details</h1>
+              <h1 className="text-2xl font-semibold text-gray-800">Staff Details</h1>
               {canCreate && (
                 <button
                   onClick={() => {
@@ -284,7 +284,7 @@ export default function Instructor() {
                   }}
                   className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
                 >
-                  + Add Instructor
+                  + Add Staff
                 </button>
               )}
             </div>
