@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 // // // // // // // // import React, { useState, useEffect } from 'react';
 // // // // // // // // import { useNavigate } from 'react-router-dom';
 // // // // // // // // import { signOut, onAuthStateChanged } from "firebase/auth";
@@ -2234,7 +2232,6 @@
 
 // export default Sidebar;
 
->>>>>>> c92756f75a88d8f0c98aed7df3a9d0462e861f48
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
