@@ -1,28 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../../../config/firebase'; // Import Firestore
-import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore'; // Firestore methods
+import { db } from '../../../../config/firebase';
+import { collection, addDoc, updateDoc, doc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { useAuth } from '../../../../context/AuthContext';
 
-const AddSectionModal = ({ isOpen, onClose, curriculumId, sectionToEdit }) => {
-  // State for form data
+const AddSectionModal = ({ isOpen, onClose, curriculumId, sectionToEdit, logActivity }) => {
+  const { user, rolePermissions } = useAuth();
+
+  const canCreate = rolePermissions?.curriculums?.create || false;
+  const canUpdate = rolePermissions?.curriculums?.update || false;
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     isPrerequisite: false,
   });
 
-  // State for loading and error handling
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Pre-fill form if editing
   useEffect(() => {
     if (sectionToEdit) {
+      console.log("Loading section for edit:", sectionToEdit);
       setFormData({
         name: sectionToEdit.name || '',
         description: sectionToEdit.description || '',
         isPrerequisite: sectionToEdit.isPrerequisite || false,
       });
     } else {
+      console.log("Resetting form for new section");
       setFormData({
         name: '',
         description: '',
@@ -31,7 +36,6 @@ const AddSectionModal = ({ isOpen, onClose, curriculumId, sectionToEdit }) => {
     }
   }, [sectionToEdit]);
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -40,11 +44,19 @@ const AddSectionModal = ({ isOpen, onClose, curriculumId, sectionToEdit }) => {
     }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name) {
       alert('Please enter a section name.');
+      return;
+    }
+
+    if (sectionToEdit && !canUpdate) {
+      alert("You do not have permission to update sections.");
+      return;
+    }
+    if (!sectionToEdit && !canCreate) {
+      alert("You do not have permission to create sections.");
       return;
     }
 
@@ -53,24 +65,50 @@ const AddSectionModal = ({ isOpen, onClose, curriculumId, sectionToEdit }) => {
 
     try {
       if (sectionToEdit) {
-        // Update existing section
         const sectionRef = doc(db, `curriculums/${curriculumId}/sections`, sectionToEdit.id);
+        const oldDataSnap = await getDoc(sectionRef);
+        const oldData = oldDataSnap.data() || {};
+        console.log("Old data:", oldData);
+
         await updateDoc(sectionRef, {
           name: formData.name,
           description: formData.description,
           isPrerequisite: formData.isPrerequisite,
         });
+
+        const changes = Object.keys(formData).reduce((acc, key) => {
+          if (JSON.stringify(oldData[key]) !== JSON.stringify(formData[key])) {
+            acc[key] = { oldValue: oldData[key], newValue: formData[key] };
+          }
+          return acc;
+        }, {});
+
+        if (Object.keys(changes).length > 0) {
+          await logActivity("Updated section", {
+            curriculumId,
+            sectionId: sectionToEdit.id,
+            name: formData.name,
+            changes
+          });
+          console.log("Logged changes:", changes);
+        } else {
+          console.log("No changes detected for update.");
+        }
       } else {
-        // Add new section
-        await addDoc(collection(db, `curriculums/${curriculumId}/sections`), {
+        const docRef = await addDoc(collection(db, `curriculums/${curriculumId}/sections`), {
           name: formData.name,
           description: formData.description,
           isPrerequisite: formData.isPrerequisite,
           createdAt: serverTimestamp(),
         });
+
+        await logActivity("Created section", {
+          curriculumId,
+          sectionId: docRef.id,
+          name: formData.name
+        });
       }
 
-      // Reset form and close modal
       setFormData({ name: '', description: '', isPrerequisite: false });
       setLoading(false);
       onClose();
@@ -81,205 +119,127 @@ const AddSectionModal = ({ isOpen, onClose, curriculumId, sectionToEdit }) => {
     }
   };
 
-  // If the modal is not open, return null
   if (!isOpen) return null;
 
   return (
-    <div style={styles.modalOverlay}>
-      <div style={styles.modal}>
-        {/* Modal Header */}
-        <div style={styles.modalHeader}>
-          <h3>{sectionToEdit ? 'Edit Section' : 'Add New Section'}</h3>
-          <button onClick={onClose} style={styles.closeButton} disabled={loading}>
-            ✕
-          </button>
-        </div>
+    <>
+      {/* Overlay */}
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+      />
 
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          {/* Section Name Field */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>
-              Section Name <span style={styles.required}>*</span>
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Section Name"
-              style={styles.input}
-              disabled={loading}
-            />
-          </div>
-
-          {/* Short Description Field */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Short Description</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Section Description"
-              style={styles.textarea}
-              maxLength="250"
-              disabled={loading}
-            />
-            <span style={styles.charCount}>{formData.description.length} / 250</span>
-          </div>
-
-          {/* More Options */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>More Options</label>
-            <label style={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                name="isPrerequisite"
-                checked={formData.isPrerequisite}
-                onChange={handleInputChange}
-                style={styles.checkbox}
-                disabled={loading}
-              />
-              Make this a prerequisite
-            </label>
-          </div>
-
-          {/* Error Message */}
-          {error && <div style={styles.errorMessage}>{error}</div>}
-
-          {/* Form Actions */}
-          <div style={styles.formActions}>
+      {/* Side Panel */}
+      <div
+        className={`fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="p-6 h-full flex flex-col">
+          {/* Modal Header */}
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {sectionToEdit ? 'Edit Section' : 'Add New Section'}
+            </h3>
             <button
-              type="button"
               onClick={onClose}
-              style={styles.cancelButton}
+              className="text-gray-500 hover:text-gray-700 text-xl"
               disabled={loading}
             >
-              Back
-            </button>
-            <button type="submit" style={styles.submitButton} disabled={loading}>
-              {loading ? 'Saving...' : sectionToEdit ? 'Update Section' : 'Add Section'}
+              ✕
             </button>
           </div>
-        </form>
+
+          {/* Permission Denied Message */}
+          {((!sectionToEdit && !canCreate) || (sectionToEdit && !canUpdate)) ? (
+            <div className="text-red-600 text-center flex-1 flex items-center justify-center">
+              Access Denied: You do not have permission to {sectionToEdit ? 'update' : 'create'} sections.
+            </div>
+          ) : (
+            /* Form */
+            <form onSubmit={handleSubmit} className="space-y-6 flex-1 flex flex-col justify-between">
+              <div className="space-y-6">
+                {/* Section Name Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Section Name <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Section Name"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50"
+                    disabled={loading}
+                  />
+                </div>
+
+                {/* Short Description Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Short Description</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Section Description"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 resize-y"
+                    maxLength="250"
+                    disabled={loading}
+                  />
+                  <span className="text-xs text-gray-500 mt-1 block text-right">
+                    {formData.description.length} / 250
+                  </span>
+                </div>
+
+                {/* More Options */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">More Options</label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name="isPrerequisite"
+                      checked={formData.isPrerequisite}
+                      onChange={handleInputChange}
+                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 disabled:opacity-50"
+                      disabled={loading}
+                    />
+                    <span className="text-sm text-gray-700">Make this a prerequisite</span>
+                  </label>
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="text-red-600 text-sm text-center">{error}</div>
+                )}
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading}
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : sectionToEdit ? 'Update Section' : 'Add Section'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
-
-// Inline styles (unchanged)
-const styles = {
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    justifyContent: 'flex-end',
-    zIndex: 1000,
-  },
-  modal: {
-    backgroundColor: '#fff',
-    width: '400px',
-    height: '100%',
-    padding: '20px',
-    boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
-    animation: 'slideIn 0.3s ease-out',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-  },
-  closeButton: {
-    background: 'none',
-    border: 'none',
-    fontSize: '16px',
-    cursor: 'pointer',
-  },
-  formGroup: {
-    marginBottom: '20px',
-  },
-  label: {
-    display: 'block',
-    fontSize: '14px',
-    marginBottom: '5px',
-  },
-  required: {
-    color: 'red',
-  },
-  input: {
-    width: '100%',
-    padding: '8px',
-    borderRadius: '5px',
-    border: '1px solid #ddd',
-    boxSizing: 'border-box',
-  },
-  textarea: {
-    width: '100%',
-    padding: '8px',
-    borderRadius: '5px',
-    border: '1px solid #ddd',
-    boxSizing: 'border-box',
-    minHeight: '100px',
-    resize: 'vertical',
-  },
-  charCount: {
-    display: 'block',
-    fontSize: '12px',
-    color: '#666',
-    textAlign: 'right',
-    marginTop: '5px',
-  },
-  checkboxLabel: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  checkbox: {
-    marginRight: '10px',
-  },
-  errorMessage: {
-    color: 'red',
-    fontSize: '14px',
-    marginBottom: '10px',
-  },
-  formActions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '10px',
-  },
-  cancelButton: {
-    padding: '8px 15px',
-    backgroundColor: '#fff',
-    border: '1px solid #ddd',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
-  submitButton: {
-    padding: '8px 15px',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
-};
-
-// Add keyframes for slide-in animation
-const styleSheet = document.createElement('style');
-styleSheet.innerHTML = `
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-`;
-document.head.appendChild(styleSheet);
 
 export default AddSectionModal;

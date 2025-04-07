@@ -1,26 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../config/firebase';
 import { collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import QuestionList from './QusetionList'
+import QuestionList from './QusetionList';
 import QuestionForm from './QuestionForm';
 import { useAuth } from '../../../context/AuthContext';
 
 const QuestionBank = () => {
-  
-  
-
   const [questions, setQuestions] = useState([]);
   const [filterType, setFilterType] = useState('');
   const [filterSubject, setFilterSubject] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
+  const [selectedQuestions, setSelectedQuestions] = useState([]); // New state for selected questions
   const { user, rolePermissions } = useAuth();
   
-    const canCreate = rolePermissions.templates?.create || false;
-    const canUpdate = rolePermissions.templates?.update || false;
-    const canDelete = rolePermissions.templates?.delete || false;
-    const canDisplay = rolePermissions.templates?.display || false;
+  const canCreate = rolePermissions.templates?.create || false;
+  const canUpdate = rolePermissions.templates?.update || false;
+  const canDelete = rolePermissions.templates?.delete || false;
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -35,16 +32,16 @@ const QuestionBank = () => {
     fetchQuestions();
   }, []);
 
+  const uniqueSubjects = [...new Set(questions.map(q => q.subject))].filter(Boolean);
+
   const addQuestion = async (questionData) => {
     try {
       if (editingQuestion && canUpdate) {
-        // Update existing question
         const questionRef = doc(db, 'questions', editingQuestion.id);
         await updateDoc(questionRef, questionData);
         setQuestions(questions.map(q => (q.id === editingQuestion.id ? { id: q.id, ...questionData } : q)));
         setEditingQuestion(null);
       } else if (canCreate) {
-        // Add new question
         const docRef = await addDoc(collection(db, 'questions'), questionData);
         setQuestions([...questions, { id: docRef.id, ...questionData }]);
       }
@@ -55,19 +52,48 @@ const QuestionBank = () => {
   };
 
   const deleteQuestion = async (id) => {
-    if (!canDelete) return; // Early return if no delete permission
+    if (!canDelete) return;
     try {
       await deleteDoc(doc(db, 'questions', id));
       setQuestions(questions.filter(q => q.id !== id));
+      setSelectedQuestions(selectedQuestions.filter(selectedId => selectedId !== id));
     } catch (error) {
       console.error('Error deleting question:', error);
     }
   };
 
+  const deleteMultipleQuestions = async () => {
+    if (!canDelete || selectedQuestions.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedQuestions.length} question(s)?`)) return;
+
+    try {
+      await Promise.all(selectedQuestions.map(id => deleteDoc(doc(db, 'questions', id))));
+      setQuestions(questions.filter(q => !selectedQuestions.includes(q.id)));
+      setSelectedQuestions([]);
+    } catch (error) {
+      console.error('Error deleting multiple questions:', error);
+      alert('Failed to delete some questions. Please try again.');
+    }
+  };
+
   const editQuestion = (question) => {
-    if (!canUpdate) return; // Early return if no update permission
+    if (!canUpdate) return;
     setEditingQuestion(question);
     setIsPanelOpen(true);
+  };
+
+  const handleSelectQuestion = (id) => {
+    setSelectedQuestions(prev => 
+      prev.includes(id) ? prev.filter(selectedId => selectedId !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedQuestions(filteredQuestions.map(q => q.id));
+    } else {
+      setSelectedQuestions([]);
+    }
   };
 
   const filteredQuestions = questions.filter(question => {
@@ -81,20 +107,33 @@ const QuestionBank = () => {
     <div className="max-w-6xl mx-auto p-6 bg-gray-100 min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-semibold text-gray-900">Question Bank</h1>
-        {canCreate && (
-          <button
-            onClick={() => {
-              setEditingQuestion(null);
-              setIsPanelOpen(true);
-            }}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Add Question
-          </button>
-        )}
+        <div className="flex gap-4">
+          {canDelete && selectedQuestions.length > 0 && (
+            <button
+              onClick={deleteMultipleQuestions}
+              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4a2 2 0 012 2v1H7V5a2 2 0 012-2z" />
+              </svg>
+              Delete Selected ({selectedQuestions.length})
+            </button>
+          )}
+          {canCreate && (
+            <button
+              onClick={() => {
+                setEditingQuestion(null);
+                setIsPanelOpen(true);
+              }}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Question
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -117,9 +156,11 @@ const QuestionBank = () => {
             className="w-full md:w-1/4 p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700"
           >
             <option value="">All Subjects</option>
-            <option value="math">Math</option>
-            <option value="science">Science</option>
-            <option value="history">History</option>
+            {uniqueSubjects.map(subject => (
+              <option key={subject} value={subject}>
+                {subject}
+              </option>
+            ))}
           </select>
 
           <div className="relative w-full md:w-1/2">
@@ -144,8 +185,11 @@ const QuestionBank = () => {
 
       <QuestionList
         questions={filteredQuestions}
-        onEdit={canUpdate ? editQuestion : null} // Pass null if no update permission
-        onDelete={canDelete ? deleteQuestion : null} // Pass null if no delete permission
+        onEdit={canUpdate ? editQuestion : null}
+        onDelete={canDelete ? deleteQuestion : null}
+        onSelect={handleSelectQuestion}
+        selectedQuestions={selectedQuestions}
+        onSelectAll={handleSelectAll}
       />
 
       <div
@@ -164,7 +208,7 @@ const QuestionBank = () => {
               </svg>
             </button>
           </div>
-          <QuestionForm onAddQuestion={addQuestion} initialData={editingQuestion} />
+          <QuestionForm onAddQuestion={addQuestion} initialData={editingQuestion} questions={questions} />
         </div>
       </div>
 

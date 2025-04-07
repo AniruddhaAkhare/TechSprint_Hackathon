@@ -297,6 +297,7 @@ import KanbanBoard from "./pages/components/EnquiryManagement/kanbanBoard.jsx"
 import Subscribe from "./pages/home/Subscribe.jsx";
 import QuestionBank from './pages/components/QuestionBank/QuestionBank.jsx';
 import QuestionTemplate from './pages/components/QuestionBank/QuestionTemplate.jsx';
+import AdminLogs from './pages/components/AdminLogs.jsx';
 export default function App() {
   const { user, rolePermissions, loading } = useAuth(); 
   const auth = getAuth();
@@ -369,10 +370,10 @@ export default function App() {
                 path="/createCourses"
                 element={<ProtectedRoute permissionSection="Course" action="create"><CreateCourses /></ProtectedRoute>}
               />
-              <Route
+              {/* <Route
                 path="/editCourse/:id"
-                element={<ProtectedRoute permissionSection="Course" action="update"><EditCourse /></ProtectedRoute>}
-              />
+                element={<ProtectedRoute permissionSection="Course"><EditCourse /></ProtectedRoute>}
+              /> */}
               <Route
                 path="/courses/:courseId/learners"
                 element={<ProtectedRoute permissionSection="Course"><IndividualCourseStudnets /></ProtectedRoute>}
@@ -568,6 +569,10 @@ export default function App() {
               <Route
                 path="/users"
                 element={<ProtectedRoute permissionSection="Users"><User /></ProtectedRoute>}
+              />
+              <Route
+                path="/activity-logs"
+                element={<ProtectedRoute permissionSection="activityLogs"><AdminLogs /></ProtectedRoute>}
               />
             </Routes>
           </div>

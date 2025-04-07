@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../../../config/firebase';
-import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { db, auth } from '../../../../config/firebase';
+import { collection, addDoc, updateDoc, doc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../../../context/AuthContext';
 
-const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
+const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActivity }) => {
   const { rolePermissions } = useAuth();
 
-  const canCreate = rolePermissions.curriculums?.create || false;
-  const canUpdate = rolePermissions.curriculums?.update || false;
+  const canCreate = rolePermissions?.curriculums?.create || false;
+  const canUpdate = rolePermissions?.curriculums?.update || false;
 
   const [formData, setFormData] = useState({
     name: '',
@@ -20,12 +20,14 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
 
   useEffect(() => {
     if (curriculumToEdit) {
+      console.log("Loading curriculum for edit:", curriculumToEdit);
       setFormData({
         name: curriculumToEdit.name || '',
         branch: curriculumToEdit.branch || 'Fireblaze',
         maxViewDuration: curriculumToEdit.maxViewDuration || 'Unlimited',
       });
     } else {
+      console.log("Resetting form for new curriculum");
       setFormData({
         name: '',
         branch: 'Fireblaze',
@@ -59,13 +61,43 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
     setError(null);
 
     try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error("No authenticated user found");
+      }
+
       if (curriculumToEdit) {
         const curriculumRef = doc(db, 'curriculums', curriculumToEdit.id);
+        const oldDataSnap = await getDoc(curriculumRef);
+        const oldData = oldDataSnap.data() || {};
+        console.log("Old data:", oldData);
+
         await updateDoc(curriculumRef, {
           name: formData.name,
           branch: formData.branch,
           maxViewDuration: formData.maxViewDuration,
+          updatedAt: serverTimestamp(),
+          updatedBy: currentUser.uid,
         });
+
+        const changes = Object.keys(formData).reduce((acc, key) => {
+          if (JSON.stringify(oldData[key]) !== JSON.stringify(formData[key])) {
+            acc[key] = { oldValue: oldData[key], newValue: formData[key] };
+          }
+          return acc;
+        }, {});
+
+        if (Object.keys(changes).length > 0 && logActivity) {
+          await logActivity("update_curriculum", {
+            curriculumId: curriculumToEdit.id,
+            name: formData.name,
+            changes,
+          });
+          console.log("Logged update changes:", changes);
+        } else {
+          console.log("No changes detected or logActivity not available.");
+        }
+
         onSubmit({
           id: curriculumToEdit.id,
           ...formData,
@@ -78,7 +110,19 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
           maxViewDuration: formData.maxViewDuration,
           sections: 0,
           createdAt: serverTimestamp(),
+          createdBy: currentUser.uid,
         });
+
+        if (logActivity) {
+          await logActivity("create_curriculum", {
+            curriculumId: docRef.id,
+            name: formData.name,
+          });
+          console.log("Logged creation of curriculum with ID:", docRef.id);
+        } else {
+          console.error("logActivity function is not available");
+        }
+
         onSubmit({
           id: docRef.id,
           ...formData,
@@ -91,7 +135,14 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
       onClose();
     } catch (err) {
       console.error('Error saving curriculum:', err);
-      setError('Failed to save curriculum. Please try again.');
+      setError(`Failed to save curriculum: ${err.message}`);
+      if (logActivity) {
+        await logActivity("error_curriculum", {
+          action: curriculumToEdit ? "update" : "create",
+          error: err.message,
+          formData,
+        });
+      }
       setLoading(false);
     }
   };
@@ -100,7 +151,6 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
 
   return (
     <>
-      {/* Overlay */}
       <div
         className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -108,7 +158,6 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
         onClick={onClose}
       />
 
-      {/* Side Panel */}
       <div
         className={`fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
@@ -164,7 +213,6 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit }) => {
                     disabled={loading}
                   >
                     <option value="Fireblaze">Fireblaze</option>
-                    {/* Add more branches as needed */}
                   </select>
                 </div>
 

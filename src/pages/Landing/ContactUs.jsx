@@ -24,7 +24,7 @@ const ContactUs = () => {
                 </div>
                 <div className="flex items-start">
                   <span className="mr-3">✉️</span>
-                  <span>contact@shikshaasarthi.com</span>
+                  <span>contact@shikshasaarthi.com</span>
                 </div>
               </div>
             </div>

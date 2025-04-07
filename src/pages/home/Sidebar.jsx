@@ -2271,6 +2271,7 @@ const Sidebar = () => {
   const canViewFee = rolePermissions?.fee?.display || false;
   const canViewEnquiry = rolePermissions?.enquiries?.display || false;
   const canViewFinancePartners = rolePermissions?.FinancePartner?.display || false;
+  const canViewactivityLogs = rolePermissions?.activityLogs?.display || false;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -2486,7 +2487,7 @@ const Sidebar = () => {
         {canViewQuestionTemplate && (
           <Link to="/question-template" className="nav-link">
             <li className="nav-item">
-              <i className="fa-solid fa-book nav-icon"></i>
+              <i className="fa-solid fa-file-lines nav-icon"></i>
               <span>Question Template</span>
             </li>
           </Link>
@@ -2564,6 +2565,15 @@ const Sidebar = () => {
             <li className="nav-item">
               <i className="fa-solid fa-money-check-dollar nav-icon"></i>
               <span>Finance Partner</span>
+            </li>
+          </Link>
+        )}
+        <li className="nav-section">Settings</li>
+        {canViewactivityLogs && (
+          <Link to="/activity-logs" className="nav-link">
+            <li className="nav-item">
+              <i className="fa-solid fa-history nav-icon"></i>
+              <span>Activity Logs</span>
             </li>
           </Link>
         )}
