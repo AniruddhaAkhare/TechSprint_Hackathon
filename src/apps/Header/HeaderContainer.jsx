@@ -18,7 +18,7 @@ export default function HeaderContent() {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         // Get additional user data from Firestore
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const userDoc = await getDoc(doc(db, 'Users', user.uid));
         if (userDoc.exists()) {
           setCurrentUser({ uid: user.uid, ...userDoc.data() });
         }

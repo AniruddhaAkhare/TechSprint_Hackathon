@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "fireblaze-ignite"
+  },
+  "targets": {
+    "fireblaze-ignite": {
+      "hosting": {
+        "ignite.fireblaze.in": [
+          "fireblaze-ignite"
+        ],
+        "shikshasaarathi-com": [
+          "shikshasaarathi"
+        ]
+      }
+    }
   }
 }

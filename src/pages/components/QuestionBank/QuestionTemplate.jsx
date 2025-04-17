@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../config/firebase';
-import { collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
 
 const QuestionTemplate = () => {
@@ -22,33 +22,59 @@ const QuestionTemplate = () => {
     });
     const [filterSubject, setFilterSubject] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedTemplates, setSelectedTemplates] = useState([]); // New state for selected templates
+    const [selectedTemplates, setSelectedTemplates] = useState([]);
 
     // Fetch templates and questions on mount
     useEffect(() => {
         const fetchTemplates = async () => {
-            const q = query(collection(db, 'templates'));
-            const querySnapshot = await getDocs(q);
-            const templatesData = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            setTemplates(templatesData);
+            try {
+                const q = query(collection(db, 'templates'));
+                const querySnapshot = await getDocs(q);
+                const templatesData = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+                setTemplates(templatesData);
+            } catch (error) {
+                console.error('Error fetching templates:', error);
+            }
         };
 
         const fetchQuestions = async () => {
-            const q = query(collection(db, 'questions'));
-            const querySnapshot = await getDocs(q);
-            const questionsData = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            setQuestions(questionsData);
+            try {
+                const q = query(collection(db, 'questions'));
+                const querySnapshot = await getDocs(q);
+                const questionsData = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+                setQuestions(questionsData);
+            } catch (error) {
+                console.error('Error fetching questions:', error);
+            }
         };
 
         fetchTemplates();
         fetchQuestions();
     }, []);
+
+    // Log Activity Function
+    const logActivity = async (action, details) => {
+        try {
+            await addDoc(collection(db, 'activityLogs'), {
+                action,
+                details: {
+                    ...details,
+                    
+                },
+                userId: user.uid,
+                userEmail: user.email,
+                timestamp: serverTimestamp(),
+            });
+        } catch (error) {
+            console.error('Error logging activity:', error);
+        }
+    };
 
     // Handle input changes
     const handleInputChange = (e) => {
@@ -75,15 +101,35 @@ const QuestionTemplate = () => {
                 const templateRef = doc(db, 'templates', editingTemplate.id);
                 await updateDoc(templateRef, templateData);
                 setTemplates(templates.map(t => (t.id === editingTemplate.id ? { id: t.id, ...templateData } : t)));
+                // Log update activity
+                await logActivity('Updated template', {
+                    templateId: editingTemplate.id,
+                    name: templateData.name,
+                    oldName: editingTemplate.name,
+                    oldSubject: editingTemplate.subject,
+                    newSubject: templateData.subject,
+                    oldQuestionCount: editingTemplate.selectedQuestions.length,
+                    newQuestionCount: templateData.selectedQuestions.length,
+                });
+                alert('Template updated successfully!');
                 setEditingTemplate(null);
             } else if (canCreate) {
                 const docRef = await addDoc(collection(db, 'templates'), templateData);
                 setTemplates([...templates, { id: docRef.id, ...templateData }]);
+                // Log create activity
+                await logActivity('Created template', {
+                    templateId: docRef.id,
+                    name: templateData.name,
+                    subject: templateData.subject,
+                    questionCount: templateData.selectedQuestions.length,
+                });
+                alert('Template created successfully!');
             }
             setIsDialogOpen(false);
             setTemplateData({ name: '', subject: '', selectedQuestions: [] });
         } catch (error) {
             console.error('Error saving template:', error);
+            alert('Failed to save template. Please try again.');
         }
     };
 
@@ -99,11 +145,21 @@ const QuestionTemplate = () => {
     const deleteTemplate = async (id) => {
         if (!canDelete) return;
         try {
+            const templateToDelete = templates.find(t => t.id === id);
             await deleteDoc(doc(db, 'templates', id));
             setTemplates(templates.filter(t => t.id !== id));
             setSelectedTemplates(selectedTemplates.filter(selectedId => selectedId !== id));
+            // Log delete activity
+            await logActivity('Deleted template', {
+                templateId: id,
+                name: templateToDelete?.name || 'Unknown',
+                subject: templateToDelete?.subject,
+                questionCount: templateToDelete?.selectedQuestions.length,
+            });
+            alert('Template deleted successfully!');
         } catch (error) {
             console.error('Error deleting template:', error);
+            alert('Failed to delete template. Please try again.');
         }
     };
 
@@ -113,9 +169,22 @@ const QuestionTemplate = () => {
         if (!window.confirm(`Are you sure you want to delete ${selectedTemplates.length} template(s)?`)) return;
 
         try {
+            const templatesToDelete = templates.filter(t => selectedTemplates.includes(t.id));
             await Promise.all(selectedTemplates.map(id => deleteDoc(doc(db, 'templates', id))));
             setTemplates(templates.filter(t => !selectedTemplates.includes(t.id)));
+            // Log bulk delete activity
+            await logActivity('Deleted multiple templates', {
+                templateIds: selectedTemplates,
+                count: selectedTemplates.length,
+                templates: templatesToDelete.map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    subject: t.subject,
+                    questionCount: t.selectedQuestions.length,
+                })),
+            });
             setSelectedTemplates([]);
+            alert(`${selectedTemplates.length} template(s) deleted successfully!`);
         } catch (error) {
             console.error('Error deleting multiple templates:', error);
             alert('Failed to delete some templates. Please try again.');
@@ -147,6 +216,14 @@ const QuestionTemplate = () => {
 
     // Unique subjects from questions for dropdowns
     const uniqueSubjects = [...new Set(questions.map(q => q.subject).filter(Boolean))];
+
+    if (!canDisplay) {
+        return (
+            <div className="p-6 bg-gray-100 min-h-screen text-center py-8 text-gray-500">
+                You don't have permission to view templates.
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-6xl mx-auto p-6 bg-gray-100 min-h-screen">
@@ -307,6 +384,7 @@ const QuestionTemplate = () => {
                                 onChange={handleInputChange}
                                 className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                 placeholder="Enter template name"
+                                required
                             />
                         </div>
 
@@ -317,6 +395,7 @@ const QuestionTemplate = () => {
                                 value={templateData.subject}
                                 onChange={handleInputChange}
                                 className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                required
                             >
                                 <option value="">Select subject</option>
                                 {uniqueSubjects.map(subject => (
@@ -360,7 +439,7 @@ const QuestionTemplate = () => {
                                         const question = questions.find(q => q.id === id);
                                         return (
                                             <li key={id} className="flex justify-between items-center bg-gray-50 p-2 rounded-md">
-                                                <span className="text-sm text-gray-700 truncate">{question?.question}</span>
+                                                <span className="text-sm text-gray-700 truncate">{question?.question || 'Unknown'}</span>
                                                 <button
                                                     onClick={() => toggleQuestion(id)}
                                                     className="text-red-600 hover:text-red-800 text-sm"

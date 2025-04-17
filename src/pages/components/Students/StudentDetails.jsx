@@ -1,53 +1,100 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { collection, getDocs, doc, writeBatch, updateDoc, deleteDoc, query, where } from "firebase/firestore";
+import { collection, getDocs, doc, writeBatch, updateDoc, deleteDoc, query, where, addDoc } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
-import { useAuth } from "../../../context/AuthContext"; // Adjust the import path as needed
+import { useAuth } from "../../../context/AuthContext";
 
 export default function StudentDetails() {
   const { adminId } = useParams();
   const navigate = useNavigate();
-  const { rolePermissions } = useAuth(); // Fetch permissions from useAuth hook
+  const { rolePermissions, user } = useAuth();
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [course, setCourse] = useState([]);
   const [centers, setCenters] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState([]);
   const [openDelete, setOpenDelete] = useState(false);
+  const [openFilter, setOpenFilter] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({
+    course: "",
+    center: "",
+    batch: "",
+    status: "",
+    goal: ""
+  });
 
   // Define permissions for Student
   const canCreate = rolePermissions?.student?.create || false;
   const canUpdate = rolePermissions?.student?.update || false;
   const canDelete = rolePermissions?.student?.delete || false;
   const canDisplay = rolePermissions?.student?.display || false;
-  const canEnroll = rolePermissions?.student?.enroll || false; // Custom permission for bulk enrollment
+  const canEnroll = rolePermissions?.student?.enroll || true;
+
+  // Activity logging function
+  const logActivity = async (action, details) => {
+    if (!user?.email) {
+      console.warn("No user email available for logging");
+      return;
+    }
+    try {
+      const activityLog = {
+        action,
+        details,
+        timestamp: new Date().toISOString(),
+        userEmail: user.email,
+        userId: user.uid,
+        adminId: adminId || "N/A",
+      };
+      await addDoc(collection(db, "activityLogs"), activityLog);
+      console.log(`Logged activity: ${action}`, details);
+    } catch (error) {
+      console.error("Error logging activity:", error);
+    }
+  };
 
   useEffect(() => {
     if (!canDisplay) {
-      navigate("/unauthorized"); // Redirect if user can't view this page
+      toast.error("You don't have permission to view student details");
       return;
     }
-    fetchStudents();
-    fetchCourse();
-    fetchCenters();
+    const fetchData = async () => {
+      await Promise.all([fetchStudents(), fetchCourse(), fetchCenters(), fetchBatches()]);
+    };
+    fetchData();
   }, [canDisplay, navigate]);
 
   const fetchStudents = async () => {
-    const snapshot = await getDocs(collection(db, "student"));
-    const studentList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    setStudents(studentList);
-    setFilteredStudents(studentList);
+    try {
+      const snapshot = await getDocs(collection(db, "student"));
+      const studentList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setStudents(studentList);
+      applyFilters(studentList, filters, searchQuery);
+      return studentList.length;
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      toast.error("Failed to fetch students");
+      return 0;
+    }
   };
 
   const fetchCourse = async () => {
-    const snapshot = await getDocs(collection(db, "Course"));
-    setCourse(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    try {
+      const snapshot = await getDocs(collection(db, "Course"));
+      const courseList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setCourse(courseList);
+      return courseList.length;
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+      toast.error("Failed to fetch courses");
+      return 0;
+    }
   };
 
   const fetchCenters = async () => {
@@ -56,7 +103,7 @@ export default function StudentDetails() {
       if (instituteSnapshot.empty) {
         console.error("No instituteSetup document found");
         setCenters([]);
-        return;
+        return 0;
       }
 
       const instituteId = instituteSnapshot.docs[0].id;
@@ -67,48 +114,133 @@ export default function StudentDetails() {
       const centerSnapshot = await getDocs(centerQuery);
       const centerList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setCenters(centerList);
+      return centerList.length;
     } catch (error) {
       console.error("Error fetching centers:", error);
-      setCenters([]);
       toast.error("Failed to fetch centers");
+      return 0;
     }
   };
 
-  const handleSearch = (e) => {
-    const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
-    const filtered = students.filter(
-      (student) =>
-        student.first_name?.toLowerCase().includes(query) ||
-        student.last_name?.toLowerCase().includes(query) ||
-        student.email?.toLowerCase().includes(query) ||
-        student.phone?.toLowerCase().includes(query)
-    );
+  const fetchBatches = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, "Batch"));
+      const batchList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setBatches(batchList);
+      return batchList.length;
+    } catch (error) {
+      console.error("Error fetching batches:", error);
+      toast.error("Failed to fetch batches");
+      return 0;
+    }
+  };
+
+  const applyFilters = (studentList, currentFilters, query) => {
+    let filtered = [...studentList];
+
+    // Apply search query
+    if (query) {
+      filtered = filtered.filter(
+        (student) =>
+          student.first_name?.toLowerCase().includes(query.toLowerCase()) ||
+          student.last_name?.toLowerCase().includes(query.toLowerCase()) ||
+          student.email?.toLowerCase().includes(query.toLowerCase()) ||
+          student.phone?.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    // Apply course filter
+    if (currentFilters.course) {
+      filtered = filtered.filter((student) =>
+        student.course_details?.some((c) => c.courseId === currentFilters.course)
+      );
+    }
+
+    // Apply center filter
+    if (currentFilters.center) {
+      filtered = filtered.filter((student) =>
+        student.preferred_centers?.includes(currentFilters.center)
+      );
+    }
+
+    // Apply batch filter
+    if (currentFilters.batch) {
+      filtered = filtered.filter((student) =>
+        student.batchId === currentFilters.batch
+      );
+    }
+
+    // Apply status filter
+    if (currentFilters.status) {
+      filtered = filtered.filter((student) => student.status === currentFilters.status);
+    }
+
+    // Apply goal filter
+    if (currentFilters.goal) {
+      filtered = filtered.filter((student) =>
+        student.goal?.toLowerCase().includes(currentFilters.goal.toLowerCase())
+      );
+    }
+
     setFilteredStudents(filtered);
   };
 
+  const handleSearch = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    applyFilters(students, filters, query);
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    const newFilters = { ...filters, [name]: value };
+    setFilters(newFilters);
+    applyFilters(students, newFilters, searchQuery);
+  };
+
+  const resetFilters = () => {
+    const newFilters = {
+      course: "",
+      center: "",
+      batch: "",
+      status: "",
+      goal: ""
+    };
+    setFilters(newFilters);
+    setSearchQuery("");
+    applyFilters(students, newFilters, "");
+  };
+
   const handleStudentSelect = (id) => {
-    if (!canEnroll) return; // Prevent selection if no enroll permission
+    if (!canEnroll) {
+      toast.error("You don't have permission to enroll students");
+      return;
+    }
     setSelectedStudents((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     );
   };
 
   const handleCourseSelect = (e) => {
-    if (!canEnroll) return; // Prevent course selection if no enroll permission
+    if (!canEnroll) {
+      toast.error("You don't have permission to enroll students");
+      return;
+    }
     const courseId = e.target.value;
-    setSelectedCourse((prev) =>
-      prev.includes(courseId) ? prev.filter((c) => c !== courseId) : [...prev, courseId]
-    );
+    setSelectedCourse([courseId]);
   };
 
   const handleStatusChange = async (studentId, newStatus) => {
-    if (!canUpdate) return; // Prevent status update if no update permission
+    if (!canUpdate) {
+      toast.error("You don't have permission to update student status");
+      return;
+    }
     try {
       const studentRef = doc(db, "student", studentId);
       await updateDoc(studentRef, { status: newStatus });
       toast.success(`Status updated to ${newStatus}`);
-      fetchStudents();
+      await fetchStudents();
+      logActivity("UPDATE STUDENT STATUS", { studentId, newStatus });
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update status");
@@ -116,20 +248,27 @@ export default function StudentDetails() {
   };
 
   const deleteStudent = async () => {
-    if (!canDelete || !deleteId) return; // Prevent deletion if no permission
+    if (!canDelete || !deleteId) {
+      toast.error("You don't have permission to delete students");
+      return;
+    }
     try {
       await deleteDoc(doc(db, "student", deleteId));
       toast.success("Student deleted successfully!");
-      fetchStudents();
-    } catch (err) {
-      console.error("Error deleting student:", err);
+      await fetchStudents();
+      logActivity("DELETE STUDENT", { studentId: deleteId });
+    } catch (error) {
+      console.error("Error deleting student:", error);
       toast.error("Failed to delete student");
     }
     setOpenDelete(false);
   };
 
   const handleBulkEnrollment = async () => {
-    if (!canEnroll) return; // Prevent bulk enrollment if no permission
+    if (!canEnroll) {
+      toast.error("You don't have permission to enroll students");
+      return;
+    }
     if (selectedStudents.length === 0 || selectedCourse.length === 0) {
       toast.error("Please select at least one student and one course.");
       return;
@@ -147,7 +286,11 @@ export default function StudentDetails() {
         const studentSnapshot = await getDocs(collection(db, "student"));
         const student = studentSnapshot.docs.find((doc) => doc.id === studentId)?.data();
 
-        if (!student) continue;
+        if (!student) {
+          console.warn(`Student not found: ${studentId}`);
+          studentsSkipped++;
+          continue;
+        }
 
         const existingCourses = student.course_details?.map((c) => c.courseId) || [];
         const newCourseIds = selectedCourse.filter((courseId) => !existingCourses.includes(courseId));
@@ -197,6 +340,11 @@ export default function StudentDetails() {
       toast.success(
         `Created ${enrollmentsCreated} enrollment records for ${selectedStudents.length - studentsSkipped} students.`
       );
+      logActivity("BULK ENROLL SUCCESS", {
+        enrolledCount: enrollmentsCreated,
+        studentCount: selectedStudents.length - studentsSkipped,
+        courseIds: selectedCourse,
+      });
 
       setSelectedStudents([]);
       setSelectedCourse([]);
@@ -216,7 +364,7 @@ export default function StudentDetails() {
       .join(", ");
   };
 
-  if (!canDisplay) return null; // Render nothing if no display permission
+  if (!canDisplay) return null;
 
   return (
     <div className="p-4 fixed inset-0 left-[300px]">
@@ -224,14 +372,22 @@ export default function StudentDetails() {
       <div className="max-w-8xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-800">Student Details</h1>
-          {canCreate && (
+          <div className="flex space-x-2">
             <button
-              onClick={() => navigate("/studentdetails/addstudent")}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+              onClick={() => setOpenFilter(true)}
+              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-200"
             >
-              Add Student
+              Filter
             </button>
-          )}
+            {canCreate && (
+              <button
+                onClick={() => navigate("/studentdetails/addstudent")}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+              >
+                Add Student
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-md h-full flex flex-col">
@@ -245,7 +401,7 @@ export default function StudentDetails() {
             />
           </div>
 
-          <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-450px)]">
+          <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-350px)]">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-100 sticky top-0 z-10">
@@ -276,7 +432,7 @@ export default function StudentDetails() {
                 {filteredStudents.map((student) => (
                   <tr key={student.id} className="border-b hover:bg-gray-50 cursor-pointer">
                     {canEnroll && (
-                      <td className="p-3 hover:text-blue-600 min-w-40">
+                      <td className="p-3 min-w-40">
                         <input
                           type="checkbox"
                           checked={selectedStudents.includes(student.id)}
@@ -319,7 +475,7 @@ export default function StudentDetails() {
                       <select
                         value={student.status || "enrolled"}
                         onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                        disabled={!canUpdate} // Disable if no update permission
+                        disabled={!canUpdate}
                         className="w-full min-w-40 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="enquiry">Enquiry</option>
@@ -417,6 +573,115 @@ export default function StudentDetails() {
               </Button>
               <Button variant="filled" color="red" onClick={deleteStudent}>
                 Yes, Delete
+              </Button>
+            </DialogFooter>
+          </Dialog>
+        )}
+
+        {openFilter && (
+          <Dialog open={openFilter} handler={() => setOpenFilter(false)} className="w-[500px] h-[400px] mx-auto bg-transparent shadow-lg">
+            <DialogHeader className="text-gray-800 bg-white rounded-t-lg">Filter Students</DialogHeader>
+            <DialogBody className="text-gray-700 bg-white overflow-y-auto max-h-[300px]">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Course</label>
+                  <select
+                    name="course"
+                    value={filters.course}
+                    onChange={handleFilterChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Courses</option>
+                    {course.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Center</label>
+                  <select
+                    name="center"
+                    value={filters.center}
+                    onChange={handleFilterChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Centers</option>
+                    {centers.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Batch</label>
+                  <select
+                    name="batch"
+                    value={filters.batch}
+                    onChange={handleFilterChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Batches</option>
+                    {batches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Status</label>
+                  <select
+                    name="status"
+                    value={filters.status}
+                    onChange={handleFilterChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="enquiry">Enquiry</option>
+                    <option value="enrolled">Enrolled</option>
+                    <option value="deferred">Deferred</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Goal</label>
+                  <input
+                    type="text"
+                    name="goal"
+                    value={filters.goal}
+                    onChange={handleFilterChange}
+                    placeholder="Enter goal..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </DialogBody>
+            <DialogFooter className="bg-white rounded-b-lg">
+              <Button
+                variant="text"
+                color="gray"
+                onClick={() => setOpenFilter(false)}
+                className="mr-2"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="filled"
+                color="blue"
+                onClick={resetFilters}
+                className="mr-2"
+              >
+                Reset
+              </Button>
+              <Button
+                variant="filled"
+                color="green"
+                onClick={() => setOpenFilter(false)}
+              >
+                Apply
               </Button>
             </DialogFooter>
           </Dialog>

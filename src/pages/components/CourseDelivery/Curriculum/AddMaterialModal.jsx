@@ -3351,13 +3351,15 @@
 
 // export default AddMaterialModal;
 
-import React, { useState } from 'react';
-import { db } from '../../../../config/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { db, auth } from '../../../../config/firebase';
+import { doc, getDoc, collection, addDoc, getDocs } from 'firebase/firestore';
+import { serverTimestamp } from 'firebase/firestore';
 import { s3Client, debugS3Config } from '../../../../config/aws-config';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { useAuth } from '../../../../context/AuthContext';
 
-const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId }) => {
+const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId, allowedMaterialTypes }) => {
   const [view, setView] = useState('typeSelection');
   const [selectedType, setSelectedType] = useState(null);
   const [file, setFile] = useState(null);
@@ -3366,10 +3368,14 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId 
   const [error, setError] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [formTemplates, setFormTemplates] = useState([]); // New state for form templates
+  const { user, rolePermissions } = useAuth();
+  const canView = rolePermissions?.curriculums?.display || false;
   const [materialData, setMaterialData] = useState({
     name: '',
     description: '',
     url: '',
+    templateId: '', // New field for form template ID
     maxViews: 'Unlimited',
     isPrerequisite: false,
     allowDownload: false,
@@ -3390,49 +3396,87 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId 
     { type: 'Zip', icon: '🗜️' },
     { type: 'Quiz', icon: '❓' },
     { type: 'Feedback', icon: '💬' },
-  ];
+  ].filter((mt) => !allowedMaterialTypes || allowedMaterialTypes.includes(mt.type));
 
-  // Check user authentication and role on mount
+  // Fetch user role (unchanged)
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const userDocRef = collection(db, "users");
-        const userDoc = await addDoc(userDocRef, { uid: user.uid });
-        const userData = userDoc.data?.();
-        setUserRole(userData?.role || "student");
+        try {
+          const userDocRef = doc(db, 'Users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setUserRole(userDoc.data().role || 'student');
+          } else {
+            console.warn('No user document found for UID:', user.uid);
+            setUserRole('student');
+          }
+        } catch (err) {
+          console.error('Error fetching user role:', err);
+          setError('Failed to verify permissions.');
+          setUserRole('student');
+        }
+      } else {
+        setUserRole(null);
       }
+      setLoading(false);
+    }, (err) => {
+      console.error('Auth state error:', err);
+      setError('Authentication error.');
       setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
-  // Log activity to Firestore
+  // Fetch form templates when selectedType is Form
+  useEffect(() => {
+    if (selectedType === 'Form') {
+      const fetchFormTemplates = async () => {
+        try {
+          const templatesCollection = collection(db, 'templates');
+          const templatesSnapshot = await getDocs(templatesCollection);
+          const templatesList = templatesSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setFormTemplates(templatesList);
+        } catch (err) {
+          console.error('Error fetching form templates:', err);
+          setError('Failed to load form templates.');
+        }
+      };
+      fetchFormTemplates();
+    }
+  }, [selectedType]);
+
+  // Log activity to Firestore (unchanged)
   const logActivity = async (action, details) => {
     const user = auth.currentUser;
     if (!user) return;
-
     try {
-      await addDoc(collection(db, "activityLogs"), {
+      await addDoc(collection(db, 'activityLogs'), {
         userId: user.uid,
+        email: user.email,
         action,
         details,
         timestamp: serverTimestamp(),
         curriculumId,
         sectionId,
+        sessionId: sessionId || null,
       });
-    } catch (error) {
-      console.error("Logging error:", error);
+    } catch (err) {
+      console.error('Error logging activity:', err);
     }
   };
 
-  // Permission check function
+  // Permission check (unchanged)
   const hasPermission = () => {
-    return userRole === "admin" || userRole === "instructor";
+    return canView;
   };
 
   const handleTypeSelect = (type) => {
     if (!hasPermission()) {
-      setError("You don't have permission to add materials");
+      setError('You don’t have permission to add materials.');
       return;
     }
     setSelectedType(type);
@@ -3441,18 +3485,14 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId 
 
   const handleContinue = () => {
     if (!hasPermission()) {
-      setError("You don't have permission to add materials");
+      setError('You don’t have permission to add materials.');
       return;
     }
     if (!selectedType) {
       setError('Please select a material type.');
       return;
     }
-    if (selectedType === 'YouTube' || selectedType === 'Feedback') {
-      setView('textConfig');
-    } else {
-      setView('fileConfig');
-    }
+    setView(selectedType === 'YouTube' || selectedType === 'Feedback' || selectedType === 'Form' ? 'textConfig' : 'fileConfig');
   };
 
   const handleBack = () => {
@@ -3466,6 +3506,7 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId 
       name: '',
       description: '',
       url: '',
+      templateId: '',
       maxViews: 'Unlimited',
       isPrerequisite: false,
       allowDownload: false,
@@ -3477,86 +3518,50 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId 
 
   const handleFileChange = (e) => {
     if (!hasPermission()) {
-      setError("You don't have permission to upload files");
+      setError('You don’t have permission to upload files.');
       return;
     }
     const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      const maxSizeInMB = 100;
-      if (selectedFile.size > maxSizeInMB * 1024 * 1024) {
-        setFile(null);
-        setError(`File size exceeds ${maxSizeInMB}MB limit.`);
-        return;
-      }
-      switch (selectedType) {
-        case 'Quiz':
-          if (!['application/pdf', 'image/jpeg', 'image/png'].includes(selectedFile.type)) {
-            setFile(null);
-            setError('Please select a valid quiz file (PDF, JPG, or PNG).');
-            return;
-          }
-          break;
-        case 'Video':
-          if (!['video/mp4', 'video/mpeg', 'video/webm'].includes(selectedFile.type)) {
-            setFile(null);
-            setError('Please select a valid video file (.mp4, .mpeg, or .webm).');
-            return;
-          }
-          break;
-        case 'PDF':
-          if (selectedFile.type !== 'application/pdf') {
-            setFile(null);
-            setError('Please select a valid PDF file.');
-            return;
-          }
-          break;
-        case 'Image':
-          if (!selectedFile.type.startsWith('image/')) {
-            setFile(null);
-            setError('Please select a valid image file.');
-            return;
-          }
-          break;
-        case 'Sheet':
-          if (!['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'].includes(selectedFile.type)) {
-            setFile(null);
-            setError('Please select a valid spreadsheet file (.xls, .xlsx).');
-            return;
-          }
-          break;
-        case 'Slide':
-          if (!['application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'].includes(selectedFile.type)) {
-            setFile(null);
-            setError('Please select a valid presentation file (.ppt, .pptx).');
-            return;
-          }
-          break;
-        case 'Assignment':
-        case 'Form':
-          if (selectedFile.type !== 'application/pdf') {
-            setFile(null);
-            setError('Please select a valid PDF file.');
-            return;
-          }
-          break;
-        case 'Zip':
-          if (selectedFile.type !== 'application/zip') {
-            setFile(null);
-            setError('Please select a valid ZIP file.');
-            return;
-          }
-          break;
-        default:
-          break;
-      }
-      setFile(selectedFile);
-      setError(null);
+    if (!selectedFile) return;
+
+    const maxSizeInMB = 100;
+    if (selectedFile.size > maxSizeInMB * 1024 * 1024) {
+      setFile(null);
+      setError(`File size exceeds ${maxSizeInMB}MB limit.`);
+      return;
     }
+
+    const mimeChecks = {
+      Quiz: ['application/pdf', 'image/jpeg', 'image/png'],
+      Video: ['video/mp4', 'video/mpeg', 'video/webm'],
+      PDF: ['application/pdf'],
+      Image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+      Sheet: [
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ],
+      Slide: [
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ],
+      Assignment: ['application/pdf'],
+      Form: ['application/pdf'], // This won't be used since we’re using templates
+      Zip: ['application/zip', 'application/x-zip-compressed'],
+    };
+
+    if (mimeChecks[selectedType] && !mimeChecks[selectedType].includes(selectedFile.type)) {
+      setFile(null);
+      setError(`Please select a valid ${selectedType.toLowerCase()} file.`);
+      return;
+    }
+
+    setFile(selectedFile);
+    setError(null);
   };
 
   const handleMaterialDataChange = (e) => {
     if (!hasPermission()) {
-      setError("You don't have permission to modify material data");
+      setError('You don’t have permission to modify material data.');
       return;
     }
     const { name, value, type, checked } = e.target;
@@ -3577,7 +3582,7 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId 
         throw new Error('Missing AWS config: Check VITE_S3_BUCKET_NAME and VITE_AWS_REGION');
       }
 
-      const fileKey = sessionId 
+      const fileKey = sessionId
         ? `materials/${curriculumId}/${sectionId}/${sessionId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`
         : `materials/${curriculumId}/${sectionId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
       const fileBuffer = await file.arrayBuffer();
@@ -3588,19 +3593,20 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId 
         ContentType: file.type,
       };
 
-      console.log('Uploading to S3 with params:', params);
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setUploadProgress(Math.min(progress, 90));
+        if (progress >= 90) clearInterval(interval);
+      }, 500);
+
       const uploadResult = await s3Client.send(new PutObjectCommand(params));
-      console.log('S3 Upload Success:', uploadResult);
+      clearInterval(interval);
+      setUploadProgress(100);
 
       const fileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`;
-      
-      await logActivity(
-        "file_upload",
-        `Uploaded ${selectedType} file: ${file.name} to S3`
-      );
+      await logActivity('file_upload', `Uploaded ${selectedType} file: ${file.name} to S3`);
 
-      setError(null);
-      setUploadProgress(0);
       return fileUrl;
     } catch (error) {
       console.error('S3 Upload Error:', error);
@@ -3612,19 +3618,36 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId 
 
   const handleAddMaterial = async () => {
     if (!hasPermission()) {
-      setError("You don't have permission to add materials");
+      setError('You don’t have permission to add materials.');
       return;
     }
     if (!materialData.name) {
       setError('Please enter a name.');
       return;
     }
-    if (selectedType !== 'YouTube' && selectedType !== 'Feedback' && !file) {
+    if (selectedType === 'Form' && !materialData.templateId) {
+      setError('Please select a form template.');
+      return;
+    }
+    if (
+      selectedType !== 'YouTube' &&
+      selectedType !== 'Feedback' &&
+      selectedType !== 'Form' &&
+      !file
+    ) {
       setError('Please upload a file.');
       return;
     }
-    if ((selectedType === 'YouTube' || selectedType === 'Feedback') && !materialData.url) {
-      setError(`Please enter a ${selectedType === 'YouTube' ? 'YouTube URL' : 'feedback text'}.`);
+    if (
+      selectedType === 'YouTube' &&
+      materialData.url &&
+      !materialData.url.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//)
+    ) {
+      setError('Please enter a valid YouTube URL.');
+      return;
+    }
+    if (selectedType === 'Feedback' && !materialData.url) {
+      setError('Please enter feedback text.');
       return;
     }
     if (materialData.state === 'scheduled' && !materialData.scheduledAt) {
@@ -3636,201 +3659,352 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId 
     setError(null);
 
     try {
-      const fileUrl = (selectedType === 'YouTube' || selectedType === 'Feedback') 
-        ? materialData.url 
-        : await handleFileUpload();
-
-      if (!fileUrl && selectedType !== 'YouTube' && selectedType !== 'Feedback') {
-        setUploading(false);
-        return;
+      let fileUrl = null;
+      if (selectedType !== 'YouTube' && selectedType !== 'Feedback' && selectedType !== 'Form') {
+        fileUrl = await handleFileUpload();
+        if (!fileUrl) {
+          throw new Error('File upload failed.');
+        }
+      } else if (selectedType === 'YouTube' || selectedType === 'Feedback') {
+        fileUrl = materialData.url;
       }
+      // For Form, fileUrl remains null, and templateId is used
 
-      // Use sessionId if provided, otherwise save to section-level materials
-      const collectionPath = sessionId 
+      const collectionPath = sessionId
         ? `curriculums/${curriculumId}/sections/${sectionId}/sessions/${sessionId}/materials`
         : `curriculums/${curriculumId}/sections/${sectionId}/materials`;
 
       await addDoc(collection(db, collectionPath), {
         type: selectedType,
         name: materialData.name,
-        description: materialData.description,
-        url: fileUrl,
+        description: materialData.description || null,
+        url: fileUrl || null,
+        templateId: selectedType === 'Form' ? materialData.templateId : null, // Store templateId for Form
         maxViews: materialData.maxViews === 'Unlimited' ? null : parseInt(materialData.maxViews, 10),
         isPrerequisite: materialData.isPrerequisite,
         allowDownload: materialData.allowDownload,
         accessOn: materialData.accessOn,
         state: materialData.state,
         scheduledAt: materialData.state === 'scheduled' ? new Date(materialData.scheduledAt).toISOString() : null,
-        createdAt: new Date(),
+        createdAt: serverTimestamp(),
       });
 
-      setUploading(false);
+      await logActivity('Material Added', `Added ${selectedType} material: ${materialData.name}`);
       onClose();
     } catch (err) {
       console.error('Error saving material:', err);
-      setError('Failed to save: ' + err.message);
+      setError('Failed to save material: ' + err.message);
+    } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
   if (!isOpen || loading) return null;
 
   return (
-    <div style={styles.modalOverlay}>
-      <div style={styles.modal}>
-        <div style={styles.modalHeader}>
-          <h3>Add Material</h3>
-          <button onClick={onClose} style={styles.closeButton} disabled={uploading}>✕</button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-end z-50">
+      <div className="bg-white w-full max-w-md h-full p-6 shadow-lg animate-slide-in-right overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Add Material</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-xl disabled:opacity-50"
+            disabled={uploading}
+            aria-label="Close modal"
+          >
+            ✕
+          </button>
         </div>
 
-        <div style={styles.modalContent}>
+        <div className="flex-1 space-y-6">
           {view === 'typeSelection' && (
             <>
-              <p style={styles.subTitle}>Select material type</p>
-              <div style={styles.materialGrid}>
+              <p className="text-sm text-gray-600">Select material type</p>
+              <div className="grid grid-cols-4 gap-3">
                 {materialTypes.map((material) => (
                   <div
                     key={material.type}
-                    style={{
-                      ...styles.materialItem,
-                      backgroundColor: selectedType === material.type ? '#e0e7ff' : '#fff',
-                    }}
+                    className={`flex flex-col items-center p-3 border rounded-md cursor-pointer transition-colors ${
+                      selectedType === material.type ? 'bg-indigo-100 border-indigo-500' : 'bg-white border-gray-200'
+                    } hover:bg-gray-50`}
                     onClick={() => handleTypeSelect(material.type)}
                   >
-                    <span style={styles.materialIcon}>{material.icon}</span>
-                    <span style={styles.materialLabel}>{material.type}</span>
+                    <span className="text-2xl mb-2">{material.icon}</span>
+                    <span className="text-xs text-center">{material.type}</span>
                   </div>
                 ))}
               </div>
-              {error && <div style={styles.errorMessage}>{error}</div>}
+              {error && <p className="text-red-600 text-sm">{error}</p>}
             </>
           )}
 
           {(view === 'fileConfig' || view === 'textConfig') && (
             <>
-              <p style={styles.subTitle}>
-                Type: {selectedType} <span style={styles.changeLink} onClick={handleBack}>Change</span>
+              <p className="text-sm text-gray-600">
+                Type: {selectedType}
+                <span
+                  className="ml-2 text-indigo-600 cursor-pointer hover:underline"
+                  onClick={handleBack}
+                >
+                  Change
+                </span>
               </p>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Name <span style={styles.required}>*</span></label>
-                <input
-                  type="text"
-                  name="name"
-                  value={materialData.name}
-                  onChange={handleMaterialDataChange}
-                  placeholder={`Enter ${selectedType} name`}
-                  style={styles.input}
-                  maxLength={100}
-                  disabled={uploading}
-                />
-                <span style={styles.charCount}>{materialData.name.length} / 100</span>
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Description (Optional)</label>
-                <textarea
-                  name="description"
-                  value={materialData.description}
-                  onChange={handleMaterialDataChange}
-                  placeholder="Enter a description"
-                  style={styles.textarea}
-                  disabled={uploading}
-                />
-              </div>
-              {view === 'fileConfig' && (
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Upload file <span style={styles.required}>*</span></label>
-                  <div style={styles.uploadBox}>
-                    {file ? (
-                      <p style={styles.fileName}>Selected file: {file.name}</p>
-                    ) : (
-                      <>
-                        <span style={styles.uploadIcon}>☁️</span>
-                        <p>Upload {selectedType.toLowerCase()} file</p>
-                        <p style={styles.uploadNote}>Max file size: 100MB</p>
-                      </>
-                    )}
-                    <input
-                      type="file"
-                      accept={
-                        selectedType === 'Quiz' ? 'application/pdf,image/jpeg,image/png' :
-                        selectedType === 'Video' ? 'video/mp4,video/mpeg,video/webm' :
-                        selectedType === 'PDF' ? 'application/pdf' :
-                        selectedType === 'Image' ? 'image/*' :
-                        selectedType === 'Sheet' ? '.xls,.xlsx' :
-                        selectedType === 'Slide' ? '.ppt,.pptx' :
-                        selectedType === 'Assignment' || selectedType === 'Form' ? 'application/pdf' :
-                        selectedType === 'Zip' ? 'application/zip' : '*/*'
-                      }
-                      onChange={handleFileChange}
-                      style={styles.fileInputOverlay}
-                      disabled={uploading}
-                    />
-                  </div>
-                </div>
-              )}
-              {view === 'textConfig' && (
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>
-                    {selectedType === 'YouTube' ? 'YouTube URL' : 'Feedback Text'} <span style={styles.required}>*</span>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    name="url"
-                    value={materialData.url}
+                    name="name"
+                    value={materialData.name}
                     onChange={handleMaterialDataChange}
-                    placeholder={selectedType === 'YouTube' ? 'Enter YouTube URL' : 'Enter feedback text'}
-                    style={styles.input}
+                    placeholder={`Enter ${selectedType} name`}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                    maxLength={100}
+                    disabled={uploading}
+                    required
+                  />
+                  <p className="text-xs text-gray-500 text-right mt-1">
+                    {materialData.name.length} / 100
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Description (Optional)
+                  </label>
+                  <textarea
+                    name="description"
+                    value={materialData.description}
+                    onChange={handleMaterialDataChange}
+                    placeholder="Enter a description"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 min-h-[100px]"
                     disabled={uploading}
                   />
                 </div>
-              )}
-              <div style={styles.formGroup}>
-                <label style={styles.label}>State <span style={styles.required}>*</span></label>
-                <select
-                  name="state"
-                  value={materialData.state}
-                  onChange={handleMaterialDataChange}
-                  style={styles.select}
-                  disabled={uploading}
-                >
-                  <option value="draft">Draft</option>
-                  <option value="scheduled">Scheduled</option>
-                </select>
-              </div>
-              {materialData.state === 'scheduled' && (
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Schedule Date/Time <span style={styles.required}>*</span></label>
+                {view === 'fileConfig' && selectedType !== 'Form' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Upload file <span className="text-red-500">*</span>
+                    </label>
+                    <div className="mt-1 p-4 border-2 border-dashed border-gray-300 rounded-md text-center relative">
+                      {file ? (
+                        <p className="text-sm text-gray-600">Selected: {file.name}</p>
+                      ) : (
+                        <>
+                          <span className="text-2xl text-gray-400">☁️</span>
+                          <p className="text-sm text-gray-600 mt-2">
+                            Upload {selectedType.toLowerCase()} file
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">Max size: 100MB</p>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept={
+                          selectedType === 'Quiz'
+                            ? 'application/pdf,image/jpeg,image/png'
+                            : selectedType === 'Video'
+                            ? 'video/mp4,video/mpeg,video/webm'
+                            : selectedType === 'PDF'
+                            ? 'application/pdf'
+                            : selectedType === 'Image'
+                            ? 'image/*'
+                            : selectedType === 'Sheet'
+                            ? '.xls,.xlsx'
+                            : selectedType === 'Slide'
+                            ? '.ppt,.pptx'
+                            : selectedType === 'Assignment'
+                            ? 'application/pdf'
+                            : selectedType === 'Zip'
+                            ? 'application/zip'
+                            : '*/*'
+                        }
+                        onChange={handleFileChange}
+                        className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                        disabled={uploading}
+                      />
+                    </div>
+                  </div>
+                )}
+                {selectedType === 'Form' && view === 'textConfig' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Select Form Template <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="templateId"
+                      value={materialData.templateId}
+                      onChange={handleMaterialDataChange}
+                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                      disabled={uploading || formTemplates.length === 0}
+                      required
+                    >
+                      <option value="">Select a template</option>
+                      {formTemplates.map((template) => (
+                        <option key={template.id} value={template.id}>
+                          {template.name || `Template ${template.id}`}
+                        </option>
+                      ))}
+                    </select>
+                    {formTemplates.length === 0 && (
+                      <p className="text-sm text-gray-500 mt-1">No form templates available.</p>
+                    )}
+                  </div>
+                )}
+                {(selectedType === 'YouTube' || selectedType === 'Feedback') && view === 'textConfig' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      {selectedType === 'YouTube' ? 'YouTube URL' : 'Feedback Text'}{' '}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="url"
+                      value={materialData.url}
+                      onChange={handleMaterialDataChange}
+                      placeholder={selectedType === 'YouTube' ? 'Enter YouTube URL' : 'Enter feedback text'}
+                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                      disabled={uploading}
+                      required
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    State <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="state"
+                    value={materialData.state}
+                    onChange={handleMaterialDataChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                    disabled={uploading}
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="scheduled">Scheduled</option>
+                  </select>
+                </div>
+                {materialData.state === 'scheduled' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Schedule Date/Time <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="scheduledAt"
+                      value={materialData.scheduledAt}
+                      onChange={handleMaterialDataChange}
+                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                      disabled={uploading}
+                      required
+                    />
+                  </div>
+                )}
+                <div className="flex gap-4">
+                  <label className="flex items-center text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      name="isPrerequisite"
+                      checked={materialData.isPrerequisite}
+                      onChange={handleMaterialDataChange}
+                      className="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                      disabled={uploading}
+                    />
+                    Prerequisite
+                  </label>
+                  <label className="flex items-center text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      name="allowDownload"
+                      checked={materialData.allowDownload}
+                      onChange={handleMaterialDataChange}
+                      className="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                      disabled={uploading}
+                    />
+                    Allow Download
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Access On <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="accessOn"
+                    value={materialData.accessOn}
+                    onChange={handleMaterialDataChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                    disabled={uploading}
+                  >
+                    <option value="Both">Both</option>
+                    <option value="Web">Web</option>
+                    <option value="Mobile">Mobile</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Max Views
+                  </label>
                   <input
-                    type="datetime-local"
-                    name="scheduledAt"
-                    value={materialData.scheduledAt}
+                    type="text"
+                    name="maxViews"
+                    value={materialData.maxViews}
                     onChange={handleMaterialDataChange}
-                    style={styles.input}
+                    placeholder="Enter max views or Unlimited"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
                     disabled={uploading}
                   />
                 </div>
-              )}
-              {error && <div style={styles.errorMessage}>{error}</div>}
-              {uploading && (
-                <div style={styles.progressBar}>
-                  <div style={{ ...styles.progressFill, width: `${uploadProgress}%` }} />
-                  <span style={styles.progressText}>{Math.round(uploadProgress)}%</span>
-                </div>
-              )}
+                {error && <p className="text-red-600 text-sm">{error}</p>}
+                {uploading && (
+                  <div className="relative w-full h-5 bg-gray-200 rounded-md">
+                    <div
+                      className="absolute h-full bg-indigo-600 rounded-md transition-all"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                    <span className="absolute inset-0 text-xs text-white text-center leading-5">
+                      {Math.round(uploadProgress)}%
+                    </span>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
 
-        <div style={styles.formActions}>
+        <div className="flex justify-end gap-2 mt-6">
           {view === 'typeSelection' ? (
             <>
-              <button onClick={onClose} style={styles.cancelButton} disabled={uploading}>Cancel</button>
-              <button onClick={handleContinue} style={styles.continueButton} disabled={uploading}>Continue</button>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                disabled={uploading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleContinue}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                disabled={uploading}
+              >
+                Continue
+              </button>
             </>
           ) : (
             <>
-              <button onClick={handleBack} style={styles.backButton} disabled={uploading}>Back</button>
-              <button onClick={handleAddMaterial} style={styles.addButton} disabled={uploading}>
+              <button
+                onClick={handleBack}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                disabled={uploading}
+              >
+                Back
+              </button>
+              <button
+                onClick={handleAddMaterial}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                disabled={uploading}
+              >
                 {uploading ? 'Saving...' : 'Save'}
               </button>
             </>
@@ -3839,42 +4013,6 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId 
       </div>
     </div>
   );
-};
-
-// Styles (unchanged for brevity)
-const styles = {
-  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 },
-  modal: { backgroundColor: '#fff', width: '400px', height: '100%', padding: '20px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)', animation: 'slideIn 0.3s ease-out' },
-  modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-  closeButton: { background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer' },
-  modalContent: { flex: 1 },
-  subTitle: { fontSize: '14px', color: '#333', marginBottom: '20px' },
-  changeLink: { color: '#007bff', cursor: 'pointer', marginLeft: '10px' },
-  materialGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' },
-  materialItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.2s' },
-  materialIcon: { fontSize: '24px', marginBottom: '5px' },
-  materialLabel: { fontSize: '12px', textAlign: 'center' },
-  formGroup: { marginBottom: '20px' },
-  label: { display: 'block', fontSize: '14px', marginBottom: '5px', fontWeight: 'bold' },
-  required: { color: 'red' },
-  input: { width: '100%', padding: '8px', borderRadius: '5px', border: '1px solid #ddd', boxSizing: 'border-box' },
-  textarea: { width: '100%', padding: '8px', borderRadius: '5px', border: '1px solid #ddd', boxSizing: 'border-box', minHeight: '100px' },
-  charCount: { fontSize: '12px', color: '#666', textAlign: 'right', marginTop: '5px' },
-  uploadBox: { border: '2px dashed #ddd', borderRadius: '5px', padding: '20px', textAlign: 'center', position: 'relative' },
-  uploadIcon: { fontSize: '24px', color: '#666' },
-  uploadNote: { fontSize: '12px', color: '#666' },
-  fileInputOverlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' },
-  fileName: { fontSize: '12px', color: '#666', marginTop: '5px' },
-  select: { width: '100%', padding: '8px', borderRadius: '5px', border: '1px solid #ddd', boxSizing: 'border-box' },
-  errorMessage: { color: 'red', fontSize: '14px', marginBottom: '10px' },
-  formActions: { display: 'flex', justifyContent: 'flex-end', gap: '10px' },
-  cancelButton: { padding: '8px 15px', backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '5px', cursor: 'pointer' },
-  continueButton: { padding: '8px 15px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' },
-  backButton: { padding: '8px 15px', backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '5px', cursor: 'pointer' },
-  addButton: { padding: '8px 15px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' },
-  progressBar: { width: '100%', backgroundColor: '#f0f0f0', borderRadius: '5px', height: '20px', position: 'relative', marginTop: '10px' },
-  progressFill: { height: '100%', backgroundColor: '#007bff', borderRadius: '5px', transition: 'width 0.3s ease' },
-  progressText: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '12px', color: '#fff' },
 };
 
 export default AddMaterialModal;

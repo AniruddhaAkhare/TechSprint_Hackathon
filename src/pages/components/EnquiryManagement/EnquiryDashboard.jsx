@@ -2,9 +2,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { db } from "../../../config/firebase";
 import { collection, onSnapshot, updateDoc, doc, addDoc } from "firebase/firestore";
-import { FaSearch, FaFilter, FaCircle, FaCheckCircle, FaTimesCircle, FaClock, FaChevronDown } from "react-icons/fa";
+import { FaSearch, FaFilter, FaCircle, FaCheckCircle, FaTimesCircle, FaClock, FaChevronDown, FaChartBar } from "react-icons/fa";
 import Modal from "react-modal";
 import { useAuth } from "../../../context/AuthContext";
+import { Link } from "react-router-dom";
 
 Modal.setAppElement("#root");
 
@@ -26,13 +27,13 @@ const initialVisibility = {
   "contact-in-future": true,
 };
 
-const KanbanBoard = () => {
+const EnquiryDashboard = () => {
   const [columns, setColumns] = useState(initialColumns);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStageVisibilityOpen, setIsStageVisibilityOpen] = useState(false);
   const [stageVisibility, setStageVisibility] = useState(initialVisibility);
   const [view, setView] = useState("kanban");
-  const { rolePermissions } = useAuth();
+  const { rolePermissions, user } = useAuth();
   const [newEnquiry, setNewEnquiry] = useState({
     name: "",
     email: "",
@@ -50,17 +51,35 @@ const KanbanBoard = () => {
   const [instructors, setInstructors] = useState([]);
   const sourceOptions = ["Instagram", "Friend", "Family", "LinkedIn", "College"];
   const stageVisibilityRef = useRef(null);
-  const [instituteId] = useState("A1JnPx6fEQ0wxP1drl3A");
+  const [instituteId] = useState("9z6G6BLzfDScI0mzMOlB");
   const [editingEnquiryId, setEditingEnquiryId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters] = useState({ centers: [], batches: [] });
 
   const canCreate = rolePermissions.enquiries?.create || false;
   const canUpdate = rolePermissions.enquiries?.update || false;
   const canDelete = rolePermissions.enquiries?.delete || false;
   const canDisplay = rolePermissions.enquiries?.display || false;
+  // const canView = rolePermissions.enquiries?.view || false;
 
-  // console.log("Permissions from AuthContext:", rolePermissions);
-  // console.log("Permission flags:", { canCreate, canUpdate, canDelete, canDisplay });
+  const logActivity = async (action, details) => {
+    if (!canDisplay) return;
+    try {
+      const activityLog = {
+        action,
+        details,
+        timestamp: new Date().toISOString(),
+        userEmail: user?.email || 'currentUser@example.com',
+        userId: user?.uid || 'currentUserId',
+        centerId: filters.centers.join(', ') || 'All',
+        batchId: filters.batches.join(', ') || 'All',
+      };
+      await addDoc(collection(db, 'activityLogs'), activityLog);
+      console.log(`Logged activity: ${action}`, details);
+    } catch (error) {
+      console.error('Error logging activity:', error);
+    }
+  };
 
   if (!canDisplay) {
     return (
@@ -82,6 +101,7 @@ const KanbanBoard = () => {
         }));
         console.log("Fetched courses:", coursesData);
         setCourses(coursesData);
+        logActivity('FETCH_COURSES', { count: coursesData.length });
       },
       (error) => {
         console.error("Error fetching courses:", error);
@@ -92,19 +112,40 @@ const KanbanBoard = () => {
 
   // Fetch Branches
   useEffect(() => {
-    console.log("Fetching branches...");
+    if (!instituteId) {
+      console.log("instituteId is not set, skipping branch fetch");
+      return;
+    }
+    console.log("Fetching branches for instituteId:", instituteId);
+    const branchCollection = collection(db, "instituteSetup", instituteId, "Center");
     const unsubscribe = onSnapshot(
-      collection(db, "instituteSetup", instituteId, "Center"),
+      branchCollection,
       (snapshot) => {
-        const branchesData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        console.log("Fetched branches:", branchesData);
+        if (snapshot.empty) {
+          console.log("No branches found in Center collection");
+          setBranches([]);
+          return;
+        }
+        const branchesData = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          console.log("Raw branch data:", data);
+          return {
+            id: doc.id,
+            name: data.name || data.centerName || "Unnamed Branch", // Fallback for missing name
+            ...data,
+          };
+        });
+        console.log("Processed branches:", branchesData);
         setBranches(branchesData);
+        // logActivity('FETCH_BRANCHES', { count: branchesData.length });
       },
       (error) => {
         console.error("Error fetching branches:", error);
+        if (error.code === "permission-denied") {
+          alert("You don't have permission to view branches. Contact your administrator.");
+        } else {
+          alert(`Failed to fetch branches: ${error.message}`);
+        }
       }
     );
     return () => unsubscribe();
@@ -122,6 +163,7 @@ const KanbanBoard = () => {
         }));
         console.log("Fetched instructors:", instructorsData);
         setInstructors(instructorsData);
+        // logActivity('FETCH_INSTRUCTORS', { count: instructorsData.length });
       },
       (error) => {
         console.error("Error fetching instructors:", error);
@@ -149,7 +191,6 @@ const KanbanBoard = () => {
           }, {});
 
           enquiries.forEach((enquiry) => {
-            // Normalize stage to match initialColumns keys
             const columnId = enquiry.stage?.toLowerCase().replace(/\s+/g, "-") || "pre-qualified";
             if (updatedColumns[columnId]) {
               updatedColumns[columnId].items.push(enquiry);
@@ -158,7 +199,8 @@ const KanbanBoard = () => {
             }
           });
           console.log("Setting columns to:", updatedColumns);
-          return { ...updatedColumns }; // Deep copy to trigger re-render
+          // logActivity('Update Enquiry', { count: enquiries.length });
+          return { ...updatedColumns };
         });
       },
       (error) => {
@@ -218,9 +260,10 @@ const KanbanBoard = () => {
         const enquiryRef = doc(db, "enquiries", movedItem.id);
         await updateDoc(enquiryRef, { stage: destination.droppableId });
         console.log(`Moved enquiry ${movedItem.id} to ${destination.droppableId}`);
+        logActivity('MOVED ENQUIRY', { enquiryId: movedItem.id, from: source.droppableId, to: destination.droppableId });
       } catch (error) {
         console.error("Error updating Firestore:", error);
-        setColumns(columns); // Revert on error
+        setColumns(columns);
       }
     }
   };
@@ -240,6 +283,7 @@ const KanbanBoard = () => {
     });
     setEditingEnquiryId(enquiry.id);
     setIsModalOpen(true);
+    logActivity('EDIT_ENQUIRY', { enquiryId: enquiry.id });
   };
 
   const handleAddEnquiry = async () => {
@@ -289,13 +333,15 @@ const KanbanBoard = () => {
         console.log("Updating enquiry:", enquiryData);
         const enquiryRef = doc(db, "enquiries", editingEnquiryId);
         await updateDoc(enquiryRef, enquiryData);
+        logActivity('UPDATE ENQUIRY', { enquiryId: editingEnquiryId });
       } else {
         if (!canCreate) {
           alert("You don't have permission to create enquiries");
           return;
         }
         console.log("Creating new enquiry:", enquiryData);
-        await addDoc(collection(db, "enquiries"), enquiryData);
+        const docRef = await addDoc(collection(db, "enquiries"), enquiryData);
+        logActivity('CREATE_ENQUIRY', { enquiryId: docRef.id });
       }
 
       setNewEnquiry({
@@ -308,8 +354,7 @@ const KanbanBoard = () => {
         source: "",
         assignTo: "",
         notes: "",
-        tags: [],
-      });
+        tags: [],          });
       setEditingEnquiryId(null);
       setIsModalOpen(false);
     } catch (error) {
@@ -338,10 +383,12 @@ const KanbanBoard = () => {
         ? newEnquiry.tags.filter((t) => t !== tag)
         : [...newEnquiry.tags, tag],
     });
+    logActivity('TOGGLE_TAG', { tag });
   };
 
   const toggleStageVisibility = (stage) => {
     setStageVisibility((prev) => ({ ...prev, [stage]: !prev[stage] }));
+    logActivity('TOGGLE_STAGE_VISIBILITY', { stage });
   };
 
   const allEnquiries = Object.values(columns)
@@ -355,7 +402,7 @@ const KanbanBoard = () => {
         enquiry.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-  console.log("Current columns state:", columns); // Log state before rendering
+  console.log("Current columns state:", columns);
 
   return (
     <div className="h-screen flex flex-col bg-gray-100 w-[calc(100vw-360px)]">
@@ -372,11 +419,20 @@ const KanbanBoard = () => {
               <FaCircle className="text-gray-400" />
               Manage Tags
             </button>
+            <Link
+              to="/enquiry-analytics"
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto hover:bg-gray-100"
+              onClick={() => logActivity('NAVIGATE_ANALYTICS', {})}
+            >
+              <FaChartBar />
+              Analytics
+            </Link>
             {canCreate && (
               <button
                 onClick={() => {
                   console.log("Add Enquiry clicked, canCreate:", canCreate);
                   setIsModalOpen(true);
+                  logActivity('OPEN_ADD_ENQUIRY', {});
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md w-full sm:w-auto hover:bg-blue-700 transition-colors"
               >
@@ -390,13 +446,19 @@ const KanbanBoard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex gap-2 w-full sm:w-auto">
             <button
-              onClick={() => setView("kanban")}
+              onClick={() => {
+                setView("kanban");
+                logActivity('SWITCH_VIEW', { view: 'kanban' });
+              }}
               className={`px-4 py-2 border border-gray-300 rounded-md w-full sm:w-auto ${view === "kanban" ? "bg-white text-gray-700" : "bg-gray-100 text-gray-500"} hover:bg-white`}
             >
               Kanban View
             </button>
             <button
-              onClick={() => setView("list")}
+              onClick={() => {
+                setView("list");
+                logActivity('SWITCH_VIEW', { view: 'list' });
+              }}
               className={`px-4 py-2 border border-gray-300 rounded-md w-full sm:w-auto ${view === "list" ? "bg-white text-gray-700" : "bg-gray-100 text-gray-500"} hover:bg-white`}
             >
               List View
@@ -410,7 +472,10 @@ const KanbanBoard = () => {
                 placeholder="Search enquiries..."
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  logActivity('SEARCH_ENQUIRIES', { term: e.target.value });
+                }}
               />
             </div>
             <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto hover:bg-gray-100">
@@ -582,7 +647,7 @@ const KanbanBoard = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Enquiry Modal */}
       <Modal
         isOpen={isModalOpen}
         onRequestClose={() => setIsModalOpen(false)}
@@ -756,4 +821,4 @@ const KanbanBoard = () => {
   );
 };
 
-export default KanbanBoard;
+export default EnquiryDashboard;

@@ -122,7 +122,7 @@ const QuestionForm = ({ onAddQuestion, initialData, questions }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
+      <div className="overflow-y-auto h-full">
         <label className="block text-sm font-medium text-gray-700 mb-1">Question</label>
         <input
           type="text"

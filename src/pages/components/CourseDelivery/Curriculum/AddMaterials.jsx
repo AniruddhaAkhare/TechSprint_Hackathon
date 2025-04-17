@@ -780,6 +780,7 @@ import QuestionBankModal from '../../QuestionBank/QuestionBank.jsx';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../../../config/firebase'; // Ensure storage is exported from firebase config
 import { serverTimestamp } from 'firebase/firestore'; // Import serverTimestamp
+import { useAuth } from '../../../../context/AuthContext.jsx';
 
 const AddMaterial = () => {
   const { curriculumId, sectionId, sessionId } = useParams();
@@ -792,14 +793,17 @@ const AddMaterial = () => {
   const [uploadError, setUploadError] = useState(null);
   const [state, setState] = useState('draft');
   const [scheduledAt, setScheduledAt] = useState('');
+  const {user, rolePermissions} = useAuth();
   const navigate = useNavigate();
+
+  const canView = rolePermissions?.curriculums?.display || false;
 
   // Check user authentication and role
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid)); // Use getDoc instead of .get()
+          const userDoc = await getDoc(doc(db, 'Users', user.uid)); // Use getDoc instead of .get()
           if (userDoc.exists()) {
             const userData = userDoc.data();
             setUserRole(userData.role || 'unknown'); // Assuming role is stored directly in users collection
@@ -828,7 +832,7 @@ const AddMaterial = () => {
     try {
       await addDoc(collection(db, 'activityLogs'), {
         userId: user.uid,
-        userEmail: user.email || 'Unknown',
+        userEmail: user.email,
         action,
         details,
         timestamp: serverTimestamp(),
@@ -845,7 +849,7 @@ const AddMaterial = () => {
   // Handle file upload to Firebase Storage (PDFs and Videos)
   const handleFileUploadToStorage = async (file, type) => {
     if (!file) return;
-    if (!hasPermission()) {
+    if (!canView) {
       alert("You don't have permission to upload files");
       return;
     }
@@ -877,7 +881,7 @@ const AddMaterial = () => {
   // Handle file upload to S3 (PDFs and Videos)
   const handleFileUpload = async (file, type) => {
     if (!file) return;
-    if (!hasPermission()) {
+    if (!canView) {
       alert("You don't have permission to upload files");
       return;
     }
@@ -939,7 +943,7 @@ const AddMaterial = () => {
   // Handle adding YouTube link or feedback text
   const handleAddTextContent = async (type, content) => {
     if (!content.trim()) return alert(`Please provide a ${type === 'youtubeLinks' ? 'URL' : 'text'}`);
-    if (!hasPermission()) {
+    if (!canView) {
       alert("You don't have permission to add content");
       return;
     }
@@ -977,7 +981,7 @@ const AddMaterial = () => {
 
   // Handle adding quiz from QuestionBankModal
   const handleAddQuiz = async (selectedQuestions) => {
-    if (!hasPermission()) {
+    if (!canView) {
       alert("You don't have permission to add quizzes");
       return;
     }
@@ -1040,7 +1044,7 @@ const AddMaterial = () => {
         </button>
       </div>
 
-      {hasPermission() ? (
+      {canView ? (
         <div className="space-y-4">
           <div>
             <label>State:</label>

@@ -34,7 +34,7 @@ export default function Navigation() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const userDoc = await getDoc(doc(db, 'Users', user.uid));
         if (userDoc.exists()) {
           setUserRole(userDoc.data().role);
         }

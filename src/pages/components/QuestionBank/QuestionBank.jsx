@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../config/firebase';
-import { collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import QuestionList from './QusetionList';
+import { collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import QuestionList from './QusetionList'; // Corrected typo from QusetionList
 import QuestionForm from './QuestionForm';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -12,27 +12,48 @@ const QuestionBank = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
-  const [selectedQuestions, setSelectedQuestions] = useState([]); // New state for selected questions
+  const [selectedQuestions, setSelectedQuestions] = useState([]);
   const { user, rolePermissions } = useAuth();
-  
+
   const canCreate = rolePermissions.templates?.create || false;
   const canUpdate = rolePermissions.templates?.update || false;
   const canDelete = rolePermissions.templates?.delete || false;
 
   useEffect(() => {
     const fetchQuestions = async () => {
-      const q = query(collection(db, 'questions'));
-      const querySnapshot = await getDocs(q);
-      const questionsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setQuestions(questionsData);
+      try {
+        const q = query(collection(db, 'questions'));
+        const querySnapshot = await getDocs(q);
+        const questionsData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setQuestions(questionsData);
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+      }
     };
     fetchQuestions();
   }, []);
 
   const uniqueSubjects = [...new Set(questions.map(q => q.subject))].filter(Boolean);
+
+  const logActivity = async (action, details) => {
+    try {
+      await addDoc(collection(db, 'activityLogs'), {
+        action,
+        details: {
+          ...details,
+          
+        },
+        userId: user.uid,
+        userEmail: user.email,
+        timestamp: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error('Error logging activity:', error);
+    }
+  };
 
   const addQuestion = async (questionData) => {
     try {
@@ -40,25 +61,52 @@ const QuestionBank = () => {
         const questionRef = doc(db, 'questions', editingQuestion.id);
         await updateDoc(questionRef, questionData);
         setQuestions(questions.map(q => (q.id === editingQuestion.id ? { id: q.id, ...questionData } : q)));
+        await logActivity('Updated question', {
+          questionId: editingQuestion.id,
+          question: questionData.question,
+          oldQuestion: editingQuestion.question,
+          oldType: editingQuestion.type,
+          newType: questionData.type,
+          oldSubject: editingQuestion.subject,
+          newSubject: questionData.subject,
+        });
+        alert('Question updated successfully!');
         setEditingQuestion(null);
       } else if (canCreate) {
         const docRef = await addDoc(collection(db, 'questions'), questionData);
         setQuestions([...questions, { id: docRef.id, ...questionData }]);
+        await logActivity('Created question', {
+          questionId: docRef.id,
+          question: questionData.question,
+          type: questionData.type,
+          subject: questionData.subject,
+        });
+        alert('Question created successfully!');
       }
       setIsPanelOpen(false);
     } catch (error) {
       console.error('Error adding/updating question:', error);
+      alert('Failed to save question. Please try again.');
     }
   };
 
   const deleteQuestion = async (id) => {
     if (!canDelete) return;
     try {
+      const questionToDelete = questions.find(q => q.id === id);
       await deleteDoc(doc(db, 'questions', id));
       setQuestions(questions.filter(q => q.id !== id));
       setSelectedQuestions(selectedQuestions.filter(selectedId => selectedId !== id));
+      await logActivity('Deleted question', {
+        questionId: id,
+        question: questionToDelete?.question || 'Unknown',
+        type: questionToDelete?.type,
+        subject: questionToDelete?.subject,
+      });
+      alert('Question deleted successfully!');
     } catch (error) {
       console.error('Error deleting question:', error);
+      alert('Failed to delete question. Please try again.');
     }
   };
 
@@ -67,9 +115,21 @@ const QuestionBank = () => {
     if (!window.confirm(`Are you sure you want to delete ${selectedQuestions.length} question(s)?`)) return;
 
     try {
+      const questionsToDelete = questions.filter(q => selectedQuestions.includes(q.id));
       await Promise.all(selectedQuestions.map(id => deleteDoc(doc(db, 'questions', id))));
       setQuestions(questions.filter(q => !selectedQuestions.includes(q.id)));
+      await logActivity('Deleted multiple questions', {
+        questionIds: selectedQuestions,
+        count: selectedQuestions.length,
+        questions: questionsToDelete.map(q => ({
+          id: q.id,
+          question: q.question,
+          type: q.type,
+          subject: q.subject,
+        })),
+      });
       setSelectedQuestions([]);
+      alert(`${selectedQuestions.length} question(s) deleted successfully!`);
     } catch (error) {
       console.error('Error deleting multiple questions:', error);
       alert('Failed to delete some questions. Please try again.');
@@ -197,7 +257,7 @@ const QuestionBank = () => {
           isPanelOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="p-6 bg-white h-full">
+        <div className="p-6 bg-white h-full overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
               {editingQuestion ? 'Edit Question' : 'Add New Question'}

@@ -28,7 +28,7 @@ const contextActions = (dispatch) => {
           const userCredential = await signInWithEmailAndPassword(auth, email, password);
           
           // Get additional user data from Firestore
-          const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+          const userDoc = await getDoc(doc(db, 'Users', userCredential.user.uid));
           
           dispatch({
             type: actionTypes.AUTH_SUCCESS,
@@ -59,7 +59,7 @@ const contextActions = (dispatch) => {
       updateUserProfile: async (userId, updates) => {
         try {
           dispatch({ type: actionTypes.PROFILE_UPDATE_START });
-          await updateDoc(doc(db, 'users', userId), updates);
+          await updateDoc(doc(db, 'Users', userId), updates);
           dispatch({
             type: actionTypes.PROFILE_UPDATE_SUCCESS,
             payload: updates

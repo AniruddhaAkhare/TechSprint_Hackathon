@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { db } from '../../../config/firebase';
-import { collection, getDocs, doc, setDoc, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from '@material-tailwind/react';
 
@@ -51,6 +51,26 @@ export default function Roles() {
     };
     fetchRoles();
   }, [canDisplay]);
+
+  // Activity logging function
+  const logActivity = async (action, details) => {
+    if (!user) {
+      console.error("No current user available for logging");
+      return;
+    }
+    try {
+      const logRef = await addDoc(collection(db, "activityLogs"), {
+        timestamp: serverTimestamp(),
+        userId: user.uid,
+        userEmail: user.email || 'Unknown',
+        action,
+        details,
+      });
+      console.log("Activity logged with ID:", logRef.id, { action, details });
+    } catch (err) {
+      console.error("Error logging activity:", err.message);
+    }
+  };
 
   const handlePermissionChange = (section, action, permissions) => {
     if (editingRole) {
@@ -112,7 +132,16 @@ export default function Roles() {
     try {
       const newRole = { name: newRoleName, permissions: newRolePermissions };
       const roleRef = await addDoc(collection(db, 'roles'), newRole);
-      setRoles([...roles, { id: roleRef.id, ...newRole }]);
+      const newRoleId = roleRef.id;
+      setRoles([...roles, { id: newRoleId, ...newRole }]);
+
+      // Log the creation
+      await logActivity("Created role", {
+        roleId: newRoleId,
+        name: newRoleName,
+        permissions: newRolePermissions,
+      });
+
       setNewRoleName('');
       setNewRolePermissions({
         instituteSetup: { create: false, update: false, display: false, delete: false },
@@ -151,8 +180,20 @@ export default function Roles() {
     }
     try {
       const roleDoc = doc(db, 'roles', editingRole.id);
+      const oldRole = roles.find(r => r.id === editingRole.id);
       await setDoc(roleDoc, { permissions: editingRole.permissions }, { merge: true });
       setRoles(roles.map(r => (r.id === editingRole.id ? { ...r, permissions: editingRole.permissions } : r)));
+
+      // Log the update
+      await logActivity("Updated role", {
+        roleId: editingRole.id,
+        name: editingRole.name,
+        changes: {
+          oldPermissions: oldRole.permissions,
+          newPermissions: editingRole.permissions,
+        },
+      });
+
       setEditingRole(null);
       setIsEditModalOpen(false);
       alert('Role updated successfully!');
@@ -168,7 +209,16 @@ export default function Roles() {
       return;
     }
     try {
+      const roleToDelete = roles.find(r => r.id === deleteId);
       await deleteDoc(doc(db, 'roles', deleteId));
+      
+      // Log the deletion
+      await logActivity("Deleted role", {
+        roleId: deleteId,
+        name: roleToDelete.name,
+        permissions: roleToDelete.permissions,
+      });
+
       setRoles(roles.filter(r => r.id !== deleteId));
       setOpenDelete(false);
       alert('Role deleted successfully!');

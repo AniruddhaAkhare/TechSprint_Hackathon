@@ -1,5 +1,3 @@
-
-
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getFirestore, collection, onSnapshot, query, getDocs } from "firebase/firestore";

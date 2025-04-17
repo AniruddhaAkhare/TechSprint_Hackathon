@@ -279,7 +279,7 @@
 // // // // // // // //                         </ListItem>
 // // // // // // // //                         <AccordionBody className="py-1">
 // // // // // // // //                             <List className="p-0 text-white">
-// // // // // // // //                                 <ListItem onClick={() => navigate('/users')}>
+// // // // // // // //                                 <ListItem onClick={() => navigate('/')}>
 // // // // // // // //                                     <ListItemPrefix>
 // // // // // // // //                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
 // // // // // // // //                                     </ListItemPrefix>
@@ -1974,7 +1974,7 @@
 //   const canViewFinancePartners = rolePermissions.FinancePartner?.display || false;
 
 //   useEffect(() => {
-    
+
 //     const fetchInstituteLogo = async () => {
 //       try {
 //         const querySnapshot = await getDocs(collection(db, "instituteSetup"));
@@ -2319,7 +2319,11 @@ const Sidebar = () => {
           if (!instituteSnapshot.empty) {
             const instituteData = instituteSnapshot.docs[0].data();
             const trialEndDate = new Date(instituteData.trialEndDate);
+            //  trialEndDate.setHours(23, 59, 59, 999); 
             const currentDate = new Date();
+
+            console.log("Parsed trialEndDate:", trialEndDate.toISOString());
+            console.log("Current date:", currentDate.toISOString());
 
             if (isNaN(trialEndDate.getTime())) {
               setTrialStatus({ trialActive: false, daysRemaining: 0 });
@@ -2329,14 +2333,20 @@ const Sidebar = () => {
 
             const timeDiff = trialEndDate - currentDate;
             const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-            const isTrialActive = instituteData.trialActive && daysRemaining > 0;
+            const isTrialActive = instituteData.trialActive && timeDiff > 0;
+            console.log("Time difference in ms:", timeDiff);
+            console.log("Days remaining:", daysRemaining);
+
 
             setTrialStatus({
               trialActive: isTrialActive,
               daysRemaining: daysRemaining > 0 ? daysRemaining : 0,
             });
 
-            if (!isTrialActive) navigate("/subscribe");
+            if (!isTrialActive) {
+              console.log("Trail ends")
+              navigate("/subscribe");
+            }
           } else {
             // Create new instituteSetup document with 7-day trial
             const trialStartDate = new Date();
@@ -2385,10 +2395,10 @@ const Sidebar = () => {
 
   const handleImageError = (e) => {
     setLogoError("Failed to load logo image.");
-    e.target.src = '/img/fireblaze.jpg'; // Fallback to default logo
+    e.target.src = '/img/fireblaze.jpg'; 
   };
 
-  if (!authUser) return null; // Don't render if no user is logged in
+  if (!authUser) return null; 
 
   return (
     <div className="sidebar">

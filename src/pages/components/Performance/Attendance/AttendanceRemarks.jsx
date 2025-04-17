@@ -35,7 +35,7 @@ export default function AttendanceRemarks() {
 
     // ✅ Fix: Define the function properly
     const handleCreateAttendanceRemarks = () => {
-        navigate("/createAttendanceRemarks", { state: { student } });  // ✅ Navigate to CreateMockTest with student data
+        navigate("/createAttendanceRemarks", { state: { student } });  // Navigate to CreateMockTest with student data
     };
 
     return (

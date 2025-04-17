@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { db } from "../../../config/firebase";
-import { getDocs, collection, deleteDoc, doc, query, orderBy } from "firebase/firestore";
+import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc } from "firebase/firestore";
 import AddFinancePartner from "./AddFinancePartner.jsx";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 import { Select, MenuItem, FormControl } from "@mui/material";
-import { useAuth } from "../../../context/AuthContext"; // Adjust the import path as needed
+import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function FinancePartner() {
   const navigate = useNavigate();
-  const { rolePermissions } = useAuth(); // Fetch permissions from useAuth hook
+  const { user, rolePermissions } = useAuth();
   const [currentPartner, setCurrentPartner] = useState(null);
   const [partners, setPartners] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,12 +28,29 @@ export default function FinancePartner() {
   const canDelete = rolePermissions?.FinancePartner?.delete || false;
   const canDisplay = rolePermissions?.FinancePartner?.display || false;
 
+  // Activity logging function
+  const logActivity = async (action, details) => {
+    try {
+      const activityLog = {
+        action,
+        details,
+        timestamp: new Date().toISOString(),
+        userEmail: user?.email || 'anonymous',
+        userId: user.uid
+      };
+      await addDoc(collection(db, 'activityLogs'), activityLog);
+    } catch (error) {
+      console.error('Error logging activity:', error);
+    }
+  };
+
   const toggleSidebar = () => setIsOpen((prev) => !prev);
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
     if (!searchTerm.trim()) {
       setSearchResults([]);
+      // logActivity('SEARCH_PARTNERS', { searchTerm: '', resultCount: 0 });
       return;
     }
     const results = partners.filter(
@@ -47,6 +64,7 @@ export default function FinancePartner() {
         )
     );
     setSearchResults(results);
+    // logActivity('SEARCH_PARTNERS', { searchTerm, resultCount: results.length });
   };
 
   useEffect(() => {
@@ -56,6 +74,7 @@ export default function FinancePartner() {
 
   const fetchPartners = async () => {
     try {
+      setLoading(true);
       const q = query(PartnerCollectionRef, orderBy("createdAt", "asc"));
       const snapshot = await getDocs(q);
       const partnerData = snapshot.docs.map((doc) => ({
@@ -63,53 +82,70 @@ export default function FinancePartner() {
         ...doc.data(),
       }));
       setPartners(partnerData);
-      setLoading(false);
+      // logActivity('FETCH_PARTNERS_SUCCESS', { count: partnerData.length });
     } catch (err) {
       console.error("Error fetching partners:", err);
+      // logActivity('FETCH_PARTNERS_ERROR', { error: err.message });
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
     if (!canDisplay) {
-      navigate("/unauthorized"); // Redirect if user can't view this page
+      // logActivity('UNAUTHORIZED_ACCESS_ATTEMPT', { page: 'FinancePartner' });
+      navigate("/unauthorized");
       return;
     }
     fetchPartners();
   }, [canDisplay, navigate]);
 
   const handleCreatePartnerClick = () => {
-    if (!canCreate) return; // Prevent creation if no permission
+    if (!canCreate) {
+      // logActivity('UNAUTHORIZED_CREATE_ATTEMPT', { action: 'createFinancePartner' });
+      return;
+    }
     setCurrentPartner(null);
     toggleSidebar();
+    // logActivity('OPEN_CREATE_PARTNER', {});
   };
 
   const handleEditClick = (partner) => {
-    if (!canUpdate) return; // Prevent editing if no permission
+    if (!canUpdate) {
+      // logActivity('UNAUTHORIZED_UPDATE_ATTEMPT', { action: 'editFinancePartner', partnerId: partner.id });
+      return;
+    }
     setCurrentPartner(partner);
     setIsOpen(true);
+    // logActivity('OPEN_EDIT_PARTNER', { partnerId: partner.id });
   };
 
   const handleClose = () => {
     setIsOpen(false);
     setCurrentPartner(null);
     fetchPartners();
+    // logActivity('CLOSE_PARTNER_SIDEBAR', {});
   };
 
   const deletePartner = async () => {
-    if (!canDelete || !deleteId) return; // Prevent deletion if no permission
+    if (!canDelete || !deleteId) {
+      // logActivity('UNAUTHORIZED_DELETE_ATTEMPT', { action: 'deleteFinancePartner', partnerId: deleteId });
+      return;
+    }
     try {
       await deleteDoc(doc(db, "FinancePartner", deleteId));
       fetchPartners();
       setOpenDelete(false);
       setDeleteMessage("Are you sure you want to delete this partner? This action cannot be undone.");
+      logActivity('DELETE PARTNER SUCCESS', { partnerId: deleteId });
     } catch (err) {
       console.error("Error deleting partner:", err);
       setDeleteMessage("An error occurred while trying to delete the partner.");
+      // logActivity('DELETE_PARTNER_ERROR', { partnerId: deleteId, error: err.message });
     }
   };
 
-  if (!canDisplay) return null; // Render nothing if no display permission
+  if (!canDisplay) return null;
 
   if (loading) {
     return (
@@ -204,6 +240,7 @@ export default function FinancePartner() {
                               setDeleteId(partner.id);
                               setOpenDelete(true);
                               setDeleteMessage("Are you sure you want to delete this partner? This action cannot be undone.");
+                              // logActivity('INITIATE_DELETE_PARTNER', { partnerId: partner.id });
                             }
                           }}
                           displayEmpty
@@ -260,7 +297,10 @@ export default function FinancePartner() {
       {canDelete && openDelete && (
         <Dialog
           open={openDelete}
-          handler={() => setOpenDelete(false)}
+          handler={() => {
+            setOpenDelete(false);
+            // logActivity('CANCEL_DELETE_PARTNER', { partnerId: deleteId });
+          }}
           className="rounded-lg shadow-lg"
         >
           <DialogHeader className="text-gray-800 font-semibold">Confirm Deletion</DialogHeader>
@@ -269,7 +309,10 @@ export default function FinancePartner() {
             <Button
               variant="text"
               color="gray"
-              onClick={() => setOpenDelete(false)}
+              onClick={() => {
+                setOpenDelete(false);
+                // logActivity('CANCEL_DELETE_PARTNER', { partnerId: deleteId });
+              }}
             >
               Cancel
             </Button>
