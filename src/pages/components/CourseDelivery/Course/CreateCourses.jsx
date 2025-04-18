@@ -303,13 +303,13 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity }) => {
           </select>
 
           {centerAssignments.length > 0 && (
-            <div className="mt-4">
-              <table className="min-w-full divide-y divide-gray-200 overflow-x-auto">
+            <div className="mt-4 overflow-x-auto max-w-[calc(100vw-350px)]">
+              <table className="divide-y divide-gray-200 overflow-x-auto">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr No</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Center Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-full">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
@@ -324,7 +324,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity }) => {
                           <select
                             value={ca.status}
                             onChange={(e) => handleCenterStatusChange(ca.centerId, e.target.value)}
-                            className="block w-full px-3 py-1 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
+                            className="block min-w-full px-3 py-1 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
                           >
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>

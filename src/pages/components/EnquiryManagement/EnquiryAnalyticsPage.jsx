@@ -27,6 +27,14 @@ const EnquiryAnalyticsPage = () => {
     instructor: "",
     tags: [],
   });
+  const [pendingFilters, setPendingFilters] = useState({
+    dateRange: "all",
+    branch: "",
+    course: "",
+    source: "",
+    instructor: "",
+    tags: [],
+  });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const sourceOptions = ["Instagram", "Friend", "Family", "LinkedIn", "College"];
   const tagOptions = ["High Priority", "Follow Up", "Hot Lead", "Career Change", "Corporate Enquiry", "International"];
@@ -165,6 +173,37 @@ const EnquiryAnalyticsPage = () => {
     return filtered;
   };
 
+  // Apply Filters Function
+  const applyPendingFilters = () => {
+    setFilters(pendingFilters);
+    setIsFilterOpen(false); // Close filter panel after applying
+    console.log("Applied filters:", pendingFilters);
+  };
+
+  // Reset Filters Function
+  const resetFilters = () => {
+    const initialFilters = {
+      dateRange: "all",
+      branch: "",
+      course: "",
+      source: "",
+      instructor: "",
+      tags: [],
+    };
+    setFilters(initialFilters);
+    setPendingFilters(initialFilters);
+    setIsFilterOpen(false); // Close filter panel after resetting
+    console.log("Filters reset to initial state");
+  };
+
+  // Handle Tag Toggle for Pending Filters
+  const handleTagToggle = (tag) => {
+    setPendingFilters((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(tag) ? prev.tags.filter((t) => t !== tag) : [...prev.tags, tag],
+    }));
+  };
+
   // Prepare filtered enquiries
   const allEnquiries = applyFilters(Object.values(columns).flatMap((column) => column.items));
 
@@ -235,13 +274,6 @@ const EnquiryAnalyticsPage = () => {
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"];
 
-  const handleTagToggle = (tag) => {
-    setFilters((prev) => ({
-      ...prev,
-      tags: prev.tags.includes(tag) ? prev.tags.filter((t) => t !== tag) : [...prev.tags, tag],
-    }));
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex items-center justify-center">
@@ -258,10 +290,10 @@ const EnquiryAnalyticsPage = () => {
           <p className="text-gray-500 text-sm sm:text-base">In-depth analysis of enquiry performance and trends</p>
         </div>
         <Link
-          to="/enquiry-dashboard"
+          to="/enquiry"
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
-          Back to Dashboard
+          Back
         </Link>
       </div>
 
@@ -282,8 +314,8 @@ const EnquiryAnalyticsPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Date Range</label>
                 <select
-                  value={filters.dateRange}
-                  onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })}
+                  value={pendingFilters.dateRange}
+                  onChange={(e) => setPendingFilters({ ...pendingFilters, dateRange: e.target.value })}
                   className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Time</option>
@@ -295,8 +327,8 @@ const EnquiryAnalyticsPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Branch</label>
                 <select
-                  value={filters.branch}
-                  onChange={(e) => setFilters({ ...filters, branch: e.target.value })}
+                  value={pendingFilters.branch}
+                  onChange={(e) => setPendingFilters({ ...pendingFilters, branch: e.target.value })}
                   className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Branches</option>
@@ -310,8 +342,8 @@ const EnquiryAnalyticsPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Course</label>
                 <select
-                  value={filters.course}
-                  onChange={(e) => setFilters({ ...filters, course: e.target.value })}
+                  value={pendingFilters.course}
+                  onChange={(e) => setPendingFilters({ ...pendingFilters, course: e.target.value })}
                   className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Courses</option>
@@ -323,10 +355,10 @@ const EnquiryAnalyticsPage = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Source</label>
+                <label className="block text-sm fontpatients: none;">Source</label>
                 <select
-                  value={filters.source}
-                  onChange={(e) => setFilters({ ...filters, source: e.target.value })}
+                  value={pendingFilters.source}
+                  onChange={(e) => setPendingFilters({ ...pendingFilters, source: e.target.value })}
                   className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Sources</option>
@@ -340,8 +372,8 @@ const EnquiryAnalyticsPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Assigned Instructor</label>
                 <select
-                  value={filters.instructor}
-                  onChange={(e) => setFilters({ ...filters, instructor: e.target.value })}
+                  value={pendingFilters.instructor}
+                  onChange={(e) => setPendingFilters({ ...pendingFilters, instructor: e.target.value })}
                   className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Instructors</option>
@@ -352,6 +384,20 @@ const EnquiryAnalyticsPage = () => {
                   ))}
                 </select>
               </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={applyPendingFilters}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Apply Filter
+                </button>
+                <button
+                  onClick={resetFilters}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Reset Filters
+                </button>
+              </div>
             </div>
             <div className="mt-4">
               <h4 className="text-sm font-medium text-gray-700 mb-2">Tags</h4>
@@ -360,11 +406,10 @@ const EnquiryAnalyticsPage = () => {
                   <button
                     key={tag}
                     onClick={() => handleTagToggle(tag)}
-                    className={`px-3 py-1 border rounded-full text-sm ${
-                      filters.tags.includes(tag)
+                    className={`px-3 py-1 border rounded-full text-sm ${pendingFilters.tags.includes(tag)
                         ? "bg-blue-100 border-blue-500 text-blue-700"
                         : "border-gray-300 text-gray-700 hover:bg-gray-100"
-                    }`}
+                      }`}
                   >
                     {tag}
                   </button>

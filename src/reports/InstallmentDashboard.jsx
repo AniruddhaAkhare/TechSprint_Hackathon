@@ -71,7 +71,7 @@ const getDateRange = (filter) => {
 const isDateInRange = (dateStr, start, end) => {
   if (!dateStr || (!start && !end)) return true;
   const date = new Date(dateStr);
-  return date >= start && date <= end;
+  return (!start || date >= start) && (!end || date <= end);
 };
 
 // Utility function to calculate days difference
@@ -87,6 +87,8 @@ export default function InstallmentDashboard() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("thisMonth");
   const [searchQuery, setSearchQuery] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     const fetchFeeData = async () => {
@@ -96,7 +98,7 @@ export default function InstallmentDashboard() {
         const studentSnapshot = await getDocs(collection(db, "student"));
         const studentMap = {};
         studentSnapshot.forEach((doc) => {
-          studentMap[doc.id] = (doc.data().first_name)+" "+(doc.data().last_name) || "Unknown";
+          studentMap[doc.id] = `${doc.data().first_name} ${doc.data().last_name}` || "Unknown";
         });
 
         const enrollmentSnapshot = await getDocs(collection(db, "enrollments"));
@@ -386,17 +388,36 @@ export default function InstallmentDashboard() {
     }
   };
 
+  const resetFilters = () => {
+    setFilter("thisMonth");
+    setSearchQuery("");
+    setStartDate("");
+    setEndDate("");
+  };
+
   const filterFeeData = () => {
-    const { start, end } = getDateRange(filter);
     let filtered = feeData;
 
-    if (start && end) {
+    // Apply custom date range if startDate or endDate is set
+    if (startDate || endDate) {
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
       filtered = filtered.filter((item) => {
         const date = item.status === "Paid" ? item.paidDate : item.dueDate;
         return isDateInRange(date, start, end);
       });
+    } else {
+      // Apply predefined date range if no custom date range is set
+      const { start, end } = getDateRange(filter);
+      if (start && end) {
+        filtered = filtered.filter((item) => {
+          const date = item.status === "Paid" ? item.paidDate : item.dueDate;
+          return isDateInRange(date, start, end);
+        });
+      }
     }
 
+    // Apply search query
     if (searchQuery) {
       filtered = filtered.filter((item) =>
         item.studentName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -458,110 +479,109 @@ export default function InstallmentDashboard() {
   };
 
   const prepareChartData = (data) => {
-    // Define the faint color palette and corresponding hover colors
-    const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
-    const hoverColors = ['#FF4D70', '#2A8BCF', '#FFBB33', '#3AA8A8'];
-  
+    const colors = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"];
+    const hoverColors = ["#FF4D70", "#2A8BCF", "#FFBB33", "#3AA8A8"];
+
     const statusData = {
-      labels: ['Paid', 'Pending'],
+      labels: ["Paid", "Pending"],
       datasets: [
         {
           data: [
-            data.filter((item) => item.status === 'Paid').length,
-            data.filter((item) => item.status === 'Pending').length,
+            data.filter((item) => item.status === "Paid").length,
+            data.filter((item) => item.status === "Pending").length,
           ],
           backgroundColor: [colors[0], colors[1]],
           hoverBackgroundColor: [hoverColors[0], hoverColors[1]],
         },
       ],
     };
-  
+
     const feeTypeData = {
-      labels: ['FullFees', 'Installments', 'Finance', 'Free'],
+      labels: ["FullFees", "Installments", "Finance", "Free"],
       datasets: [
         {
           data: [
-            data.filter((item) => item.feeTemplate.includes('FullFees')).length,
-            data.filter((item) => item.feeTemplate.includes('Installments')).length,
-            data.filter((item) => item.feeTemplate.includes('Finance')).length,
-            data.filter((item) => item.feeTemplate === 'Free').length,
+            data.filter((item) => item.feeTemplate.includes("FullFees")).length,
+            data.filter((item) => item.feeTemplate.includes("Installments")).length,
+            data.filter((item) => item.feeTemplate.includes("Finance")).length,
+            data.filter((item) => item.feeTemplate === "Free").length,
           ],
           backgroundColor: colors,
           hoverBackgroundColor: hoverColors,
         },
       ],
     };
-  
+
     const monthlyData = {};
     data.forEach((item) => {
-      const date = item.status === 'Paid' ? item.paidDate : item.dueDate;
+      const date = item.status === "Paid" ? item.paidDate : item.dueDate;
       if (!date) return;
       const dueDate = new Date(date);
-      const monthYear = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}`;
+      const monthYear = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}`;
       if (!monthlyData[monthYear]) {
         monthlyData[monthYear] = { due: 0, paid: 0 };
       }
-      if (item.status === 'Pending') {
+      if (item.status === "Pending") {
         monthlyData[monthYear].due += toNumber(item.amount);
       } else {
         monthlyData[monthYear].paid += toNumber(item.amount);
       }
     });
-  
+
     const barData = {
       labels: Object.keys(monthlyData).sort(),
       datasets: [
         {
-          label: 'Total Due',
+          label: "Total Due",
           data: Object.values(monthlyData).map((item) => item.due),
           backgroundColor: colors[1],
           hoverBackgroundColor: hoverColors[1],
         },
         {
-          label: 'Total Paid',
+          label: "Total Paid",
           data: Object.values(monthlyData).map((item) => item.paid),
           backgroundColor: colors[0],
           hoverBackgroundColor: hoverColors[0],
         },
       ],
     };
-  
+
     const stackedBarData = {
-      labels: ['FullFees', 'Installments', 'Finance', 'Free'],
+      labels: ["FullFees", "Installments", "Finance", "Free"],
       datasets: [
         {
-          label: 'Paid',
+          label: "Paid",
           data: [
             data
-              .filter((item) => item.feeTemplate.includes('FullFees') && item.status === 'Paid')
+              .filter((item) => item.feeTemplate.includes("FullFees") && item.status === "Paid")
               .reduce((acc, item) => acc + toNumber(item.amount), 0),
             data
-              .filter((item) => item.feeTemplate.includes('Installments') && item.status === 'Paid')
+              .filter((item) => item.feeTemplate.includes("Installments") && item.status === "Paid")
               .reduce((acc, item) => acc + toNumber(item.amount), 0),
             data
-              .filter((item) => item.feeTemplate.includes('Finance') && item.status === 'Paid')
+              .filter((item) => item.feeTemplate.includes("Finance") && item.status === "Paid")
               .reduce((acc, item) => acc + toNumber(item.amount), 0),
             data
-              .filter((item) => item.feeTemplate === 'Free' && item.status === 'Paid')
+              .filter((item) => item.feeTemplate === "Free" && item.status === "Paid")
               .reduce((acc, item) => acc + toNumber(item.amount), 0),
           ],
           backgroundColor: colors[0],
           hoverBackgroundColor: hoverColors[0],
         },
         {
-          label: 'Pending',
+          label: "Pending",
           data: [
             data
-              .filter((item) => item.feeTemplate.includes('FullFees') && item.status === 'Pending')
+              .filter((item) => item.feeTemplate.includes("FullFees") && item.status === "Pending")
               .reduce((acc, item) => acc + toNumber(item.amount), 0),
             data
-              .filter((item) => item.feeTemplate.includes('Installments') && item.status === 'Pending')
+              .filter((item) => item.feeTemplate.includes("Installments") && item.status === "Pending")
               .reduce((acc, item) => acc + toNumber(item.amount), 0),
             data
-              .filter((item) => item.feeTemplate.includes('Finance') && item.status === 'Pending')
+              .filter((item) => item.feeTemplate.includes("Finance") && item.status === "Pending")
               .reduce((acc, item) => acc + toNumber(item.amount), 0),
             data
-              .filter((item) => item.feeTemplate === 'Free' && item.status === 'Pending')
+              .filter((item) => item.feeTemplate === "Free" && item.status === "Pending")
               .reduce((acc, item) => acc + toNumber(item.amount), 0),
           ],
           backgroundColor: colors[1],
@@ -569,12 +589,12 @@ export default function InstallmentDashboard() {
         },
       ],
     };
-  
+
     const lineData = {
       labels: Object.keys(monthlyData).sort(),
       datasets: [
         {
-          label: 'Paid Amount Over Time',
+          label: "Paid Amount Over Time",
           data: Object.values(monthlyData).map((item) => item.paid),
           borderColor: colors[0],
           backgroundColor: colors[0],
@@ -584,7 +604,7 @@ export default function InstallmentDashboard() {
         },
       ],
     };
-  
+
     return { statusData, feeTypeData, barData, stackedBarData, lineData };
   };
 
@@ -632,7 +652,7 @@ export default function InstallmentDashboard() {
       </div>
 
       {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6 items-center">
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
@@ -652,6 +672,28 @@ export default function InstallmentDashboard() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full sm:w-64 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
         />
+        <div className="flex gap-2">
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            placeholder="Start Date"
+            className="w-full sm:w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
+          />
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            placeholder="End Date"
+            className="w-full sm:w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
+          />
+        </div>
+        <button
+          onClick={resetFilters}
+          className="px-4 py-2 bg-gray-500 text-white rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-150 ease-in-out"
+        >
+          Reset Filters
+        </button>
       </div>
 
       {/* Charts */}

@@ -308,7 +308,7 @@ import { Select, MenuItem, FormControl } from '@mui/material';
 import { useAuth } from "../../../../context/AuthContext.jsx";
 
 export default function Sessions() {
-    const { rolePermissions } = useAuth();
+    const { rolePermissions, user } = useAuth();
 
     // Permission checks
     const canCreate = rolePermissions.Sessions?.create || false;
@@ -324,6 +324,9 @@ export default function Sessions() {
     const [openDelete, setOpenDelete] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
     const [statusFilter, setStatusFilter] = useState('Active');
+    const [dateFilter, setDateFilter] = useState('All');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const [deleteMessage, setDeleteMessage] = useState("Are you sure you want to delete this session? This action cannot be undone.");
 
     const SessionCollectionRef = collection(db, "Sessions");
@@ -385,6 +388,59 @@ export default function Sessions() {
         fetchSessions();
     }, [canDisplay, canUpdate]);
 
+    // Handle predefined date filters
+    const handleDateFilterChange = (value) => {
+        setDateFilter(value);
+        const today = new Date('2025-04-18'); // Current date as per system context
+        let start, end;
+
+        switch (value) {
+            case 'Today':
+                start = end = today.toISOString().split('T')[0]; // 2025-04-18
+                break;
+            case 'Last Week':
+                start = new Date(today);
+                start.setDate(today.getDate() - 7); // 2025-04-11
+                end = new Date(today);
+                end.setDate(today.getDate() - 1); // 2025-04-17
+                start = start.toISOString().split('T')[0];
+                end = end.toISOString().split('T')[0];
+                break;
+            case 'Last Month':
+                start = new Date(today);
+                start.setMonth(today.getMonth() - 1); // 2025-03-18
+                end = new Date(today);
+                end.setDate(today.getDate() - 1); // 2025-04-17
+                start = start.toISOString().split('T')[0];
+                end = end.toISOString().split('T')[0];
+                break;
+            case 'Next Week':
+                start = new Date(today);
+                start.setDate(today.getDate() + 1); // 2025-04-19
+                end = new Date(today);
+                end.setDate(today.getDate() + 7); // 2025-04-25
+                start = start.toISOString().split('T')[0];
+                end = end.toISOString().split('T')[0];
+                break;
+            case 'Next Month':
+                start = new Date(today);
+                start.setDate(today.getDate() + 1); // 2025-04-19
+                end = new Date(today);
+                end.setMonth(today.getMonth() + 1); // 2025-05-18
+                end = end.toISOString().split('T')[0];
+                start = start.toISOString().split('T')[0];
+                break;
+            case 'All':
+            default:
+                start = '';
+                end = '';
+                break;
+        }
+
+        setStartDate(start);
+        setEndDate(end);
+    };
+
     const handleCreateSessionClick = () => {
         if (!canCreate) {
             alert("You do not have permission to create sessions.");
@@ -431,7 +487,6 @@ export default function Sessions() {
         try {
             const sessionToDelete = sessions.find(s => s.id === deleteId);
             await deleteDoc(doc(db, "Sessions", deleteId));
-            // Log delete activity
             await logActivity("Deleted session", {
                 sessionId: deleteId,
                 name: sessionToDelete?.name || "Unknown",
@@ -451,9 +506,24 @@ export default function Sessions() {
     };
 
     const filteredSessions = () => {
-        const baseSessions = searchResults.length > 0 ? searchResults : sessions;
-        if (statusFilter === 'All') return baseSessions;
-        return baseSessions.filter(s => s.status === statusFilter);
+        let baseSessions = searchResults.length > 0 ? searchResults : sessions;
+
+        // Apply status filter
+        if (statusFilter !== 'All') {
+            baseSessions = baseSessions.filter(s => s.status === statusFilter);
+        }
+
+        // Apply date filter
+        if (startDate && endDate) {
+            baseSessions = baseSessions.filter(s => {
+                const sessionDate = new Date(s.date);
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                return sessionDate >= start && sessionDate <= end;
+            });
+        }
+
+        return baseSessions;
     };
 
     if (!canDisplay) {
@@ -492,7 +562,41 @@ export default function Sessions() {
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="mb-6">
+                <div className="mb-6 flex flex-col gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="w-full sm:w-40 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">End Date</label>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="w-full sm:w-40 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <FormControl size="small" className="w-full sm:w-40">
+                            <Select
+                                value={dateFilter}
+                                onChange={(e) => handleDateFilterChange(e.target.value)}
+                                className="bg-white border border-gray-300 rounded-md"
+                            >
+                                <MenuItem value="All">All Dates</MenuItem>
+                                <MenuItem value="Today">Today</MenuItem>
+                                <MenuItem value="Last Week">Last Week</MenuItem>
+                                <MenuItem value="Last Month">Last Month</MenuItem>
+                                <MenuItem value="Next Week">Next Week</MenuItem>
+                                <MenuItem value="Next Month">Next Month</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </div>
                     <input
                         type="text"
                         value={searchTerm}

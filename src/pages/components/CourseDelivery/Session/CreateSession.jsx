@@ -18,9 +18,12 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
   const [sessionMode, setSessionMode] = useState("Online");
   const [sessionLink, setSessionLink] = useState("");
   const [venue, setVenue] = useState("");
+  const [preFeedbackForm, setPreFeedbackForm] = useState("");
+  const [postFeedbackForm, setPostFeedbackForm] = useState("");
   const [students, setStudents] = useState([]);
   const [batches, setBatches] = useState([]);
   const [availableCenters, setAvailableCenters] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -45,6 +48,8 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
       setSessionMode(sessionToEdit.sessionMode || "Online");
       setSessionLink(sessionToEdit.sessionLink || "");
       setVenue(sessionToEdit.venue || "");
+      setPreFeedbackForm(sessionToEdit.preFeedbackForm || "");
+      setPostFeedbackForm(sessionToEdit.postFeedbackForm || "");
     }
   }, [sessionToEdit]);
 
@@ -54,6 +59,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         setLoading(true);
         setError(null);
 
+        // Fetch Centers
         const institutesSnapshot = await getDocs(collection(db, "instituteSetup"));
         if (institutesSnapshot.empty) {
           console.log("No institutes found in instituteSetup collection");
@@ -78,14 +84,21 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         const centersData = (await Promise.all(centerPromises)).flat();
         setAvailableCenters(centersData);
 
+        // Fetch Students
         const studentsSnapshot = await getDocs(collection(db, "student"));
         const studentData = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setStudents(studentData);
 
+        // Fetch Batches
         const q = query(collection(db, "Batch"), where("status", "==", "Active"));
         const batchesSnapshot = await getDocs(q);
         const batchData = batchesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setBatches(batchData);
+
+        // Fetch Templates
+        const templateSnapshot = await getDocs(collection(db, "templates"));
+        const templatesList = templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setTemplates(templatesList);
 
         setLoading(false);
       } catch (error) {
@@ -103,22 +116,23 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         ? prev.filter(id => id !== centerId)
         : [...prev, centerId]
     );
+    // Clear selected batches and students when centers change
     setSelectedBatches([]);
     setSelectedStudents([]);
   };
 
-  const filteredStudents = students.filter(student => {
-    if (centerNames.length === 0) return true;
-    const studentCenterName = student.course_details?.[0]?.center || "";
-    return availableCenters.some(
-      center => centerNames.includes(center.id) && center.name === studentCenterName
-    );
-  });
-
+  // Filter batches to only those assigned to selected centers
   const filteredBatches = batches.filter(batch => {
     if (centerNames.length === 0) return true;
     const batchCenterIds = batch.centers || [];
-    return batchCenterIds.some(centerId => centerNames.includes(centerId));
+    return centerNames.some(centerId => batchCenterIds.includes(centerId));
+  });
+
+  // Filter students to only those with at least one preferred center matching selected centers
+  const filteredStudents = students.filter(student => {
+    if (centerNames.length === 0) return true;
+    const studentCenters = student.preferred_centers || [];
+    return studentCenters.some(centerId => centerNames.includes(centerId));
   });
 
   const handleBatchChange = (batchId) => {
@@ -157,6 +171,25 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate Date (No backdated sessions)
+    const currentDate = new Date('2025-04-18'); // Current date as per system context
+    const sessionDate = new Date(date);
+    if (sessionDate < currentDate.setHours(0, 0, 0, 0)) {
+      alert("Session date cannot be in the past. Please select a future date.");
+      return;
+    }
+
+    // Validate End Time > Start Time
+    if (startTime && endTime) {
+      const start = new Date(`1970-01-01T${startTime}:00`);
+      const end = new Date(`1970-01-01T${endTime}:00`);
+      if (end <= start) {
+        alert("End time must be later than start time.");
+        return;
+      }
+    }
+
     const sessionData = {
       name: capitalizeFirstLetter(sessionName),
       centerNames,
@@ -171,6 +204,8 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
       meetingPlatform: sessionMode === "Online" ? meetingPlatform : "",
       sessionLink: sessionMode === "Online" ? sessionLink : "",
       venue: sessionMode === "Offline" ? venue : "",
+      preFeedbackForm: preFeedbackForm || null,
+      postFeedbackForm: postFeedbackForm || null,
       ...(sessionId ? { lastUpdated: serverTimestamp() } : { createdAt: serverTimestamp() }),
     };
 
@@ -190,7 +225,10 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
             newName: sessionData.name,
             oldDate: sessionToEdit?.date,
             newDate: sessionData.date,
-            // Add more fields as needed
+            oldPreFeedbackForm: sessionToEdit?.preFeedbackForm,
+            newPreFeedbackForm: sessionData.preFeedbackForm,
+            oldPostFeedbackForm: sessionToEdit?.postFeedbackForm,
+            newPostFeedbackForm: sessionData.postFeedbackForm,
           },
         });
         alert("Session updated successfully!");
@@ -202,6 +240,8 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         await logActivity("Created session", {
           sessionId: docRef.id,
           name: sessionData.name,
+          preFeedbackForm: sessionData.preFeedbackForm,
+          postFeedbackForm: sessionData.postFeedbackForm,
         });
         alert("Session created successfully!");
       }
@@ -234,6 +274,8 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
     setSessionMode("Online");
     setSessionLink("");
     setVenue("");
+    setPreFeedbackForm("");
+    setPostFeedbackForm("");
   };
 
   return (
@@ -414,6 +456,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
+                min="2025-04-18"
                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -437,6 +480,38 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Pre Feedback Form</label>
+            <select
+              value={preFeedbackForm}
+              onChange={(e) => setPreFeedbackForm(e.target.value)}
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select a Pre Feedback Form</option>
+              {templates.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Post Feedback Form</label>
+            <select
+              value={postFeedbackForm}
+              onChange={(e) => setPostFeedbackForm(e.target.value)}
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select a Post Feedback Form</option>
+              {templates.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
