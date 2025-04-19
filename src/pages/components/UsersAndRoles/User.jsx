@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { db, auth } from '../../../config/firebase';
-import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -36,12 +36,10 @@ export default function User() {
 
       try {
         setLoading(true);
-        // Fetch existing Users collection
         const usersSnapshot = await getDocs(collection(db, 'Users'));
         const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setUsers(usersData);
 
-        // Fetch roles
         const rolesSnapshot = await getDocs(collection(db, 'roles'));
         const rolesData = rolesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setRoles(rolesData);
@@ -55,6 +53,26 @@ export default function User() {
     fetchData();
   }, [canDisplay]);
 
+  // Activity logging function
+  const logActivity = async (action, details) => {
+    if (!currentUser) {
+      console.error("No current user available for logging");
+      return;
+    }
+    try {
+      const logRef = await addDoc(collection(db, "activityLogs"), {
+        timestamp: serverTimestamp(),
+        userId: currentUser.uid,
+        userEmail: currentUser.email || 'Unknown',
+        action,
+        details,
+      });
+      console.log("Activity logged with ID:", logRef.id, { action, details });
+    } catch (err) {
+      console.error("Error logging activity:", err.message);
+    }
+  };
+
   const handleRoleChange = async () => {
     if (!selectedUser || !selectedRoleId) {
       alert('Please select a user and a role.');
@@ -65,12 +83,27 @@ export default function User() {
       return;
     }
     try {
+      const oldRoleId = selectedUser.role;
+      const newRoleName = roles.find(r => r.id === selectedRoleId)?.name || 'Unknown';
+      const oldRoleName = roles.find(r => r.id === oldRoleId)?.name || 'Unknown';
+
       await setDoc(
         doc(db, 'Users', selectedUser.id), 
         { role: selectedRoleId }, 
         { merge: true }
       );
       setUsers(users.map(u => u.id === selectedUser.id ? { ...u, role: selectedRoleId } : u));
+      
+      // Log the role change
+      await logActivity("Updated user role", {
+        userId: selectedUser.id,
+        userEmail: selectedUser.email,
+        changes: {
+          oldRole: oldRoleName,
+          newRole: newRoleName,
+        },
+      });
+
       setSelectedUser(null);
       setSelectedRoleId('');
     } catch (error) {
@@ -93,16 +126,13 @@ export default function User() {
       setLoading(true);
       setError('');
 
-      // 1. Create authentication user
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         newUser.email,
-        newUser.password
+        newUser.password,
       );
-      
       const authUser = userCredential.user;
       
-      // 2. Create user document in Firestore with same UID
       const userData = {
         displayName: newUser.name,
         email: newUser.email,
@@ -112,7 +142,14 @@ export default function User() {
 
       await setDoc(doc(db, 'Users', authUser.uid), userData);
       
-      // 3. Update local state
+      // Log the creation
+      await logActivity("Created user", {
+        userId: authUser.uid,
+        email: newUser.email,
+        name: newUser.name,
+        role: roles.find(r => r.id === newUser.role)?.name || 'Unknown',
+      });
+
       setUsers([...users, { id: authUser.uid, ...userData }]);
       setNewUser({ name: '', email: '', password: '', role: '' });
       setIsCreateModalOpen(false);
@@ -132,17 +169,28 @@ export default function User() {
     
     try {
       setLoading(true);
-      
+
       await deleteDoc(doc(db, 'Users', userToDelete.id));
       
+      // Log the deletion
+      await logActivity("Deleted user", {
+        userId: userToDelete.id,
+        email: userToDelete.email,
+        name: userToDelete.displayName || 'Unknown',
+        role: roles.find(r => r.id === userToDelete.role)?.name || 'Unknown',
+      });
+
+      // Note: deleteUser requires the user to be signed in as the target user,
+      // which isn't practical here. We'll skip auth deletion for now unless you have admin SDK.
+      // For proper auth deletion, use Firebase Admin SDK on a server.
       try {
-        
-        await deleteUser(auth.currentUser); 
+        // This will only work if the currentUser is the one being deleted, which is unlikely
+        // await deleteUser(auth.currentUser); 
+        console.warn("Skipping auth user deletion - requires Admin SDK or re-authentication.");
       } catch (authError) {
         console.warn('Could not delete auth user:', authError);
       }
-      
-      // 3. Update local state
+
       setUsers(users.filter(u => u.id !== userToDelete.id));
       setIsDeleteModalOpen(false);
       setUserToDelete(null);
@@ -178,10 +226,9 @@ export default function User() {
       </div>
 
       {loading && <div className="text-center py-4">Loading...</div>}
-      {/* {error && <div className="text-red-600 text-center py-4">{error}</div>} */}
+      {error && <div className="text-red-600 text-center py-4">{error}</div>}
 
       <div className="bg-white p-6 rounded-lg shadow-md">
-        {/* Users Table */}
         <div className="overflow-x-auto">
           <table className="w-full table-auto">
             <thead className="bg-gray-100">
@@ -236,7 +283,6 @@ export default function User() {
           </table>
         </div>
 
-        {/* Role Assignment */}
         {selectedUser && canUpdate && (
           <div className="mt-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">
@@ -264,7 +310,6 @@ export default function User() {
         )}
       </div>
 
-      {/* Create User Modal */}
       {isCreateModalOpen && canCreate && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -334,14 +379,13 @@ export default function User() {
         </div>
       )}
 
-      {/* Delete User Modal */}
       {isDeleteModalOpen && canDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Confirm Deletion</h2>
             <p className="text-gray-600 mb-6">
               Are you sure you want to permanently delete {userToDelete?.displayName}? 
-              This will remove the user from both the database and authentication system.
+              This will remove the user from the database (authentication deletion requires Admin SDK).
             </p>
             <div className="flex justify-end space-x-4">
               <button

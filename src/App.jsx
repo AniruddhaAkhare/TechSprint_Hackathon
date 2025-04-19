@@ -647,6 +647,12 @@ import KanbanBoard from './pages/components/EnquiryManagement/kanbanBoard.jsx';
 import Subscribe from './pages/home/Subscribe.jsx';
 import QuestionBank from './pages/components/QuestionBank/QuestionBank.jsx';
 import QuestionTemplate from './pages/components/QuestionBank/QuestionTemplate.jsx';
+import AdminLogs from './pages/components/AdminLogs.jsx';
+import CourseAnalyticsDashboard from './pages/components/CourseDelivery/Course/CourseAnalyticsDashboard.jsx'
+import InstallmentDashboard from './reports/InstallmentDashboard.jsx';
+import AttendanceDashboard from './StudentInformation/AttendanceDashboard.jsx'
+import EnquiryDashboard from './pages/components/EnquiryManagement/EnquiryDashboard.jsx';
+import EnquiryAnalyticsPage from './pages/components/EnquiryManagement/EnquiryAnalyticsPage.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -693,6 +699,8 @@ export default function App() {
               <Route path="/editCourse/:id" element={<ProtectedRoute permissionSection="Course" action="update"><EditCourse /></ProtectedRoute>} />
               <Route path="/courses/:courseId/learners" element={<ProtectedRoute permissionSection="Course"><IndividualCourseStudnets /></ProtectedRoute>} />
               <Route path="/courses/:courseId/batches" element={<ProtectedRoute permissionSection="Course"><IndividualCourseBatch /></ProtectedRoute>} />
+              <Route path="/course-analytics-dashboard" element={<ProtectedRoute permissionSection="Course"><CourseAnalyticsDashboard /></ProtectedRoute>} />
+
               
               {/* Batch Routes */}
               <Route path="/batches" element={<ProtectedRoute permissionSection="Batch"><Batches /></ProtectedRoute>} />
@@ -701,7 +709,7 @@ export default function App() {
 
               {/* Curriculum Routes */}
               <Route path="/curriculum" element={<ProtectedRoute permissionSection="curriculums"><Curriculum /></ProtectedRoute>} />
-              <Route path="/createCurriculum" element={<ProtectedRoute permissionSection="curriculums" action="create"><CreateCurriculum /></ProtectedRoute>} />
+              {/* <Route path="/createCurriculum" element={<ProtectedRoute permissionSection="curriculums" action="create"><CreateCurriculum /></ProtectedRoute>} /> */}
               <Route path="/curriculum/:curriculumId" element={<ProtectedRoute permissionSection="curriculums" action="update"><CurriculumEditor /></ProtectedRoute>} />
               <Route path="/curriculum/:curriculumId/section/:sectionId" element={<ProtectedRoute permissionSection="curriculums"><SectionMaterials /></ProtectedRoute>} />
               <Route path="/curriculum/:curriculumId/section/:sectionId/add-material" element={<ProtectedRoute permissionSection="curriculums" action="create"><AddMaterial /></ProtectedRoute>} />
@@ -723,6 +731,10 @@ export default function App() {
 
               {/* Enquiry */}
               <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><KanbanBoard /></ProtectedRoute>} />
+              <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryDashboard /></ProtectedRoute>} />
+              <Route path="/enquiry-analytics" element={<ProtectedRoute permissionSection="enquiries"><EnquiryAnalyticsPage /></ProtectedRoute>} />
+
+
 
               {/* Student Routes */}
               <Route path="/studentdetails" element={<ProtectedRoute permissionSection="student"><StudentDetails /></ProtectedRoute>} />
@@ -731,8 +743,11 @@ export default function App() {
               <Route path="/studentdetails/addstudent" element={<ProtectedRoute permissionSection="student" action="create"><AddStudent /></ProtectedRoute>} />
               <Route path="/studentdetails/updatestudent/:studentId" element={<ProtectedRoute permissionSection="student" action="update"><EditStudent /></ProtectedRoute>} />
               <Route path="/studentdetails/:studentId" element={<ProtectedRoute permissionSection="student"><StudentInfo /></ProtectedRoute>} />
-              <Route path="/add-course/:studentId" element={<ProtectedRoute permissionSection="student" action="update"><AddCourse /></ProtectedRoute>} />
+              <Route path="/add-course/:studentId" element={<ProtectedRoute permissionSection="enrollments"><AddCourse /></ProtectedRoute>} />
               <Route path="/attendance" element={<ProtectedRoute permissionSection="attendance"><Attendance /></ProtectedRoute>} />
+              <Route path="/attendance-dashboard" element={<ProtectedRoute permissionSection="attendance"><AttendanceDashboard /></ProtectedRoute>} />
+
+
 
               {/* Performance Routes */}
               <Route path="/addPerformance" element={<ProtectedRoute permissionSection="performance"><AddPerformance /></ProtectedRoute>} />
@@ -753,10 +768,22 @@ export default function App() {
 
               {/* Reports */}
               <Route path="/reports" element={<ProtectedRoute permissionSection="fee"><InstallmentReport /></ProtectedRoute>} />
+              <Route path="/reports-dashboard" element={<ProtectedRoute permissionSection="fee"><InstallmentDashboard /></ProtectedRoute>} />
+
 
               {/* Roles */}
-              <Route path="/roles" element={<ProtectedRoute permissionSection="roles"><Role /></ProtectedRoute>} />
-              <Route path="/users" element={<ProtectedRoute permissionSection="Users"><User /></ProtectedRoute>} />
+              <Route
+                path="/roles"
+                element={<ProtectedRoute permissionSection="roles"><Role /></ProtectedRoute>}
+              />
+              <Route
+                path="/users"
+                element={<ProtectedRoute permissionSection="Users"><User /></ProtectedRoute>}
+              />
+              <Route
+                path="/activity-logs"
+                element={<ProtectedRoute permissionSection="activityLogs"><AdminLogs /></ProtectedRoute>}
+              />
             </Routes>
           </div>
         </div>

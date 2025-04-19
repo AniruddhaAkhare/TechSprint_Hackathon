@@ -15,7 +15,7 @@ function AppContextProvider({ children }) {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Fetch user data from Firestore
-        const userRef = doc(db, 'users', user.uid);
+        const userRef = doc(db, 'Users', user.uid);
         const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
           if (docSnap.exists()) {
             dispatch({

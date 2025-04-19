@@ -1,10 +1,11 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { db } from "../../../config/firebase";
-import { collection, onSnapshot, updateDoc, doc, addDoc, query, where, getDocs, deleteDoc } from "firebase/firestore";
-import { FaSearch, FaFilter, FaCircle, FaCheckCircle, FaTimesCircle, FaClock, FaChevronDown, FaTimes, FaPen, FaTrash } from "react-icons/fa";
+import { collection, onSnapshot, updateDoc, doc, addDoc } from "firebase/firestore";
+import { FaSearch, FaFilter, FaCircle, FaCheckCircle, FaTimesCircle, FaClock, FaChevronDown, FaChartBar } from "react-icons/fa";
 import Modal from "react-modal";
+import { useAuth } from "../../../context/AuthContext";
+import { Link } from "react-router-dom";
 
 Modal.setAppElement("#root");
 
@@ -26,15 +27,13 @@ const initialVisibility = {
   "contact-in-future": true,
 };
 
-const KanbanBoard = () => {
+const EnquiryDashboard = () => {
   const [columns, setColumns] = useState(initialColumns);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isTagsModalOpen, setIsTagsModalOpen] = useState(false);
   const [isStageVisibilityOpen, setIsStageVisibilityOpen] = useState(false);
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [stageVisibility, setStageVisibility] = useState(initialVisibility);
   const [view, setView] = useState("kanban");
-  const [rolePermissions] = useState({ enquiries: { create: true, update: true, delete: true, display: true } }); // Mock permissions
+  const { rolePermissions, user } = useAuth();
   const [newEnquiry, setNewEnquiry] = useState({
     name: "",
     email: "",
@@ -50,32 +49,37 @@ const KanbanBoard = () => {
   const [courses, setCourses] = useState([]);
   const [branches, setBranches] = useState([]);
   const [instructors, setInstructors] = useState([]);
-  const [availableTags, setAvailableTags] = useState([
-    "High Priority",
-    "Follow Up",
-    "Hot Lead",
-    "Career Change",
-    "Corporate Enquiry",
-    "International",
-  ]);
-  const [newTag, setNewTag] = useState("");
-  const [filters, setFilters] = useState({
-    tags: [],
-    stage: "",
-    branch: "",
-    course: "",
-  });
   const sourceOptions = ["Instagram", "Friend", "Family", "LinkedIn", "College"];
   const stageVisibilityRef = useRef(null);
-  const filtersRef = useRef(null);
-  const [instituteId] = useState("A1JnPx6fEQ0wxP1drl3A");
+  const [instituteId] = useState("9z6G6BLzfDScI0mzMOlB");
   const [editingEnquiryId, setEditingEnquiryId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters] = useState({ centers: [], batches: [] });
 
   const canCreate = rolePermissions.enquiries?.create || false;
   const canUpdate = rolePermissions.enquiries?.update || false;
   const canDelete = rolePermissions.enquiries?.delete || false;
   const canDisplay = rolePermissions.enquiries?.display || false;
+  // const canView = rolePermissions.enquiries?.view || false;
+
+  const logActivity = async (action, details) => {
+    if (!canDisplay) return;
+    try {
+      const activityLog = {
+        action,
+        details,
+        timestamp: new Date().toISOString(),
+        userEmail: user?.email || 'currentUser@example.com',
+        userId: user?.uid || 'currentUserId',
+        centerId: filters.centers.join(', ') || 'All',
+        batchId: filters.batches.join(', ') || 'All',
+      };
+      await addDoc(collection(db, 'activityLogs'), activityLog);
+      console.log(`Logged activity: ${action}`, details);
+    } catch (error) {
+      console.error('Error logging activity:', error);
+    }
+  };
 
   if (!canDisplay) {
     return (
@@ -85,19 +89,130 @@ const KanbanBoard = () => {
     );
   }
 
+  // Fetch Courses
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "tags"), (snapshot) => {
-      const tagsData = snapshot.docs.map((doc) => doc.data().name);
-      setAvailableTags(tagsData);
-    });
+    console.log("Fetching courses...");
+    const unsubscribe = onSnapshot(
+      collection(db, "Course"),
+      (snapshot) => {
+        const coursesData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("Fetched courses:", coursesData);
+        setCourses(coursesData);
+        logActivity('FETCH_COURSES', { count: coursesData.length });
+      },
+      (error) => {
+        console.error("Error fetching courses:", error);
+      }
+    );
     return () => unsubscribe();
   }, []);
 
+  // Fetch Branches
+  useEffect(() => {
+    if (!instituteId) {
+      console.log("instituteId is not set, skipping branch fetch");
+      return;
+    }
+    console.log("Fetching branches for instituteId:", instituteId);
+    const branchCollection = collection(db, "instituteSetup", instituteId, "Center");
+    const unsubscribe = onSnapshot(
+      branchCollection,
+      (snapshot) => {
+        if (snapshot.empty) {
+          console.log("No branches found in Center collection");
+          setBranches([]);
+          return;
+        }
+        const branchesData = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          console.log("Raw branch data:", data);
+          return {
+            id: doc.id,
+            name: data.name || data.centerName || "Unnamed Branch", // Fallback for missing name
+            ...data,
+          };
+        });
+        console.log("Processed branches:", branchesData);
+        setBranches(branchesData);
+        // logActivity('FETCH_BRANCHES', { count: branchesData.length });
+      },
+      (error) => {
+        console.error("Error fetching branches:", error);
+        if (error.code === "permission-denied") {
+          alert("You don't have permission to view branches. Contact your administrator.");
+        } else {
+          alert(`Failed to fetch branches: ${error.message}`);
+        }
+      }
+    );
+    return () => unsubscribe();
+  }, [instituteId]);
+
+  // Fetch Instructors
+  useEffect(() => {
+    console.log("Fetching instructors...");
+    const unsubscribe = onSnapshot(
+      collection(db, "Instructor"),
+      (snapshot) => {
+        const instructorsData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("Fetched instructors:", instructorsData);
+        setInstructors(instructorsData);
+        // logActivity('FETCH_INSTRUCTORS', { count: instructorsData.length });
+      },
+      (error) => {
+        console.error("Error fetching instructors:", error);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch Enquiries
+  useEffect(() => {
+    console.log("Fetching enquiries...");
+    const unsubscribe = onSnapshot(
+      collection(db, "enquiries"),
+      (snapshot) => {
+        const enquiries = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("Fetched enquiries:", enquiries);
+
+        setColumns((prevColumns) => {
+          const updatedColumns = Object.keys(initialColumns).reduce((acc, key) => {
+            acc[key] = { ...initialColumns[key], items: [] };
+            return acc;
+          }, {});
+
+          enquiries.forEach((enquiry) => {
+            const columnId = enquiry.stage?.toLowerCase().replace(/\s+/g, "-") || "pre-qualified";
+            if (updatedColumns[columnId]) {
+              updatedColumns[columnId].items.push(enquiry);
+            } else {
+              console.warn(`Invalid stage "${columnId}" for enquiry:`, enquiry);
+            }
+          });
+          console.log("Setting columns to:", updatedColumns);
+          // logActivity('Update Enquiry', { count: enquiries.length });
+          return { ...updatedColumns };
+        });
+      },
+      (error) => {
+        console.error("Error fetching enquiries:", error);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  // Handle click outside for stage visibility dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (filtersRef.current && !filtersRef.current.contains(event.target)) {
-        setIsFiltersOpen(false);
-      }
       if (stageVisibilityRef.current && !stageVisibilityRef.current.contains(event.target)) {
         setIsStageVisibilityOpen(false);
       }
@@ -106,50 +221,9 @@ const KanbanBoard = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "Course"), (snapshot) => {
-      const coursesData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setCourses(coursesData);
-    }, (error) => console.error("Error fetching courses:", error));
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "instituteSetup", instituteId, "Center"), (snapshot) => {
-      const branchesData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setBranches(branchesData);
-    }, (error) => console.error("Error fetching branches:", error));
-    return () => unsubscribe();
-  }, [instituteId]);
-
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "Instructor"), (snapshot) => {
-      const instructorsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setInstructors(instructorsData);
-    }, (error) => console.error("Error fetching instructors:", error));
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "enquiries"), (snapshot) => {
-      const enquiries = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setColumns((prevColumns) => {
-        const updatedColumns = Object.keys(initialColumns).reduce((acc, key) => {
-          acc[key] = { ...initialColumns[key], items: [] };
-          return acc;
-        }, {});
-        enquiries.forEach((enquiry) => {
-          const columnId = enquiry.stage?.toLowerCase().replace(/\s+/g, "-") || "pre-qualified";
-          if (updatedColumns[columnId]) updatedColumns[columnId].items.push(enquiry);
-        });
-        return { ...updatedColumns };
-      });
-    }, (error) => console.error("Error fetching enquiries:", error));
-    return () => unsubscribe();
-  }, []);
-
   const onDragEnd = async (result) => {
     const { source, destination } = result;
+
     if (!destination) return;
 
     const sourceColumn = columns[source.droppableId];
@@ -160,18 +234,33 @@ const KanbanBoard = () => {
 
     if (source.droppableId === destination.droppableId) {
       sourceItems.splice(destination.index, 0, movedItem);
-      setColumns({ ...columns, [source.droppableId]: { ...sourceColumn, items: sourceItems } });
+      setColumns({
+        ...columns,
+        [source.droppableId]: {
+          ...sourceColumn,
+          items: sourceItems,
+        },
+      });
     } else {
       destItems.splice(destination.index, 0, movedItem);
       const updatedColumns = {
         ...columns,
-        [source.droppableId]: { ...sourceColumn, items: sourceItems },
-        [destination.droppableId]: { ...destColumn, items: destItems },
+        [source.droppableId]: {
+          ...sourceColumn,
+          items: sourceItems,
+        },
+        [destination.droppableId]: {
+          ...destColumn,
+          items: destItems,
+        },
       };
       setColumns(updatedColumns);
+
       try {
         const enquiryRef = doc(db, "enquiries", movedItem.id);
         await updateDoc(enquiryRef, { stage: destination.droppableId });
+        console.log(`Moved enquiry ${movedItem.id} to ${destination.droppableId}`);
+        logActivity('MOVED ENQUIRY', { enquiryId: movedItem.id, from: source.droppableId, to: destination.droppableId });
       } catch (error) {
         console.error("Error updating Firestore:", error);
         setColumns(columns);
@@ -194,9 +283,12 @@ const KanbanBoard = () => {
     });
     setEditingEnquiryId(enquiry.id);
     setIsModalOpen(true);
+    logActivity('EDIT_ENQUIRY', { enquiryId: enquiry.id });
   };
 
   const handleAddEnquiry = async () => {
+    console.log("handleAddEnquiry called, canCreate:", canCreate);
+
     const requiredFields = ["name", "email", "phone", "branch", "course", "source"];
     const missingFields = requiredFields.filter((field) => !newEnquiry[field]);
 
@@ -206,6 +298,7 @@ const KanbanBoard = () => {
     }
 
     const selectedCourse = courses.find((course) => course.name === newEnquiry.course);
+
     let currentStage = "pre-qualified";
     if (editingEnquiryId) {
       const foundStage = Object.entries(columns).find(([stageId, column]) =>
@@ -237,14 +330,18 @@ const KanbanBoard = () => {
           alert("You don't have permission to update enquiries");
           return;
         }
+        console.log("Updating enquiry:", enquiryData);
         const enquiryRef = doc(db, "enquiries", editingEnquiryId);
         await updateDoc(enquiryRef, enquiryData);
+        logActivity('UPDATE ENQUIRY', { enquiryId: editingEnquiryId });
       } else {
         if (!canCreate) {
           alert("You don't have permission to create enquiries");
           return;
         }
-        await addDoc(collection(db, "enquiries"), enquiryData);
+        console.log("Creating new enquiry:", enquiryData);
+        const docRef = await addDoc(collection(db, "enquiries"), enquiryData);
+        logActivity('CREATE_ENQUIRY', { enquiryId: docRef.id });
       }
 
       setNewEnquiry({
@@ -257,8 +354,7 @@ const KanbanBoard = () => {
         source: "",
         assignTo: "",
         notes: "",
-        tags: [],
-      });
+        tags: [],          });
       setEditingEnquiryId(null);
       setIsModalOpen(false);
     } catch (error) {
@@ -267,92 +363,77 @@ const KanbanBoard = () => {
     }
   };
 
-  const handleAddTag = async () => {
-    if (newTag.trim() && !availableTags.includes(newTag.trim())) {
-      try {
-        await addDoc(collection(db, "tags"), { name: newTag.trim() });
-        setNewTag("");
-      } catch (error) {
-        console.error("Error adding tag:", error);
-        alert("Failed to add tag");
-      }
-    }
-  };
-
-  const handleDeleteTag = async (tag) => {
-    try {
-      const tagQuery = query(collection(db, "tags"), where("name", "==", tag));
-      const tagSnapshot = await getDocs(tagQuery);
-      tagSnapshot.forEach(async (doc) => await deleteDoc(doc.ref));
-    } catch (error) {
-      console.error("Error deleting tag:", error);
-      alert("Failed to delete tag");
-    }
-  };
-
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
   const filteredEnquiries = (items) => {
-    return items.filter((enquiry) => {
-      const matchesSearch =
-        !searchTerm ||
+    if (!searchTerm) return items;
+    const filtered = items.filter(
+      (enquiry) =>
         enquiry.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enquiry.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enquiry.phone?.includes(searchTerm) ||
-        enquiry.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchesTags = filters.tags.length === 0 || enquiry.tags?.some((tag) => filters.tags.includes(tag));
-      const matchesStage = !filters.stage || enquiry.stage === filters.stage;
-      const matchesBranch = !filters.branch || enquiry.branch === filters.branch;
-      const matchesCourse = !filters.course || enquiry.course === filters.course;
-      return matchesSearch && matchesTags && matchesStage && matchesBranch && matchesCourse;
-    });
+        enquiry.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    console.log("Filtered enquiries:", filtered);
+    return filtered;
   };
 
   const handleTagToggle = (tag) => {
     setNewEnquiry({
       ...newEnquiry,
-      tags: newEnquiry.tags.includes(tag) ? newEnquiry.tags.filter((t) => t !== tag) : [...newEnquiry.tags, tag],
+      tags: newEnquiry.tags.includes(tag)
+        ? newEnquiry.tags.filter((t) => t !== tag)
+        : [...newEnquiry.tags, tag],
     });
+    logActivity('TOGGLE_TAG', { tag });
   };
 
   const toggleStageVisibility = (stage) => {
     setStageVisibility((prev) => ({ ...prev, [stage]: !prev[stage] }));
+    logActivity('TOGGLE_STAGE_VISIBILITY', { stage });
   };
 
-  const allEnquiries = Object.values(columns).flatMap((column) => column.items).filter(
-    (enquiry) =>
-      !searchTerm ||
-      enquiry.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enquiry.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enquiry.phone?.includes(searchTerm) ||
-      enquiry.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const allEnquiries = Object.values(columns)
+    .flatMap((column) => column.items)
+    .filter(
+      (enquiry) =>
+        !searchTerm ||
+        enquiry.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        enquiry.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        enquiry.phone?.includes(searchTerm) ||
+        enquiry.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+  console.log("Current columns state:", columns);
 
   return (
     <div className="h-screen flex flex-col bg-gray-100 w-[calc(100vw-360px)]">
+      {/* Fixed Header and Controls Section */}
       <div className="p-4 sm:p-6 shrink-0">
+        {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-semibold">Enquiry Management</h1>
             <p className="text-gray-500 text-sm sm:text-base">Manage and track enquiries from initial contact to conversion.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log("Manage Tags clicked");
-                setIsTagsModalOpen(true);
-              }}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto hover:bg-gray-100"
-            >
+            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto hover:bg-gray-100">
               <FaCircle className="text-gray-400" />
               Manage Tags
             </button>
+            <Link
+              to="/enquiry-analytics"
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto hover:bg-gray-100"
+              onClick={() => logActivity('NAVIGATE_ANALYTICS', {})}
+            >
+              <FaChartBar />
+              Analytics
+            </Link>
             {canCreate && (
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => {
+                  console.log("Add Enquiry clicked, canCreate:", canCreate);
+                  setIsModalOpen(true);
+                  logActivity('OPEN_ADD_ENQUIRY', {});
+                }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md w-full sm:w-auto hover:bg-blue-700 transition-colors"
               >
                 + Add Enquiry
@@ -360,16 +441,24 @@ const KanbanBoard = () => {
             )}
           </div>
         </div>
+
+        {/* Controls Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex gap-2 w-full sm:w-auto">
             <button
-              onClick={() => setView("kanban")}
+              onClick={() => {
+                setView("kanban");
+                logActivity('SWITCH_VIEW', { view: 'kanban' });
+              }}
               className={`px-4 py-2 border border-gray-300 rounded-md w-full sm:w-auto ${view === "kanban" ? "bg-white text-gray-700" : "bg-gray-100 text-gray-500"} hover:bg-white`}
             >
               Kanban View
             </button>
             <button
-              onClick={() => setView("list")}
+              onClick={() => {
+                setView("list");
+                logActivity('SWITCH_VIEW', { view: 'list' });
+              }}
               className={`px-4 py-2 border border-gray-300 rounded-md w-full sm:w-auto ${view === "list" ? "bg-white text-gray-700" : "bg-gray-100 text-gray-500"} hover:bg-white`}
             >
               List View
@@ -383,89 +472,16 @@ const KanbanBoard = () => {
                 placeholder="Search enquiries..."
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  logActivity('SEARCH_ENQUIRIES', { term: e.target.value });
+                }}
               />
             </div>
-            <div className="relative" ref={filtersRef}>
-              <button
-                onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto hover:bg-gray-100"
-              >
-                <FaFilter />
-                Filters
-              </button>
-              {isFiltersOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-300 rounded-md shadow-lg z-10 p-4">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Apply Filters</h3>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">Tags</label>
-                    <select
-                      multiple
-                      value={filters.tags}
-                      onChange={(e) => handleFilterChange("tags", Array.from(e.target.selectedOptions, (option) => option.value))}
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-                    >
-                      {availableTags.map((tag) => (
-                        <option key={tag} value={tag}>{tag}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">Stage</label>
-                    <select
-                      value={filters.stage}
-                      onChange={(e) => handleFilterChange("stage", e.target.value)}
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-                    >
-                      <option value="">All Stages</option>
-                      {Object.entries(initialColumns).map(([stageId, { name }]) => (
-                        <option key={stageId} value={stageId}>{name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">Branch</label>
-                    <select
-                      value={filters.branch}
-                      onChange={(e) => handleFilterChange("branch", e.target.value)}
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-                    >
-                      <option value="">All Branches</option>
-                      {branches.map((branch) => (
-                        <option key={branch.id} value={branch.branchName}>{branch.branchName}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">Course</label>
-                    <select
-                      value={filters.course}
-                      onChange={(e) => handleFilterChange("course", e.target.value)}
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-                    >
-                      <option value="">All Courses</option>
-                      {courses.map((course) => (
-                        <option key={course.id} value={course.name}>{course.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => setFilters({ tags: [], stage: "", branch: "", course: "" })}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                    >
-                      Clear
-                    </button>
-                    <button
-                      onClick={() => setIsFiltersOpen(false)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto hover:bg-gray-100">
+              <FaFilter />
+              Filters
+            </button>
             {view === "kanban" && (
               <div className="relative w-full sm:w-auto" ref={stageVisibilityRef}>
                 <button
@@ -493,7 +509,9 @@ const KanbanBoard = () => {
                               className="sr-only peer"
                             />
                             <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600">
-                              <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${stageVisibility[stage] ? "translate-x-5" : "translate-x-1"}`}></div>
+                              <div
+                                className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${stageVisibility[stage] ? "translate-x-5" : "translate-x-1"}`}
+                              ></div>
                             </div>
                           </label>
                         </div>
@@ -506,7 +524,10 @@ const KanbanBoard = () => {
           </div>
         </div>
       </div>
+
+      {/* Scrollable Content Area */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
+        {/* Kanban View */}
         {view === "kanban" && (
           <DragDropContext onDragEnd={onDragEnd}>
             <div className="flex overflow-x-auto gap-4 h-full">
@@ -515,7 +536,11 @@ const KanbanBoard = () => {
                 .map(([columnId, column]) => (
                   <Droppable droppableId={columnId} key={columnId}>
                     {(provided) => (
-                      <div className="bg-white rounded-lg shadow-md w-72 flex-shrink-0" {...provided.droppableProps} ref={provided.innerRef}>
+                      <div
+                        className="bg-white rounded-lg shadow-md w-72 flex-shrink-0"
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                      >
                         <div className="flex items-center gap-2 p-4 border-b border-gray-200">
                           {column.icon}
                           <h2 className="text-base font-medium truncate">{column.name}</h2>
@@ -542,7 +567,10 @@ const KanbanBoard = () => {
                                     <p className="text-gray-500 truncate">{item.email || "No email"}</p>
                                     <div className="flex flex-wrap gap-2 mt-2 min-h-[40px]">
                                       {item.tags?.map((tag) => (
-                                        <span key={tag} className="flex items-center gap-1 text-orange-500 px-2 py-1 bg-orange-50 rounded-full text-sm whitespace-nowrap">
+                                        <span
+                                          key={tag}
+                                          className="flex items-center gap-1 text-orange-500 px-2 py-1 bg-orange-50 rounded-full text-sm whitespace-nowrap"
+                                        >
                                           <FaCircle className="text-orange-500 text-xs" />
                                           {tag}
                                         </span>
@@ -562,6 +590,8 @@ const KanbanBoard = () => {
             </div>
           </DragDropContext>
         )}
+
+        {/* List View */}
         {view === "list" && (
           <div className="bg-white rounded-lg shadow-md overflow-x-auto h-full">
             <table className="w-full text-left">
@@ -578,7 +608,9 @@ const KanbanBoard = () => {
               <tbody>
                 {filteredEnquiries(allEnquiries).length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="p-4 text-center text-gray-500">No enquiries found</td>
+                    <td colSpan="6" className="p-4 text-center text-gray-500">
+                      No enquiries found
+                    </td>
                   </tr>
                 ) : (
                   filteredEnquiries(allEnquiries).map((item) => (
@@ -596,7 +628,10 @@ const KanbanBoard = () => {
                       <td className="p-4">
                         <div className="flex flex-wrap gap-2">
                           {item.tags?.map((tag) => (
-                            <span key={tag} className="flex items-center gap-1 text-orange-500 px-2 py-1 bg-orange-50 rounded-full text-sm whitespace-nowrap">
+                            <span
+                              key={tag}
+                              className="flex items-center gap-1 text-orange-500 px-2 py-1 bg-orange-50 rounded-full text-sm whitespace-nowrap"
+                            >
                               <FaCircle className="text-orange-500 text-xs" />
                               {tag}
                             </span>
@@ -611,11 +646,13 @@ const KanbanBoard = () => {
           </div>
         )}
       </div>
+
+      {/* Enquiry Modal */}
       <Modal
         isOpen={isModalOpen}
         onRequestClose={() => setIsModalOpen(false)}
         className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-[95%] sm:w-full max-w-2xl mx-auto mt-4 sm:mt-20 max-h-[90vh] overflow-y-auto"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start z-50"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start"
       >
         <h2 className="text-lg sm:text-xl font-semibold mb-4">
           {editingEnquiryId ? "Edit Enquiry" : "Add New Enquiry"}
@@ -624,7 +661,9 @@ const KanbanBoard = () => {
           <div>
             <h3 className="text-base sm:text-lg font-medium mb-2">Contact Information</h3>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Full Name <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700">
+                Full Name <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 value={newEnquiry.name}
@@ -634,7 +673,9 @@ const KanbanBoard = () => {
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700">
+                Email <span className="text-red-500">*</span>
+              </label>
               <input
                 type="email"
                 value={newEnquiry.email}
@@ -644,7 +685,9 @@ const KanbanBoard = () => {
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Phone <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700">
+                Phone <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 value={newEnquiry.phone}
@@ -667,7 +710,9 @@ const KanbanBoard = () => {
           <div>
             <h3 className="text-base sm:text-lg font-medium mb-2">Enquiry Details</h3>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Branch <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700">
+                Branch <span className="text-red-500">*</span>
+              </label>
               <select
                 value={newEnquiry.branch}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, branch: e.target.value })}
@@ -675,12 +720,16 @@ const KanbanBoard = () => {
               >
                 <option value="">Select branch</option>
                 {branches.map((branch) => (
-                  <option key={branch.id} value={branch.name}>{branch.name}</option>
+                  <option key={branch.id} value={branch.name}>
+                    {branch.name}
+                  </option>
                 ))}
               </select>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Course <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700">
+                Course <span className="text-red-500">*</span>
+              </label>
               <select
                 value={newEnquiry.course}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, course: e.target.value })}
@@ -688,12 +737,16 @@ const KanbanBoard = () => {
               >
                 <option value="">Select course</option>
                 {courses.map((course) => (
-                  <option key={course.id} value={course.name}>{course.name}</option>
+                  <option key={course.id} value={course.name}>
+                    {course.name}
+                  </option>
                 ))}
               </select>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Source <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700">
+                Source <span className="text-red-500">*</span>
+              </label>
               <select
                 value={newEnquiry.source}
                 onChange={(e) => setNewEnquiry({ ...newEnquiry, source: e.target.value })}
@@ -701,7 +754,9 @@ const KanbanBoard = () => {
               >
                 <option value="">Select source</option>
                 {sourceOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
                 ))}
               </select>
             </div>
@@ -714,7 +769,9 @@ const KanbanBoard = () => {
               >
                 <option value="">Select instructor</option>
                 {instructors.map((instructor) => (
-                  <option key={instructor.id} value={instructor.f_name}>{instructor.f_name} {instructor.l_name}</option>
+                  <option key={instructor.id} value={instructor.f_name}>
+                    {instructor.f_name} {instructor.l_name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -733,7 +790,7 @@ const KanbanBoard = () => {
         <div className="mt-4">
           <h3 className="text-base sm:text-lg font-medium mb-2">Tags</h3>
           <div className="flex flex-wrap gap-2">
-            {availableTags.map((tag) => (
+            {["High Priority", "Follow Up", "Hot Lead", "Career Change", "Corporate Enquiry", "International"].map((tag) => (
               <button
                 key={tag}
                 onClick={() => handleTagToggle(tag)}
@@ -760,61 +817,8 @@ const KanbanBoard = () => {
           </button>
         </div>
       </Modal>
-      <Modal
-        isOpen={isTagsModalOpen}
-        onRequestClose={() => setIsTagsModalOpen(false)}
-        className="bg-white rounded-lg shadow-lg p-6 w-[95%] max-w-md mx-auto mt-20 max-h-[80vh] overflow-y-auto border border-gray-200"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start z-50"
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Manage Tags</h2>
-          <button onClick={() => setIsTagsModalOpen(false)} className="text-gray-500 hover:text-gray-700">
-            <FaTimes />
-          </button>
-        </div>
-        <div className="mb-6">
-          <h3 className="text-sm font-medium mb-2">Create New Tag</h3>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              placeholder="Tag name"
-              className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <button
-              onClick={handleAddTag}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-            >
-              + Add
-            </button>
-          </div>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium mb-2">Existing Tags</h3>
-          {availableTags.length === 0 ? (
-            <p className="text-gray-500">No tags available</p>
-          ) : (
-            <div className="space-y-2">
-              {availableTags.map((tag) => (
-                <div key={tag} className="flex items-center justify-between py-1">
-                  <div className="flex items-center gap-2">
-                    <FaCircle className="text-gray-500" />
-                    <span className="text-sm">{tag}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleDeleteTag(tag)} className="text-red-500 hover:text-red-700">
-                      <FaTrash />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </Modal>
     </div>
   );
 };
 
-export default KanbanBoard;
+export default EnquiryDashboard;

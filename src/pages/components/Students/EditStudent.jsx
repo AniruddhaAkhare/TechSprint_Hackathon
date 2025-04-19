@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { doc, getDoc, updateDoc, deleteDoc, collection, getDocs, setDoc, query, where } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteDoc, collection, getDocs, query, where, addDoc } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Timestamp } from "firebase/firestore";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function EditStudent() {
     const { studentId } = useParams();
     const navigate = useNavigate();
+    const { rolePermissions, user } = useAuth();
     const [student, setStudent] = useState({
         first_name: "",
         last_name: "",
         email: "",
-        phoneNumber: "", // Changed from phone to phoneNumber for clarity
+        phoneNumber: "",
         status: "",
         goal: "",
         address: { street: "", area: "", city: "", state: "", zip: "", country: "" },
@@ -27,10 +31,10 @@ export default function EditStudent() {
         discount: "",
         total: "",
         preferred_centers: [],
-        guardian_details: { name: "", phoneNumber: "", email: "", relation: "", occupation: "" }, // Changed phone to phoneNumber
+        guardian_details: { name: "", phoneNumber: "", email: "", relation: "", occupation: "" },
     });
-    const [countryCode, setCountryCode] = useState("+91"); // Default to India (+91) for student
-    const [guardianCountryCode, setGuardianCountryCode] = useState("+91"); // Default to India (+91) for guardian
+    const [countryCode, setCountryCode] = useState("+91");
+    const [guardianCountryCode, setGuardianCountryCode] = useState("+91");
     const [feeTemplates, setFeeTemplates] = useState([]);
     const [selectedTemplate, setSelectedTemplate] = useState(null);
     const [courses, setCourses] = useState([]);
@@ -39,10 +43,31 @@ export default function EditStudent() {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedCenter, setSelectedCenter] = useState("");
 
-    // List of country codes (expandable)
+    // Define permissions
+    const canDisplay = rolePermissions?.student?.display || false;
+    const canUpdate = rolePermissions?.student?.update || false;
+    const canDelete = rolePermissions?.student?.delete || false;
+
+    // Activity logging function
+    const logActivity = async (action, details) => {
+        try {
+            const activityLog = {
+                action,
+                details: { studentId, ...details },
+                timestamp: new Date().toISOString(),
+                userEmail: user?.email || "anonymous",
+                userId: user?.uid || "anonymous",
+            };
+            await addDoc(collection(db, "activityLogs"), activityLog);
+        } catch (error) {
+            console.error("Error logging activity:", error);
+        }
+    };
+
+    // List of country codes (unchanged)
     const countryCodes = [
         { code: "+1", label: "USA (+1)" },
-        { code: "+1", label: "Canada (+1)" }, // Note: Canada shares +1 with the USA, but you might differentiate by region if needed
+        { code: "+1", label: "Canada (+1)" },
         { code: "+7", label: "Russia (+7)" },
         { code: "+20", label: "Egypt (+20)" },
         { code: "+27", label: "South Africa (+27)" },
@@ -225,13 +250,25 @@ export default function EditStudent() {
     ];
 
     useEffect(() => {
-        fetchStudent();
-        fetchCourses();
-        fetchBatches();
-        fetchCenters();
-        fetchFeeTemplates();
-        setTimeout(() => setIsOpen(true), 10); // Trigger slide-in animation
-    }, [studentId]);
+        if (!canDisplay) {
+            toast.error("You don't have permission to view this page");
+            // logActivity("UNAUTHORIZED_ACCESS_ATTEMPT", { page: "EditStudent" });
+            navigate("/unauthorized");
+            return;
+        }
+        const fetchData = async () => {
+            await Promise.all([
+                fetchStudent(),
+                fetchCourses(),
+                fetchBatches(),
+                fetchCenters(),
+                fetchFeeTemplates(),
+            ]);
+            // logActivity("FETCH_DATA", { entities: ["student", "courses", "batches", "centers", "feeTemplates"] });
+            setTimeout(() => setIsOpen(true), 10); // Trigger slide-in animation
+        };
+        fetchData();
+    }, [studentId, canDisplay, navigate]);
 
     const fetchStudent = async () => {
         try {
@@ -239,7 +276,6 @@ export default function EditStudent() {
             const studentSnap = await getDoc(studentRef);
             if (studentSnap.exists()) {
                 const data = studentSnap.data();
-                // Split phone numbers into country code and number if they include a country code
                 const studentPhone = data.phone || "";
                 const guardianPhone = data.guardian_details?.phone || "";
                 setStudent({
@@ -270,12 +306,16 @@ export default function EditStudent() {
                 });
                 setCountryCode(studentPhone.startsWith("+") ? studentPhone.slice(0, studentPhone.indexOf("+") + 3) : "+91");
                 setGuardianCountryCode(guardianPhone.startsWith("+") ? guardianPhone.slice(0, guardianPhone.indexOf("+") + 3) : "+91");
+                // logActivity("FETCH_STUDENT_SUCCESS", { studentId });
             } else {
-                alert("Student not found.");
-                navigate(-1);
+                toast.error("Student not found");
+                // logActivity("FETCH_STUDENT_NOT_FOUND", { studentId });
+                navigate("/studentdetails");
             }
         } catch (error) {
             console.error("Error fetching student data:", error);
+            toast.error("Failed to fetch student data");
+            // logActivity("FETCH_STUDENT_ERROR", { error: error.message });
         }
     };
 
@@ -283,8 +323,11 @@ export default function EditStudent() {
         try {
             const querySnapshot = await getDocs(collection(db, "Course"));
             setCourses(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            // logActivity("FETCH_COURSES_SUCCESS", { count: querySnapshot.docs.length });
         } catch (error) {
             console.error("Error fetching courses:", error);
+            toast.error("Failed to fetch courses");
+            // logActivity("FETCH_COURSES_ERROR", { error: error.message });
         }
     };
 
@@ -292,8 +335,11 @@ export default function EditStudent() {
         try {
             const querySnapshot = await getDocs(collection(db, "Batch"));
             setBatches(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            // logActivity("FETCH_BATCHES_SUCCESS", { count: querySnapshot.docs.length });
         } catch (error) {
             console.error("Error fetching batches:", error);
+            toast.error("Failed to fetch batches");
+            // logActivity("FETCH_BATCHES_ERROR", { error: error.message });
         }
     };
 
@@ -302,6 +348,8 @@ export default function EditStudent() {
             const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
             if (instituteSnapshot.empty) {
                 console.error("No instituteSetup document found");
+                setCenters([]);
+                // logActivity("FETCH_CENTERS_WARNING", { message: "No instituteSetup found" });
                 return;
             }
             const instituteId = instituteSnapshot.docs[0].id;
@@ -312,19 +360,24 @@ export default function EditStudent() {
             const centerSnapshot = await getDocs(centerQuery);
             const centersList = centerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setCenters(centersList);
+            // logActivity("FETCH_CENTERS_SUCCESS", { count: centersList.length });
         } catch (error) {
             console.error("Error fetching centers:", error);
+            toast.error("Failed to fetch centers");
+            // logActivity("FETCH_CENTERS_ERROR", { error: error.message });
         }
     };
 
     const fetchFeeTemplates = async () => {
         try {
             const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
-            if (!templateSnapshot.empty) {
-                setFeeTemplates(templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            }
+            const templates = templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setFeeTemplates(templates);
+            // logActivity("FETCH_FEE_TEMPLATES_SUCCESS", { count: templates.length });
         } catch (error) {
-            console.error("Error in fetching payment type:", error);
+            console.error("Error fetching fee templates:", error);
+            toast.error("Failed to fetch fee templates");
+            // logActivity("FETCH_FEE_TEMPLATES_ERROR", { error: error.message });
         }
     };
 
@@ -370,47 +423,126 @@ export default function EditStudent() {
         } else {
             setStudent(prev => ({ ...prev, [name]: value }));
         }
+        logActivity("FIELD CHANGED", { field: name, value });
     };
 
-    const addCourse = () => setStudent(prev => ({ ...prev, courseDetails: [...prev.courseDetails, { courseName: '', batch: '', branch: '', mode: '', fee: 0 }] }));
-    const addEducation = () => setStudent(prev => ({ ...prev, educationDetails: [...prev.educationDetails, { level: '', institute: '', degree: '', specialization: '', grade: '', passingyr: '' }] }));
-    const addInstallment = () => setStudent(prev => ({ ...prev, installmentDetails: [...prev.installmentDetails, { number: '', dueAmount: '', dueDate: '', paidOn: '', amtPaid: '', modeOfPayment: '', pdcStatus: '', remark: '' }] }));
-    const addExperience = () => setStudent(prev => ({ ...prev, experienceDetails: [...prev.experienceDetails, { companyName: '', designation: '', salary: '', years: '', description: '' }] }));
+    const addCourse = () => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addCourse" });
+            return;
+        }
+        setStudent(prev => ({ ...prev, courseDetails: [...prev.courseDetails, { courseName: '', batch: '', branch: '', mode: '', fee: 0 }] }));
+        logActivity("ADD COURSE", {});
+    };
 
-    const removeCourse = (index) => setStudent(prev => ({ ...prev, courseDetails: prev.courseDetails.filter((_, i) => i !== index) }));
-    const deleteEducation = (index) => setStudent(prev => ({ ...prev, educationDetails: prev.educationDetails.filter((_, i) => i !== index) }));
-    const deleteInstallment = (index) => setStudent(prev => ({ ...prev, installmentDetails: prev.installmentDetails.filter((_, i) => i !== index) }));
-    const deleteExperience = (index) => setStudent(prev => ({ ...prev, experienceDetails: prev.experienceDetails.filter((_, i) => i !== index) }));
+    const addEducation = () => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addEducation" });
+            return;
+        }
+        setStudent(prev => ({ ...prev, educationDetails: [...prev.educationDetails, { level: '', institute: '', degree: '', specialization: '', grade: '', passingyr: '' }] }));
+        logActivity("ADD EDUCATION", {});
+    };
+
+    const addInstallment = () => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addInstallment" });
+            return;
+        }
+        setStudent(prev => ({ ...prev, installmentDetails: [...prev.installmentDetails, { number: '', dueAmount: '', dueDate: '', paidOn: '', amtPaid: '', modeOfPayment: '', pdcStatus: '', remark: '' }] }));
+        logActivity("ADD INSTALLMENT", {});
+    };
+
+    const addExperience = () => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addExperience" });
+            return;
+        }
+        setStudent(prev => ({ ...prev, experienceDetails: [...prev.experienceDetails, { companyName: '', designation: '', salary: '', years: '', description: '' }] }));
+        logActivity("ADD EXPERIENCE", {});
+    };
+
+    const removeCourse = (index) => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "removeCourse", index });
+            return;
+        }
+        setStudent(prev => ({ ...prev, courseDetails: prev.courseDetails.filter((_, i) => i !== index) }));
+        logActivity("REMOVE COURSE", { index });
+    };
+
+    const deleteEducation = (index) => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "deleteEducation", index });
+            return;
+        }
+        setStudent(prev => ({ ...prev, educationDetails: prev.educationDetails.filter((_, i) => i !== index) }));
+        logActivity("DELETE EDUCATION", { index });
+    };
+
+    const deleteInstallment = (index) => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "deleteInstallment", index });
+            return;
+        }
+        setStudent(prev => ({ ...prev, installmentDetails: prev.installmentDetails.filter((_, i) => i !== index) }));
+        logActivity("DELETE INSTALLMENT", { index });
+    };
+
+    const deleteExperience = (index) => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "deleteExperience", index });
+            return;
+        }
+        setStudent(prev => ({ ...prev, experienceDetails: prev.experienceDetails.filter((_, i) => i !== index) }));
+        logActivity("DELETE EXPERIENCE", { index });
+    };
 
     const handleAddCenter = () => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addCenter", centerId: selectedCenter });
+            return;
+        }
         if (selectedCenter && !student.preferred_centers.includes(selectedCenter)) {
             setStudent(prev => ({ ...prev, preferred_centers: [...prev.preferred_centers, selectedCenter] }));
             setSelectedCenter("");
+            logActivity("ADD CENTER", { centerId: selectedCenter });
         }
     };
 
     const handleRemoveCenter = (centerId) => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "removeCenter", centerId });
+            return;
+        }
         setStudent(prev => ({ ...prev, preferred_centers: prev.preferred_centers.filter(id => id !== centerId) }));
+        logActivity("REMOVE CENTER", { centerId });
     };
 
     const handleUpdate = async (e) => {
         e.preventDefault();
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "updateStudent" });
+            return;
+        }
+
         if (!student.first_name || !student.last_name || !student.email || !student.phoneNumber) {
-            alert("Please fill necessary fields.");
+            toast.error("Please fill necessary fields");
+            // logActivity("INVALID_UPDATE_ATTEMPT", { missingFields: { first_name: !student.first_name, last_name: !student.last_name, email: !student.email, phoneNumber: !student.phoneNumber } });
             return;
         }
 
-        let installmentTotal = 0;
-        student.installmentDetails.forEach((installment) => {
-            installmentTotal += Number(installment.dueAmount);
-        });
-
-        if (installmentTotal !== Number(student.total)) {
-            alert("Installment total does not match with total amount");
-            return;
-        }
-
-        // Combine country codes with phone numbers
         const fullPhoneNumber = `${countryCode}${student.phoneNumber}`;
         const fullGuardianPhoneNumber = `${guardianCountryCode}${student.guardian_details.phoneNumber || ""}`;
 
@@ -420,7 +552,7 @@ export default function EditStudent() {
                 first_name: student.first_name,
                 last_name: student.last_name,
                 email: student.email,
-                phone: fullPhoneNumber, // Save with country code
+                phone: fullPhoneNumber,
                 status: student.status,
                 goal: student.goal,
                 residential_address: student.address,
@@ -429,101 +561,61 @@ export default function EditStudent() {
                 admission_date: Timestamp.fromDate(new Date(student.admission_date)),
                 course_details: student.courseDetails,
                 education_details: student.educationDetails,
-                installment_details: student.installmentDetails,
                 experience_details: student.experienceDetails,
-                discount: student.discount,
-                total: student.total,
                 preferred_centers: student.preferred_centers,
                 guardian_details: {
                     ...student.guardian_details,
-                    phone: fullGuardianPhoneNumber // Save with country code
+                    phone: fullGuardianPhoneNumber,
                 },
             });
 
-            let paidAmt = 0;
-            const today = new Date().toISOString().split("T")[0];
-            let outstanding = 0;
-            let overdue = 0;
-
-            student.installmentDetails.forEach((installment) => {
-                const amtPaid = Number(installment.amtPaid) || 0;
-                const amtDue = Number(installment.dueAmount) || 0;
-
-                paidAmt += amtPaid;
-
-                const dueDate = new Date(installment.dueDate).toISOString().split("T")[0];
-                if (dueDate > today && !installment.amtPaid) {
-                    outstanding += amtDue;
-                } else if (dueDate <= today && !installment.amtPaid) {
-                    overdue += amtDue;
-                }
-            });
-
-            const enrollmentData = {
-                student_id: studentId,
-                course_id: student.courseDetails[0]?.courseId || "",
-                enrollment_date: Timestamp.fromDate(new Date(student.admission_date)),
-                fee: {
-                    discount: student.discount || 0,
-                    total: student.total || 0,
-                    overdue: overdue,
-                    paid: paidAmt,
-                    outstanding: outstanding,
-                },
-                installments: student.installmentDetails,
-            };
-
-            await setDoc(doc(db, 'enrollments', studentId), enrollmentData, { merge: true });
-
-            for (const installmentData of student.installmentDetails) {
-                if (installmentData.id) {
-                    await setDoc(doc(db, 'installments', installmentData.id), {
-                        ...installmentData,
-                        student_id: studentId
-                    }, { merge: true });
-                } else {
-                    const newInstallmentRef = doc(collection(db, 'installments'));
-                    await setDoc(newInstallmentRef, {
-                        ...installmentData,
-                        student_id: studentId,
-                        id: newInstallmentRef.id
-                    });
-                    setStudent(prev => {
-                        const updatedInstallments = [...prev.installmentDetails];
-                        const index = updatedInstallments.findIndex(inst => inst === installmentData);
-                        updatedInstallments[index] = { ...installmentData, id: newInstallmentRef.id };
-                        return { ...prev, installmentDetails: updatedInstallments };
-                    });
-                }
-            }
-
-            alert("Student updated successfully!");
+            toast.success("Student updated successfully!");
+            logActivity("UPDATE STUDENT SUCCESS", { updatedFields: Object.keys(student) });
             navigate("/studentdetails");
         } catch (error) {
             console.error("Error updating student:", error);
-            alert("Error updating student. Please try again.");
+            toast.error("Failed to update student");
+            // logActivity("UPDATE_STUDENT_ERROR", { error: error.message });
         }
     };
 
     const handleDelete = async () => {
+        if (!canDelete) {
+            toast.error("You don't have permission to delete students");
+            // logActivity("UNAUTHORIZED_DELETE_ATTEMPT", { action: "deleteStudent" });
+            return;
+        }
+
         if (window.confirm("Are you sure you want to delete this student?")) {
             try {
                 await deleteDoc(doc(db, "student", studentId));
-                alert("Student deleted successfully!");
+                toast.success("Student deleted successfully!");
+                logActivity("DELETE STUDENT SUCCESS", {});
                 navigate("/studentdetails");
             } catch (error) {
                 console.error("Error deleting student:", error);
-                alert("Error deleting student. Please try again.");
+                toast.error("Failed to delete student");
+                // logActivity("DELETE_STUDENT_ERROR", { error: error.message });
             }
+        } else {
+            logActivity("CANCEL DELETE STUDENT", {});
         }
     };
 
     const handleClose = () => {
         setIsOpen(false);
-        setTimeout(() => navigate("/studentdetails"), 300);
+        setTimeout(() => {
+            navigate("/studentdetails");
+            // logActivity("NAVIGATE_BACK", { from: "EditStudent" });
+        }, 300);
     };
 
     const handleFeeSummary = () => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "feeSummary" });
+            return;
+        }
         let totalFees = 0;
         student.courseDetails.forEach((course) => {
             if (course.fee && !isNaN(course.fee)) {
@@ -533,21 +625,37 @@ export default function EditStudent() {
         const discountAmount = (totalFees * (student.discount / 100)) || 0;
         const finalTotal = totalFees - discountAmount;
         setStudent(prev => ({ ...prev, total: finalTotal }));
+        // logActivity("CALCULATE_FEE_SUMMARY", { totalFees, discountAmount, finalTotal });
     };
 
     const handleTemplateChange = async (e) => {
+        if (!canUpdate) {
+            toast.error("You don't have permission to update student details");
+            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "changeFeeTemplate", templateId: e.target.value });
+            return;
+        }
         const templateId = e.target.value;
         setSelectedTemplate(templateId);
 
-        const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
-        const templateData = templateSnapshot.docs.find(doc => doc.id === templateId)?.data();
-        if (templateData && templateData.installments) {
-            setStudent(prev => ({ ...prev, installmentDetails: templateData.installments }));
+        try {
+            const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
+            const templateData = templateSnapshot.docs.find(doc => doc.id === templateId)?.data();
+            if (templateData && templateData.installments) {
+                setStudent(prev => ({ ...prev, installmentDetails: templateData.installments }));
+                logActivity("APPLY FEE TEMPLATE", { templateId });
+            }
+        } catch (error) {
+            console.error("Error applying fee template:", error);
+            toast.error("Failed to apply fee template");
+            // logActivity("APPLY_FEE_TEMPLATE_ERROR", { templateId, error: error.message });
         }
     };
 
+    if (!canDisplay) return null;
+
     return (
         <>
+            <ToastContainer position="top-right" autoClose={3000} />
             <div
                 className="fixed inset-0 bg-black bg-opacity-50 z-40"
                 onClick={handleClose}
@@ -584,6 +692,7 @@ export default function EditStudent() {
                                         onChange={handleChange}
                                         placeholder="First Name"
                                         required
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
@@ -596,6 +705,7 @@ export default function EditStudent() {
                                         onChange={handleChange}
                                         placeholder="Last Name"
                                         required
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
@@ -608,6 +718,7 @@ export default function EditStudent() {
                                         onChange={handleChange}
                                         placeholder="Email"
                                         required
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
@@ -616,7 +727,11 @@ export default function EditStudent() {
                                     <div className="flex mt-1">
                                         <select
                                             value={countryCode}
-                                            onChange={(e) => setCountryCode(e.target.value)}
+                                            onChange={(e) => {
+                                                setCountryCode(e.target.value);
+                                                logActivity("CHANGE COUNTRY CODE", { field: "phone", value: e.target.value });
+                                            }}
+                                            disabled={!canUpdate}
                                             className="w-1/3 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
                                             {countryCodes.map((country) => (
@@ -632,6 +747,7 @@ export default function EditStudent() {
                                             onChange={handleChange}
                                             placeholder="Phone Number"
                                             required
+                                            disabled={!canUpdate}
                                             className="w-2/3 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
@@ -644,6 +760,7 @@ export default function EditStudent() {
                                         value={student.date_of_birth}
                                         onChange={handleChange}
                                         required
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
@@ -654,6 +771,7 @@ export default function EditStudent() {
                                         name="admission_date"
                                         value={student.admission_date}
                                         onChange={handleChange}
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 focus:outline-none"
                                     />
                                 </div>
@@ -672,6 +790,7 @@ export default function EditStudent() {
                                         value={student.guardian_details.name}
                                         onChange={handleChange}
                                         placeholder="Guardian Name"
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
@@ -680,7 +799,11 @@ export default function EditStudent() {
                                     <div className="flex mt-1">
                                         <select
                                             value={guardianCountryCode}
-                                            onChange={(e) => setGuardianCountryCode(e.target.value)}
+                                            onChange={(e) => {
+                                                setGuardianCountryCode(e.target.value);
+                                                logActivity("CHANGE COUNTRY CODE", { field: "guardian_phone", value: e.target.value });
+                                            }}
+                                            disabled={!canUpdate}
                                             className="w-1/3 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
                                             {countryCodes.map((country) => (
@@ -695,6 +818,7 @@ export default function EditStudent() {
                                             value={student.guardian_details.phoneNumber}
                                             onChange={handleChange}
                                             placeholder="Guardian Phone"
+                                            disabled={!canUpdate}
                                             className="w-2/3 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
@@ -707,6 +831,7 @@ export default function EditStudent() {
                                         value={student.guardian_details.email}
                                         onChange={handleChange}
                                         placeholder="Guardian Email"
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
@@ -718,6 +843,7 @@ export default function EditStudent() {
                                         value={student.guardian_details.relation}
                                         onChange={handleChange}
                                         placeholder="Relation"
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
@@ -729,6 +855,7 @@ export default function EditStudent() {
                                         value={student.guardian_details.occupation}
                                         onChange={handleChange}
                                         placeholder="Occupation"
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
@@ -748,6 +875,7 @@ export default function EditStudent() {
                                             value={student.address.street}
                                             onChange={handleChange}
                                             placeholder="Street"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -756,6 +884,7 @@ export default function EditStudent() {
                                             value={student.address.area}
                                             onChange={handleChange}
                                             placeholder="Area"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -764,6 +893,7 @@ export default function EditStudent() {
                                             value={student.address.city}
                                             onChange={handleChange}
                                             placeholder="City"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -772,6 +902,7 @@ export default function EditStudent() {
                                             value={student.address.state}
                                             onChange={handleChange}
                                             placeholder="State"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -780,6 +911,7 @@ export default function EditStudent() {
                                             value={student.address.zip}
                                             onChange={handleChange}
                                             placeholder="Zip Code"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -788,6 +920,7 @@ export default function EditStudent() {
                                             value={student.address.country}
                                             onChange={handleChange}
                                             placeholder="Country"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
@@ -801,6 +934,7 @@ export default function EditStudent() {
                                             value={student.billingAddress.name}
                                             onChange={handleChange}
                                             placeholder="Name / Company Name"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -809,6 +943,7 @@ export default function EditStudent() {
                                             value={student.billingAddress.street}
                                             onChange={handleChange}
                                             placeholder="Street"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -817,6 +952,7 @@ export default function EditStudent() {
                                             value={student.billingAddress.area}
                                             onChange={handleChange}
                                             placeholder="Area"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -825,6 +961,7 @@ export default function EditStudent() {
                                             value={student.billingAddress.city}
                                             onChange={handleChange}
                                             placeholder="City"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -833,6 +970,7 @@ export default function EditStudent() {
                                             value={student.billingAddress.state}
                                             onChange={handleChange}
                                             placeholder="State"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -841,6 +979,7 @@ export default function EditStudent() {
                                             value={student.billingAddress.zip}
                                             onChange={handleChange}
                                             placeholder="Zip Code"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -849,6 +988,7 @@ export default function EditStudent() {
                                             value={student.billingAddress.country}
                                             onChange={handleChange}
                                             placeholder="Country"
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
@@ -857,6 +997,7 @@ export default function EditStudent() {
                                             value={student.billingAddress.gstNo}
                                             onChange={handleChange}
                                             placeholder="GST No."
+                                            disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
@@ -888,6 +1029,7 @@ export default function EditStudent() {
                                                         name={`educationDetails.${index}.level`}
                                                         value={edu.level}
                                                         onChange={handleChange}
+                                                        disabled={!canUpdate}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     >
                                                         <option value="" disabled>Select Level</option>
@@ -903,6 +1045,7 @@ export default function EditStudent() {
                                                         value={edu.institute}
                                                         onChange={handleChange}
                                                         placeholder="Institute Name"
+                                                        disabled={!canUpdate}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </td>
@@ -913,6 +1056,7 @@ export default function EditStudent() {
                                                         value={edu.degree}
                                                         onChange={handleChange}
                                                         placeholder="Degree"
+                                                        disabled={!canUpdate}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </td>
@@ -923,6 +1067,7 @@ export default function EditStudent() {
                                                         value={edu.specialization}
                                                         onChange={handleChange}
                                                         placeholder="Specialization"
+                                                        disabled={!canUpdate}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </td>
@@ -933,6 +1078,7 @@ export default function EditStudent() {
                                                         value={edu.grade}
                                                         onChange={handleChange}
                                                         placeholder="Grade"
+                                                        disabled={!canUpdate}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </td>
@@ -943,6 +1089,7 @@ export default function EditStudent() {
                                                         value={edu.passingyr}
                                                         onChange={handleChange}
                                                         placeholder="Year"
+                                                        disabled={!canUpdate}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </td>
@@ -950,7 +1097,8 @@ export default function EditStudent() {
                                                     <button
                                                         type="button"
                                                         onClick={() => deleteEducation(index)}
-                                                        className="text-red-500 hover:text-red-700"
+                                                        disabled={!canUpdate}
+                                                        className="text-red-500 hover:text-red-700 disabled:text-gray-400"
                                                     >
                                                         <FontAwesomeIcon icon={faXmark} />
                                                     </button>
@@ -962,7 +1110,10 @@ export default function EditStudent() {
                                 <button
                                     type="button"
                                     onClick={addEducation}
-                                    className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+                                    disabled={!canUpdate}
+                                    className={`mt-4 px-4 py-2 rounded-md text-white ${
+                                        canUpdate ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
+                                    } transition duration-200`}
                                 >
                                     Add Education
                                 </button>
@@ -994,6 +1145,7 @@ export default function EditStudent() {
                                                         value={exp.companyName}
                                                         onChange={handleChange}
                                                         placeholder="Company Name"
+                                                        disabled={!canUpdate}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </td>
@@ -1004,6 +1156,7 @@ export default function EditStudent() {
                                                         value={exp.designation}
                                                         onChange={handleChange}
                                                         placeholder="Designation"
+                                                        disabled={!canUpdate}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </td>
@@ -1014,6 +1167,7 @@ export default function EditStudent() {
                                                         value={exp.salary}
                                                         onChange={handleChange}
                                                         placeholder="Salary"
+                                                        disabled={!canUpdate}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </td>
@@ -1024,6 +1178,7 @@ export default function EditStudent() {
                                                         value={exp.years}
                                                         onChange={handleChange}
                                                         placeholder="Years"
+                                                        disabled={!canUpdate}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </td>
@@ -1034,6 +1189,7 @@ export default function EditStudent() {
                                                         value={exp.description}
                                                         onChange={handleChange}
                                                         placeholder="Description"
+                                                        disabled={!canUpdate}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </td>
@@ -1041,7 +1197,8 @@ export default function EditStudent() {
                                                     <button
                                                         type="button"
                                                         onClick={() => deleteExperience(index)}
-                                                        className="text-red-500 hover:text-red-700"
+                                                        disabled={!canUpdate}
+                                                        className="text-red-500 hover:text-red-700 disabled:text-gray-400"
                                                     >
                                                         <FontAwesomeIcon icon={faXmark} />
                                                     </button>
@@ -1053,7 +1210,10 @@ export default function EditStudent() {
                                 <button
                                     type="button"
                                     onClick={addExperience}
-                                    className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+                                    disabled={!canUpdate}
+                                    className={`mt-4 px-4 py-2 rounded-md text-white ${
+                                        canUpdate ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
+                                    } transition duration-200`}
                                 >
                                     Add Experience
                                 </button>
@@ -1070,6 +1230,7 @@ export default function EditStudent() {
                                         name="goal"
                                         value={student.goal}
                                         onChange={handleChange}
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="" disabled>Select Goal</option>
@@ -1084,6 +1245,7 @@ export default function EditStudent() {
                                         name="status"
                                         value={student.status}
                                         onChange={handleChange}
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="" disabled>Select Status</option>
@@ -1098,7 +1260,11 @@ export default function EditStudent() {
                                     <div className="flex items-center space-x-2">
                                         <select
                                             value={selectedCenter}
-                                            onChange={(e) => setSelectedCenter(e.target.value)}
+                                            onChange={(e) => {
+                                                setSelectedCenter(e.target.value);
+                                                logActivity("SELECT CENTER", { centerId: e.target.value });
+                                            }}
+                                            disabled={!canUpdate}
                                             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
                                             <option value="" disabled>Select a Center</option>
@@ -1113,9 +1279,9 @@ export default function EditStudent() {
                                         <button
                                             type="button"
                                             onClick={handleAddCenter}
-                                            disabled={!selectedCenter}
+                                            disabled={!selectedCenter || !canUpdate}
                                             className={`mt-1 px-3 py-2 rounded-md text-white ${
-                                                selectedCenter ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
+                                                selectedCenter && canUpdate ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
                                             } transition duration-200`}
                                         >
                                             Add
@@ -1133,7 +1299,8 @@ export default function EditStudent() {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleRemoveCenter(centerId)}
-                                                                className="text-red-500 hover:text-red-700"
+                                                                disabled={!canUpdate}
+                                                                className="text-red-500 hover:text-red-700 disabled:text-gray-400"
                                                             >
                                                                 <FontAwesomeIcon icon={faXmark} />
                                                             </button>
@@ -1151,6 +1318,7 @@ export default function EditStudent() {
                                         name="admission_date"
                                         value={student.admission_date}
                                         onChange={handleChange}
+                                        disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 focus:outline-none"
                                     />
                                 </div>
@@ -1161,14 +1329,20 @@ export default function EditStudent() {
                         <div className="flex justify-end space-x-4">
                             <button
                                 type="submit"
-                                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+                                disabled={!canUpdate}
+                                className={`px-6 py-2 rounded-md text-white ${
+                                    canUpdate ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
+                                } transition duration-200`}
                             >
                                 Update Student
                             </button>
                             <button
                                 type="button"
                                 onClick={handleDelete}
-                                className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                                disabled={!canDelete}
+                                className={`px-6 py-2 rounded-md text-white ${
+                                    canDelete ? "bg-red-600 hover:bg-red-700" : "bg-gray-400 cursor-not-allowed"
+                                } transition duration-200`}
                             >
                                 Delete Student
                             </button>

@@ -23,7 +23,7 @@ export default function ErpApp() {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Fetch user data from Firestore
-        const userDocRef = doc(db, 'users', user.uid);
+        const userDocRef = doc(db, 'Users', user.uid);
         const unsubscribeUser = onSnapshot(userDocRef, (doc) => {
           setUser({ uid: user.uid, ...doc.data() });
         });

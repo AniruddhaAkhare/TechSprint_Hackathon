@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth, db } from '../../config/firebase'; // Ensure this points to your firebase config
+import { auth, db } from '../../config/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { setDoc, doc } from 'firebase/firestore';
 
@@ -16,9 +16,12 @@ export default function RegisterForm() {
         setError('');
 
         try {
+            // Step 1: Create user in Firebase Authentication
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
+            console.log('User created in Auth:', user.uid); // Debug log
 
+            // Step 2: Prepare user data for Firestore
             const userData = {
                 displayName: name,
                 email: email,
@@ -26,10 +29,19 @@ export default function RegisterForm() {
                 createdAt: new Date().toISOString(),
             };
 
-            await setDoc(doc(db, 'Users', user.uid), userData);
+            // Step 3: Write user data to Firestore
+            try {
+                await setDoc(doc(db, 'Users', user.uid), userData);
+                console.log('User data written to Firestore:', userData); // Debug log
+            } catch (firestoreError) {
+                console.error('Firestore write error:', firestoreError);
+                throw new Error('Failed to save user data: ' + firestoreError.message);
+            }
 
+            // Step 4: Navigate to dashboard on success
             navigate('/dashboard');
         } catch (error) {
+            console.error('Registration error:', error);
             setError('Failed to register: ' + error.message);
         }
     };
@@ -101,7 +113,6 @@ export default function RegisterForm() {
                     </button>
                 </form>
 
-                {/* Link to login page */}
                 <div className="mt-4 text-center">
                     <p className="text-sm text-gray-600">
                         Already have an account?{' '}

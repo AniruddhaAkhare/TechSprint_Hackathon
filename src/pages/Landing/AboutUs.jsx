@@ -10,7 +10,7 @@ const AboutUs = () => {
         </div>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-gray-600 mb-6">
-            Shikshaa Sarthi was founded in 2020 with a mission to democratize education through technology. We believe that quality education should be accessible to everyone, regardless of their location or financial situation.
+            Shiksha Saarthi was founded in 2020 with a mission to democratize education through technology. We believe that quality education should be accessible to everyone, regardless of their location or financial situation.
           </p>
           <p className="text-gray-600 mb-6">
             Our team consists of passionate educators, technologists, and designers working together to create engaging learning experiences. We combine the best of traditional pedagogy with modern technology to deliver effective educational solutions.

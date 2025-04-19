@@ -1,81 +1,66 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
-import {
-  getDocs,
-  collection,
-  addDoc,
-  updateDoc,
-  doc,
-  serverTimestamp,
-} from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { getDocs, collection, addDoc, updateDoc, doc, serverTimestamp, getDoc } from "firebase/firestore";
 
-const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
-  const navigate = useNavigate();
+const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity }) => {
   const [instructors, setInstructors] = useState([]);
   const [centers, setCenters] = useState([]);
   const [owners, setOwners] = useState([]);
-  
+
   const [courseName, setCourseName] = useState("");
   const [courseDescription, setCourseDescription] = useState("");
   const [courseFee, setCourseFee] = useState("");
   const [courseDuration, setCourseDuration] = useState("");
   const [courseMode, setCourseMode] = useState("");
   const [courseStatus, setCourseStatus] = useState("Active");
-  
+
   const [centerAssignments, setCenterAssignments] = useState([]);
   const [selectedOwners, setSelectedOwners] = useState([]);
   const [totalStudentCount, setTotalStudentCount] = useState(0);
-  
+
   const [availableCenters, setAvailableCenters] = useState([]);
   const [availableOwners, setAvailableOwners] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch Instructors
-      const instructorSnapshot = await getDocs(collection(db, "Instructor"));
-      setInstructors(instructorSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      try {
+        // Fetch Instructors
+        const instructorSnapshot = await getDocs(collection(db, "Instructor"));
+        setInstructors(instructorSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
 
-      // Fetch Centers from instituteSetup -> Center (only active ones)
-      const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
-      if (!instituteSnapshot.empty) {
-        const instituteId = instituteSnapshot.docs[0].id; // Assuming single institute
-        const centerSnapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
-        const activeCenters = centerSnapshot.docs
-          .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .filter((center) => center.isActive); // Filter only active centers
-        setCenters(activeCenters);
-        setAvailableCenters(activeCenters);
-      }
+        // Fetch Centers from instituteSetup -> Center (only active ones)
+        const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+        if (!instituteSnapshot.empty) {
+          const instituteId = instituteSnapshot.docs[0].id; // Assuming single institute
+          const centerSnapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
+          const activeCenters = centerSnapshot.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() }))
+            .filter((center) => center.isActive); // Filter only active centers
+          setCenters(activeCenters);
+          setAvailableCenters(activeCenters);
+        }
+        const ownerSnapshot = await getDocs(collection(db, "Instructor"));
+        const ownersList = ownerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setOwners(ownersList);
+        setAvailableOwners(ownersList);
 
-      const batchSnapshot = await getDocs(collection(db, "Batch"));
-      const batchesList = batchSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setBatches(batchesList);
-      setAvailableBatches(batchesList.filter(batch => batch.status === "Ongoing" || !batch.status));
 
-      const ownerSnapshot = await getDocs(collection(db, "Instructor"));
-      const ownersList = ownerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setOwners(ownersList);
-      setAvailableOwners(ownersList);
 
-      // Fetch student count and batch student counts if editing a course
-      if (course) {
-        // Calculate total students similar to LearnerList
-        const enrollmentsRef = collection(db, "enrollments");
-        const enrollmentSnapshot = await getDocs(enrollmentsRef);
-        const allEnrollments = enrollmentSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        const matchedLearners = allEnrollments
-          .filter(enrollment => 
-            enrollment.courses?.some(c => 
-              c.selectedCourse?.id === course.id
-            )
+        // Fetch student count and batch student counts if editing a course
+        if (course) {
+          const enrollmentsRef = collection(db, "enrollments");
+          const enrollmentSnapshot = await getDocs(enrollmentsRef);
+          const allEnrollments = enrollmentSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          const matchedLearners = allEnrollments.filter(enrollment =>
+            enrollment.courses?.some(c => c.selectedCourse?.id === course.id)
           );
-        
-        setTotalStudentCount(matchedLearners.length);
+          setTotalStudentCount(matchedLearners.length);
+        }
+      } catch (err) {
+        console.error("Error fetching data in CreateCourses:", err.message);
       }
     };
     fetchData();
@@ -83,6 +68,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
 
   useEffect(() => {
     if (course) {
+      console.log("Loading course for edit:", course);
       setCourseName(course.name || "");
       setCourseDescription(course.description || "");
       setCourseFee(course.fee || "");
@@ -115,17 +101,36 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
 
     try {
       if (course) {
-        await updateDoc(doc(db, "Course", course.id), courseData);
+        const courseRef = doc(db, "Course", course.id);
+        const oldData = (await getDoc(courseRef)).data() || {};
+        console.log("Old data:", oldData);
+        console.log("New data:", courseData);
+
+        await updateDoc(courseRef, courseData);
+        const changes = Object.keys(courseData).reduce((acc, key) => {
+          if (key !== 'createdAt' && JSON.stringify(oldData[key]) !== JSON.stringify(courseData[key])) {
+            acc[key] = { oldValue: oldData[key], newValue: courseData[key] };
+          }
+          return acc;
+        }, {});
+        
+        if (Object.keys(changes).length > 0) {
+          await logActivity("Updated course", { courseId: course.id, name: courseName, changes });
+          console.log("Logged changes:", changes);
+        } else {
+          console.log("No changes detected for update.");
+        }
         alert("Course updated successfully!");
       } else {
         const docRef = await addDoc(collection(db, "Course"), courseData);
+        await logActivity("Created course", { courseId: docRef.id, name: courseName });
         alert("Course created successfully!");
       }
       resetForm();
       toggleSidebar();
     } catch (error) {
-      console.error("Error saving course:", error);
-      alert("Failed to save course. Please try again.");
+      console.error("Error saving course:", error.message);
+      alert(`Failed to save course: ${error.message}`);
     }
   };
 
@@ -157,7 +162,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
   };
 
   const handleCenterStatusChange = (centerId, newStatus) => {
-    setCenterAssignments(centerAssignments.map(ca => 
+    setCenterAssignments(centerAssignments.map(ca =>
       ca.centerId === centerId ? { ...ca, status: newStatus } : ca
     ));
   };
@@ -177,9 +182,8 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full bg-white w-full shadow-lg transform transition-transform duration-300 ${
-        isOpen ? "translate-x-0" : "translate-x-full"
-      } p-6 overflow-y-auto`}
+      className={`fixed top-0 right-0 h-full bg-white w-full shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
+        } p-6 overflow-y-auto`}
     >
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
@@ -300,7 +304,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course }) => {
 
           {centerAssignments.length > 0 && (
             <div className="mt-4">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 overflow-x-auto">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr No</th>

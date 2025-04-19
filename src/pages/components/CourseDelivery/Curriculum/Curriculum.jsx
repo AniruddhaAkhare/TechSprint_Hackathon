@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CreateCurriculum from './CreateCurriculum';
 import { db } from '../../../../config/firebase';
-import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, deleteDoc, doc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../../../context/AuthContext';
 
 const Curriculum = () => {
@@ -24,6 +24,27 @@ const Curriculum = () => {
   const canDelete = rolePermissions.curriculums?.delete || false;
   const canDisplay = rolePermissions.curriculums?.display || false;
 
+  // Activity logging function aligned with Courses.jsx
+  const logActivity = async (action, details) => {
+    if (!user) {
+      console.error("No user logged in for logging activity");
+      return;
+    }
+    try {
+      const logRef = await addDoc(collection(db, "activityLogs"), {
+        timestamp: serverTimestamp(),
+        userId: user.uid,
+        userEmail: user.email || 'Unknown',
+        action,
+        details
+      });
+      console.log("Activity logged with ID:", logRef.id, { action, details });
+    } catch (err) {
+      console.error("Error logging activity:", err.message);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     if (!canDisplay) return;
     const unsubscribe = onSnapshot(collection(db, 'curriculums'), (snapshot) => {
@@ -32,7 +53,7 @@ const Curriculum = () => {
         ...doc.data(),
       }));
       setCurriculums(curriculumData);
-    });
+    }, (err) => console.error("Error fetching curriculums:", err));
     return () => unsubscribe();
   }, [canDisplay]);
 
@@ -92,11 +113,17 @@ const Curriculum = () => {
   const confirmDelete = async () => {
     if (selectedCurriculumId && canDelete) {
       try {
+        const curriculum = curriculums.find(c => c.id === selectedCurriculumId);
+        if (!curriculum) throw new Error("Curriculum not found");
         await deleteDoc(doc(db, 'curriculums', selectedCurriculumId));
+        await logActivity("Deleted curriculum", { 
+          curriculumId: selectedCurriculumId, 
+          name: curriculum.name || 'Unknown' 
+        });
         setIsDeleteModalOpen(false);
         setSelectedCurriculumId(null);
       } catch (error) {
-        console.error("Error deleting curriculum:", error);
+        console.error("Error deleting curriculum:", error.message);
       }
     }
   };
@@ -120,8 +147,28 @@ const Curriculum = () => {
     setCurriculumToEdit(null);
   };
 
-  const handleAddCurriculumSubmit = (formData) => {
-    handleCloseModal();
+  const handleAddCurriculumSubmit = async (formData) => {
+    try {
+      if (curriculumToEdit) {
+        const changes = {
+          oldName: curriculumToEdit.name,
+          newName: formData.name,
+          // Add more fields as needed based on your curriculum structure
+        };
+        await logActivity("Updated curriculum", { 
+          curriculumId: curriculumToEdit.id, 
+          name: formData.name, 
+          changes 
+        });
+      } else {
+        await logActivity("Created curriculum", { 
+          name: formData.name 
+        });
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error("Error logging curriculum action:", error.message);
+    }
   };
 
   if (!canDisplay) {
@@ -244,7 +291,7 @@ const Curriculum = () => {
           disabled={currentPage === 1}
           className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          &lt;
+          back
         </button>
         <span className="px-3 py-1 bg-indigo-600 text-white rounded-md">
           {currentPage}
@@ -254,7 +301,7 @@ const Curriculum = () => {
           disabled={currentPage === totalPages}
           className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          &gt;
+          prev
         </button>
         <select
           value={itemsPerPage}
@@ -267,12 +314,13 @@ const Curriculum = () => {
         </select>
       </div>
 
-      {canCreate && (
+      {(canCreate || canUpdate) && (
         <CreateCurriculum
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onSubmit={handleAddCurriculumSubmit}
           curriculumToEdit={curriculumToEdit}
+          logActivity={logActivity} // Pass logActivity for consistency
         />
       )}
 

@@ -9,6 +9,9 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const countryCodes = [
   { code: "+1", label: "USA (+1)" },
@@ -196,6 +199,7 @@ const countryCodes = [
 
 const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
   const navigate = useNavigate();
+  const { user, rolePermissions } = useAuth();
   const [partnerName, setPartnerName] = useState("");
   const [contactPersons, setContactPersons] = useState([]);
   const [scheme, setScheme] = useState([]);
@@ -209,19 +213,54 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
   });
   const [status, setStatus] = useState("Active");
   const [transactionCount, setTransactionCount] = useState(0);
-
   const [newContact, setNewContact] = useState({ name: "", countryCode: "+91", mobile: "", email: "" });
   const [newScheme, setNewScheme] = useState({ plan: "", total_tenure: "", ratio: "", subvention_rate: "", description: "" });
 
+  // Permission checks
+  const canDisplay = rolePermissions?.FinancePartner?.display || false;
+  const canCreate = rolePermissions?.FinancePartner?.create || false;
+  const canUpdate = rolePermissions?.FinancePartner?.update || false;
+
+  // Activity logging function
+  const logActivity = async (action, details) => {
+    try {
+      const activityLog = {
+        action,
+        details: { partnerId: partner?.id || null, ...details },
+        timestamp: new Date().toISOString(),
+        userEmail: user?.email || "anonymous",
+        userId: user.uid
+      };
+      await addDoc(collection(db, "activityLogs"), activityLog);
+    } catch (error) {
+      console.error("Error logging activity:", error);
+    }
+  };
+
   useEffect(() => {
+    if (!canDisplay) {
+      toast.error("You don't have permission to view this page");
+      // logActivity("UNAUTHORIZED_ACCESS_ATTEMPT", { page: "AddFinancePartner" });
+      navigate("/unauthorized");
+      return;
+    }
+
     const fetchData = async () => {
       if (partner) {
-        const transactionSnapshot = await getDocs(collection(db, `FinancePartner/${partner.id}/Transactions`));
-        setTransactionCount(transactionSnapshot.docs.length);
+        try {
+          const transactionSnapshot = await getDocs(collection(db, `FinancePartner/${partner.id}/Transactions`));
+          setTransactionCount(transactionSnapshot.docs.length);
+          // logActivity("FETCH_TRANSACTIONS_SUCCESS", { transactionCount: transactionSnapshot.docs.length });
+        } catch (error) {
+          console.error("Error fetching transactions:", error);
+          setTransactionCount(0);
+          // logActivity("FETCH_TRANSACTIONS_ERROR", { error: error.message });
+        }
       }
     };
     fetchData();
-  }, [partner]);
+    // logActivity("OPEN_SIDEBAR", { mode: partner ? "edit" : "create" });
+  }, [canDisplay, navigate, partner]);
 
   useEffect(() => {
     if (isOpen) {
@@ -247,6 +286,14 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const requiredPermission = partner ? canUpdate : canCreate;
+    const actionType = partner ? "update" : "create";
+    if (!requiredPermission) {
+      toast.error(`You don't have permission to ${actionType} a finance partner`);
+      // logActivity(`UNAUTHORIZED_${actionType.toUpperCase()}_ATTEMPT`, { action: `${actionType}FinancePartner` });
+      return;
+    }
+
     const partnerData = {
       name: partnerName,
       contactPersons,
@@ -259,16 +306,19 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     try {
       if (partner) {
         await updateDoc(doc(db, "FinancePartner", partner.id), partnerData);
-        alert("Finance Partner updated successfully!");
+        toast.success("Finance Partner updated successfully!");
+        logActivity("UPDATE PARTNER ", { name: partnerName });
       } else {
-        await addDoc(collection(db, "FinancePartner"), partnerData);
-        alert("Finance Partner added successfully!");
+        const docRef = await addDoc(collection(db, "FinancePartner"), partnerData);
+        toast.success("Finance Partner added successfully!");
+        logActivity("CREATE PARTNER", { name: partnerName, newPartnerId: docRef.id });
       }
       resetForm();
       toggleSidebar();
     } catch (error) {
       console.error("Error saving finance partner:", error);
-      alert("Failed to save finance partner. Please try again.");
+      toast.error("Failed to save finance partner. Please try again.");
+      // logActivity(`${actionType.toUpperCase()}_PARTNER_ERROR`, { error: error.message, name: partnerName });
     }
   };
 
@@ -281,23 +331,46 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     setTransactionCount(0);
     setNewContact({ name: "", countryCode: "+91", mobile: "", email: "" });
     setNewScheme({ plan: "", total_tenure: "", ratio: "", subvention_rate: "", description: "" });
+    logActivity("RESET_FORM", {});
   };
 
   const handleAddContact = () => {
+    if (!canUpdate && partner) {
+      toast.error("You don't have permission to update contact persons");
+      // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addContact" });
+      return;
+    }
+    if (!canCreate && !partner) {
+      toast.error("You don't have permission to create contact persons");
+      // logActivity("UNAUTHORIZED_CREATE_ATTEMPT", { action: "addContact" });
+      return;
+    }
     if (
       newContact.name.trim() &&
       newContact.mobile.trim() &&
-      /^\d{7,15}$/.test(newContact.mobile) && // Validate mobile length
+      /^\d{7,15}$/.test(newContact.mobile) &&
       newContact.email.trim()
     ) {
       setContactPersons([...contactPersons, { ...newContact }]);
       setNewContact({ name: "", countryCode: "+91", mobile: "", email: "" });
+      logActivity("ADD CONTACT", { contactName: newContact.name });
     } else {
-      alert("Please fill in all contact person details correctly. Mobile number must be 7-15 digits.");
+      toast.error("Please fill in all contact person details correctly. Mobile number must be 7-15 digits.");
+      // logActivity("ADD_CONTACT_FAILED", { reason: "invalid input" });
     }
   };
 
   const handleAddScheme = () => {
+    if (!canUpdate && partner) {
+      toast.error("You don't have permission to update schemes");
+      // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addScheme" });
+      return;
+    }
+    if (!canCreate && !partner) {
+      toast.error("You don't have permission to create schemes");
+      // logActivity("UNAUTHORIZED_CREATE_ATTEMPT", { action: "addScheme" });
+      return;
+    }
     if (
       newScheme.plan.trim() &&
       newScheme.total_tenure.trim() &&
@@ -307,91 +380,210 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     ) {
       setScheme([...scheme, { ...newScheme }]);
       setNewScheme({ plan: "", total_tenure: "", ratio: "", subvention_rate: "", description: "" });
+      logActivity("ADD SCHEME", { plan: newScheme.plan });
     } else {
-      alert("Please fill in all scheme details.");
+      toast.error("Please fill in all scheme details.");
+      // logActivity("ADD_SCHEME_FAILED", { reason: "invalid input" });
     }
   };
 
   const handleRemoveContact = (index) => {
+    if (!canUpdate && partner) {
+      toast.error("You don't have permission to update contact persons");
+      // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "removeContact" });
+      return;
+    }
+    if (!canCreate && !partner) {
+      toast.error("You don't have permission to create contact persons");
+      // logActivity("UNAUTHORIZED_CREATE_ATTEMPT", { action: "removeContact" });
+      return;
+    }
+    const contactName = contactPersons[index].name;
     setContactPersons(contactPersons.filter((_, i) => i !== index));
+    logActivity("REMOVE CONTACT", { contactName });
   };
 
   const handleRemoveScheme = (index) => {
+    if (!canUpdate && partner) {
+      toast.error("You don't have permission to update schemes");
+      // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "removeScheme" });
+      return;
+    }
+    if (!canCreate && !partner) {
+      toast.error("You don't have permission to create schemes");
+      // logActivity("UNAUTHORIZED_CREATE_ATTEMPT", { action: "removeScheme" });
+      return;
+    }
+    const plan = scheme[index].plan;
     setScheme(scheme.filter((_, i) => i !== index));
+    logActivity("REMOVE SCHEME", { plan });
   };
 
   const handleAddressChange = (field, value) => {
-    setAddress((prev) => ({ ...prev, [field]: value }));
+    if (!canUpdate && partner) {
+      toast.error("You don't have permission to update address");
+      // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "updateAddress", field });
+      return;
+    }
+    if (!canCreate && !partner) {
+      toast.error("You don't have permission to create address");
+      // logActivity("UNAUTHORIZED_CREATE_ATTEMPT", { action: "updateAddress", field });
+      return;
+    }
+    setAddress((prev) => {
+      const newAddress = { ...prev, [field]: value };
+      logActivity("CHANGE ADDRESS", { field, value });
+      return newAddress;
+    });
   };
 
-  return (
-    <div
-      className={`fixed inset-y-0 right-0 z-50 bg-white w-full shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
-        } p-4 sm:p-6 overflow-y-auto`}
-    >
-      <div className="flex justify-between items-center mb-4 sm:mb-6">
-        <h1 className="text-lg sm:text-xl font-bold text-gray-800">
-          {partner ? "Edit Finance Partner" : "Add Finance Partner"}
-        </h1>
-        <button
-          onClick={toggleSidebar}
-          className="bg-blue-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+  const handlePartnerNameChange = (value) => {
+    if (!canUpdate && partner) {
+      toast.error("You don't have permission to update partner name");
+      // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "updatePartnerName" });
+      return;
+    }
+    if (!canCreate && !partner) {
+      toast.error("You don't have permission to create partner name");
+      // logActivity("UNAUTHORIZED_CREATE_ATTEMPT", { action: "updatePartnerName" });
+      return;
+    }
+    setPartnerName(value);
+    logActivity("CHANGE PARTNER NAME", { value });
+  };
 
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-        {/* Partner Name */}
-        <div>
-          <label htmlFor="partnerName" className="block text-sm font-medium text-gray-700">
-            Partner Name
-          </label>
-          <input
-            type="text"
-            id="partnerName"
-            value={partnerName}
-            onChange={(e) => setPartnerName(e.target.value)}
-            placeholder="Enter partner name"
-            required
-            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+  const handleStatusChange = (value) => {
+    if (!canUpdate && partner) {
+      toast.error("You don't have permission to update status");
+      // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "updateStatus" });
+      return;
+    }
+    if (!canCreate && !partner) {
+      toast.error("You don't have permission to create status");
+      // logActivity("UNAUTHORIZED_CREATE_ATTEMPT", { action: "updateStatus" });
+      return;
+    }
+    setStatus(value);
+    logActivity("CHANGE STATUS", { value });
+  };
+
+  const handleNewContactChange = (field, value) => {
+    if (!canUpdate && partner) {
+      toast.error("You don't have permission to update contact details");
+      // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "updateNewContact", field });
+      return;
+    }
+    if (!canCreate && !partner) {
+      toast.error("You don't have permission to create contact details");
+      // logActivity("UNAUTHORIZED_CREATE_ATTEMPT", { action: "updateNewContact", field });
+      return;
+    }
+    if (field === "mobile") {
+      value = value.replace(/\D/g, "").slice(0, 15);
+    }
+    setNewContact((prev) => {
+      const updated = { ...prev, [field]: value };
+      logActivity("CHANGE NEW CONTACT", { field, value });
+      return updated;
+    });
+  };
+
+  const handleNewSchemeChange = (field, value) => {
+    if (!canUpdate && partner) {
+      toast.error("You don't have permission to update scheme details");
+      // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "updateNewScheme", field });
+      return;
+    }
+    if (!canCreate && !partner) {
+      toast.error("You don't have permission to create scheme details");
+      // logActivity("UNAUTHORIZED_CREATE_ATTEMPT", { action: "updateNewScheme", field });
+      return;
+    }
+    setNewScheme((prev) => {
+      const updated = { ...prev, [field]: value };
+      logActivity("CHANGE NEW SCHEME", { field, value });
+      return updated;
+    });
+  };
+
+  const handleClose = () => {
+    toggleSidebar();
+    // logActivity("CLOSE_SIDEBAR", {});
+  };
+
+  if (!canDisplay) return null;
+
+  return (
+    <>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <div
+        className={`fixed inset-y-0 right-0 z-50 bg-white w-full shadow-lg transform transition-transform duration-300 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        } p-4 sm:p-6 overflow-y-auto`}
+      >
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
+          <h1 className="text-lg sm:text-xl font-bold text-gray-800">
+            {partner ? "Edit Finance Partner" : "Add Finance Partner"}
+          </h1>
+          <button
+            onClick={handleClose}
+            className="bg-blue-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        {/* Contact Persons */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Contact Persons</label>
-          {/* <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4"> */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-4 overflow-x-auto">
-           
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          {/* Partner Name */}
+          <div>
+            <label htmlFor="partnerName" className="block text-sm font-medium text-gray-700">
+              Partner Name
+            </label>
+            <input
+              type="text"
+              id="partnerName"
+              value={partnerName}
+              onChange={(e) => handlePartnerNameChange(e.target.value)}
+              placeholder="Enter partner name"
+              required
+              disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            />
+          </div>
+
+          {/* Contact Persons */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Contact Persons</label>
+            <div className="flex flex-col sm:flex-row gap-4 mb-4 overflow-x-auto">
               <input
                 type="text"
                 value={newContact.name}
-                onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+                onChange={(e) => handleNewContactChange("name", e.target.value)}
                 placeholder="Contact Name"
-                className="w-full min-w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full min-w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 disabled:bg-gray-100"
               />
               <input
                 type="email"
                 value={newContact.email}
-                onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                onChange={(e) => handleNewContactChange("email", e.target.value)}
                 placeholder="Email Address"
-                className="w-full min-w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full min-w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 disabled:bg-gray-100"
               />
-            
-            
               <select
                 value={newContact.countryCode}
-                onChange={(e) => setNewContact({ ...newContact, countryCode: e.target.value })}
-                className="w-full min-w-40 sm:w-1/3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                onChange={(e) => handleNewContactChange("countryCode", e.target.value)}
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full min-w-40 sm:w-1/3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 disabled:bg-gray-100"
               >
                 {countryCodes.map((country) => (
                   <option key={country.code + country.label} value={country.code}>
@@ -402,228 +594,246 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
               <input
                 type="tel"
                 value={newContact.mobile}
-                onChange={(e) => setNewContact({ ...newContact, mobile: e.target.value.replace(/\D/g, "").slice(0, 15) })}
+                onChange={(e) => handleNewContactChange("mobile", e.target.value)}
                 placeholder="Mobile Number"
-                className="w-full min-w-40 sm:w-2/3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full min-w-40 sm:w-2/3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 disabled:bg-gray-100"
               />
-            
-          </div>
-          <button
-            type="button"
-            onClick={handleAddContact}
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto"
-          >
-            Add Contact
-          </button>
-
-          {contactPersons.length > 0 && (
-            <div className="mt-4 max-h-40 overflow-y-auto border border-gray-300 rounded-md">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-gray-200 text-gray-700 sticky top-0">
-                  <tr>
-                    <th className="p-3 text-sm font-semibold min-w-40">Sr No</th>
-                    <th className="p-3 text-sm font-semibold min-w-40">Name</th>
-                    <th className="p-3 text-sm font-semibold min-w-40">Mobile</th>
-                    <th className="p-3 text-sm font-semibold min-w-40">Email</th>
-                    <th className="p-3 text-sm font-semibold min-w-40">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contactPersons.map((contact, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="p-3 text-gray-600">{index + 1}</td>
-                      <td className="p-3 text-gray-600">{contact.name}</td>
-                      <td className="p-3 text-gray-600">{contact.countryCode} {contact.mobile}</td>
-                      <td className="p-3 text-gray-600">{contact.email}</td>
-                      <td className="p-3">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveContact(index)}
-                          className="text-red-500 hover:text-red-700 font-bold"
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
-          )}
-        </div>
+            <button
+              type="button"
+              onClick={handleAddContact}
+              disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              Add Contact
+            </button>
 
-        {/* Scheme */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Scheme Details</label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <input
-              type="text"
-              value={newScheme.plan}
-              onChange={(e) => setNewScheme({ ...newScheme, plan: e.target.value })}
-              placeholder="Plan"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              value={newScheme.total_tenure}
-              onChange={(e) => setNewScheme({ ...newScheme, total_tenure: e.target.value })}
-              placeholder="Total Tenure"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              value={newScheme.ratio}
-              onChange={(e) => setNewScheme({ ...newScheme, ratio: e.target.value })}
-              placeholder="Ratio (Downpayment : Total Tenure)"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              value={newScheme.subvention_rate}
-              onChange={(e) => setNewScheme({ ...newScheme, subvention_rate: e.target.value })}
-              placeholder="Subvention Rate"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              value={newScheme.description}
-              onChange={(e) => setNewScheme({ ...newScheme, description: e.target.value })}
-              placeholder="Description"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={handleAddScheme}
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto"
-          >
-            Add Scheme
-          </button>
-
-          {scheme.length > 0 && (
-            <div className="mt-4 max-h-40 overflow-y-auto border border-gray-300 rounded-md">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-gray-200 text-gray-700 sticky top-0">
-                  <tr>
-                    <th className="p-3 text-sm font-semibold min-w-40">Sr No</th>
-                    <th className="p-3 text-sm font-semibold min-w-40">Plan</th>
-                    <th className="p-3 text-sm font-semibold min-w-40">Total Tenure</th>
-                    <th className="p-3 text-sm font-semibold min-w-40">Ratio</th>
-                    <th className="p-3 text-sm font-semibold min-w-40">Subvention Rate</th>
-                    <th className="p-3 text-sm font-semibold min-w-40">Description</th>
-                    <th className="p-3 text-sm font-semibold min-w-40">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {scheme.map((s, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="p-3 text-gray-600">{index + 1}</td>
-                      <td className="p-3 text-gray-600">{s.plan}</td>
-                      <td className="p-3 text-gray-600">{s.total_tenure}</td>
-                      <td className="p-3 text-gray-600">{s.ratio}</td>
-                      <td className="p-3 text-gray-600">{s.subvention_rate}</td>
-                      <td className="p-3 text-gray-600">{s.description}</td>
-                      <td className="p-3">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveScheme(index)}
-                          className="text-red-500 hover:text-red-700 font-bold"
-                        >
-                          ✕
-                        </button>
-                      </td>
+            {contactPersons.length > 0 && (
+              <div className="mt-4 max-h-40 overflow-y-auto border border-gray-300 rounded-md">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-gray-200 text-gray-700 sticky top-0">
+                    <tr>
+                      <th className="p-3 text-sm font-semibold min-w-40">Sr No</th>
+                      <th className="p-3 text-sm font-semibold min-w-40">Name</th>
+                      <th className="p-3 text-sm font-semibold min-w-40">Mobile</th>
+                      <th className="p-3 text-sm font-semibold min-w-40">Email</th>
+                      <th className="p-3 text-sm font-semibold min-w-40">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Address */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <input
-              type="text"
-              value={address.street}
-              onChange={(e) => handleAddressChange("street", e.target.value)}
-              placeholder="Street"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              value={address.area}
-              onChange={(e) => handleAddressChange("area", e.target.value)}
-              placeholder="Area"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              value={address.city}
-              onChange={(e) => handleAddressChange("city", e.target.value)}
-              placeholder="City"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              value={address.state}
-              onChange={(e) => handleAddressChange("state", e.target.value)}
-              placeholder="State"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              value={address.country}
-              onChange={(e) => handleAddressChange("country", e.target.value)}
-              placeholder="Country"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              value={address.postalCode}
-              onChange={(e) => handleAddressChange("postalCode", e.target.value)}
-              placeholder="Postal Code"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+                  </thead>
+                  <tbody>
+                    {contactPersons.map((contact, index) => (
+                      <tr key={index} className="border-b hover:bg-gray-50">
+                        <td className="p-3 text-gray-600">{index + 1}</td>
+                        <td className="p-3 text-gray-600">{contact.name}</td>
+                        <td className="p-3 text-gray-600">{contact.countryCode} {contact.mobile}</td>
+                        <td className="p-3 text-gray-600">{contact.email}</td>
+                        <td className="p-3">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveContact(index)}
+                            disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                            className="text-red-500 hover:text-red-700 font-bold disabled:text-gray-400 disabled:cursor-not-allowed"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* Status */}
-        <div>
-          <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-            Status
-          </label>
-          <select
-            id="status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            required
-            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-        </div>
-
-        {/* Transaction Count */}
-        {partner && (
+          {/* Scheme */}
           <div>
-            <h3 className="text-sm font-medium text-gray-700">Total Transactions: {transactionCount}</h3>
-          </div>
-        )}
+            <label className="block text-sm font-medium text-gray-700 mb-2">Scheme Details</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <input
+                type="text"
+                value={newScheme.plan}
+                onChange={(e) => handleNewSchemeChange("plan", e.target.value)}
+                placeholder="Plan"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              />
+              <input
+                type="text"
+                value={newScheme.total_tenure}
+                onChange={(e) => handleNewSchemeChange("total_tenure", e.target.value)}
+                placeholder="Total Tenure"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              />
+              <input
+                type="text"
+                value={newScheme.ratio}
+                onChange={(e) => handleNewSchemeChange("ratio", e.target.value)}
+                placeholder="Ratio (Downpayment : Total Tenure)"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              />
+              <input
+                type="text"
+                value={newScheme.subvention_rate}
+                onChange={(e) => handleNewSchemeChange("subvention_rate", e.target.value)}
+                placeholder="Subvention Rate"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              />
+              <input
+                type="text"
+                value={newScheme.description}
+                onChange={(e) => handleNewSchemeChange("description", e.target.value)}
+                placeholder="Description"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleAddScheme}
+              disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              Add Scheme
+            </button>
 
-        {/* Submit Button */}
-        <div className="flex justify-end mt-4">
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200 w-full sm:w-auto"
-          >
-            {partner ? "Update Partner" : "Save Partner"}
-          </button>
-        </div>
-      </form>
-    </div>
+            {scheme.length > 0 && (
+              <div className="mt-4 max-h-40 overflow-y-auto border border-gray-300 rounded-md">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-gray-200 text-gray-700 sticky top-0">
+                    <tr>
+                      <th className="p-3 text-sm font-semibold min-w-40">Sr No</th>
+                      <th className="p-3 text-sm font-semibold min-w-40">Plan</th>
+                      <th className="p-3 text-sm font-semibold min-w-40">Total Tenure</th>
+                      <th className="p-3 text-sm font-semibold min-w-40">Ratio</th>
+                      <th className="p-3 text-sm font-semibold min-w-40">Subvention Rate</th>
+                      <th className="p-3 text-sm font-semibold min-w-40">Description</th>
+                      <th className="p-3 text-sm font-semibold min-w-40">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scheme.map((s, index) => (
+                      <tr key={index} className="border-b hover:bg-gray-50">
+                        <td className="p-3 text-gray-600">{index + 1}</td>
+                        <td className="p-3 text-gray-600">{s.plan}</td>
+                        <td className="p-3 text-gray-600">{s.total_tenure}</td>
+                        <td className="p-3 text-gray-600">{s.ratio}</td>
+                        <td className="p-3 text-gray-600">{s.subvention_rate}</td>
+                        <td className="p-3 text-gray-600">{s.description}</td>
+                        <td className="p-3">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveScheme(index)}
+                            disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                            className="text-red-500 hover:text-red-700 font-bold disabled:text-gray-400 disabled:cursor-not-allowed"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Address */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input
+                type="text"
+                value={address.street}
+                onChange={(e) => handleAddressChange("street", e.target.value)}
+                placeholder="Street"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              />
+              <input
+                type="text"
+                value={address.area}
+                onChange={(e) => handleAddressChange("area", e.target.value)}
+                placeholder="Area"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              />
+              <input
+                type="text"
+                value={address.city}
+                onChange={(e) => handleAddressChange("city", e.target.value)}
+                placeholder="City"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              />
+              <input
+                type="text"
+                value={address.state}
+                onChange={(e) => handleAddressChange("state", e.target.value)}
+                placeholder="State"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              />
+              <input
+                type="text"
+                value={address.country}
+                onChange={(e) => handleAddressChange("country", e.target.value)}
+                placeholder="Country"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              />
+              <input
+                type="text"
+                value={address.postalCode}
+                onChange={(e) => handleAddressChange("postalCode", e.target.value)}
+                placeholder="Postal Code"
+                disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              />
+            </div>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+              Status
+            </label>
+            <select
+              id="status"
+              value={status}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              required
+              disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
+          {/* Transaction Count */}
+          {partner && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700">Total Transactions: {transactionCount}</h3>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <div className="flex justify-end mt-4">
+            <button
+              type="submit"
+              disabled={(!canUpdate && partner) || (!canCreate && !partner)}
+              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {partner ? "Update Partner" : "Save Partner"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </>
   );
 };
 
