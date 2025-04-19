@@ -1,11 +1,29 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { collection, getDocs, doc, writeBatch, updateDoc, deleteDoc, query, where, addDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  doc,
+  writeBatch,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  addDoc,
+} from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
+import {
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  Button,
+} from "@material-tailwind/react";
 import { useAuth } from "../../../context/AuthContext";
+import { FaFilter, FaChevronDown } from "react-icons/fa";
+
 
 export default function StudentDetails() {
   const { adminId } = useParams();
@@ -27,8 +45,9 @@ export default function StudentDetails() {
     center: "",
     batch: "",
     status: "",
-    goal: ""
+    goal: "",
   });
+  const [goalOptions, setGoalOptions] = useState([]);
 
   // Define permissions for Student
   const canCreate = rolePermissions?.student?.create || false;
@@ -62,10 +81,16 @@ export default function StudentDetails() {
   useEffect(() => {
     if (!canDisplay) {
       toast.error("You don't have permission to view student details");
+      navigate("/");
       return;
     }
     const fetchData = async () => {
-      await Promise.all([fetchStudents(), fetchCourse(), fetchCenters(), fetchBatches()]);
+      await Promise.all([
+        fetchStudents(),
+        fetchCourse(),
+        fetchCenters(),
+        fetchBatches(),
+      ]);
     };
     fetchData();
   }, [canDisplay, navigate]);
@@ -73,8 +98,20 @@ export default function StudentDetails() {
   const fetchStudents = async () => {
     try {
       const snapshot = await getDocs(collection(db, "student"));
-      const studentList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const studentList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setStudents(studentList);
+      // Extract unique goal values
+      const uniqueGoals = [
+        ...new Set(
+          studentList
+            .map((student) => student.goal)
+            .filter((goal) => goal && goal.trim() !== "")
+        ),
+      ].sort();
+      setGoalOptions(uniqueGoals);
       applyFilters(studentList, filters, searchQuery);
       return studentList.length;
     } catch (error) {
@@ -87,7 +124,10 @@ export default function StudentDetails() {
   const fetchCourse = async () => {
     try {
       const snapshot = await getDocs(collection(db, "Course"));
-      const courseList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const courseList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setCourse(courseList);
       return courseList.length;
     } catch (error) {
@@ -112,7 +152,10 @@ export default function StudentDetails() {
         where("isActive", "==", true)
       );
       const centerSnapshot = await getDocs(centerQuery);
-      const centerList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const centerList = centerSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setCenters(centerList);
       return centerList.length;
     } catch (error) {
@@ -125,7 +168,10 @@ export default function StudentDetails() {
   const fetchBatches = async () => {
     try {
       const snapshot = await getDocs(collection(db, "Batch"));
-      const batchList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const batchList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setBatches(batchList);
       return batchList.length;
     } catch (error) {
@@ -136,53 +182,96 @@ export default function StudentDetails() {
   };
 
   const applyFilters = (studentList, currentFilters, query) => {
+    console.log("Applying filters:", { currentFilters, query, studentList });
     let filtered = [...studentList];
 
     // Apply search query
     if (query) {
-      filtered = filtered.filter(
-        (student) =>
-          student.first_name?.toLowerCase().includes(query.toLowerCase()) ||
-          student.last_name?.toLowerCase().includes(query.toLowerCase()) ||
-          student.email?.toLowerCase().includes(query.toLowerCase()) ||
-          student.phone?.toLowerCase().includes(query.toLowerCase())
+      filtered = filtered.filter((student) =>
+        [
+          student.first_name,
+          student.last_name,
+          student.email,
+          student.phone,
+        ].some(
+          (field) =>
+            field &&
+            field.toLowerCase().includes(query.toLowerCase())
+        )
       );
     }
 
     // Apply course filter
     if (currentFilters.course) {
-      filtered = filtered.filter((student) =>
-        student.course_details?.some((c) => c.courseId === currentFilters.course)
-      );
+      filtered = filtered.filter((student) => {
+        const courseIds = student.course_details?.map((c) => c.courseId) || [];
+        console.log(
+          `Course filter: student ${student.id}, courseIds:`,
+          courseIds,
+          `filter: ${currentFilters.course}`
+        );
+        return courseIds.includes(currentFilters.course);
+      });
     }
 
     // Apply center filter
     if (currentFilters.center) {
-      filtered = filtered.filter((student) =>
-        student.preferred_centers?.includes(currentFilters.center)
-      );
+      filtered = filtered.filter((student) => {
+        const centers = student.preferred_centers || [];
+        console.log(
+          `Center filter: student ${student.id}, centers:`,
+          centers,
+          `filter: ${currentFilters.center}`
+        );
+        return centers.includes(currentFilters.center);
+      });
     }
 
     // Apply batch filter
     if (currentFilters.batch) {
-      filtered = filtered.filter((student) =>
-        student.batchId === currentFilters.batch
-      );
+      filtered = filtered.filter((student) => {
+        console.log(
+          `Batch filter: student ${student.id}, batchId:`,
+          student.batchId,
+          `filter: ${currentFilters.batch}`
+        );
+        return student.batchId === currentFilters.batch;
+      });
     }
 
     // Apply status filter
     if (currentFilters.status) {
-      filtered = filtered.filter((student) => student.status === currentFilters.status);
+      filtered = filtered.filter((student) => {
+        console.log(
+          `Status filter: student ${student.id}, status:`,
+          student.status,
+          `filter: ${currentFilters.status}`
+        );
+        return student.status === currentFilters.status;
+      });
     }
 
     // Apply goal filter
     if (currentFilters.goal) {
-      filtered = filtered.filter((student) =>
-        student.goal?.toLowerCase().includes(currentFilters.goal.toLowerCase())
-      );
+      filtered = filtered.filter((student) => {
+        console.log(
+          `Goal filter: student ${student.id}, goal:`,
+          student.goal,
+          `filter: ${currentFilters.goal}`
+        );
+        return (
+          student.goal &&
+          student.goal.toLowerCase() === currentFilters.goal.toLowerCase()
+        );
+      });
     }
 
     setFilteredStudents(filtered);
+    if (filtered.length === 0) {
+      toast.warn("No students match the selected filters.");
+    } else {
+      toast.success(`Filtered to ${filtered.length} student(s).`);
+    }
   };
 
   const handleSearch = (e) => {
@@ -195,6 +284,7 @@ export default function StudentDetails() {
     const { name, value } = e.target;
     const newFilters = { ...filters, [name]: value };
     setFilters(newFilters);
+    // Apply filters immediately for better UX
     applyFilters(students, newFilters, searchQuery);
   };
 
@@ -204,11 +294,18 @@ export default function StudentDetails() {
       center: "",
       batch: "",
       status: "",
-      goal: ""
+      goal: "",
     };
     setFilters(newFilters);
     setSearchQuery("");
     applyFilters(students, newFilters, "");
+    setOpenFilter(false);
+    toast.success("Filters reset successfully.");
+  };
+
+  const handleApplyFilters = () => {
+    applyFilters(students, filters, searchQuery);
+    setOpenFilter(false);
   };
 
   const handleStudentSelect = (id) => {
@@ -284,7 +381,9 @@ export default function StudentDetails() {
       for (const studentId of selectedStudents) {
         const studentRef = doc(db, "student", studentId);
         const studentSnapshot = await getDocs(collection(db, "student"));
-        const student = studentSnapshot.docs.find((doc) => doc.id === studentId)?.data();
+        const student = studentSnapshot.docs.find(
+          (doc) => doc.id === studentId
+        )?.data();
 
         if (!student) {
           console.warn(`Student not found: ${studentId}`);
@@ -292,8 +391,11 @@ export default function StudentDetails() {
           continue;
         }
 
-        const existingCourses = student.course_details?.map((c) => c.courseId) || [];
-        const newCourseIds = selectedCourse.filter((courseId) => !existingCourses.includes(courseId));
+        const existingCourses =
+          student.course_details?.map((c) => c.courseId) || [];
+        const newCourseIds = selectedCourse.filter(
+          (courseId) => !existingCourses.includes(courseId)
+        );
 
         if (newCourseIds.length === 0) {
           studentsSkipped++;
@@ -309,7 +411,10 @@ export default function StudentDetails() {
           };
         });
 
-        const updatedCourseDetails = [...(student.course_details || []), ...newCourseDetails];
+        const updatedCourseDetails = [
+          ...(student.course_details || []),
+          ...newCourseDetails,
+        ];
         batch.update(studentRef, { course_details: updatedCourseDetails });
 
         for (const courseId of newCourseIds) {
@@ -335,10 +440,14 @@ export default function StudentDetails() {
       await fetchStudents();
 
       if (studentsSkipped > 0) {
-        toast.warn(`${studentsSkipped} students were already enrolled in the selected courses.`);
+        toast.warn(
+          `${studentsSkipped} students were already enrolled in the selected courses.`
+        );
       }
       toast.success(
-        `Created ${enrollmentsCreated} enrollment records for ${selectedStudents.length - studentsSkipped} students.`
+        `Created ${enrollmentsCreated} enrollment records for ${
+          selectedStudents.length - studentsSkipped
+        } students.`
       );
       logActivity("BULK ENROLL SUCCESS", {
         enrolledCount: enrollmentsCreated,
@@ -371,14 +480,18 @@ export default function StudentDetails() {
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="max-w-8xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-gray-800">Student Details</h1>
+          <h1 className="text-2xl font-semibold text-gray-800">
+            Student Details
+          </h1>
           <div className="flex space-x-2">
             <button
-              onClick={() => setOpenFilter(true)}
-              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-200"
-            >
-              Filter
-            </button>
+                      onClick={() => setOpenFilter(true)}
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                    >
+                      <FaFilter />
+                      Filters
+                      <FaChevronDown />
+                    </button>
             {canCreate && (
               <button
                 onClick={() => navigate("/studentdetails/addstudent")}
@@ -410,27 +523,50 @@ export default function StudentDetails() {
                       <input
                         type="checkbox"
                         onChange={(e) =>
-                          setSelectedStudents(e.target.checked ? filteredStudents.map((s) => s.id) : [])
+                          setSelectedStudents(
+                            e.target.checked
+                              ? filteredStudents.map((s) => s.id)
+                              : []
+                          )
                         }
                         className="rounded"
                       />
                     </th>
                   )}
-                  <th className="p-3 text-sm font-medium text-gray-600 text-left">First Name</th>
-                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Last Name</th>
-                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Email</th>
-                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Phone</th>
-                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Preferred Learning Centers</th>
-                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Status</th>
-                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Goal</th>
+                  <th className="p-3 text-sm font-medium text-gray-600 text-left">
+                    First Name
+                  </th>
+                  <th className="p-3 text-sm font-medium text-gray-600 text-left">
+                    Last Name
+                  </th>
+                  <th className="p-3 text-sm font-medium text-gray-600 text-left">
+                    Email
+                  </th>
+                  <th className="p-3 text-sm font-medium text-gray-600 text-left">
+                    Phone
+                  </th>
+                  <th className="p-3 text-sm font-medium text-gray-600 text-left">
+                    Preferred Learning Centers
+                  </th>
+                  <th className="p-3 text-sm font-medium text-gray-600 text-left">
+                    Status
+                  </th>
+                  <th className="p-3 text-sm font-medium text-gray-600 text-left">
+                    Goal
+                  </th>
                   {(canUpdate || canDelete) && (
-                    <th className="p-3 text-sm font-medium text-gray-600 text-left">Actions</th>
+                    <th className="p-3 text-sm font-medium text-gray-600 text-left">
+                      Actions
+                    </th>
                   )}
                 </tr>
               </thead>
               <tbody>
                 {filteredStudents.map((student) => (
-                  <tr key={student.id} className="border-b hover:bg-gray-50 cursor-pointer">
+                  <tr
+                    key={student.id}
+                    className="border-b hover:bg-gray-50 cursor-pointer"
+                  >
                     {canEnroll && (
                       <td className="p-3 min-w-40">
                         <input
@@ -474,7 +610,9 @@ export default function StudentDetails() {
                     <td className="p-3">
                       <select
                         value={student.status || "enrolled"}
-                        onChange={(e) => handleStatusChange(student.id, e.target.value)}
+                        onChange={(e) =>
+                          handleStatusChange(student.id, e.target.value)
+                        }
                         disabled={!canUpdate}
                         className="w-full min-w-40 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
@@ -495,7 +633,11 @@ export default function StudentDetails() {
                         <div className="flex space-x-2">
                           {canUpdate && (
                             <button
-                              onClick={() => navigate(`/studentdetails/updatestudent/${student.id}`)}
+                              onClick={() =>
+                                navigate(
+                                  `/studentdetails/updatestudent/${student.id}`
+                                )
+                              }
                               className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition duration-200"
                             >
                               Update
@@ -524,10 +666,14 @@ export default function StudentDetails() {
 
         {canEnroll && (
           <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-lg font-medium text-gray-700 mb-4">Bulk Enrollment</h2>
+            <h2 className="text-lg font-medium text-gray-700 mb-4">
+              Bulk Enrollment
+            </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Select Courses</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Select Courses
+                </label>
                 <select
                   value={selectedCourse.length > 0 ? selectedCourse[0] : ""}
                   onChange={handleCourseSelect}
@@ -543,7 +689,9 @@ export default function StudentDetails() {
               </div>
               <button
                 onClick={handleBulkEnrollment}
-                disabled={selectedStudents.length === 0 || selectedCourse.length === 0}
+                disabled={
+                  selectedStudents.length === 0 || selectedCourse.length === 0
+                }
                 className={`bg-green-600 text-white px-4 py-2 rounded-md transition duration-200 ${
                   selectedStudents.length === 0 || selectedCourse.length === 0
                     ? "opacity-50 cursor-not-allowed"
@@ -558,9 +706,12 @@ export default function StudentDetails() {
 
         {canDelete && openDelete && (
           <Dialog open={openDelete} handler={() => setOpenDelete(false)}>
-            <DialogHeader className="text-gray-800">Confirm Deletion</DialogHeader>
+            <DialogHeader className="text-gray-800">
+              Confirm Deletion
+            </DialogHeader>
             <DialogBody className="text-gray-700">
-              Are you sure you want to delete this student? This action cannot be undone.
+              Are you sure you want to delete this student? This action cannot be
+              undone.
             </DialogBody>
             <DialogFooter>
               <Button
@@ -579,12 +730,20 @@ export default function StudentDetails() {
         )}
 
         {openFilter && (
-          <Dialog open={openFilter} handler={() => setOpenFilter(false)} className="w-[500px] h-[400px] mx-auto bg-transparent shadow-lg">
-            <DialogHeader className="text-gray-800 bg-white rounded-t-lg">Filter Students</DialogHeader>
-            <DialogBody className="text-gray-700 bg-white overflow-y-auto max-h-[300px]">
+          <Dialog
+            open={openFilter}
+            handler={() => setOpenFilter(false)}
+            className="w-[500px] max-h-[80vh] mx-auto bg-transparent shadow-lg"
+          >
+            <DialogHeader className="text-gray-800 bg-white rounded-t-lg">
+              Filter Students
+            </DialogHeader>
+            <DialogBody className="text-gray-700 bg-white overflow-y-auto max-h-[50vh]">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Course</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Course
+                  </label>
                   <select
                     name="course"
                     value={filters.course}
@@ -600,7 +759,9 @@ export default function StudentDetails() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Center</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Center
+                  </label>
                   <select
                     name="center"
                     value={filters.center}
@@ -616,7 +777,9 @@ export default function StudentDetails() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Batch</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Batch
+                  </label>
                   <select
                     name="batch"
                     value={filters.batch}
@@ -632,7 +795,9 @@ export default function StudentDetails() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Status
+                  </label>
                   <select
                     name="status"
                     value={filters.status}
@@ -647,15 +812,22 @@ export default function StudentDetails() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Goal</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Goal
+                  </label>
+                  <select
                     name="goal"
                     value={filters.goal}
                     onChange={handleFilterChange}
-                    placeholder="Enter goal..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
+                    <option value="">All Goals</option>
+                    {goalOptions.map((goal) => (
+                      <option key={goal} value={goal}>
+                        {goal}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </DialogBody>
@@ -679,7 +851,7 @@ export default function StudentDetails() {
               <Button
                 variant="filled"
                 color="green"
-                onClick={() => setOpenFilter(false)}
+                onClick={handleApplyFilters}
               >
                 Apply
               </Button>
