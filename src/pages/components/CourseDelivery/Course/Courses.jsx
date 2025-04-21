@@ -895,11 +895,12 @@ return (
                   <td className="px-4 py-3 text-gray-600">{course.duration || 'N/A'}</td>
                   <td className="px-4 py-3 text-gray-600">{course.mode || 'N/A'}</td>
                   <td className="px-4 py-3 text-gray-600">
-                      {centers.length > 0 && course.center
-                        ? centers.find(c => c.name === course.center)?.name ||
-                          centers.find(c => c.id === course.center)?.name ||
-                          course.center || 'N/A'
-                        : course.center || 'N/A'}
+                    {course.centerIds.length > 0
+                      ? course.centerIds
+                          .map(centerId => centers.find(c => c.id === centerId)?.name || centerId)
+                          .filter(Boolean)
+                          .join(', ') || 'N/A'
+                      : 'N/A'}
                   </td>
                   <td className="px-4 py-3 text-gray-600">{course.status || 'Active'}</td>
                   <td className="px-4 py-3">
