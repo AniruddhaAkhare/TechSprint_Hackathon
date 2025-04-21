@@ -101,7 +101,7 @@ const EnquiryDashboard = () => {
         }));
         console.log("Fetched courses:", coursesData);
         setCourses(coursesData);
-        logActivity('FETCH_COURSES', { count: coursesData.length });
+        // logActivity('FETCH_COURSES', { count: coursesData.length });
       },
       (error) => {
         console.error("Error fetching courses:", error);
@@ -432,7 +432,7 @@ const EnquiryDashboard = () => {
                 onClick={() => {
                   console.log("Add Enquiry clicked, canCreate:", canCreate);
                   setIsModalOpen(true);
-                  logActivity('OPEN_ADD_ENQUIRY', {});
+                  // logActivity('OPEN_ADD_ENQUIRY', {});
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md w-full sm:w-auto hover:bg-blue-700 transition-colors"
               >

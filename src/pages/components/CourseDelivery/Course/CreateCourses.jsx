@@ -115,7 +115,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity }) => {
         }, {});
         
         if (Object.keys(changes).length > 0) {
-          await logActivity("Updated course", { courseId: course.id, name: courseName, changes });
+          await logActivity("Updated course", { name: courseName, changes });
           console.log("Logged changes:", changes);
         } else {
           console.log("No changes detected for update.");
@@ -123,7 +123,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity }) => {
         alert("Course updated successfully!");
       } else {
         const docRef = await addDoc(collection(db, "Course"), courseData);
-        await logActivity("Created course", { courseId: docRef.id, name: courseName });
+        await logActivity("Created course", { name: courseName });
         alert("Course created successfully!");
       }
       resetForm();

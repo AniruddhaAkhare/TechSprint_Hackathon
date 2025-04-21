@@ -45,22 +45,22 @@ const CurriculumPage = () => {
   const handleOpenModal = () => {
     if (!canCreateCurriculum) {
       alert("You don't have permission to create a curriculum");
-      logActivity("access_denied", "Attempted to open curriculum creation modal without permission");
+      // logActivity("access_denied", "Attempted to open curriculum creation modal without permission");
       return;
     }
     setIsModalOpen(true);
-    logActivity("open_modal", "Opened curriculum creation modal");
+    // logActivity("open_modal", "Opened curriculum creation modal");
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    logActivity("close_modal", "Closed curriculum creation modal");
+    // logActivity("close_modal", "Closed curriculum creation modal");
   };
 
   const handleSubmit = (data) => {
     if (!canCreateCurriculum) {
       alert("You don't have permission to create a curriculum");
-      logActivity("access_denied", "Attempted to submit curriculum without permission");
+      // logActivity("access_denied", "Attempted to submit curriculum without permission");
       return;
     }
     console.log("New Curriculum:", data);

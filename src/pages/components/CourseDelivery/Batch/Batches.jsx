@@ -119,9 +119,9 @@ export default function Batches() {
             const batchRef = doc(db, "Batch", batch.id);
             await updateDoc(batchRef, { status: "Inactive" });
             await logActivity("Updated batch status", {
-              batchId: batch.id,
+              // batchId: batch.id,
               name: batch.batchName,
-              changes: { oldStatus: batch.status, newStatus: "Inactive" },
+              changes: { oldStatus: batch.status, newStatus: batch.status=="Active"? "Active":"Inactive" },
             });
             return { ...batch, status: "Inactive" };
           }
@@ -291,7 +291,7 @@ export default function Batches() {
       const batch = batches.find((b) => b.id === deleteId);
       await deleteDoc(doc(db, "Batch", deleteId));
       await logActivity("Deleted batch", {
-        batchId: deleteId,
+        // batchId: deleteId,
         name: batch.batchName || "Unknown",
       });
       fetchBatches();
@@ -315,7 +315,7 @@ export default function Batches() {
           newName: formData.batchName,
         };
         await logActivity("Updated batch", {
-          batchId: currentBatch.id,
+          // batchId: currentBatch.id,
           name: formData.batchName,
           changes,
         });

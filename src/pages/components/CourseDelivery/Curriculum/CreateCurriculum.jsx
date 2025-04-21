@@ -141,7 +141,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
 
         if (Object.keys(changes).length > 0 && logActivity) {
           await logActivity('Update Curriculum', {
-            curriculumId: curriculumToEdit.id,
+            // curriculumId: curriculumToEdit.id,
             name: formData.name,
             changes,
           });
@@ -167,7 +167,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
 
         if (logActivity) {
           await logActivity('Create Curriculum', {
-            curriculumId: docRef.id,
+            // curriculumId: docRef.id,
             name: formData.name,
           });
           console.log('Logged creation of curriculum with ID:', docRef.id);

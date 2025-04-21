@@ -85,8 +85,8 @@ const AddSectionModal = ({ isOpen, onClose, curriculumId, sectionToEdit, logActi
 
         if (Object.keys(changes).length > 0) {
           await logActivity("Updated section", {
-            curriculumId,
-            sectionId: sectionToEdit.id,
+            // curriculumId,
+            // sectionId: sectionToEdit.id,
             name: formData.name,
             changes
           });
@@ -103,8 +103,8 @@ const AddSectionModal = ({ isOpen, onClose, curriculumId, sectionToEdit, logActi
         });
 
         await logActivity("Created section", {
-          curriculumId,
-          sectionId: docRef.id,
+          // curriculumId,
+          // sectionId: docRef.id,
           name: formData.name
         });
       }

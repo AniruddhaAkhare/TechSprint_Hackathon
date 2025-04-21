@@ -42,10 +42,10 @@ const CurriculumEditor = () => {
         setSections(sectionsData);
 
         // Log viewing the curriculum
-        await logActivity("Viewed curriculum editor", {
-          curriculumId,
-          name: docSnap.data().name || "Unknown"
-        });
+        // await logActivity("Viewed curriculum editor", {
+        //   curriculumId,
+        //   name: docSnap.data().name || "Unknown"
+        // });
       } catch (error) {
         console.error("Error fetching curriculum:", error);
       }
@@ -95,11 +95,11 @@ const CurriculumEditor = () => {
     }
     try {
       const section = sections.find(s => s.id === sectionId);
-      await logActivity("Navigated to add material", {
-        curriculumId,
-        sectionId,
-        sectionName: section?.name || "Unknown"
-      });
+      // await logActivity("Navigated to add material", {
+        // curriculumId,
+        // sectionId,
+        // sectionName: section?.name || "Unknown"
+      // });
       navigate(`/curriculum/${curriculumId}/section/${sectionId}/add-material`);
     } catch (error) {
       console.error("Error logging navigation to add material:", error);

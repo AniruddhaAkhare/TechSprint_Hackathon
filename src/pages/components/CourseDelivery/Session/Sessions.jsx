@@ -488,7 +488,7 @@ export default function Sessions() {
             const sessionToDelete = sessions.find(s => s.id === deleteId);
             await deleteDoc(doc(db, "Sessions", deleteId));
             await logActivity("Deleted session", {
-                sessionId: deleteId,
+                // sessionId: deleteId,
                 name: sessionToDelete?.name || "Unknown",
             });
             setOpenDelete(false);

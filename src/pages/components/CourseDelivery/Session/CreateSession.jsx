@@ -218,7 +218,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         sessionIdResult = sessionId;
         // Log update activity
         await logActivity("Updated session", {
-          sessionId: sessionId,
+          // sessionId: sessionId,
           name: sessionData.name,
           changes: {
             oldName: sessionToEdit?.name,
@@ -238,10 +238,10 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         sessionIdResult = docRef.id;
         // Log create activity
         await logActivity("Created session", {
-          sessionId: docRef.id,
+          // sessionId: docRef.id,
           name: sessionData.name,
-          preFeedbackForm: sessionData.preFeedbackForm,
-          postFeedbackForm: sessionData.postFeedbackForm,
+          // preFeedbackForm: sessionData.preFeedbackForm,
+          // postFeedbackForm: sessionData.postFeedbackForm,
         });
         alert("Session created successfully!");
       }

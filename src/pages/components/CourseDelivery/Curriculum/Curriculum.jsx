@@ -117,7 +117,7 @@ const Curriculum = () => {
         if (!curriculum) throw new Error("Curriculum not found");
         await deleteDoc(doc(db, 'curriculums', selectedCurriculumId));
         await logActivity("Deleted curriculum", { 
-          curriculumId: selectedCurriculumId, 
+          // curriculumId: selectedCurriculumId, 
           name: curriculum.name || 'Unknown' 
         });
         setIsDeleteModalOpen(false);
@@ -156,7 +156,7 @@ const Curriculum = () => {
           // Add more fields as needed based on your curriculum structure
         };
         await logActivity("Updated curriculum", { 
-          curriculumId: curriculumToEdit.id, 
+          // curriculumId: curriculumToEdit.id, 
           name: formData.name, 
           changes 
         });
