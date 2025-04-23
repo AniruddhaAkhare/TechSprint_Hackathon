@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { db } from "../../../../config/firebase";
 import {
   getDocs,
@@ -7,9 +7,14 @@ import {
   doc,
   query,
   orderBy,
+  setDoc,
   updateDoc,
   addDoc,
   serverTimestamp,
+  onSnapshot,
+  where,
+  arrayUnion,
+  increment
 } from "firebase/firestore";
 import CreateBatch from "./CreateBatch";
 import {
@@ -22,6 +27,7 @@ import {
 import { useAuth } from "../../../../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import debounce from 'lodash/debounce';
 
 export default function Batches() {
   const { user, rolePermissions } = useAuth();
@@ -40,9 +46,6 @@ export default function Batches() {
   const [centers, setCenters] = useState([]);
   const [startDateFrom, setStartDateFrom] = useState("");
   const [startDateTo, setStartDateTo] = useState("");
-
-  const BatchCollectionRef = collection(db, "Batch");
-  const StudentCollectionRef = collection(db, "student");
   const [isOpen, setIsOpen] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -50,176 +53,150 @@ export default function Batches() {
     "Are you sure you want to delete this batch? This action cannot be undone."
   );
 
+  const BatchCollectionRef = collection(db, "Batch");
+  const StudentCollectionRef = collection(db, "student");
+  const instituteId = "9z6G6BLzfDScI0mzMOlB"; // Hardcoded institute ID
+  const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+
   const toggleSidebar = () => setIsOpen((prev) => !prev);
 
-  // Activity logging function
   const logActivity = async (action, details) => {
-    if (!user) {
-      console.error("No user logged in for logging activity");
-      return;
-    }
+    if (!user) return;
     try {
-      const logRef = await addDoc(collection(db, "activityLogs"), {
+      const logDocRef = doc(db, "activityLogs", "currentLog");
+      const logEntry = {
         timestamp: serverTimestamp(),
         userId: user.uid,
         userEmail: user.email,
         action,
-        details,
+        details
+      };
+      await updateDoc(logDocRef, {
+        logs: arrayUnion(logEntry),
+        count: increment(1)
+      }).catch(async (err) => {
+        if (err.code === 'not-found') {
+          await setDoc(logDocRef, { logs: [logEntry], count: 1 });
+        } else {
+          throw err;
+        }
       });
-      console.log("Activity logged with ID:", logRef.id, { action, details });
     } catch (err) {
       console.error("Error logging activity:", err.message);
-      throw err;
+      toast.error("Failed to log activity.");
     }
   };
 
-  const fetchCenters = async () => {
+  const fetchCenters = useCallback(() => {
     if (!canDisplay) return;
-    try {
-      const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
-      if (instituteSnapshot.empty) {
-        console.error("No institute found");
-        toast.error("No institute setup found");
-        return;
-      }
-      const instituteId = instituteSnapshot.docs[0].id;
-      const centersSnapshot = await getDocs(
-        collection(db, "instituteSetup", instituteId, "Center")
-      );
-      const centerData = centersSnapshot.docs.map((doc) => ({
+    const unsubscribe = onSnapshot(CenterCollectionRef, (snapshot) => {
+      const centerData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
       setCenters(centerData);
-      console.log("Fetched centers:", centerData);
-    } catch (err) {
-      console.error("Error fetching centers:", err);
+    }, (err) => {
+      console.error("Error fetching centers:", err.message);
       toast.error("Failed to fetch centers");
-    }
-  };
+    });
+    return unsubscribe;
+  }, [canDisplay]);
 
-  const fetchBatches = async () => {
+  const fetchBatches = useCallback(() => {
     if (!canDisplay) return;
-    try {
-      const q = query(BatchCollectionRef, orderBy("createdAt", "desc"));
-      const snapshot = await getDocs(q);
-      const batchData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
+    const q = query(BatchCollectionRef, orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const currentDate = new Date();
-      const updatedBatches = await Promise.all(
-        batchData.map(async (batch) => {
-          const batchEndDate = batch.endDate?.toDate
-            ? batch.endDate.toDate()
-            : new Date(batch.endDate);
-
-          if (currentDate > batchEndDate && batch.status !== "Inactive") {
-            const batchRef = doc(db, "Batch", batch.id);
-            await updateDoc(batchRef, { status: "Inactive" });
-            await logActivity("Updated batch status", {
-              // batchId: batch.id,
-              name: batch.batchName,
-              changes: { oldStatus: batch.status, newStatus: batch.status=="Active"? "Active":"Inactive" },
-            });
-            return { ...batch, status: "Inactive" };
-          }
-          return batch;
-        })
-      );
-
-      setBatches(updatedBatches);
-      setSearchResults(updatedBatches); // Initialize searchResults
-      console.log("Fetched batches:", updatedBatches);
-    } catch (err) {
-      console.error("Error fetching batches:", err);
+      const batchData = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        const batchEndDate = data.endDate?.toDate
+          ? data.endDate.toDate()
+          : new Date(data.endDate);
+        const status = currentDate > batchEndDate && data.status !== "Inactive"
+          ? "Inactive"
+          : data.status || "Active";
+        return {
+          id: doc.id,
+          ...data,
+          status
+        };
+      });
+      setBatches(batchData);
+      setSearchResults(batchData);
+    }, (err) => {
+      console.error("Error fetching batches:", err.message);
       toast.error("Failed to fetch batches");
-    }
-  };
+    });
+    return unsubscribe;
+  }, [canDisplay]);
+
+  const debouncedApplyFilters = useCallback(
+    debounce(() => {
+      let filteredBatches = [...batches];
+
+      if (filterStatus !== "All") {
+        filteredBatches = filteredBatches.filter(
+          (batch) => batch.status === filterStatus
+        );
+      }
+
+      if (filterCenter !== "All") {
+        filteredBatches = filteredBatches.filter((batch) => {
+          const batchCenters = Array.isArray(batch.centers)
+            ? batch.centers
+            : batch.center
+            ? [batch.center]
+            : [];
+          const center = centers.find((c) => c.id === filterCenter);
+          return (
+            batchCenters.includes(filterCenter) ||
+            (center && batchCenters.includes(center.name))
+          );
+        });
+      }
+
+      if (startDateFrom && startDateTo) {
+        const fromDate = new Date(startDateFrom);
+        const toDate = new Date(startDateTo);
+        filteredBatches = filteredBatches.filter((batch) => {
+          const batchStartDate = batch.startDate?.toDate
+            ? batch.startDate.toDate()
+            : new Date(batch.startDate);
+          return batchStartDate >= fromDate && batchStartDate <= toDate;
+        });
+      }
+
+      if (searchTerm.trim()) {
+        filteredBatches = filteredBatches.filter((batch) =>
+          batch.batchName.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      setSearchResults(filteredBatches);
+      if (filteredBatches.length === 0) {
+        toast.warn("No batches match the selected filters.");
+      } else {
+        toast.success(`Filtered to ${filteredBatches.length} batch(es).`);
+      }
+    }, 300),
+    [batches, filterStatus, filterCenter, startDateFrom, startDateTo, searchTerm, centers]
+  );
 
   useEffect(() => {
     if (canDisplay) {
-      fetchCenters();
-      fetchBatches();
+      const unsubscribeCenters = fetchCenters();
+      const unsubscribeBatches = fetchBatches();
+      return () => {
+        unsubscribeCenters && unsubscribeCenters();
+        unsubscribeBatches && unsubscribeBatches();
+      };
     }
-  }, [canDisplay]);
+  }, [canDisplay, fetchCenters, fetchBatches]);
 
   useEffect(() => {
-    applyFilters();
-  }, [searchTerm, filterStatus, filterCenter, startDateFrom, startDateTo, batches]);
-
-  const applyFilters = () => {
-    console.log("Applying filters:", {
-      searchTerm,
-      filterStatus,
-      filterCenter,
-      startDateFrom,
-      startDateTo,
-      totalBatches: batches.length,
-    });
-    let filteredBatches = [...batches];
-
-    // Apply status filter
-    if (filterStatus !== "All") {
-      filteredBatches = filteredBatches.filter(
-        (batch) => batch.status === filterStatus
-      );
-      console.log(`After status filter (${filterStatus}):`, filteredBatches.length);
-    }
-
-    // Apply center filter
-    if (filterCenter !== "All") {
-      filteredBatches = filteredBatches.filter((batch) => {
-        // Handle centers as array, single ID, or name
-        const batchCenters = Array.isArray(batch.centers)
-          ? batch.centers
-          : batch.center
-          ? [batch.center]
-          : [];
-        console.log(
-          `Center filter: batch ${batch.id}, centers:`,
-          batchCenters,
-          `filter: ${filterCenter}`
-        );
-        // Try matching by ID or name
-        const center = centers.find((c) => c.id === filterCenter);
-        return (
-          batchCenters.includes(filterCenter) ||
-          (center && batchCenters.includes(center.name))
-        );
-      });
-      console.log(`After center filter (${filterCenter}):`, filteredBatches.length);
-    }
-
-    // Apply date range filter
-    if (startDateFrom && startDateTo) {
-      const fromDate = new Date(startDateFrom);
-      const toDate = new Date(startDateTo);
-      filteredBatches = filteredBatches.filter((batch) => {
-        const batchStartDate = batch.startDate?.toDate
-          ? batch.startDate.toDate()
-          : new Date(batch.startDate);
-        return batchStartDate >= fromDate && batchStartDate <= toDate;
-      });
-      console.log(`After date filter:`, filteredBatches.length);
-    }
-
-    // Apply search term filter
-    if (searchTerm.trim()) {
-      filteredBatches = filteredBatches.filter((batch) =>
-        batch.batchName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      console.log(`After search filter:`, filteredBatches.length);
-    }
-
-    setSearchResults(filteredBatches);
-    if (filteredBatches.length === 0) {
-      toast.warn("No batches match the selected filters.");
-    } else {
-      toast.success(`Filtered to ${filteredBatches.length} batch(es).`);
-    }
-  };
+    debouncedApplyFilters();
+    return () => debouncedApplyFilters.cancel();
+  }, [debouncedApplyFilters]);
 
   const resetFilters = () => {
     setSearchTerm("");
@@ -252,23 +229,15 @@ export default function Batches() {
   const handleClose = () => {
     setIsOpen(false);
     setCurrentBatch(null);
-    fetchBatches();
   };
 
   const checkStudentsInBatch = async (batchId) => {
     try {
-      const snapshot = await getDocs(StudentCollectionRef);
-      const students = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      const hasStudents = students.some((student) => {
-        const courseDetails = student.course_details || [];
-        return courseDetails.some((course) => course.batch === batchId);
-      });
-      return hasStudents;
+      const q = query(StudentCollectionRef, where("course_details.batch", "==", batchId));
+      const snapshot = await getDocs(q);
+      return !snapshot.empty;
     } catch (err) {
-      console.error("Error checking students in batch:", err);
+      console.error("Error checking students in batch:", err.message);
       return false;
     }
   };
@@ -278,7 +247,6 @@ export default function Batches() {
       if (!canDelete) toast.error("You do not have permission to delete batches.");
       return;
     }
-
     try {
       const hasStudents = await checkStudentsInBatch(deleteId);
       if (hasStudents) {
@@ -287,21 +255,16 @@ export default function Batches() {
         );
         return;
       }
-
       const batch = batches.find((b) => b.id === deleteId);
       await deleteDoc(doc(db, "Batch", deleteId));
-      await logActivity("Deleted batch", {
-        // batchId: deleteId,
-        name: batch.batchName || "Unknown",
-      });
-      fetchBatches();
+      await logActivity("Deleted batch", { name: batch.batchName || "Unknown" });
       setOpenDelete(false);
       setDeleteMessage(
         "Are you sure you want to delete this batch? This action cannot be undone."
       );
       toast.success("Batch deleted successfully.");
     } catch (err) {
-      console.error("Error deleting batch:", err);
+      console.error("Error deleting batch:", err.message);
       setDeleteMessage("An error occurred while trying to delete the batch.");
       toast.error("Failed to delete batch.");
     }
@@ -310,19 +273,12 @@ export default function Batches() {
   const handleBatchSubmit = async (formData) => {
     try {
       if (currentBatch) {
-        const changes = {
-          oldName: currentBatch.batchName,
-          newName: formData.batchName,
-        };
         await logActivity("Updated batch", {
-          // batchId: currentBatch.id,
           name: formData.batchName,
-          changes,
+          changes: { oldName: currentBatch.batchName, newName: formData.batchName }
         });
       } else {
-        await logActivity("Created batch", {
-          name: formData.batchName,
-        });
+        await logActivity("Created batch", { name: formData.batchName });
       }
       handleClose();
     } catch (err) {
@@ -452,16 +408,13 @@ export default function Batches() {
                     className="border-b hover:bg-gray-50 transition duration-150"
                   >
                     <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                    <td className="px-4 py-3 text-gray-800">
-                      {batch.batchName}
-                    </td>
+                    <td className="px-4 py-3 text-gray-800">{batch.batchName}</td>
                     <td className="px-4 py-3 text-gray-600">{batch.status}</td>
                     <td className="px-4 py-3 text-gray-600">
                       {batch.centers
                         ? batch.centers
                             .map((centerId) =>
-                              centers.find((c) => c.id === centerId)?.name ||
-                              centerId
+                              centers.find((c) => c.id === centerId)?.name || centerId
                             )
                             .join(", ")
                         : batch.center || "N/A"}
@@ -511,14 +464,14 @@ export default function Batches() {
         </div>
       </div>
 
-      {isOpen && canCreate && (
+      {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={handleClose}
         />
       )}
 
-      {canCreate && (
+      {isOpen && (
         <div
           className={`fixed top-0 right-0 h-full w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${
             isOpen ? "translate-x-0" : "translate-x-full"
@@ -530,6 +483,7 @@ export default function Batches() {
             batch={currentBatch}
             onSubmit={handleBatchSubmit}
             logActivity={logActivity}
+            centers={centers}
           />
         </div>
       )}
@@ -538,13 +492,15 @@ export default function Batches() {
         <Dialog
           open={openDelete}
           handler={() => setOpenDelete(false)}
-          className="rounded-lg shadow-lg"
+          className="rounded-lg shadow-lg w-96 max-w-[90%] mx-auto"
         >
-          <DialogHeader className="text-gray-800 font-semibold">
+          <DialogHeader className="text-gray-800 font-semibold text-lg p-4">
             Confirm Deletion
           </DialogHeader>
-          <DialogBody className="text-gray-600">{deleteMessage}</DialogBody>
-          <DialogFooter className="space-x-4">
+          <DialogBody className="text-gray-600 text-base p-4">
+            {deleteMessage}
+          </DialogBody>
+          <DialogFooter className="space-x-4 p-4">
             <Button
               variant="text"
               color="gray"
@@ -559,7 +515,7 @@ export default function Batches() {
                 variant="filled"
                 color="red"
                 onClick={deleteBatch}
-                className="bg-red-500 hover:bg-red-600 transition duration-200"
+                className="bg-red-500 hover:bg-red-600 transition duration-200 text-sm"
               >
                 Yes, Delete
               </Button>

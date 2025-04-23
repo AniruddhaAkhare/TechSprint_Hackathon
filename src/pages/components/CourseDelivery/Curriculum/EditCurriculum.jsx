@@ -406,9 +406,9 @@ const EditCurriculum = () => {
         <div className="space-y-4">
           {sections.map((section, index) => (
             <div
-              key={section.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden relative z-[10]" // Controlled stacking context
-            >
+            key={section.id}
+            className="bg-white rounded-lg shadow-md overflow-visible relative" // Removed z-[10], set overflow-visible
+          >
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <div className="flex items-center gap-4 flex-1">
                   <span
@@ -441,9 +441,8 @@ const EditCurriculum = () => {
                     </button>
                     {sectionDropdownOpen === section.id && (
                       <div
-                        className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-[10000]"
+                        className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-[999999]" // Even higher z-index
                       >
-                        {/* Ultra-high z-index to ensure dropdown is on top */}
                         <button
                           onClick={() => handleEditSection(section)}
                           className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -485,13 +484,10 @@ const EditCurriculum = () => {
                           </button>
                           {materialDropdownOpen === material.id && (
                             <div
-                              className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-[10000]"
+                              className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-[999999]" // Even higher z-index
                             >
-                              {/* Ultra-high z-index to ensure dropdown is on top */}
                               <button
-                                onClick={() =>
-                                  handleDeleteMaterial(section.id, material.id, material.url)
-                                }
+                                onClick={() => handleDeleteMaterial(section.id, material.id, material.url)}
                                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                               >
                                 Delete
@@ -595,10 +591,9 @@ const EditCurriculum = () => {
                   ) : selectedMaterial.type === 'YouTube' ? (
                     <iframe
                       className="w-full max-h-64 rounded-md"
-                      src={`https://www.youtube.com/embed/${
-                        new URL(selectedMaterial.url).searchParams.get('v') ||
+                      src={`https://www.youtube.com/embed/${new URL(selectedMaterial.url).searchParams.get('v') ||
                         selectedMaterial.url.split('/').pop()
-                      }`}
+                        }`}
                       title={selectedMaterial.name}
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
