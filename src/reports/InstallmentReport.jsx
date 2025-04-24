@@ -309,6 +309,7 @@ const InstallmentReport = () => {
       </div>
     );
   }
+  // console.log(feeData);
 
   return (
     <div className="p-4 min-h-screen fixed inset-0 left-[300px]">
@@ -374,9 +375,9 @@ const InstallmentReport = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total Fees
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Discount
-                </th>
+                </th> */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Received
                 </th>
@@ -393,7 +394,7 @@ const InstallmentReport = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.courseName}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.feeTemplate}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹{toNumber(row.totalFees).toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.discountType}+{row.discount}</td>
+                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.discountType}+{row.discount}</td> */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">₹{toNumber(row.received).toFixed(2)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">₹{toNumber(row.pending).toFixed(2)}</td>
                   </tr>

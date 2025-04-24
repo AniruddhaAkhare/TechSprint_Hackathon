@@ -155,17 +155,17 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity }) =>
         await updateDoc(batchRef, { ...batchData, statusChangeDate: serverTimestamp() });
         batchId = batch.id;
         await logActivity("Updated batch", {
-          batchId: batch.id,
+          // batchId: batch.id,
           name: batchData.batchName,
           changes: {
             oldName: batch.batchName,
             newName: batchData.batchName,
             oldStatus: batch.status,
             newStatus: batchData.status,
-            oldPreFeedbackForm: batch.preFeedbackForm,
-            newPreFeedbackForm: batchData.preFeedbackForm,
-            oldPostFeedbackForm: batch.postFeedbackForm,
-            newPostFeedbackForm: batchData.postFeedbackForm,
+            // oldPreFeedbackForm: batch.preFeedbackForm,
+            // newPreFeedbackForm: batchData.preFeedbackForm,
+            // oldPostFeedbackForm: batch.postFeedbackForm,
+            // newPostFeedbackForm: batchData.postFeedbackForm,
           },
         });
         alert("Batch updated successfully!");
@@ -176,10 +176,10 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity }) =>
         });
         batchId = docRef.id;
         await logActivity("Created batch", {
-          batchId: docRef.id,
+          // batchId: docRef.id,
           name: batchData.batchName,
-          preFeedbackForm: batchData.preFeedbackForm,
-          postFeedbackForm: batchData.postFeedbackForm,
+          // preFeedbackForm: batchData.preFeedbackForm,
+          // postFeedbackForm: batchData.postFeedbackForm,
         });
         alert("Batch created successfully!");
       }

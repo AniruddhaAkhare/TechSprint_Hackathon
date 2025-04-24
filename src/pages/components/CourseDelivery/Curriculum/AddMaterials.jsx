@@ -865,7 +865,7 @@ const AddMaterial = () => {
       });
 
       await logActivity(
-        `upload_${type}`,
+        `Upload ${type}`,
         `Uploaded ${file.name} to section ${sectionId}`
       );
 
@@ -873,7 +873,7 @@ const AddMaterial = () => {
       navigate(`/curriculum/${curriculumId}/section/${sectionId}`);
     } catch (error) {
       console.error("Upload error:", error);
-      await logActivity('upload_error', `Failed to upload ${file.name}: ${error.message}`);
+      // await logActivity('Upload_error', `Failed to upload ${file.name}: ${error.message}`);
       setUploadError(`Failed to upload ${type}: ${error.message}`);
     }
   };
@@ -925,7 +925,7 @@ const AddMaterial = () => {
       });
 
       await logActivity(
-        `upload_${type}`,
+        `Upload ${type}`,
         `Uploaded ${file.name} to ${sessionId ? 'session' : 'section'} ${sessionId || sectionId}`
       );
 
@@ -935,7 +935,7 @@ const AddMaterial = () => {
         : `/curriculum/${curriculumId}/section/${sectionId}`);
     } catch (error) {
       console.error(`Error uploading ${type}:`, error);
-      await logActivity('upload_error', `Failed to upload ${file.name}: ${error.message}`);
+      // await logActivity('upload Error', `Failed to upload ${file.name}: ${error.message}`);
       setUploadError(`Failed to upload ${type}: ${error.message}`);
     }
   };
@@ -962,7 +962,7 @@ const AddMaterial = () => {
       });
 
       await logActivity(
-        `add_${type}`,
+        `Add ${type}`,
         `Added ${type} content: ${content} to ${sessionId ? 'session' : 'section'} ${sessionId || sectionId}`
       );
 
@@ -974,7 +974,7 @@ const AddMaterial = () => {
         : `/curriculum/${curriculumId}/section/${sectionId}`);
     } catch (error) {
       console.error(`Error adding ${type}:`, error);
-      await logActivity(`add_${type}_error`, `Failed to add ${type}: ${error.message}`);
+      // await logActivity(`add_${type}_error`, `Failed to add ${type}: ${error.message}`);
       setUploadError(`Failed to add ${type}: ${error.message}`);
     }
   };
@@ -1000,7 +1000,7 @@ const AddMaterial = () => {
       });
 
       await logActivity(
-        'add_quiz',
+        'Add quiz',
         `Added quiz with ${selectedQuestions.length} questions to ${sessionId ? 'session' : 'section'} ${sessionId || sectionId}`
       );
 
@@ -1010,7 +1010,7 @@ const AddMaterial = () => {
         : `/curriculum/${curriculumId}/section/${sectionId}`);
     } catch (error) {
       console.error('Error adding quiz:', error);
-      await logActivity('add_quiz_error', `Failed to add quiz: ${error.message}`);
+      // await logActivity('add_quiz_error', `Failed to add quiz: ${error.message}`);
       setUploadError(`Failed to add quiz: ${error.message}`);
     }
   };

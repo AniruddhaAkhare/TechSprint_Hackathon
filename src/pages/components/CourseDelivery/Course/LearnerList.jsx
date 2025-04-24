@@ -78,10 +78,11 @@ export default function LearnerList({ courseId, open, onClose }) {
     }, [courseId, open]);
 
     return (
+        
         <Dialog
             open={open}
             handler={onClose}
-            className="rounded-lg shadow-lg max-w-2xl"
+            
         >
             <DialogHeader className="text-gray-800 font-semibold">
                 Learners for Course
