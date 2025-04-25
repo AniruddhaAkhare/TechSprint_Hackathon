@@ -643,7 +643,7 @@ import AddFinancePartner from './pages/components/FinancePartner/AddFinancePartn
 import Attendance from './StudentInformation/Attendance.jsx';
 import User from './pages/components/UsersAndRoles/User.jsx';
 import LandingPage from './pages/Landing/LandingPage.jsx';
-import KanbanBoard from './pages/components/EnquiryManagement/kanbanBoard.jsx';
+import KanbanBoard from './pages/components/EnquiryManagement/KanbanBoard.jsx';
 import Subscribe from './pages/home/Subscribe.jsx';
 import QuestionBank from './pages/components/QuestionBank/QuestionBank.jsx';
 import QuestionTemplate from './pages/components/QuestionBank/QuestionTemplate.jsx';
