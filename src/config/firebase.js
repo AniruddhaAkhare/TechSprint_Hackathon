@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import {getAuth} from "firebase/auth";
 import { getStorage } from "firebase/storage";
 import { getFirestore } from "firebase/firestore";
-
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { getAnalytics } from "firebase/analytics";
 
 
@@ -17,6 +17,7 @@ const firebaseConfig = {
   measurementId: "G-14J96V5WD0"
 };
 
+
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
@@ -29,8 +30,8 @@ const analytics = getAnalytics(app);
 const db = getFirestore(app);
 // Initialize Storage
 const storage = getStorage(app); // Add this line
-
-export { db, storage }; // Export storage properly
+const functions = getFunctions(app);
+export { db, storage, functions, httpsCallable }; // Export storage properly
 
 // Add a course with subjects array
 export const addCourse = async (courseName, subjectIds = []) => {
@@ -99,4 +100,4 @@ export const addSession = async (batchId, subjectId, date, startTime, endTime, f
 };
 
 
-export {analytics}
+
