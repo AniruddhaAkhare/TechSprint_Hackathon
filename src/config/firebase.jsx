@@ -18,6 +18,8 @@ const firebaseConfig = {
 };
 
 
+
+
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
@@ -31,6 +33,11 @@ const db = getFirestore(app);
 // Initialize Storage
 const storage = getStorage(app); // Add this line
 const functions = getFunctions(app);
+if (process.env.NODE_ENV === "development") {
+  connectFirestoreEmulator(db, "localhost", 8080);
+  connectFunctionsEmulator(functions, "localhost", 5001);
+}
+
 export { db, storage, functions, httpsCallable }; // Export storage properly
 
 // Add a course with subjects array

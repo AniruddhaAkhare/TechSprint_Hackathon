@@ -709,7 +709,7 @@ export default function App() {
 
               {/* Curriculum Routes */}
               <Route path="/curriculum" element={<ProtectedRoute permissionSection="curriculums"><Curriculum /></ProtectedRoute>} />
-              {/* <Route path="/createCurriculum" element={<ProtectedRoute permissionSection="curriculums" action="create"><CreateCurriculum /></ProtectedRoute>} /> */}
+              <Route path="/createCurriculum" element={<ProtectedRoute permissionSection="curriculums" action="create"><CreateCurriculum /></ProtectedRoute>} />
               <Route path="/curriculum/:curriculumId" element={<ProtectedRoute permissionSection="curriculums" action="update"><CurriculumEditor /></ProtectedRoute>} />
               <Route path="/curriculum/:curriculumId/section/:sectionId" element={<ProtectedRoute permissionSection="curriculums"><SectionMaterials /></ProtectedRoute>} />
               <Route path="/curriculum/:curriculumId/section/:sectionId/add-material" element={<ProtectedRoute permissionSection="curriculums" action="create"><AddMaterial /></ProtectedRoute>} />

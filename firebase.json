@@ -11,7 +11,7 @@
   "hosting": [
     {
       "target": "ignite.fireblaze.in",
-      "public": "dist",
+      "public": "build",
       "ignore": [
         "firebase.json",
         "**/.*",
@@ -26,7 +26,7 @@
     },
     {
       "target": "shikshasaarathi-com",
-      "public": "dist",
+      "public": "build",
       "ignore": [
         "firebase.json",
         "**/.*",
