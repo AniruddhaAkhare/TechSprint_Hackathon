@@ -1,16 +1,22 @@
 {
-  "name": "ignite",
-  "private": true,
-  "version": "0.0.0",
-  "homepage": ".",
-  "type": "module",
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "start": "react-scripts start",
+    "shell": "firebase functions:shell",
+    "emulators": "firebase emulators:start",
+    "build": "react-scripts build"
   },
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
   "dependencies": {
+<<<<<<< HEAD
     "@aws-sdk/client-s3": "^3.774.0",
     "@aws-sdk/lib-storage": "^3.774.0",
     "@aws-sdk/s3-request-presigner": "^3.774.0",
@@ -66,20 +72,39 @@
     "styled-components": "^6.1.14",
     "xlsx": "^0.18.5",
     "zeptomail": "^6.2.0"
+=======
+    "browserify-zlib": "^0.2.0",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.1",
+    "firebase": "^9.23.0",
+    "firebase-functions": "^6.0.1",
+    "https-browserify": "^1.0.0",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "react-scripts": "^5.0.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.4",
+    "util": "^0.12.5",
+    "zeptomail": "^6.2.1"
+>>>>>>> 06b2d807af498344690d0b440c6641476182c25e
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9.17.0",
-    "eslint-plugin-react": "^7.37.2",
-    "eslint-plugin-react-hooks": "^5.0.0",
-    "eslint-plugin-react-refresh": "^0.4.16",
-    "globals": "^15.14.0",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.17",
-    "vite": "^6.0.5"
+    "eslint": "^8.15.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true,
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
