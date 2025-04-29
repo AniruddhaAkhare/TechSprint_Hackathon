@@ -2270,6 +2270,7 @@ const Sidebar = () => {
   const canViewInvoices = rolePermissions?.invoice?.display || false;
   const canViewFee = rolePermissions?.fee?.display || false;
   const canViewEnquiry = rolePermissions?.enquiries?.display || false;
+  const canAddEnquiryForm = rolePermissions?.enquiries?.display || false;
   const canViewFinancePartners = rolePermissions?.FinancePartner?.display || false;
   const canViewactivityLogs = rolePermissions?.activityLogs?.display || false;
 
@@ -2533,6 +2534,14 @@ const Sidebar = () => {
             <li className="nav-item">
               <FaQuestionCircle className="nav-icon" />
               <span>Enquiry Management</span>
+            </li>
+          </Link>
+        )}
+        {canViewEnquiry && (
+          <Link to="/addFormForEnquiry" className="nav-link">
+            <li className="nav-item">
+              <FaQuestionCircle className="nav-icon" />
+              <span>Add Enquiry Form</span>
             </li>
           </Link>
         )}

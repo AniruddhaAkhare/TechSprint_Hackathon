@@ -643,7 +643,7 @@ import AddFinancePartner from './pages/components/FinancePartner/AddFinancePartn
 import Attendance from './StudentInformation/Attendance.jsx';
 import User from './pages/components/UsersAndRoles/User.jsx';
 import LandingPage from './pages/Landing/LandingPage.jsx';
-import KanbanBoard from './pages/components/EnquiryManagement/KanbanBoard.jsx';
+import KanbanBoard from './pages/components/EnquiryManagement/kanbanBoard.jsx';
 import Subscribe from './pages/home/Subscribe.jsx';
 import QuestionBank from './pages/components/QuestionBank/QuestionBank.jsx';
 import QuestionTemplate from './pages/components/QuestionBank/QuestionTemplate.jsx';
@@ -653,6 +653,7 @@ import InstallmentDashboard from './reports/InstallmentDashboard.jsx';
 import AttendanceDashboard from './StudentInformation/AttendanceDashboard.jsx'
 import EnquiryDashboard from './pages/components/EnquiryManagement/EnquiryDashboard.jsx';
 import EnquiryAnalyticsPage from './pages/components/EnquiryManagement/EnquiryAnalyticsPage.jsx';
+import EnquiryForms from './pages/components/EnquiryForm/EnquiryForm.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -733,6 +734,7 @@ export default function App() {
               <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><KanbanBoard /></ProtectedRoute>} />
               {/* <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryDashboard /></ProtectedRoute>} /> */}
               <Route path="/enquiry-analytics" element={<ProtectedRoute permissionSection="enquiries"><EnquiryAnalyticsPage /></ProtectedRoute>} />
+              <Route path="/addFormForEnquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryForms /></ProtectedRoute>} />
 
 
 
