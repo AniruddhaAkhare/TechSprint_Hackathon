@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../../../config/firebase.js'
+import { db } from '../../../config/firebase'
 import { collection, getDocs, addDoc } from 'firebase/firestore';
 
 export default function AddPerformance() {

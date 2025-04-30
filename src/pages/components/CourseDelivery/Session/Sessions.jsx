@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { db } from '../../../../config/firebase.js';
+import { db } from '../../../../config/firebase.jsx'
 import { collection, onSnapshot, deleteDoc, doc, query, orderBy, updateDoc, setDoc, arrayUnion, increment } from 'firebase/firestore';
 import CreateSession from "./CreateSession.jsx";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";

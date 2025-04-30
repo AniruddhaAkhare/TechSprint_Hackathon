@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../../../../config/firebase.js";
+import { db } from '../../../../config/firebase'
 import { collection, addDoc, getDocs, serverTimestamp, updateDoc, doc, query, where } from "firebase/firestore";
 import { FaTimes } from "react-icons/fa";
 

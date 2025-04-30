@@ -4,7 +4,7 @@ import { collection, addDoc, Timestamp, getDocs, query, where } from "firebase/f
 import { db } from "../../../config/firebase";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
-import * as EmailService from '../../services/emailService';
+import * as EmailService from '../../../services/emailService'
 
 export default function AddStudent() {
   const [isOpen, setIsOpen] = useState(true);

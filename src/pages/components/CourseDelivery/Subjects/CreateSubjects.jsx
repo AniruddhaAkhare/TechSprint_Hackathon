@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from "../../../../config/firebase.js";
+import { db } from '../../../../config/firebase.jsx'
 import { collection, addDoc } from 'firebase/firestore';
 import { FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
