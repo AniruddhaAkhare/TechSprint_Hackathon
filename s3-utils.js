@@ -65,6 +65,8 @@
 
 import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
 import { s3Client } from "./aws-config"
+import { httpsCallable } from "firebase/functions";
+import { functions } from "./config/firebase";
 
 /**
  * Uploads a file to S3 bucket
@@ -76,6 +78,12 @@ export const uploadToS3 = async (file, directory = "") => {
   if (!file) {
     throw new Error("No file provided")
   }
+
+  const generateUploadUrl = httpsCallable(functions, "generateUploadUrl");
+  // const dir = directory ? (directory.endsWith("/") ? directory : `${directory}/`) : "";
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  // const fileKey = `${dir}${timestamp}_${file.name.replace(/\s+/g, "_")}`;
+
 
   const bucketName = import.meta.env.VITE_S3_BUCKET_NAME
   const region = import.meta.env.VITE_AWS_REGION

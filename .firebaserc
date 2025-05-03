@@ -5,13 +5,17 @@
   "targets": {
     "fireblaze-ignite": {
       "hosting": {
-        "ignite.fireblaze.in": [
-          "fireblaze-ignite"
-        ],
         "shikshasaarathi-com": [
           "shikshasaarathi"
+        ],
+        "ignite.fireblaze.in": [
+          "enquiry-form-app"
+        ],
+        "enquiry-form-app-2025": [
+          "enquiry-form-app-2025"
         ]
       }
     }
-  }
+  },
+  "etags": {}
 }
