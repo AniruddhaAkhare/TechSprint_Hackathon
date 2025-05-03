@@ -4,6 +4,7 @@ import { getFirestore, collection, onSnapshot, query, getDocs } from "firebase/f
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { useNavigate } from "react-router-dom";
+import CheckInOut from "../../home/CheckInOut";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -36,7 +37,6 @@ const Dashboard = () => {
       )
     );
 
-    // Fetch Centers from instituteSetup subcollection
     const fetchCenters = async () => {
       try {
         const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
@@ -129,7 +129,7 @@ const Dashboard = () => {
   return (
     <div className="p-20">
       <h1 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">Dashboard</h1>
-
+      {/* <CheckInOut/> */}
       {/* Card Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {[

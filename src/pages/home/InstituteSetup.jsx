@@ -252,31 +252,31 @@ const InstituteSetup = () => {
     }
 
     const fetchInstituteData = async () => {
-      try{
-      const querySnapshot = await getDocs(collection(db, "instituteSetup"));
-      if (!querySnapshot.empty) {
-        const data = querySnapshot.docs[0].data();
-        setFormData({
-          ...data,
-          phoneNumber: data.phoneNumber || "", // Fallback to empty string
-          email: data.email || "",
-          website: data.website || "",
-          academicYearStart: data.academicYearStart || "",
-          academicYearEnd: data.academicYearEnd || "",
-          timezone: data.timezone || "",
-        });
-        setInstituteId(querySnapshot.docs[0].id);
-        const branchesSnapshot = await getDocs(collection(db, "instituteSetup", querySnapshot.docs[0].id, "Center"));
-        const branchList = branchesSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        branchList.sort((a, b) => a.name.localeCompare(b.name));
-        setBranches(branchList);
+      try {
+        const querySnapshot = await getDocs(collection(db, "instituteSetup"));
+        if (!querySnapshot.empty) {
+          const data = querySnapshot.docs[0].data();
+          setFormData({
+            ...data,
+            phoneNumber: data.phoneNumber || "", // Fallback to empty string
+            email: data.email || "",
+            website: data.website || "",
+            academicYearStart: data.academicYearStart || "",
+            academicYearEnd: data.academicYearEnd || "",
+            timezone: data.timezone || "",
+          });
+          setInstituteId(querySnapshot.docs[0].id);
+          const branchesSnapshot = await getDocs(collection(db, "instituteSetup", querySnapshot.docs[0].id, "Center"));
+          const branchList = branchesSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          branchList.sort((a, b) => a.name.localeCompare(b.name));
+          setBranches(branchList);
+        }
+      } catch (error) {
+        console.error("Error fetching institute data:", error);
       }
-    }catch(error){
-      console.error("Error fetching institute data:", error);
-    }
     };
     fetchInstituteData();
   }, [canDisplay, navigate]);
@@ -383,11 +383,45 @@ const InstituteSetup = () => {
         ...prev,
         contactNumber: numericValue,
       }));
-    } else {
+    } else if (name === "latitude" || name === "longitude") {
+      // Validate latitude and longitude
+      const numericValue = value.replace(/[^0-9.-]/g, "");
+      if (name === "latitude" && (numericValue < -90 || numericValue > 90)) {
+        return;
+      }
+      if (name === "longitude" && (numericValue < -180 || numericValue > 180)) {
+        return;
+      }
+      setBranchForm((prev) => ({
+        ...prev,
+        [name]: numericValue,
+      }));
+    }
+    else {
       setBranchForm((prev) => ({
         ...prev,
         [name]: type === "checkbox" ? checked : value,
       }));
+    }
+  };
+
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setBranchForm((prev) => ({
+            ...prev,
+            latitude: position.coords.latitude.toString(),
+            longitude: position.coords.longitude.toString(),
+          }));
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          alert("Unable to fetch current location. Please enter manually.");
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser.");
     }
   };
 
@@ -414,6 +448,8 @@ const InstituteSetup = () => {
       isActive: branch.isActive !== undefined ? branch.isActive : true,
       contactNumber: numberWithoutCode || "",
       email: branch.email || "",
+      latitute: branch.latitute || "",
+      longitute: branch.lengitute || "",
     });
     setShowModal(true);
   };
@@ -451,6 +487,8 @@ const InstituteSetup = () => {
         isActive: true,
         contactNumber: "",
         email: "",
+        latitude: "",
+        longitude: "",
       });
       setCurrentBranch(null);
       setBranchCountryCode("+91");
@@ -1132,7 +1170,35 @@ const InstituteSetup = () => {
                         required
                       />
                     </div>
+
                   </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Latitude <span className="form-group-required">*</span></label>
+                      <input
+                        type="text"
+                        name="latitude"
+                        value={branchForm.latitude}
+                        onChange={handleBranchChange}
+                        placeholder="Enter latitude"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Longitude <span className="form-group-required">*</span></label>
+                      <input
+                        type="text"
+                        name="longitude"
+                        value={branchForm.longitude}
+                        onChange={handleBranchChange}
+                        placeholder="Enter longitude"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <button type="button" onClick={getCurrentLocation}>
+                    Use Current Location
+                  </button>
                   <div className="form-group">
                     <label>
                       <input

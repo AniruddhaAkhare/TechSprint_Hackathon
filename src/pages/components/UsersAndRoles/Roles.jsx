@@ -27,6 +27,7 @@ export default function Roles() {
     fee: { create: false, update: false, display: false, delete: false },
     invoice: { create: false, update: false, display: false, delete: false },
     FinancePartner: { create: false, update: false, display: false, delete: false },
+    Holidays: { create: false, update: false, display: false, delete:false },
   });
   const [editingRole, setEditingRole] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -161,6 +162,8 @@ export default function Roles() {
         fee: { create: false, update: false, display: false, delete: false },
         invoice: { create: false, update: false, display: false, delete: false },
         FinancePartner: { create: false, update: false, display: false, delete: false },
+        Holidays: { create: false, update: false, display: false, delete: false },
+
       });
       alert('Role created successfully!');
     } catch (error) {

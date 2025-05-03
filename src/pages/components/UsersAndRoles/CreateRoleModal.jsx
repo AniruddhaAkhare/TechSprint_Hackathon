@@ -738,6 +738,7 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
     "Staff",
     "Reports",
     "Centers",
+    "Holidays",
   ];
 
   return (

@@ -4,6 +4,7 @@ import { collection, addDoc, Timestamp, getDocs, query, where } from "firebase/f
 import { db } from "../../../config/firebase";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import sendWelcomeEmail from "../../../services/sendWelcomeEmail.jsx";
 
 export default function AddStudent() {
   const [isOpen, setIsOpen] = useState(true);
@@ -11,8 +12,8 @@ export default function AddStudent() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("+91"); // Default to India (+91) for student
-  const [guardianCountryCode, setGuardianCountryCode] = useState("+91"); // Default to India (+91) for guardian
+  const [countryCode, setCountryCode] = useState("+91"); 
+  const [guardianCountryCode, setGuardianCountryCode] = useState("+91"); 
   const [address, setAddress] = useState({ street: "", area: "", city: "", state: "", zip: "", country: "" });
   const [billingAddress, setBillingAddress] = useState({ name: "", street: "", area: "", city: "", state: "", zip: "", country: "", gstNo: "" });
   const [copyAddress, setCopyAddress] = useState(false);
@@ -35,12 +36,13 @@ export default function AddStudent() {
   const [courseId, setCourseId] = useState("");
   const [feeTemplates, setFeeTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // List of country codes (you can expand this list as needed)
+  // List of country codes (same as provided)
   const countryCodes = [
     { code: "+1", label: "USA (+1)" },
-    { code: "+1", label: "Canada (+1)" }, // Note: Canada shares +1 with the USA, but you might differentiate by region if needed
+    { code: "+1", label: "Canada (+1)" },
     { code: "+7", label: "Russia (+7)" },
     { code: "+20", label: "Egypt (+20)" },
     { code: "+27", label: "South Africa (+27)" },
@@ -119,7 +121,7 @@ export default function AddStudent() {
     { code: "+269", label: "Comoros (+269)" },
     { code: "+291", label: "Eritrea (+291)" },
     { code: "+297", label: "Aruba (+297)" },
-    { code: "+298", label: "Faroe Islands (+298)" },
+    { code: "+298", label: "Far deviance (+298)" },
     { code: "+299", label: "Greenland (+299)" },
     { code: "+351", label: "Portugal (+351)" },
     { code: "+352", label: "Luxembourg (+352)" },
@@ -220,7 +222,7 @@ export default function AddStudent() {
     { code: "+995", label: "Georgia (+995)" },
     { code: "+996", label: "Kyrgyzstan (+996)" },
     { code: "+998", label: "Uzbekistan (+998)" },
-];
+  ];
 
   // Utility function to capitalize the first letter
   const capitalizeFirstLetter = (str) => {
@@ -306,17 +308,17 @@ export default function AddStudent() {
       return;
     }
 
-    // Combine country code with phone number for student
     const fullPhoneNumber = `${countryCode}${phone}`;
-    // Combine country code with phone number for guardian
     const fullGuardianPhoneNumber = `${guardianCountryCode}${guardianDetails.phone || ""}`;
+
+    setIsSubmitting(true);
 
     try {
       const studentDocRef = await addDoc(collection(db, 'student'), {
         first_name: capitalizeFirstLetter(firstName),
         last_name: capitalizeFirstLetter(lastName),
         email,
-        phone: fullPhoneNumber, // Save student phone with country code
+        phone: fullPhoneNumber,
         residential_address: address,
         billing_address: billingAddress,
         goal: goal || "Not specified",
@@ -324,7 +326,7 @@ export default function AddStudent() {
         date_of_birth: Timestamp.fromDate(new Date(dateOfBirth)),
         guardian_details: {
           ...guardianDetails,
-          phone: fullGuardianPhoneNumber // Save guardian phone with country code
+          phone: fullGuardianPhoneNumber
         },
         admission_date: Timestamp.fromDate(new Date(admissionDate)),
         course_details: courseDetails,
@@ -382,11 +384,38 @@ export default function AddStudent() {
         });
       }
 
-      alert("Student added successfully!");
+      // Send welcome email after successful student creation
+      // Send welcome email after successful student creation
+      try {
+        console.log("Preparing to send welcome email", {
+          toEmail: email,
+          fullName: `${capitalizeFirstLetter(firstName)} ${capitalizeFirstLetter(lastName)}`,
+        }); // Debug log
+        
+        
+        await sendWelcomeEmail(
+          email,
+          `${capitalizeFirstLetter(firstName)} ${capitalizeFirstLetter(lastName)}`,
+        );
+        console.log("Welcome email sent successfully to:", email); // Debug log
+        alert("Student added successfully! Welcome email sent.");
+      } catch (emailError) {
+        console.error("Welcome email failed to send:", {
+          message: emailError.message,
+          code: emailError.code,
+          details: emailError.details || emailError,
+          stack: emailError.stack,
+        }); // Enhanced error logging
+        alert("Student added successfully, but welcome email failed to send.");
+      }
+
+
       navigate("/studentdetails");
     } catch (error) {
       console.error("Error adding student:", error);
       alert("Error adding student. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -528,12 +557,11 @@ export default function AddStudent() {
       )}
 
       <div
-        className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/3 shadow-lg transform transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        } p-6 overflow-y-auto z-50`}
+        className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/3 shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
+          } p-6 overflow-y-auto z-50`}
       >
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-gray-800">Add Student</h1>
+          <h1 className="text-2xl font-semibold text-gray-800">Add Prach</h1>
           <button
             onClick={toggleSidebar}
             className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition duration-200"
@@ -1049,9 +1077,8 @@ export default function AddStudent() {
                     type="button"
                     onClick={handleAddCenter}
                     disabled={!selectedCenter}
-                    className={`mt-1 px-3 py-2 rounded-md text-white ${
-                      selectedCenter ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
-                    } transition duration-200`}
+                    className={`mt-1 px-3 py-2 rounded-md text-white ${selectedCenter ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
+                      } transition duration-200`}
                   >
                     Add
                   </button>
@@ -1095,9 +1122,22 @@ export default function AddStudent() {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+              disabled={isSubmitting}
+              className={`bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
             >
-              Add Student
+              {isSubmitting ? 'Processing...' : 'Add Student'}
+            </button>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+            >
+              {isSubmitting ? 'Processing...' : 'Add Student'}
             </button>
           </div>
         </form>

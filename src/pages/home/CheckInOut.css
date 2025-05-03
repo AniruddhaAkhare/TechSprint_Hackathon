@@ -1,0 +1,26 @@
+.check-in-out {
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.error {
+  font-size: 0.9rem;
+}
+
+.status p {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.actions button {
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.actions button:disabled {
+  background-color: #ccc;
+}

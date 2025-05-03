@@ -1,31 +1,67 @@
-import { https } from 'firebase-functions';
-import { SendMailClient } from "zeptomail";
+const functions = require("firebase-functions");
+const axios = require("axios");
+const cors = require("cors")({ origin: true });
 
-const url = "api.zeptomail.in/";
-const token = "Zoho-enczapikey PHtE6r1YF+nigzN58xgEtvWxFMT3MoIq/bszfgASt9tKA/YCTE1QqdF9lme/+hwpBPhER//Iyd895ejJt+jWJG7sNGZMXWqyqK3sx/VYSPOZsbq6x00fsl4ZdkDaUo7odtVj1ifWvNfaNA==";
+exports.sendEmail = functions.region("us-central1").https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    if (req.method !== "POST") {
+      return res.status(405).send("Method Not Allowed");
+    }
 
-export const sendTestEmail = https.onRequest(async (req, res) => {
-  try {
-    const client = new SendMailClient({url, token});
-    
-    await client.sendMail({
-      "from": {
-        "address": "noreply@shikshasaarathi.com",
-        "name": "noreply"
-      },
-      "to": [{
-        "email_address": {
-          "address": "aniruddha@fireblazeaischool.in",
-          "name": "Aniruddha"
+    const { toEmail, subject, htmlContent } = req.body;
+    // Detailed validation
+    if (!toEmail || !subject || !htmlContent) {
+      const missingFields = [];
+      if (!toEmail) missingFields.push("toEmail");
+      if (!subject) missingFields.push("subject");
+      if (!htmlContent) missingFields.push("htmlContent");
+      return res.status(400).send(`Missing required fields: ${missingFields.join(", ")}`);
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(toEmail)) {
+      return res.status(400).send(`Invalid email address: ${toEmail}`);
+    }
+
+    try {
+      const response = await axios.post(
+        "https://api.zeptomail.com/v1.1/email",
+        {
+          fromAddress: "noreply@shikshasaarathi.com",
+          toAddress: toEmail,
+          subject: subject,
+          htmlbody: htmlContent,
+        },
+        {
+          headers: {
+            Authorization: `Zoho-enczapikey PHtE6r1cE+G93WUupERW4/LsR8WmPY0vrr8xKQRPudwQWKdVH00Erjih5bqV4u/ULGnqYT5KWGqyqK3sx/VYSPOZsbq6x00ctlUTcUzbUI/sc9Bs1SLTs9fTNA==`,
+            "Content-Type": "application/json",
+          },
         }
-      }],
-      "subject": "Test Email",
-      "htmlbody": "<div><b>Test email sent successfully.</b></div>"
-    });
+      );
 
-    res.status(200).send('Email sent successfully');
-  } catch (error) {
-    console.error('Error sending email:', error);
-    res.status(500).send('Error sending email');
-  }
+      return res.status(200).send({
+        status: "success",
+        message: "Email sent successfully",
+        data: response.data,
+      });
+    } catch (error) {
+      console.error("Error sending email via ZeptoMail:", {
+        message: error.message,
+        code: error.code,
+        response: error.response ? error.response.data : null,
+      });
+
+      let errorMessage = "Failed to send email.";
+      if (error.response) {
+        errorMessage += ` ZeptoMail responded with: ${JSON.stringify(error.response.data)}`;
+      } else if (error.code === "ENOTFOUND") {
+        errorMessage += " Could not connect to ZeptoMail API.";
+      } else {
+        errorMessage += ` Error: ${error.message}`;
+      }
+
+      return res.status(500).send(errorMessage);
+    }
+  });
 });

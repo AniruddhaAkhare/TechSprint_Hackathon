@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import emailService from '../../../../services/emailService'; // Import the email service
 import './Feedback.css';
 
 const formFieldTemplates = {
@@ -49,13 +48,13 @@ export default function Feedback() {
 
 
 
-    emailService.sendEmail(formData) // Call the email service to send the data
-      .then(response => {
-        console.log("Email sent successfully:", response);
-      })
-      .catch(error => {
-        console.error("Error sending email:", error);
-      });
+    // emailService.sendEmail(formData) // Call the email service to send the data
+    //   .then(response => {
+    //     console.log("Email sent successfully:", response);
+    //   })
+    //   .catch(error => {
+    //     console.error("Error sending email:", error);
+    //   });
   };
 
   return (

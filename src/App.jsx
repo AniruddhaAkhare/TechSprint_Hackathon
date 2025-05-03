@@ -583,16 +583,14 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
-import { useAuth } from './context/AuthContext';
-
+import { useAuth } from './context/AuthContext.jsx';
 // Home Pages
 import Sidebar from './pages/home/Sidebar.jsx';
 import LoginForm from './pages/home/LoginForm.jsx';
 import RegisterForm from './pages/home/RegisterForm.jsx';
 import Welcome from './pages/home/Welcome.jsx';
 import ForgetPasswordForm from './pages/home/ForgetPasswordForm.jsx';
-import InstituteSetup from './pages/home/InstituteSetup.jsx';
-
+import InstituteSetup from './pages/components/InstituteSetup/InstituteSetup.jsx';
 // Components
 import Dashboard from './pages/components/Dashboard/Dashboard.jsx';
 import Roles from './pages/components/UsersAndRoles/Roles';
@@ -610,10 +608,10 @@ import CreateCurriculum from './pages/components/CourseDelivery/Curriculum/Creat
 import SectionMaterials from './pages/components/CourseDelivery/Curriculum/SectionMaterials.jsx';
 import AddMaterial from './pages/components/CourseDelivery/Curriculum/AddMaterials.jsx';
 import EditCurriculum from './pages/components/CourseDelivery/Curriculum/EditCurriculum.jsx';
-import Calendar from './pages/components/CourseDelivery/Session/Calendar.jsx';
+// import Calendar from './pages/components/CourseDelivery/Session/Calendar.jsx';
 import Sessions from './pages/components/CourseDelivery/Session/Sessions.jsx';
 import CreateSession from './pages/components/CourseDelivery/Session/CreateSession.jsx';
-import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession.jsx';
+// import ZoomSession from './pages/components/CourseDelivery/Session/ZoomSession.jsx';
 import Subjects from './pages/components/CourseDelivery/Subjects/Subjects.jsx';
 import CreateSubjects from './pages/components/CourseDelivery/Subjects/CreateSubjects.jsx';
 import Instructor from './pages/components/Instructors/Instructor.jsx';
@@ -653,6 +651,12 @@ import InstallmentDashboard from './reports/InstallmentDashboard.jsx';
 import AttendanceDashboard from './StudentInformation/AttendanceDashboard.jsx'
 import EnquiryDashboard from './pages/components/EnquiryManagement/EnquiryDashboard.jsx';
 import EnquiryAnalyticsPage from './pages/components/EnquiryManagement/EnquiryAnalyticsPage.jsx';
+import ProfilePage from './pages/home/ProfilePage.jsx';
+import EmployeeAttendance from './pages/components/HRManagement/TimeAndAttendanceTracking/EmployeeAttendance.jsx';
+import HolidayCalendar from './pages/components/HRManagement/HolidayCalendar.jsx';
+import EmployeePage from './pages/components/HRManagement/TimeAndAttendanceTracking/Employeepage.jsx';
+import HRLeaveApproval from './pages/components/HRManagement/Leave/HRLeaveApproval.jsx';
+import LeaveApplication from './pages/components/HRManagement/Leave/LeaveApplication.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -691,7 +695,7 @@ export default function App() {
 
               {/* Protected Routes */}
               <Route path="/instituteSetup" element={<ProtectedRoute permissionSection="instituteSetup"><InstituteSetup /></ProtectedRoute>} />
-              <Route path="/my-profile/:uid" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/my-profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
               {/* Course Delivery Routes */}
               <Route path="/courses" element={<ProtectedRoute permissionSection="Course"><Courses /></ProtectedRoute>} />
@@ -717,10 +721,10 @@ export default function App() {
               <Route path="/edit-curriculum/:id" element={<ProtectedRoute permissionSection="curriculums" action="update"><EditCurriculum /></ProtectedRoute>} />
 
               {/* Session Routes */}
-              <Route path="/calendar" element={<ProtectedRoute permissionSection="Sessions"><Calendar /></ProtectedRoute>} />
+              {/* <Route path="/calendar" element={<ProtectedRoute permissionSection="Sessions"><Calendar /></ProtectedRoute>} /> */}
               <Route path="/sessions" element={<ProtectedRoute permissionSection="Sessions"><Sessions /></ProtectedRoute>} />
               <Route path="/createSession" element={<ProtectedRoute permissionSection="Sessions" action="create"><CreateSession /></ProtectedRoute>} />
-              <Route path="/zoom" element={<ProtectedRoute permissionSection="Sessions"><ZoomSession /></ProtectedRoute>} />
+              {/* <Route path="/zoom" element={<ProtectedRoute permissionSection="Sessions"><ZoomSession /></ProtectedRoute>} /> */}
               <Route path="/subjects" element={<ProtectedRoute permissionSection="Sessions"><Subjects /></ProtectedRoute>} />
               <Route path="/createSubjects" element={<ProtectedRoute permissionSection="Sessions" action="create"><CreateSubjects /></ProtectedRoute>} />
               <Route path="/assignment" element={<ProtectedRoute permissionSection="assignments"><Assignments /></ProtectedRoute>} />
@@ -784,6 +788,31 @@ export default function App() {
                 path="/activity-logs"
                 element={<ProtectedRoute permissionSection="activityLogs"><AdminLogs /></ProtectedRoute>}
               />
+
+
+              {/* HR */}
+              <Route
+                path="/employee-attendance"
+                element={<ProtectedRoute permissionSection="Users"><EmployeeAttendance /></ProtectedRoute>}
+              />
+              <Route
+                path="/holiday-calendar"
+                element={<HolidayCalendar />}
+              />
+              <Route
+                path="/employee-attendance/:email"
+                element={<EmployeePage />}
+              />
+              <Route
+                path="/leave-management"
+                element={<HRLeaveApproval />}
+              />
+              <Route
+                path="/leave-application"
+                element={<LeaveApplication />}
+              />
+              
+
             </Routes>
           </div>
         </div>
