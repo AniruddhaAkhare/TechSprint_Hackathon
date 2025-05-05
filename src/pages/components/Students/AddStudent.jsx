@@ -393,10 +393,10 @@ export default function AddStudent() {
         }); // Debug log
         
         
-        await sendWelcomeEmail(
-          email,
-          `${capitalizeFirstLetter(firstName)} ${capitalizeFirstLetter(lastName)}`,
-        );
+        await sendWelcomeEmail({
+          toEmail: email,
+          fullName: `${capitalizeFirstLetter(firstName)} ${capitalizeFirstLetter(lastName)}`
+        });
         console.log("Welcome email sent successfully to:", email); // Debug log
         alert("Student added successfully! Welcome email sent.");
       } catch (emailError) {
