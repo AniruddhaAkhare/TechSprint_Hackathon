@@ -829,10 +829,10 @@ const KanbanBoard = () => {
       />
       {isTypePopupOpen && addButtonRef.current && (
         <div
-          className="absolute bg-white p-6 rounded-lg shadow-lg w-96 z-50 sm:right-0 sm:top-0 sm:mt-12 mt-2 right-auto"
+          className="absolute bg-white p-6 rounded-lg shadow-lg w-96 z-50 sm:mt-12 mt-2 right-auto"
           style={{
             top: window.innerWidth < 640 ? addButtonRef.current.offsetHeight + 5 : 0,
-            right: window.innerWidth >= 640 ? -addButtonRef.current.offsetWidth : 0,
+            // right: window.innerWidth >= 640 ? -addButtonRef.current.offsetWidth : 0,
           }}
         >
           <h3 className="text-lg font-semibold mb-4">Add Note</h3>
