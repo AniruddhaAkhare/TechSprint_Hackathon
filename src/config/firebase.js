@@ -112,8 +112,7 @@ import { getStorage } from "firebase/storage";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getAnalytics } from "firebase/analytics";
-import { httpsCallable } from "firebase/functions";
-
+import { connectFunctionsEmulator } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCr7lMF1rd-VeEArjy0dklqR08hzoqxFZI",
@@ -131,13 +130,15 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const functions = getFunctions(app);
 
-
+if (import.meta.env.MODE === 'development') {
+  connectFunctionsEmulator(functions, "localhost", 5001);
+}
 const analytics = getAnalytics(app);
 
 
 const db = getFirestore(app);
 const storage = getStorage(app); 
-export { db, storage, auth, functions, httpsCallable }; 
+export { db, storage, auth, functions}; 
 
 // import { initializeApp } from "firebase/app";
 // import {getAuth} from "firebase/auth";
