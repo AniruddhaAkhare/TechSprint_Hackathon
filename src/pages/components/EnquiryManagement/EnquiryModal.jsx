@@ -53,7 +53,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
 
       collegeName: "",
       graduationPassOutYear: "",
-      postGraduationStream: "",
+      // postGraduationStream: "",
       postGraduationPercentage: "",
       postGraduationCollegeName: "",
       postGraduationPassOutYear: "",
@@ -890,6 +890,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         </div>
 
         <div className="space-y-4 sm:space-y-6">
+          
           {currentSection === 1 && (
             <div>
               <h3 className="text-base sm:text-lg font-medium mb-2">Personal Details</h3>
@@ -1010,6 +1011,76 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                   )}
                 </div>
                 <div className="mb-3 sm:mb-4 sm:col-span-2">
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">Address</label>
+  {isEditing ? (
+    <div className="space-y-2">
+      <input
+        type="text"
+        value={newEnquiry.streetAddress}
+        onChange={(e) => setNewEnquiry({ ...newEnquiry, streetAddress: e.target.value })}
+        placeholder="Street Address"
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        required
+      />
+      <input
+        type="text"
+        value={newEnquiry.city}
+        onChange={(e) => setNewEnquiry({ ...newEnquiry, city: e.target.value })}
+        placeholder="City"
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        required
+      />
+      <input
+        type="text"
+        value={newEnquiry.stateRegionProvince}
+        onChange={(e) => setNewEnquiry({ ...newEnquiry, stateRegionProvince: e.target.value })}
+        placeholder="State/Region/Province"
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        required
+      />
+      <input
+        type="text"
+        value={newEnquiry.postalZipCode}
+        onChange={(e) => setNewEnquiry({ ...newEnquiry, postalZipCode: e.target.value })}
+        placeholder="Postal/Zip Code"
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        required
+      />
+      <select
+        value={newEnquiry.country}
+        onChange={(e) => setNewEnquiry({ ...newEnquiry, country: e.target.value })}
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        required
+      >
+        <option value="">Select country</option>
+        <option value="India">India</option>
+        <option value="USA">USA</option>
+        <option value="UK">UK</option>
+        <option value="Canada">Canada</option>
+        <option value="Australia">Australia</option>
+      </select>
+    </div>
+  ) : (
+    <div className="mt-1 text-xs sm:text-sm text-gray-900">
+      <p>{renderField(newEnquiry.streetAddress)}</p>
+      <p>{renderField(newEnquiry.city)}</p>
+      <p>{renderField(newEnquiry.stateRegionProvince)}</p>
+      <p>{renderField(newEnquiry.postalZipCode)}</p>
+      <p>{renderField(newEnquiry.country)}</p>
+    </div>
+  )}
+</div>
+<div className="mb-3 sm:mb-4 sm:col-span-1">
+  <div className="mb-4 sm:mb-4">
+    <label className="block text-xs sm:text-sm font-medium text-gray-700">Creator Name</label>
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.createdBy)}</p>
+  </div>
+  <div className="mb-3 sm:mb-4">
+    <label className="block text-xs sm:text-sm font-medium text-gray-700">Owner Name</label>
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.owner)}</p>
+  </div>
+</div>
+                {/* <div className="mb-3 sm:mb-4 sm:col-span-2">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">Address</label>
                   {isEditing ? (
                     <div className="space-y-2">
@@ -1068,21 +1139,21 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                       <p>{renderField(newEnquiry.country)}</p>
                     </div>
                   )}
-                </div>
+                </div> */}
                 <div className="mb-3 sm:mb-4">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">Creation Date and Time</label>
                   <p className="mt-1 text-xs sm:text-sm text-gray-900">
                     {formatDateSafely(newEnquiry.createdAt, "MMM d, yyyy h:mm a")}
                   </p>
                 </div>
-                <div className="mb-3 sm:mb-4">
+                {/* <div className="mb-3 sm:mb-4">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">Creator Name</label>
                   <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.createdBy)}</p>
-                </div>
-                <div className="mb-3 sm:mb-4">
+                </div> */}
+                {/* <div className="mb-3 sm:mb-4">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">Owner Name</label>
                   <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.owner)}</p>
-                </div>
+                </div> */}
                 <div className="mb-3 sm:mb-4">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">Last Modified Time</label>
                   <p className="mt-1 text-xs sm:text-sm text-gray-900">

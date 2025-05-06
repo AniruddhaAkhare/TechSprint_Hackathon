@@ -887,7 +887,7 @@ const KanbanBoard = () => {
               }}
             >
               <div className="p-4 border-b border-gray-200 contents">
-                <div className="flex items-center">
+                <div className="ml-6 flex items-center">
                   {(canUpdate || canDelete) && (
                     <input
                       type="checkbox"
@@ -902,23 +902,23 @@ const KanbanBoard = () => {
                     />
                   )}
                 </div>
-                <div className="font-semibold">Name</div>
-                <div className="font-semibold">Amount</div>
-                <div className="font-semibold">Phone</div>
-                <div className="font-semibold">Email</div>
-                <div className="font-semibold">Stage</div>
-                <div className="font-semibold">Tags</div>
-                <div className="font-semibold cursor-pointer" onClick={() => handleSort("createdAt")}>
+                <div className="font-semibold ml-8">Name</div>
+                <div className="font-semibold ml-8">Amount</div>
+                <div className="font-semibold ml-8">Phone</div>
+                <div className="font-semibold ml-8">Email</div>
+                <div className="font-semibold ml-8">Stage</div>
+                <div className="font-semibold ml-8">Tags</div>
+                <div className="font-semibold cursor-pointer ml-8" onClick={() => handleSort("createdAt")}>
                   Created At {sortConfig.key === "createdAt" && (sortConfig.direction === "asc" ? "↑" : "↓")}
                 </div>
-                <div className="font-semibold">Created By</div>
-                <div className="font-semibold cursor-pointer" onClick={() => handleSort("lastModifiedTime")}>
+                <div className="font-semibold ml-8">Created By</div>
+                <div className="font-semibold cursor-pointer ml-2" onClick={() => handleSort("lastModifiedTime")}>
                   Last Modified Time {sortConfig.key === "lastModifiedTime" && (sortConfig.direction === "asc" ? "↑" : "↓")}
                 </div>
-                <div className="font-semibold cursor-pointer" onClick={() => handleSort("lastTouched")}>
+                <div className="font-semibold cursor-pointer ml-8" onClick={() => handleSort("lastTouched")}>
                   Last Touched {sortConfig.key === "lastTouched" && (sortConfig.direction === "asc" ? "↑" : "↓")}
                 </div>
-                <div className="font-semibold">Last Updated By</div>
+                <div className="font-semibold ml-4">Last Updated By</div>
               </div>
               {filteredEnquiries(allEnquiries).length === 0 ? (
                 <div className="col-span-12 p-4 text-center text-gray-500">No enquiries found</div>
