@@ -52,6 +52,9 @@ const Column = ({ columnId, column, filteredEnquiries, canUpdate, handleViewEnqu
                       <p className="text-gray-500 truncate">{item.phone || "No phone"}</p>
                       <p className="text-gray-500 truncate">{item.email || "No email"}</p>
                       <p className="text-gray-500 truncate">Owner: {item.assignTo || "Unassigned"}</p>
+                      <p className="text-gray-500 truncate">Last Modified Time: {item.lastModifiedTime || "Not available"}</p>
+                      <p className="text-gray-500 truncate">Last Touched: {item.lastTouched || "Not available"}</p>
+                      
                       <div className="flex flex-wrap gap-2 mt-2 min-h-[40px]">
                         {item.tags?.map((tag) => (
                           <span key={tag} className="flex items-center gap-1 text-orange-500 px-2 py-1 bg-orange-50 rounded-full text-sm whitespace-nowrap">
