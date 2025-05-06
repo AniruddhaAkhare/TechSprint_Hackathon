@@ -127,7 +127,7 @@ const HRLeaveApproval = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+    <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen p-4 fixed inset-0 left-[300px]">
       <h3 className="text-3xl font-semibold text-gray-800 mb-6">
         Leave Approval Dashboard
       </h3>

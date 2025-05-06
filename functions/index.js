@@ -69,10 +69,15 @@
 const functions = require("firebase-functions");
 const axios = require("axios");
 
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
 exports.sendEmail = functions.region("us-central1").https.onCall(async (data) => {
   const { toEmail, subject, htmlContent, fullName } = data;
+  const zohoApiKey =
+    functions.config().zepto?.apikey || process.env.ZEPTO_API_KEY;
 
-  // Input validation
   if (!toEmail || !subject || !htmlContent) {
     throw new functions.https.HttpsError(
       'invalid-argument',
@@ -84,7 +89,6 @@ exports.sendEmail = functions.region("us-central1").https.onCall(async (data) =>
     );
   }
 
-  // Email format validation
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toEmail)) {
     throw new functions.https.HttpsError(
       'invalid-argument',
@@ -93,7 +97,6 @@ exports.sendEmail = functions.region("us-central1").https.onCall(async (data) =>
   }
 
   try {
-    // Payload matching your working cURL example
     const payload = {
       from: {
         address: "noreply@shikshasaarathi.com"
@@ -105,8 +108,8 @@ exports.sendEmail = functions.region("us-central1").https.onCall(async (data) =>
         }
       }],
       subject: subject,
-      htmlbody: htmlContent
-      // Removed optional fields that might cause issues
+      htmlbody: htmlContent,
+      // ACL: "public-read",
     };
 
     const response = await axios.post(
@@ -116,7 +119,7 @@ exports.sendEmail = functions.region("us-central1").https.onCall(async (data) =>
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
-          "Authorization": "Zoho-enczapikey PHtE6r1cE+G93WUupERW4/LsR8WmPY0vrr8xKQRPudwQWKdVH00Er495lmDkqE0qAfETEvCby4hp5bqV4u/ULGnqYT5KWGqyqK3sx/VYSPOZsbq6x00ctlUTcUzbUI/sc9Bs1SLTs9fTNA=="
+          "Authorization": `Zoho-enczapikey ${zohoApiKey}`
         },
         timeout: 10000
       }

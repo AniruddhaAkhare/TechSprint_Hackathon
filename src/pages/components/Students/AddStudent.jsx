@@ -561,7 +561,7 @@ export default function AddStudent() {
           } p-6 overflow-y-auto z-50`}
       >
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-gray-800">Add Prach</h1>
+          <h1 className="text-2xl font-semibold text-gray-800">Add Student</h1>
           <button
             onClick={toggleSidebar}
             className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition duration-200"
@@ -1118,18 +1118,7 @@ export default function AddStudent() {
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-            >
-              {isSubmitting ? 'Processing...' : 'Add Student'}
-            </button>
-          </div>
-
+          
           <div className="flex justify-end">
             <button
               type="submit"

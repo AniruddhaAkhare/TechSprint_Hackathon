@@ -28,6 +28,10 @@ export default function Roles() {
     invoice: { create: false, update: false, display: false, delete: false },
     FinancePartner: { create: false, update: false, display: false, delete: false },
     Holidays: { create: false, update: false, display: false, delete:false },
+    Leaves: { create: false, update: false, display: false, delete: false },
+    Holiday: { create: false, update: false, display: false, delete: false },
+    JopOpening: { create: false, update: false, display: false, delete: false },
+    Companies: { create: false, update: false, display: false, delete: false },
   });
   const [editingRole, setEditingRole] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -163,6 +167,9 @@ export default function Roles() {
         invoice: { create: false, update: false, display: false, delete: false },
         FinancePartner: { create: false, update: false, display: false, delete: false },
         Holidays: { create: false, update: false, display: false, delete: false },
+        Leaves: { create: false, update: false, display: false, delete: false },
+        JopOpening: { create: false, update: false, display: false, delete: false },
+        Companies: { create: false, update: false, display: false, delete: false }
 
       });
       alert('Role created successfully!');
@@ -256,7 +263,7 @@ export default function Roles() {
   const permissionSections = Object.keys(newRolePermissions);
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
+    <div className="flex flex-col w-full min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-semibold text-gray-800">Role Management</h1>
         {canCreate && (

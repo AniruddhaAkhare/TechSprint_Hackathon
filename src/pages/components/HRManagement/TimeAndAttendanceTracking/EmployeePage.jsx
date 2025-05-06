@@ -89,7 +89,7 @@ const EmployeePage = () => {
     }
 
     return (
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 ">
         <div className="w-24 text-gray-600 font-medium">
           {date.toLocaleDateString()}
         </div>
@@ -128,7 +128,7 @@ const EmployeePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
+    <div className="min-h-screen bg-gray-100 py-8 p-4 fixed inset-0 left-[300px]">
       <div className="max-w-4xl mx-auto">
         {/* Employee Details Card */}
         <div className="bg-white p-8 rounded-lg shadow-lg mb-8">

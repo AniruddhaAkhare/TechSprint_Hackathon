@@ -759,7 +759,7 @@ const KanbanBoard = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100 w-[calc(100vw-360px)]">
+    <div className="h-screen flex flex-col bg-gray-100 p-4 fixed inset-0 left-[300px]">
       <div className="p-4 sm:p-6 shrink-0">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
           <div>
