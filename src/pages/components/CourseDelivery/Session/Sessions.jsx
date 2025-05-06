@@ -323,7 +323,7 @@ export default function Sessions() {
     }
 
     return (
-        <div className="flex flex-col w-full min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
+        <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
             <ToastContainer position="top-right" autoClose={3000} />
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <h1 className="text-2xl font-semibold text-gray-800">Sessions</h1>

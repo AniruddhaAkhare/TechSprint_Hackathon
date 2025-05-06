@@ -178,7 +178,7 @@ const HolidayCalendar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px]">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-2xl font-semibold text-gray-800 mb-6">Holiday Calendar</h3>

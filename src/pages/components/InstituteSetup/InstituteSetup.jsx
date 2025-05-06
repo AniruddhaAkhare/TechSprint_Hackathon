@@ -167,7 +167,7 @@ const InstituteSetup = () => {
   if (!canDisplay) return null;
 
   return (
-    <div className="institute-setup p-20">
+    <div className="institute-setup p-4 fixed inset-0 left-[300px]">
       <div className="header">
         <FaBook className="header-icon" />
         <h1>Institute Setup</h1>

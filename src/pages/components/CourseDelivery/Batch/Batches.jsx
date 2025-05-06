@@ -296,7 +296,7 @@ export default function Batches() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-gray-50 p-2">
+    <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Batches</h1>

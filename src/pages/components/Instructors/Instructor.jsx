@@ -295,7 +295,7 @@ export default function Instructor() {
   if (!canDisplay) return null; // Render nothing if no display permission
 
   return (
-    <div className="p-20">
+    <div className="p-4 fixed inset-0 left-[300px]">
       <div className="max-w-8xl mx-auto">
         {/* Header Section */}
         <div className="flex justify-between items-center mb-6">

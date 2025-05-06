@@ -92,7 +92,7 @@ const LeaveApplication = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-8 px-4">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-8 px-4 p-4 fixed inset-0 left-[300px]">
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
         <h3 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
           Apply for Leave

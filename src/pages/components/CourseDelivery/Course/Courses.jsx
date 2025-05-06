@@ -691,7 +691,7 @@ export default function Courses() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-gray-50 p-2">
+    <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Courses</h1>
         <div className="flex space-x-4">

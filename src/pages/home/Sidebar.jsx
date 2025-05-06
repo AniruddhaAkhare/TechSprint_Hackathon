@@ -61,6 +61,10 @@ const Sidebar = () => {
   const canViewFinancePartners = rolePermissions?.FinancePartner?.display || false;
   const canViewactivityLogs = rolePermissions?.activityLogs?.display || false;
   const canViewLeaves = rolePermissions?.Leaves?.display || false;
+  const canViewCompanies = rolePermissions?.Companies?.display || false;
+  const canViewJobOpenings = rolePermissions?.JobOpenings?.display || false;
+
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -185,7 +189,7 @@ const Sidebar = () => {
   if (!authUser) return null;
 
   return (
-    <div className="sidebar">
+    <div className="sidebar fixed">
       <div className="logo">
         <img
           src={instituteLogo}
@@ -353,7 +357,22 @@ const Sidebar = () => {
         </li>
         {accordionState.placement && (
           <>
-            {/* Add placement cell items here if needed */}
+            {canViewCompanies && (
+              <Link to="/companies" className="nav-link">
+                <li className="nav-item">
+                  <FaUsers className="nav-icon" />
+                  <span>Companies</span>
+                </li>
+              </Link>
+            )}
+            {canViewJobOpenings && (
+              <Link to="/job-openings" className="nav-link">
+                <li className="nav-item">
+                  <FaUsers className="nav-icon" />
+                  <span>Job Openings</span>
+                </li>
+              </Link>
+            )}
           </>
         )}
 

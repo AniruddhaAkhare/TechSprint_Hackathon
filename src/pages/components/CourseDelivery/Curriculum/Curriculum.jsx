@@ -192,7 +192,7 @@ const Curriculum = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen font-sans">
+    <div className=" bg-gray-100 min-h-screen font-sans p-4 fixed inset-0 left-[300px]">
       <ToastContainer position="top-right" autoClose={3000} />
       <h2 className="text-2xl font-bold text-gray-900 mb-2">Curriculum</h2>
       <p className="text-sm text-gray-600 mb-6">Manage all your course curriculum in one place.</p>

@@ -875,6 +875,9 @@ import HolidayCalendar from './pages/components/HRManagement/HolidayCalendar.jsx
 import EmployeePage from './pages/components/HRManagement/TimeAndAttendanceTracking/Employeepage.jsx';
 import HRLeaveApproval from './pages/components/HRManagement/Leave/HRLeaveApproval.jsx';
 import LeaveApplication from './pages/components/HRManagement/Leave/LeaveApplication.jsx';
+import Companies from './pages/components/PlacementManagement/Companies/Companies.jsx';
+import JobOpenings from './pages/components/PlacementManagement/JobOpenings/JobOpenings.jsx';
+import RecruiterView from './pages/components/PlacementManagement/JobOpenings/RecruiterView.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -1031,6 +1034,20 @@ export default function App() {
               <Route
                 path="/leave-application"
                 element={<LeaveApplication />}
+              />
+
+              {/* Placement */}
+              <Route
+                path="/companies"
+                element={<Companies />}
+              />
+              <Route
+                path="/job-openings"
+                element={<JobOpenings />}
+              />
+              <Route
+                path="/recruiter-view/:id"
+                element={<RecruiterView />}
               />
               
 
