@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { db, auth } from "../../../config/firebase";
@@ -20,18 +21,14 @@ const initialColumns = {
   "contact-in-future": { name: "Contact in Future", items: [], icon: <FaClock className="text-gray-500" />, count: 0, totalAmount: 0 },
 };
 
-const initialVisibility = {
-  "pre-qualified": true,
-  "qualified": true,
-  "negotiation": true,
-  "closed-won": true,
-  "closed-lost": true,
-  "contact-in-future": true,
-};
-
 const KanbanBoard = () => {
   const [columns, setColumns] = useState(initialColumns);
-  const [stageVisibility, setStageVisibility] = useState(initialVisibility);
+  const [stageVisibility, setStageVisibility] = useState(() => {
+    const saved = localStorage.getItem("stageVisibility");
+    return saved
+      ? JSON.parse(saved)
+      : Object.keys(initialColumns).reduce((acc, stage) => ({ ...acc, [stage]: true }), {});
+  });
   const [view, setView] = useState("kanban");
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,7 +37,15 @@ const KanbanBoard = () => {
   const [isEnquiryTypeModalOpen, setIsEnquiryTypeModalOpen] = useState(false);
   const [isBulkEnquiryModalOpen, setIsBulkEnquiryModalOpen] = useState(false);
   const [isMassUpdateModalOpen, setIsMassUpdateModalOpen] = useState(false);
-  const [filters, setFilters] = useState({ tags: [], stage: "", branch: "", course: "", instructor: "", owner: "" });
+  const [filters, setFilters] = useState({
+    tags: [],
+    stage: "",
+    branch: "",
+    course: "",
+    owner: "",
+    createdAtRange: { startDate: "", endDate: "" },
+    lastTouchedRange: { startDate: "", endDate: "" },
+  });
   const [courses, setCourses] = useState([]);
   const [branches, setBranches] = useState([]);
   const [instructors, setInstructors] = useState([]);
@@ -63,9 +68,27 @@ const KanbanBoard = () => {
   const [selectedEnquiries, setSelectedEnquiries] = useState([]);
   const [massUpdateData, setMassUpdateData] = useState({ assignTo: "", tagsToAdd: [], tagsToRemove: [] });
   const [validationErrors, setValidationErrors] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [columnWidths, setColumnWidths] = useState({
+    checkbox: 50,
+    name: 150,
+    amount: 100,
+    phone: 120,
+    email: 200,
+    stage: 120,
+    tags: 200,
+    createdAt: 150,
+    createdBy: 150,
+    lastModifiedTime: 150,
+    lastTouched: 150,
+    lastUpdatedBy: 150,
+  });
   const addButtonRef = useRef(null);
+  const resizingColumn = useRef(null);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+  const gridRef = useRef(null);
 
-  // Define permissions
   const canDisplay = rolePermissions.enquiries?.display || false;
   const canCreate = rolePermissions.enquiries?.create || false;
   const canUpdate = rolePermissions.enquiries?.update || false;
@@ -78,7 +101,6 @@ const KanbanBoard = () => {
     return () => unsubscribe();
   }, []);
 
-  // Utility function to format dates safely
   const formatDateSafely = (dateString, formatString) => {
     if (!dateString) return "Not available";
     const date = new Date(dateString);
@@ -86,7 +108,6 @@ const KanbanBoard = () => {
     return format(date, formatString);
   };
 
-  // Utility function to render fields with fallback
   const renderField = (value, placeholder = "Not provided") => {
     return value || placeholder;
   };
@@ -156,6 +177,7 @@ const KanbanBoard = () => {
       await updateDoc(enquiryRef, {
         notes: updatedNotes,
         history: updatedHistory,
+        lastTouched: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
 
@@ -236,7 +258,9 @@ const KanbanBoard = () => {
           }
         });
         Object.keys(updatedColumns).forEach((key) => {
-          updatedColumns[key].count = filteredEnquiries(updatedColumns[key].items).length;
+          const filteredItems = filteredEnquiries(updatedColumns[key].items);
+          updatedColumns[key].count = filteredItems.length;
+          updatedColumns[key].totalAmount = filteredItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
         });
         return { ...updatedColumns };
       });
@@ -259,14 +283,114 @@ const KanbanBoard = () => {
         enquiry.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enquiry.phone?.includes(searchTerm) ||
         enquiry.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+
       const matchesTags = filters.tags.length === 0 || enquiry.tags?.some((tag) => filters.tags.includes(tag));
       const matchesStage = !filters.stage || enquiry.stage === filters.stage;
       const matchesBranch = !filters.branch || enquiry.branch === filters.branch;
       const matchesCourse = !filters.course || enquiry.course === filters.course;
-      const matchesInstructor = !filters.instructor || enquiry.assignTo === filters.instructor;
       const matchesOwner = !filters.owner || enquiry.assignTo === filters.owner;
-      return matchesSearch && matchesTags && matchesStage && matchesBranch && matchesCourse && matchesInstructor && matchesOwner;
+
+      const matchesCreatedAt = (() => {
+        if (!filters.createdAtRange.startDate && !filters.createdAtRange.endDate) return true;
+        if (!enquiry.createdAt) return false;
+        const createdAt = new Date(enquiry.createdAt);
+        const startDate = filters.createdAtRange.startDate ? new Date(filters.createdAtRange.startDate) : null;
+        const endDate = filters.createdAtRange.endDate ? new Date(filters.createdAtRange.endDate) : null;
+        if (startDate && endDate) {
+          endDate.setHours(23, 59, 59, 999); // Include entire end date
+          return createdAt >= startDate && createdAt <= endDate;
+        }
+        if (startDate) return createdAt >= startDate;
+        if (endDate) {
+          endDate.setHours(23, 59, 59, 999);
+          return createdAt <= endDate;
+        }
+        return true;
+      })();
+
+      const matchesLastTouched = (() => {
+        if (!filters.lastTouchedRange.startDate && !filters.lastTouchedRange.endDate) return true;
+        if (!enquiry.lastTouched) return false;
+        const lastTouched = new Date(enquiry.lastTouched);
+        const startDate = filters.lastTouchedRange.startDate ? new Date(filters.lastTouchedRange.startDate) : null;
+        const endDate = filters.lastTouchedRange.endDate ? new Date(filters.lastTouchedRange.endDate) : null;
+        if (startDate && endDate) {
+          endDate.setHours(23, 59, 59, 999); // Include entire end date
+          return lastTouched >= startDate && lastTouched <= endDate;
+        }
+        if (startDate) return lastTouched >= startDate;
+        if (endDate) {
+          endDate.setHours(23, 59, 59, 999);
+          return lastTouched <= endDate;
+        }
+        return true;
+      })();
+
+      return (
+        matchesSearch &&
+        matchesTags &&
+        matchesStage &&
+        matchesBranch &&
+        matchesCourse &&
+        matchesOwner &&
+        matchesCreatedAt &&
+        matchesLastTouched
+      );
+    }).sort((a, b) => {
+      if (!sortConfig.key) return 0;
+      const aValue = a[sortConfig.key] || "";
+      const bValue = b[sortConfig.key] || "";
+      const aDate = new Date(aValue);
+      const bDate = new Date(bValue);
+      const isValidA = !isNaN(aDate.getTime());
+      const isValidB = !isNaN(bDate.getTime());
+
+      if (!isValidA && !isValidB) return 0;
+      if (!isValidA) return sortConfig.direction === "asc" ? 1 : -1;
+      if (!isValidB) return sortConfig.direction === "asc" ? -1 : 1;
+
+      return sortConfig.direction === "asc" ? aDate - bDate : bDate - aDate;
     });
+  };
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const handleMouseDown = (e, columnKey) => {
+    resizingColumn.current = columnKey;
+    startX.current = e.clientX;
+    startWidth.current = columnWidths[columnKey];
+    if (gridRef.current) {
+      gridRef.current.style.userSelect = "none";
+      document.body.style.userSelect = "none";
+    }
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleMouseMove = (e) => {
+    if (resizingColumn.current) {
+      const delta = e.clientX - startX.current;
+      const newWidth = Math.max(50, startWidth.current + delta);
+      setColumnWidths((prev) => ({
+        ...prev,
+        [resizingColumn.current]: newWidth,
+      }));
+    }
+  };
+
+  const handleMouseUp = () => {
+    resizingColumn.current = null;
+    if (gridRef.current) {
+      gridRef.current.style.userSelect = "";
+      document.body.style.userSelect = "";
+    }
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
   };
 
   const onDragEnd = async (result) => {
@@ -309,14 +433,11 @@ const KanbanBoard = () => {
     }
   };
 
-  const allEnquiries = Object.values(columns).flatMap((column) => column.items).filter(
-    (enquiry) =>
-      !searchTerm ||
-      enquiry.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enquiry.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enquiry.phone?.includes(searchTerm) ||
-      enquiry.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const allEnquiries = Object.values(columns)
+    .flatMap((column) => column.items)
+    .filter((enquiry) =>
+      filteredEnquiries([enquiry]).length > 0
+    );
 
   const getLastUpdater = (enquiry) => {
     if (enquiry.history && enquiry.history.length > 0) {
@@ -342,7 +463,6 @@ const KanbanBoard = () => {
     }
   };
 
-  // Handle Excel file upload
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -396,7 +516,6 @@ const KanbanBoard = () => {
     reader.readAsArrayBuffer(file);
   };
 
-  // Handle bulk enquiry change
   const handleBulkEnquiryChange = (index, field, value) => {
     const updatedEnquiries = [...bulkEnquiries];
     updatedEnquiries[index][field] = value;
@@ -407,7 +526,6 @@ const KanbanBoard = () => {
     );
   };
 
-  // Handle submit bulk enquiries
   const handleSubmitBulkEnquiries = async () => {
     if (!canCreate) {
       alert("You don't have permission to create enquiries.");
@@ -446,6 +564,8 @@ const KanbanBoard = () => {
           stage: "pre-qualified",
           createdAt: timestamp,
           updatedAt: timestamp,
+          lastModifiedTime: timestamp,
+          lastTouched: timestamp,
           createdBy: userName,
           history: [
             {
@@ -586,6 +706,7 @@ const KanbanBoard = () => {
 
         if (Object.keys(updates).length > 0) {
           updates.updatedAt = timestamp;
+          updates.lastModifiedTime = timestamp;
           updates.history = [...(enquiry.history || []), ...historyEntries];
           await updateDoc(enquiryRef, updates);
         }
@@ -599,6 +720,42 @@ const KanbanBoard = () => {
       console.error("Error updating enquiries:", error);
       alert(`Failed to update enquiries: ${error.message}`);
     }
+  };
+
+  const gridTemplateColumns = `
+    ${columnWidths.checkbox}px
+    ${columnWidths.name}px
+    ${columnWidths.amount}px
+    ${columnWidths.phone}px
+    ${columnWidths.email}px
+    ${columnWidths.stage}px
+    ${columnWidths.tags}px
+    ${columnWidths.createdAt}px
+    ${columnWidths.createdBy}px
+    ${columnWidths.lastModifiedTime}px
+    ${columnWidths.lastTouched}px
+    ${columnWidths.lastUpdatedBy}px
+  `;
+
+  const getResizeHandlePositions = () => {
+    const columnsOrder = [
+      "checkbox",
+      "name",
+      "amount",
+      "phone",
+      "email",
+      "stage",
+      "tags",
+      "createdAt",
+      "createdBy",
+      "lastModifiedTime",
+      "lastTouched",
+    ];
+    let cumulativeWidth = 0;
+    return columnsOrder.map((key) => {
+      cumulativeWidth += columnWidths[key];
+      return { key, left: cumulativeWidth - 0.5 };
+    });
   };
 
   return (
@@ -720,83 +877,116 @@ const KanbanBoard = () => {
           </DragDropContext>
         )}
         {view === "list" && (
-          <div className="bg-white rounded-lg shadow-md overflow-x-auto h-full">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="p-4">
-                    {(canUpdate || canDelete) && (
-                      <input
-                        type="checkbox"
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedEnquiries(filteredEnquiries(allEnquiries).map((item) => item.id));
-                          } else {
-                            setSelectedEnquiries([]);
-                          }
-                        }}
-                        checked={filteredEnquiries(allEnquiries).length > 0 && selectedEnquiries.length === filteredEnquiries(allEnquiries).length}
-                      />
-                    )}
-                  </th>
-                  <th className="p-4">Name</th>
-                  <th className="p-4">Amount</th>
-                  <th className="p-4">Phone</th>
-                  <th className="p-4">Email</th>
-                  <th className="p-4">Stage</th>
-                  <th className="p-4">Tags</th>
-                  <th className="p-4">Created At</th>
-                  <th className="p-4">Created By</th>
-                  <th className="p-4">Last Updated At</th>
-                  <th className="p-4">Last Updated By</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredEnquiries(allEnquiries).length === 0 ? (
-                  <tr>
-                    <td colSpan="11" className="p-4 text-center text-gray-500">No enquiries found</td>
-                  </tr>
-                ) : (
-                  filteredEnquiries(allEnquiries).map((item) => (
-                    <tr
-                      key={item.id}
-                      className={`border-b border-gray-200 hover:bg-gray-50 ${selectedEnquiries.includes(item.id) ? "bg-blue-100" : ""}`}
-                      onClick={() => handleViewEnquiry(item)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                        {(canUpdate || canDelete) && (
-                          <input
-                            type="checkbox"
-                            checked={selectedEnquiries.includes(item.id)}
-                            onChange={() => handleSelectForAction(item.id)}
-                          />
-                        )}
-                      </td>
-                      <td className="p-4 truncate max-w-[150px]">{item.name || "Unnamed"}</td>
-                      <td className="p-4">₹{item.amount?.toLocaleString() || "0"}</td>
-                      <td className="p-4 truncate max-w-[120px]">{item.phone || "No phone"}</td>
-                      <td className="p-4 truncate max-w-[200px]">{item.email || "No email"}</td>
-                      <td className="p-4">{initialColumns[item.stage]?.name || "Unknown"}</td>
-                      <td className="p-4">
-                        <div className="flex flex-wrap gap-2">
-                          {item.tags?.map((tag) => (
-                            <span key={tag} className="flex items-center gap-1 text-orange-500 px-2 py-1 bg-orange-50 rounded-full text-sm whitespace-nowrap">
-                              <FaCircle className="text-orange-500 text-xs" />
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="p-4 truncate max-w-[150px]">{formatDateSafely(item.createdAt, "MMM d, yyyy h:mm a")}</td>
-                      <td className="p-4 truncate max-w-[150px]">{renderField(item.createdBy)}</td>
-                      <td className="p-4 truncate max-w-[150px]">{formatDateSafely(item.updatedAt, "MMM d, yyyy h:mm a")}</td>
-                      <td className="p-4 truncate max-w-[150px]">{renderField(getLastUpdater(item))}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <div className="bg-white rounded-lg shadow-md overflow-x-auto h-full relative">
+            <div
+              ref={gridRef}
+              className="grid"
+              style={{
+                gridTemplateColumns: gridTemplateColumns,
+                position: "relative",
+              }}
+            >
+              <div className="p-4 border-b border-gray-200 contents">
+                <div className="ml-6 flex items-center">
+                  {(canUpdate || canDelete) && (
+                    <input
+                      type="checkbox"
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedEnquiries(filteredEnquiries(allEnquiries).map((item) => item.id));
+                        } else {
+                          setSelectedEnquiries([]);
+                        }
+                      }}
+                      checked={filteredEnquiries(allEnquiries).length > 0 && selectedEnquiries.length === filteredEnquiries(allEnquiries).length}
+                    />
+                  )}
+                </div>
+                <div className="font-semibold ml-8">Name</div>
+                <div className="font-semibold ml-8">Amount</div>
+                <div className="font-semibold ml-8">Phone</div>
+                <div className="font-semibold ml-8">Email</div>
+                <div className="font-semibold ml-8">Stage</div>
+                <div className="font-semibold ml-8">Tags</div>
+                <div className="font-semibold cursor-pointer ml-8" onClick={() => handleSort("createdAt")}>
+                  Created At {sortConfig.key === "createdAt" && (sortConfig.direction === "asc" ? "↑" : "↓")}
+                </div>
+                <div className="font-semibold ml-8">Created By</div>
+                <div className="font-semibold cursor-pointer ml-2" onClick={() => handleSort("lastModifiedTime")}>
+                  Last Modified Time {sortConfig.key === "lastModifiedTime" && (sortConfig.direction === "asc" ? "↑" : "↓")}
+                </div>
+                <div className="font-semibold cursor-pointer ml-8" onClick={() => handleSort("lastTouched")}>
+                  Last Touched {sortConfig.key === "lastTouched" && (sortConfig.direction === "asc" ? "↑" : "↓")}
+                </div>
+                <div className="font-semibold ml-4">Last Updated By</div>
+              </div>
+              {filteredEnquiries(allEnquiries).length === 0 ? (
+                <div className="col-span-12 p-4 text-center text-gray-500">No enquiries found</div>
+              ) : (
+                filteredEnquiries(allEnquiries).map((item) => (
+                  <div
+                    key={item.id}
+                    className={`border-b border-gray-200 hover:bg-gray-50 contents ${selectedEnquiries.includes(item.id) ? "bg-blue-100" : ""}`}
+                    onClick={() => handleViewEnquiry(item)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div className="p-4" onClick={(e) => e.stopPropagation()}>
+                      {(canUpdate || canDelete) && (
+                        <input
+                          type="checkbox"
+                          checked={selectedEnquiries.includes(item.id)}
+                          onChange={() => handleSelectForAction(item.id)}
+                        />
+                      )}
+                    </div>
+                    <div className="p-4 truncate" style={{ maxWidth: columnWidths.name }}>
+                      {item.name || "Unnamed"}
+                    </div>
+                    <div className="p-4">₹{item.amount?.toLocaleString() || "0"}</div>
+                    <div className="p-4 truncate" style={{ maxWidth: columnWidths.phone }}>
+                      {item.phone || "No phone"}
+                    </div>
+                    <div className="p-4 truncate" style={{ maxWidth: columnWidths.email }}>
+                      {item.email || "No email"}
+                    </div>
+                    <div className="p-4">{initialColumns[item.stage]?.name || "Unknown"}</div>
+                    <div className="p-4">
+                      <div className="flex flex-wrap gap-2">
+                        {item.tags?.map((tag) => (
+                          <span key={tag} className="flex items-center gap-1 text-orange-500 px-2 py-1 bg-orange-50 rounded-full text-sm whitespace-nowrap">
+                            <FaCircle className="text-orange-500 text-xs" />
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="p-4 truncate" style={{ maxWidth: columnWidths.createdAt }}>
+                      {formatDateSafely(item.createdAt, "MMM d, yyyy h:mm a")}
+                    </div>
+                    <div className="p-4 truncate" style={{ maxWidth: columnWidths.createdBy }}>
+                      {renderField(item.createdBy)}
+                    </div>
+                    <div className="p-4 truncate" style={{ maxWidth: columnWidths.lastModifiedTime }}>
+                      {formatDateSafely(item.lastModifiedTime, "MMM d, yyyy h:mm a")}
+                    </div>
+                    <div className="p-4 truncate" style={{ maxWidth: columnWidths.lastTouched }}>
+                      {formatDateSafely(item.lastTouched, "MMM d, yyyy h:mm a")}
+                    </div>
+                    <div className="p-4 truncate" style={{ maxWidth: columnWidths.lastUpdatedBy }}>
+                      {renderField(getLastUpdater(item))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            {getResizeHandlePositions().map(({ key, left }) => (
+              <div
+                key={key}
+                className="absolute top-0 bottom-0 w-[1px] cursor-col-resize bg-gray-300 hover:bg-gray-500"
+                style={{ left: `${left}px` }}
+                onMouseDown={(e) => handleMouseDown(e, key)}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -832,7 +1022,6 @@ const KanbanBoard = () => {
           className="absolute bg-white p-6 rounded-lg shadow-lg w-96 z-50 sm:mt-12 mt-2 right-auto"
           style={{
             top: window.innerWidth < 640 ? addButtonRef.current.offsetHeight + 5 : 0,
-            // right: window.innerWidth >= 640 ? -addButtonRef.current.offsetWidth : 0,
           }}
         >
           <h3 className="text-lg font-semibold mb-4">Add Note</h3>
@@ -885,7 +1074,7 @@ const KanbanBoard = () => {
               </div>
             </div>
           )}
-          {noteType === "call-schedule"  && (
+          {noteType === "call-schedule" && (
             <div className="space-y-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Call Date</label>

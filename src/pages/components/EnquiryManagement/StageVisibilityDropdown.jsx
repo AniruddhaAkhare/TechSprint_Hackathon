@@ -1,3 +1,5 @@
+
+
 import React, { useState, useRef, useEffect } from "react";
 import { FaChevronDown } from "react-icons/fa";
 
@@ -5,6 +7,20 @@ const StageVisibilityDropdown = ({ stageVisibility, setStageVisibility, initialC
   const [isStageVisibilityOpen, setIsStageVisibilityOpen] = useState(false);
   const stageVisibilityRef = useRef(null);
 
+  // Load stage visibility from localStorage on component mount
+  useEffect(() => {
+    const savedVisibility = localStorage.getItem("stageVisibility");
+    if (savedVisibility) {
+      setStageVisibility(JSON.parse(savedVisibility));
+    }
+  }, [setStageVisibility]);
+
+  // Save stage visibility to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("stageVisibility", JSON.stringify(stageVisibility));
+  }, [stageVisibility]);
+
+  // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (stageVisibilityRef.current && !stageVisibilityRef.current.contains(event.target)) {
@@ -45,8 +61,12 @@ const StageVisibilityDropdown = ({ stageVisibility, setStageVisibility, initialC
                     onChange={() => toggleStageVisibility(stage)}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600">
-                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${stageVisibility[stage] ? "translate-x-5" : "translate-x-1"}`}></div>
+                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peerChecked:bg-blue-600">
+                    <div
+                      className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${
+                        stageVisibility[stage] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    ></div>
                   </div>
                 </label>
               </div>

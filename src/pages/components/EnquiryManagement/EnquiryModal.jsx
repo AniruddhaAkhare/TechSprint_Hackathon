@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef } from "react";
 import Modal from "react-modal";
 import { db, auth } from "../../../config/firebase";
@@ -7,8 +5,6 @@ import { addDoc, updateDoc, doc, collection, query, where, getDocs } from "fireb
 import { format } from "date-fns";
 import { s3Client } from "../../../config/aws-config";
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { debugS3Config } from "../../../config/aws-config";
-// import { format } from "date-fns";
 
 Modal.setAppElement("#root");
 
@@ -27,12 +23,9 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  // const [audioError, setAudioError] = useState({});
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const [audioError, setAudioError] = useState({});
-
-
   const [audioStatus, setAudioStatus] = useState({});
 
   const [newEnquiry, setNewEnquiry] = useState(
@@ -56,9 +49,11 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       hscPassOutYear: "",
       graduationStream: "",
       graduationPercentage: "",
+      postGraduationStream: "",
+
       collegeName: "",
       graduationPassOutYear: "",
-      postGraduationStream: "",
+      // postGraduationStream: "",
       postGraduationPercentage: "",
       postGraduationCollegeName: "",
       postGraduationPassOutYear: "",
@@ -82,7 +77,11 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       lostReason: "",
       createdAt: "",
       createdBy: "",
+      owner: "", // New field for Lead Owner
       history: [],
+      lastModifiedTime: "",
+      lastTouched: "",
+
     }
   );
 
@@ -149,11 +148,13 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         lostReason: selectedEnquiry.lostReason || "",
         createdAt: selectedEnquiry.createdAt || defaultCreatedAt,
         createdBy: selectedEnquiry.createdBy || currentUser?.displayName || currentUser?.email || "Unknown User",
+        owner: selectedEnquiry.owner || selectedEnquiry.assignTo || selectedEnquiry.createdBy || currentUser?.displayName || currentUser?.email || "Unknown User",
         history: selectedEnquiry.history || inferredHistory,
       });
       setIsEditing(false);
     } else {
       const newCreatedAt = new Date().toISOString();
+      const userIdentity = currentUser?.displayName || currentUser?.email || "Unknown User";
       setEditingEnquiryId(null);
       setIsEditing(true);
       setCurrentSection(1);
@@ -181,6 +182,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         graduationPassOutYear: "",
         postGraduationStream: "",
         postGraduationPercentage: "",
+        // postGraduationStream:"",
         postGraduationCollegeName: "",
         postGraduationPassOutYear: "",
         branch: "",
@@ -202,57 +204,16 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         closingDate: "",
         lostReason: "",
         createdAt: newCreatedAt,
-        createdBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+        createdBy: userIdentity,
+        owner: userIdentity, // Initialize owner as same as createdBy
         history: [],
+
       });
     }
   }, [selectedEnquiry, currentUser]);
 
-   // Start recording function
-   // Start recording function
-   
-  // Start recording function
-  const startRecording = async () => {
-    try {
-      if (!navigator.mediaDevices || !MediaRecorder.isTypeSupported("audio/webm")) {
-        alert("Audio recording is not supported in this browser.");
-        return;
-      }
-      console.log("Requesting microphone access...");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: "audio/webm" });
-      audioChunksRef.current = [];
 
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        setAudioBlob(audioBlob);
-        console.log("Audio blob created:", audioBlob);
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      mediaRecorderRef.current.onerror = (event) => {
-        console.error("MediaRecorder error:", event.error);
-        alert(`Recording failed: ${event.error.message}`);
-        setIsRecording(false);
-      };
-
-      mediaRecorderRef.current.start();
-      setIsRecording(true);
-      console.log("Recording started");
-    } catch (error) {
-      console.error("Recording error:", error);
-      alert(`Failed to start recording: ${error.message}. Please ensure microphone access is granted.`);
-    }
-  };
- 
-   // Upload to S3 function
-   const uploadToS3 = async (audioBlob) => {
+  const uploadToS3 = async (audioBlob) => {
     if (!audioBlob) {
       console.error("No audio blob available for upload");
       alert("No audio recording to upload.");
@@ -274,7 +235,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         Key: fileKey,
         Body: new Uint8Array(fileBuffer),
         ContentType: "audio/webm",
-        ACL: "public-read", // Ensure public access
+        // ACL: "public-read",
       };
 
       console.log("Uploading to S3 with params:", { bucketName, fileKey });
@@ -307,27 +268,42 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
     }
   };
 
-   // Stop recording function
-    // Stop recording function
   const stopRecording = async () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       console.log("Stopping recording...");
-      mediaRecorderRef.current.stop();
       setIsRecording(false);
       setIsUploading(true);
+
       try {
-        // Wait for audioBlob to be set
-        const audioBlob = await new Promise((resolve) => {
-          const checkBlob = () => {
-            if (audioBlob) {
-              resolve(audioBlob);
+        // Create a promise to wait for the audioBlob to be set
+        const audioBlobResolved = await new Promise((resolve, reject) => {
+          let timeoutId = setTimeout(() => {
+            reject(new Error("Audio blob creation timed out"));
+          }, 5000); // 5-second timeout to prevent infinite wait
+
+          mediaRecorderRef.current.onstop = () => {
+            clearTimeout(timeoutId);
+            const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+            if (blob.size === 0) {
+              reject(new Error("Audio blob is empty"));
             } else {
-              setTimeout(checkBlob, 100);
+              setAudioBlob(blob);
+              resolve(blob);
             }
+            audioChunksRef.current = []; // Reset chunks
+            mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop()); // Stop all tracks
           };
-          checkBlob();
+
+          mediaRecorderRef.current.onerror = (event) => {
+            clearTimeout(timeoutId);
+            reject(new Error(`MediaRecorder error: ${event.error.message}`));
+          };
+
+          mediaRecorderRef.current.stop();
         });
-        const audioUrl = await uploadToS3(audioBlob);
+
+        // Upload the audio blob to S3
+        const audioUrl = await uploadToS3(audioBlobResolved);
         if (audioUrl) {
           const noteObject = {
             content: "Office visit recording",
@@ -343,21 +319,46 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           }));
           await handleAddNoteToFirebase(updatedNotes, noteObject);
         } else {
-          alert("Failed to upload recording. Please try again.");
+          throw new Error("Failed to upload recording to S3");
         }
       } catch (error) {
         console.error("Stop recording error:", error);
         alert(`Failed to process recording: ${error.message}`);
       } finally {
         setIsUploading(false);
+        setAudioBlob(null); // Clear blob after processing
       }
     }
   };
 
+  const startRecording = async () => {
+    try {
+      if (!navigator.mediaDevices || !MediaRecorder.isTypeSupported("audio/webm")) {
+        alert("Audio recording is not supported in this browser.");
+        return;
+      }
+      console.log("Requesting microphone access...");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      audioChunksRef.current = [];
 
-  // Validate audio URL accessibility
-   // Validate audio URL accessibility with retry
-   const validateAudioUrl = async (url, index, retries = 2) => {
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      console.log("Recording started");
+    } catch (error) {
+      console.error("Recording error:", error);
+      alert(`Failed to start recording: ${error.message}. Please ensure microphone access is granted.`);
+    }
+  };
+
+
+  const validateAudioUrl = async (url, index, retries = 2) => {
     setAudioStatus((prev) => ({ ...prev, [index]: "loading" }));
     try {
       const response = await fetch(url, { method: "HEAD" });
@@ -389,32 +390,54 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
     }
   };
 
-
-
   const deleteFromS3 = async (fileKey) => {
     try {
       const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
       if (!bucketName) {
         throw new Error("Missing AWS configuration: VITE_S3_BUCKET_NAME not set");
       }
+      if (!fileKey) {
+        throw new Error("Invalid file key: File key is empty or undefined");
+      }
 
       const params = {
         Bucket: bucketName,
-        Key: fileKey,
+        Key: decodeURIComponent(fileKey),
       };
 
-      await s3Client.send(new DeleteObjectCommand(params));
-      console.log(`Successfully deleted S3 object: ${fileKey}`);
+      console.log("Attempting to delete S3 object with params:", {
+        bucketName,
+        fileKey,
+        endpoint: `https://${bucketName}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${fileKey}`,
+      });
+
+      const response = await s3Client.send(new DeleteObjectCommand(params));
+      console.log(`Successfully deleted S3 object: ${fileKey}`, response);
     } catch (error) {
       console.error("S3 Delete Error:", {
         message: error.message,
         name: error.name,
         stack: error.stack,
         code: error.code,
+        requestId: error.$metadata?.requestId,
+        httpStatusCode: error.$metadata?.httpStatusCode,
       });
-      throw new Error(`Failed to delete recording from S3: ${error.message}`);
+      let errorMessage = "Failed to delete recording from S3: ";
+      if (error.name === "CredentialsError") {
+        errorMessage += "Invalid or missing AWS credentials.";
+      } else if (error.name === "AccessDenied") {
+        errorMessage += "Access denied. Check IAM permissions for s3:DeleteObject.";
+      } else if (error.message.includes("Failed to fetch")) {
+        errorMessage += "Network or CORS issue. Verify S3 bucket CORS settings allow DELETE requests from your origin and check network connectivity.";
+      } else if (error.code === "NoSuchKey") {
+        errorMessage += "The specified file does not exist in the S3 bucket.";
+      } else {
+        errorMessage += `${error.message} (Request ID: ${error.$metadata?.requestId || "N/A"})`;
+      }
+      throw new Error(errorMessage);
     }
   };
+
 
   const deleteRecording = async (note, index) => {
     if (!canUpdate) {
@@ -427,7 +450,11 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
     }
 
     try {
-      const fileKey = note.audioUrl.split(".amazonaws.com/")[1];
+      const fileKeyMatch = note.audioUrl.match(/amazonaws\.com\/(.+)/);
+      if (!fileKeyMatch || !fileKeyMatch[1]) {
+        throw new Error("Invalid audio URL: Could not extract file key");
+      }
+      const fileKey = fileKeyMatch[1];
       await deleteFromS3(fileKey);
 
       const updatedNotes = newEnquiry.notes.filter((_, i) => i !== index);
@@ -442,6 +469,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       await updateDoc(enquiryRef, {
         notes: updatedNotes,
         history: updatedHistory,
+        lastTouched: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
 
@@ -449,6 +477,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         ...prev,
         notes: updatedNotes,
         history: updatedHistory,
+        lastTouched: new Date().toISOString(),
       }));
 
       alert("Recording deleted successfully!");
@@ -479,11 +508,13 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       await updateDoc(enquiryRef, {
         notes: updatedNotes,
         history: updatedHistory,
+        lastTouched: new Date().toISOString(), // Update Last Touched
         updatedAt: new Date().toISOString(),
       });
       setNewEnquiry((prev) => ({
         ...prev,
         history: updatedHistory,
+        lastTouched: new Date().toISOString(),
       }));
       if (noteObject.type === "call-schedule" && noteObject.callDate && noteObject.callScheduledTime) {
         const callDateTime = new Date(`${noteObject.callDate}T${noteObject.callScheduledTime}`);
@@ -505,6 +536,8 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       alert(`Failed to add note: ${error.message}`);
     }
   };
+
+
 
   const handleAddNote = async () => {
     if (!newNote.trim()) {
@@ -584,8 +617,10 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         lostReason: newEnquiry.lostReason || "",
         createdAt: newEnquiry.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        lastModifiedTime: new Date().toISOString(),
         tags: Array.isArray(newEnquiry.tags) ? newEnquiry.tags : [],
         createdBy: newEnquiry.createdBy || currentUser?.displayName || currentUser?.email || "Unknown User",
+        owner: newEnquiry.assignTo || newEnquiry.owner, // Update owner to assignTo if set
         history: newEnquiry.history || [],
       };
 
@@ -600,6 +635,17 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           ...enquiryData.history,
           {
             action: `Changed stage to ${stageDisplay[newEnquiry.stage]?.name || newEnquiry.stage}`,
+            performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+            timestamp: new Date().toISOString(),
+          },
+        ];
+      }
+
+      if (newEnquiry.assignTo && newEnquiry.assignTo !== selectedEnquiry?.assignTo) {
+        enquiryData.history = [
+          ...enquiryData.history,
+          {
+            action: `Changed owner to ${newEnquiry.assignTo}`,
             performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
             timestamp: new Date().toISOString(),
           },
@@ -674,7 +720,10 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           lostReason: "",
           createdAt: "",
           createdBy: "",
+          owner: "",
           history: [],
+          lastModifiedTime: "",
+          lastTouched: ""
         });
         setEditingEnquiryId(null);
         setIsEditing(false);
@@ -744,8 +793,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
     }
   };
 
-   // Handle audio error
-   const handleAudioError = (index, error) => {
+  const handleAudioError = (index, error) => {
     console.error(`Audio error for note ${index}:`, error);
     let errorMessage = "Failed to play audio: ";
     if (error.target?.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
@@ -756,6 +804,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
     setAudioError((prev) => ({ ...prev, [index]: errorMessage }));
     setAudioStatus((prev) => ({ ...prev, [index]: "invalid" }));
   };
+
   useEffect(() => {
     newEnquiry.notes.forEach((note, index) => {
       if (note.type === "office-visit" && note.audioUrl && !audioStatus[index]) {
@@ -763,16 +812,6 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       }
     });
   }, [newEnquiry.notes]);
-
-  // Validate audio URLs when notes change
-  useEffect(() => {
-    newEnquiry.notes.forEach((note, index) => {
-      if (note.type === "office-visit" && note.audioUrl && !audioStatus[index]) {
-        validateAudioUrl(note.audioUrl, index);
-      }
-    });
-  }, [newEnquiry.notes]);
-
 
   return (
     <div>
@@ -806,15 +845,13 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
               <p className="text-xs sm:text-sm text-gray-600">Assigned to: {newEnquiry.assignTo}</p>
             )}
             <button
-        onClick={isRecording ? stopRecording : startRecording}
-        disabled={isUploading}
-        className={`px-3 py-1 sm:px-4 sm:py-2 rounded-md text-white text-sm ${
-          isUploading ? "bg-gray-400 cursor-not-allowed" : isRecording ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
-        } transition-colors`}
-      >
-        {isUploading ? "Uploading..." : isRecording ? "Stop Visit" : "Start Visit"}
-      </button>
-            
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={isUploading}
+              className={`px-3 py-1 sm:px-4 sm:py-2 rounded-md text-white text-sm ${isUploading ? "bg-gray-400 cursor-not-allowed" : isRecording ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+                } transition-colors`}
+            >
+              {isUploading ? "Uploading..." : isRecording ? "Stop Visit" : "Start Visit"}
+            </button>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row justify-between mb-4 flex-wrap gap-2">
@@ -853,6 +890,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         </div>
 
         <div className="space-y-4 sm:space-y-6">
+          
           {currentSection === 1 && (
             <div>
               <h3 className="text-base sm:text-lg font-medium mb-2">Personal Details</h3>
@@ -973,6 +1011,76 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                   )}
                 </div>
                 <div className="mb-3 sm:mb-4 sm:col-span-2">
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">Address</label>
+  {isEditing ? (
+    <div className="space-y-2">
+      <input
+        type="text"
+        value={newEnquiry.streetAddress}
+        onChange={(e) => setNewEnquiry({ ...newEnquiry, streetAddress: e.target.value })}
+        placeholder="Street Address"
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        required
+      />
+      <input
+        type="text"
+        value={newEnquiry.city}
+        onChange={(e) => setNewEnquiry({ ...newEnquiry, city: e.target.value })}
+        placeholder="City"
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        required
+      />
+      <input
+        type="text"
+        value={newEnquiry.stateRegionProvince}
+        onChange={(e) => setNewEnquiry({ ...newEnquiry, stateRegionProvince: e.target.value })}
+        placeholder="State/Region/Province"
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        required
+      />
+      <input
+        type="text"
+        value={newEnquiry.postalZipCode}
+        onChange={(e) => setNewEnquiry({ ...newEnquiry, postalZipCode: e.target.value })}
+        placeholder="Postal/Zip Code"
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        required
+      />
+      <select
+        value={newEnquiry.country}
+        onChange={(e) => setNewEnquiry({ ...newEnquiry, country: e.target.value })}
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        required
+      >
+        <option value="">Select country</option>
+        <option value="India">India</option>
+        <option value="USA">USA</option>
+        <option value="UK">UK</option>
+        <option value="Canada">Canada</option>
+        <option value="Australia">Australia</option>
+      </select>
+    </div>
+  ) : (
+    <div className="mt-1 text-xs sm:text-sm text-gray-900">
+      <p>{renderField(newEnquiry.streetAddress)}</p>
+      <p>{renderField(newEnquiry.city)}</p>
+      <p>{renderField(newEnquiry.stateRegionProvince)}</p>
+      <p>{renderField(newEnquiry.postalZipCode)}</p>
+      <p>{renderField(newEnquiry.country)}</p>
+    </div>
+  )}
+</div>
+<div className="mb-3 sm:mb-4 sm:col-span-1">
+  <div className="mb-4 sm:mb-4">
+    <label className="block text-xs sm:text-sm font-medium text-gray-700">Creator Name</label>
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.createdBy)}</p>
+  </div>
+  <div className="mb-3 sm:mb-4">
+    <label className="block text-xs sm:text-sm font-medium text-gray-700">Owner Name</label>
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.owner)}</p>
+  </div>
+</div>
+                {/* <div className="mb-3 sm:mb-4 sm:col-span-2">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">Address</label>
                   {isEditing ? (
                     <div className="space-y-2">
@@ -1031,476 +1139,644 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                       <p>{renderField(newEnquiry.country)}</p>
                     </div>
                   )}
-                </div>
+                </div> */}
                 <div className="mb-3 sm:mb-4">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">Creation Date and Time</label>
                   <p className="mt-1 text-xs sm:text-sm text-gray-900">
                     {formatDateSafely(newEnquiry.createdAt, "MMM d, yyyy h:mm a")}
                   </p>
                 </div>
-                <div className="mb-3 sm:mb-4">
+                {/* <div className="mb-3 sm:mb-4">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">Creator Name</label>
                   <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.createdBy)}</p>
+                </div> */}
+                {/* <div className="mb-3 sm:mb-4">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Owner Name</label>
+                  <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.owner)}</p>
+                </div> */}
+                <div className="mb-3 sm:mb-4">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Last Modified Time</label>
+                  <p className="mt-1 text-xs sm:text-sm text-gray-900">
+                    {formatDateSafely(newEnquiry.lastModifiedTime, "MMM d, yyyy h:mm a")}
+                  </p>
                 </div>
                 <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Owner Name</label>
-                  <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.assignTo)}</p>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Last Touched</label>
+                  <p className="mt-1 text-xs sm:text-sm text-gray-900">
+                    {formatDateSafely(newEnquiry.lastTouched, "MMM d, yyyy h:mm a")}
+                  </p>
                 </div>
               </div>
             </div>
           )}
+
           {currentSection === 2 && (
             <div>
-              <h3 className="text-base sm:text-lg font-medium mb-2">Additional Details</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">SSC Percentage</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={newEnquiry.sscPercentage}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, sscPercentage: e.target.value })}
-                      placeholder="Enter SSC percentage"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      min="0"
-                      max="100"
-                      step="0.01"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.sscPercentage)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">School Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={newEnquiry.schoolName}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, schoolName: e.target.value })}
-                      placeholder="Enter school name"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.schoolName)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">SSC Pass Out Year</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={newEnquiry.sscPassOutYear}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, sscPassOutYear: e.target.value })}
-                      placeholder="Enter SSC pass out year"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      min="1900"
-                      max={new Date().getFullYear()}
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.sscPassOutYear)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">HSC Percentage</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={newEnquiry.hscPercentage}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, hscPercentage: e.target.value })}
-                      placeholder="Enter HSC percentage"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      min="0"
-                      max="100"
-                      step="0.01"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.hscPercentage)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Junior College Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={newEnquiry.juniorCollegeName}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, juniorCollegeName: e.target.value })}
-                      placeholder="Enter junior college name"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.juniorCollegeName)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">HSC Pass Out Year</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={newEnquiry.hscPassOutYear}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, hscPassOutYear: e.target.value })}
-                      placeholder="Enter HSC pass out year"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      min="1900"
-                      max={new Date().getFullYear()}
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.hscPassOutYear)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Degree</label>
-                  {isEditing ? (
-                    <select
-                      value={newEnquiry.degree}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, degree: e.target.value })}
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    >
-                      <option value="">Select degree</option>
-                      <option value="High School">High School</option>
-                      <option value="Bachelor's">Bachelor's</option>
-                      <option value="Master's">Master's</option>
-                      <option value="PhD">PhD</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.degree)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Graduation Stream</label>
-                  {isEditing ? (
-                    <select
-                      value={newEnquiry.graduationStream}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, graduationStream: e.target.value })}
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    >
-                      <option value="">Select graduation stream</option>
-                      <option value="B.Com/M.Com">B.Com/M.Com</option>
-                      <option value="B.E/B.Tech">B.E/B.Tech</option>
-                      <option value="BA">BA</option>
-                      <option value="BBA">BBA</option>
-                      <option value="BCA/MCA">BCA/MCA</option>
-                      <option value="BSc/MSc">BSc/MSc</option>
-                      <option value="M.E/M.Tech">M.E/M.Tech</option>
-                      <option value="MBA">MBA</option>
-                      <option value="Others">Others</option>
-                    </select>
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationStream)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">College Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={newEnquiry.collegeName}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, collegeName: e.target.value })}
-                      placeholder="Enter college name"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.collegeName)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Graduation Percentage</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={newEnquiry.graduationPercentage}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, graduationPercentage: e.target.value })}
-                      placeholder="Enter graduation percentage"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      min="0"
-                      max="100"
-                      step="0.01"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationPercentage)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Graduation Pass Out Year</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={newEnquiry.graduationPassOutYear}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, graduationPassOutYear: e.target.value })}
-                      placeholder="Enter graduation pass out year"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      min="1900"
-                      max={new Date().getFullYear()}
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationPassOutYear)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Post Graduation Stream</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={newEnquiry.postGraduationStream}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationStream: e.target.value })}
-                      placeholder="Enter post graduation stream"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationStream)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Post Graduation Percentage</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={newEnquiry.postGraduationPercentage}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationPercentage: e.target.value })}
-                      placeholder="Enter post graduation percentage"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      min="0"
-                      max="100"
-                      step="0.01"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationPercentage)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Post Graduation College Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={newEnquiry.postGraduationCollegeName}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationCollegeName: e.target.value })}
-                      placeholder="Enter post graduation college name"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationCollegeName)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Post Graduation Pass Out Year</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={newEnquiry.postGraduationPassOutYear}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationPassOutYear: e.target.value })}
-                      placeholder="Enter post graduation pass out year"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      min="1900"
-                      max={new Date().getFullYear()}
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationPassOutYear)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Current Profession</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={newEnquiry.currentProfession}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, currentProfession: e.target.value })}
-                      placeholder="Enter current profession"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.currentProfession)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Company Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={newEnquiry.workingCompanyName}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, workingCompanyName: e.target.value })}
-                      placeholder="Enter company name"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workingCompanyName)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Working Domain</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={newEnquiry.workingDomain}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, workingDomain: e.target.value })}
-                      placeholder="Enter working domain"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workingDomain)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Experience in Years</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={newEnquiry.experienceInYears}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, experienceInYears: e.target.value })}
-                      placeholder="Enter experience in years"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      min="0"
-                      step="0.1"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.experienceInYears)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Guardian Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={newEnquiry.guardianName}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, guardianName: e.target.value })}
-                      placeholder="Enter guardian name"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.guardianName)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Guardian Contact</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={newEnquiry.guardianContact}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, guardianContact: e.target.value })}
-                      placeholder="Enter guardian contact"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.guardianContact)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4 sm:col-span-2">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Why do they want to do the course?</label>
-                  {isEditing ? (
-                    <textarea
-                      value={newEnquiry.courseMotivation}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, courseMotivation: e.target.value })}
-                      placeholder="Enter reason for taking the course"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      rows="4"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.courseMotivation)}</p>
-                  )}
-                </div>
-              </div>
+              <h3 className="text-base sm:text-lg font-medium mb-2">School & HSC Details</h3>
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Field</th>
+                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">SSC Percentage</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={newEnquiry.sscPercentage}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, sscPercentage: e.target.value })}
+                          placeholder="Enter SSC percentage"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.sscPercentage)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">School Name</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={newEnquiry.schoolName}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, schoolName: e.target.value })}
+                          placeholder="Enter school name"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.schoolName)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">SSC Pass Out Year</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={newEnquiry.sscPassOutYear}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, sscPassOutYear: e.target.value })}
+                          placeholder="Enter SSC pass out year"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          min="1900"
+                          max={new Date().getFullYear()}
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.sscPassOutYear)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">HSC Percentage</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={newEnquiry.hscPercentage}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, hscPercentage: e.target.value })}
+                          placeholder="Enter HSC percentage"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.hscPercentage)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Junior College Name</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={newEnquiry.juniorCollegeName}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, juniorCollegeName: e.target.value })}
+                          placeholder="Enter junior college name"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.juniorCollegeName)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">HSC Pass Out Year</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={newEnquiry.hscPassOutYear}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, hscPassOutYear: e.target.value })}
+                          placeholder="Enter HSC pass out year"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          min="1900"
+                          max={new Date().getFullYear()}
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.hscPassOutYear)}</p>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <h3 className="text-base sm:text-lg font-medium mb-2 mt-6">Undergraduate and Post-graduate Details</h3>
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Field</th>
+                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Degree</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <select
+                          value={newEnquiry.degree}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, degree: e.target.value })}
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        >
+                          <option value="">Select degree</option>
+                          <option value="High School">High School</option>
+                          <option value="Bachelor's">Bachelor's</option>
+                          <option value="Master's">Master's</option>
+                          <option value="PhD">PhD</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.degree)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Graduation Stream</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <select
+                          value={newEnquiry.graduationStream}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, graduationStream: e.target.value })}
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        >
+                          <option value="">Select graduation stream</option>
+                          <option value="B.Com/M.Com">B.Com/M.Com</option>
+                          <option value="B.E/B.Tech">B.E/B.Tech</option>
+                          <option value="BA">BA</option>
+                          <option value="BBA">BBA</option>
+                          <option value="BCA/MCA">BCA/MCA</option>
+                          <option value="BSc/MSc">BSc/MSc</option>
+                          <option value="M.E/M.Tech">M.E/M.Tech</option>
+                          <option value="MBA">MBA</option>
+                          <option value="Others">Others</option>
+                        </select>
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationStream)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">College Name</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={newEnquiry.collegeName}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, collegeName: e.target.value })}
+                          placeholder="Enter college name"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.collegeName)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Graduation Percentage</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={newEnquiry.graduationPercentage}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, graduationPercentage: e.target.value })}
+                          placeholder="Enter graduation percentage"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationPercentage)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Graduation Pass Out Year</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={newEnquiry.graduationPassOutYear}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, graduationPassOutYear: e.target.value })}
+                          placeholder="Enter graduation pass out year"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          min="1900"
+                          max={new Date().getFullYear()}
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationPassOutYear)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Post Graduation Stream</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={newEnquiry.postGraduationStream}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationStream: e.target.value })}
+                          placeholder="Enter post graduation stream"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationStream)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Post Graduation College Name</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={newEnquiry.postGraduationCollegeName}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationCollegeName: e.target.value })}
+                          placeholder="Enter post graduation college name"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationCollegeName)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Post-Graduation Percentage</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={newEnquiry.postGraduationPercentage}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationPercentage: e.target.value })}
+                          placeholder="Enter post graduation percentage"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationPercentage)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Post Graduation Pass Out Year</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={newEnquiry.postGraduationPassOutYear}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationPassOutYear: e.target.value })}
+                          placeholder="Enter post graduation pass out year"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          min="1900"
+                          max={new Date().getFullYear()}
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationPassOutYear)}</p>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <h3 className="text-base sm:text-lg font-medium mb-2 mt-6">Professional Details</h3>
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Field</th>
+                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Current Job Title</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={newEnquiry.currentJobTitle}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, currentJobTitle: e.target.value })}
+                          placeholder="Enter current job title"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.currentJobTitle)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Company Name</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={newEnquiry.workingCompanyName}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, workingCompanyName: e.target.value })}
+                          placeholder="Enter company name"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workingCompanyName)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Working Domain</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={newEnquiry.workingDomain}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, workingDomain: e.target.value })}
+                          placeholder="Enter working domain"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workingDomain)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Experience in Years</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={newEnquiry.experienceInYears}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, experienceInYears: e.target.value })}
+                          placeholder="Enter experience in years"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          min="0"
+                          step="0.1"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.experienceInYears)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Current Salary</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={newEnquiry.currentSalary}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, currentSalary: e.target.value })}
+                          placeholder="Enter current salary"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          min="0"
+                          step="0.01"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.currentSalary)}</p>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <h3 className="text-base sm:text-lg font-medium mb-2 mt-6">Guardian Details</h3>
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Field</th>
+                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Guardian Name</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={newEnquiry.guardianName}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, guardianName: e.target.value })}
+                          placeholder="Enter guardian name"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.guardianName)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Guardian Contact</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={newEnquiry.guardianContact}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, guardianContact: e.target.value })}
+                          placeholder="Enter guardian contact"
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.guardianContact)}</p>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Guardian Relation</td>
+                    <td className="border border-gray-300 p-2">
+                      {isEditing ? (
+                        <select
+                          value={newEnquiry.guardianRelation}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, guardianRelation: e.target.value })}
+                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        >
+                          <option value="">Select relation</option>
+                          <option value="Parent">Parent</option>
+                          <option value="Sibling">Sibling</option>
+                          <option value="Spouse">Spouse</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.guardianRelation)}</p>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           )}
+
           {currentSection === 3 && (
             <div>
               <h3 className="text-base sm:text-lg font-medium mb-2">Enquiry Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Branch</label>
-                  {isEditing ? (
-                    <select
-                      value={newEnquiry.branch}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, branch: e.target.value })}
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    >
-                      <option value="">Select branch</option>
-                      {branches.map((branch) => (
-                        <option key={branch.id} value={branch.name}>{branch.name}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.branch)}</p>
-                  )}
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Branch</label>
+                    {isEditing ? (
+                      <select
+                        value={newEnquiry.branch}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, branch: e.target.value })}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="">Select branch</option>
+                        {branches.map((branch) => (
+                          <option key={branch.id} value={branch.name}>{branch.name}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.branch)}</p>
+                    )}
+                  </div>
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Source</label>
+                    {isEditing ? (
+                      <select
+                        value={newEnquiry.source}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, source: e.target.value })}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="">Select source</option>
+                        {sourceOptions.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.source)}</p>
+                    )}
+                  </div>
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Referred By</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={newEnquiry.referredBy}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, referredBy: e.target.value })}
+                        placeholder="Enter referrer name"
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      />
+                    ) : (
+                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.referredBy)}</p>
+                    )}
+                  </div>
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Assign To</label>
+                    {isEditing ? (
+                      <select
+                        value={newEnquiry.assignTo}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, assignTo: e.target.value, owner: e.target.value || newEnquiry.owner })}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="">Select counselor</option>
+                        {instructors
+                          .filter((instructor) => instructor.role === "Sales")
+                          .map((instructor) => (
+                            <option key={instructor.id} value={`${instructor.f_name} ${instructor.l_name}`}>
+                              {instructor.f_name} {instructor.l_name}
+                            </option>
+                          ))}
+                      </select>
+                    ) : (
+                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.assignTo)}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Course</label>
-                  {isEditing ? (
-                    <select
-                      value={newEnquiry.course}
-                      onChange={handleCourseChange}
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    >
-                      <option value="">Select course</option>
-                      {courses.map((course) => (
-                        <option key={course.id} value={course.name}>{course.name}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.course)}</p>
-                  )}
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Learning Objective</label>
+                    {isEditing ? (
+                      <select
+                        value={newEnquiry.learningObjective}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, learningObjective: e.target.value })}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="">Select objective</option>
+                        <option value="none">None</option>
+                        <option value="job transition">Job Transition</option>
+                        <option value="career start">Career Start</option>
+                        <option value="ongoing job-upskill">Ongoing Job - Upskill</option>
+                        <option value="further education-upskill">Further Education - Upskill</option>
+                        <option value="pursuing degree-upskill">Pursuing Degree - Upskill</option>
+                      </select>
+                    ) : (
+                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.learningObjective)}</p>
+                    )}
+                  </div>
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Course</label>
+                    {isEditing ? (
+                      <select
+                        value={newEnquiry.course}
+                        onChange={handleCourseChange}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="">Select course</option>
+                        {courses.map((course) => (
+                          <option key={course.id} value={course.name}>{course.name}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.course)}</p>
+                    )}
+                  </div>
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Fee</label>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        value={newEnquiry.fee}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, fee: e.target.value })}
+                        placeholder="Enter fee"
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        min="0"
+                        step="0.01"
+                      />
+                    ) : (
+                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.fee)}</p>
+                    )}
+                  </div>
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Closing Date</label>
+                    {isEditing ? (
+                      <input
+                        type="date"
+                        value={newEnquiry.closingDate}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, closingDate: e.target.value })}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      />
+                    ) : (
+                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.closingDate)}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Fee</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={newEnquiry.fee}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, fee: e.target.value })}
-                      placeholder="Enter fee"
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      min="0"
-                      step="0.01"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.fee)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Source</label>
-                  {isEditing ? (
-                    <select
-                      value={newEnquiry.source}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, source: e.target.value })}
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    >
-                      <option value="">Select source</option>
-                      {sourceOptions.map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.source)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Assign To</label>
-                  {isEditing ? (
-                    <select
-                      value={newEnquiry.assignTo}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, assignTo: e.target.value })}
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    >
-                      <option value="">Select instructor</option>
-                      {instructors.map((instructor) => (
-                        <option key={instructor.id} value={instructor.f_name}>{instructor.f_name} {instructor.l_name}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.assignTo)}</p>
-                  )}
-                </div>
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Closing Date</label>
-                  {isEditing ? (
-                    <input
-                      type="date"
-                      value={newEnquiry.closingDate}
-                      onChange={(e) => setNewEnquiry({ ...newEnquiry, closingDate: e.target.value })}
-                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.closingDate)}</p>
-                  )}
-                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-4">
                 <div className="mb-3 sm:mb-4">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">Stage</label>
                   {isEditing ? (
@@ -1583,67 +1859,67 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
             </div>
           )}
 
-{currentSection === 4 && (
-        <div>
-          <h3 className="text-base sm:text-lg font-medium mb-2">Notes</h3>
-          <div className="space-y-4">
-            {newEnquiry.notes && newEnquiry.notes.length > 0 ? (
-              newEnquiry.notes.map((note, index) => (
-                <div key={index} className="border border-gray-200 rounded-md p-3 sm:p-4 bg-gray-50">
-                  <div className="flex justify-between items-center">
-                    <p className="text-xs sm:text-sm font-medium text-gray-700">{formatNoteType(note.type)}</p>
-                    <p className="text-xs sm:text-sm text-gray-500">{formatDateSafely(note.createdAt, "MMM d, yyyy h:mm a")}</p>
-                  </div>
-                  <p className="text-xs sm:text-sm text-gray-900 mt-1">{note.content}</p>
-                  {note.type === "office-visit" && note.audioUrl && (
-                    <div className="mt-2">
-                      {audioStatus[index] === "loading" ? (
-                        <p className="text-xs sm:text-sm text-gray-500">Loading audio...</p>
-                      ) : audioError[index] || audioStatus[index] === "invalid" ? (
-                        <div>
-                          <p className="text-xs sm:text-sm text-red-600">{audioError[index]}</p>
-                          <a
-                            href={note.audioUrl}
-                            download
-                            className="text-xs sm:text-sm text-blue-600 hover:underline"
-                          >
-                            Download Audio
-                          </a>
+          {currentSection === 4 && (
+            <div>
+              <h3 className="text-base sm:text-lg font-medium mb-2">Notes</h3>
+              <div className="space-y-4">
+                {newEnquiry.notes && newEnquiry.notes.length > 0 ? (
+                  newEnquiry.notes.map((note, index) => (
+                    <div key={index} className="border border-gray-200 rounded-md p-3 sm:p-4 bg-gray-50">
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs sm:text-sm font-medium text-gray-700">{formatNoteType(note.type)}</p>
+                        <p className="text-xs sm:text-sm text-gray-500">{formatDateSafely(note.createdAt, "MMM d, yyyy h:mm a")}</p>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-900 mt-1">{note.content}</p>
+                      {note.type === "office-visit" && note.audioUrl && (
+                        <div className="mt-2">
+                          {audioStatus[index] === "loading" ? (
+                            <p className="text-xs sm:text-sm text-gray-500">Loading audio...</p>
+                          ) : audioError[index] || audioStatus[index] === "invalid" ? (
+                            <div>
+                              <p className="text-xs sm:text-sm text-red-600">{audioError[index]}</p>
+                              <a
+                                href={note.audioUrl}
+                                download
+                                className="text-xs sm:text-sm text-blue-600 hover:underline"
+                              >
+                                Download Audio
+                              </a>
+                            </div>
+                          ) : (
+                            <audio
+                              controls
+                              src={note.audioUrl}
+                              onError={(e) => handleAudioError(index, e)}
+                              className="w-full max-w-md"
+                            >
+                              Your browser does not support the audio element.
+                            </audio>
+                          )}
+                          {canUpdate && audioStatus[index] === "valid" && (
+                            <button
+                              onClick={() => deleteRecording(note, index)}
+                              className="mt-2 px-2 py-1 text-xs sm:text-sm text-red-600 hover:text-red-800"
+                            >
+                              Delete Recording
+                            </button>
+                          )}
                         </div>
-                      ) : (
-                        <audio
-                          controls
-                          src={note.audioUrl}
-                          onError={(e) => handleAudioError(index, e)}
-                          className="w-full max-w-md"
-                        >
-                          Your browser does not support the audio element.
-                        </audio>
                       )}
-                      {canUpdate && audioStatus[index] === "valid" && (
-                        <button
-                          onClick={() => deleteRecording(note, index)}
-                          className="mt-2 px-2 py-1 text-xs sm:text-sm text-red-600 hover:text-red-800"
-                        >
-                          Delete Recording
-                        </button>
+                      {note.addedBy && (
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1">Added by: {note.addedBy}</p>
                       )}
                     </div>
-                  )}
-                  {note.addedBy && (
-                    <p className="text-xs sm:text-sm text-gray-500 mt-1">Added by: {note.addedBy}</p>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p className="text-xs sm:text-sm text-gray-500">No notes available.</p>
-            )}
-          </div>
-        </div>
-         )}
+                  ))
+                ) : (
+                  <p className="text-xs sm:text-sm text-gray-500">No notes available.</p>
+                )}
+              </div>
+            </div>
+          )}
 
 
-         
+
           {currentSection === 5 && (
             <div>
               <h3 className="text-base sm:text-lg font-medium">History</h3>
@@ -1736,3 +2012,4 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
 };
 
 export default EnquiryModal;
+
