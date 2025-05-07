@@ -587,7 +587,6 @@
 
 // export default CreateRoleModal;
 
-
 import React, { useState, useEffect } from "react";
 import { db } from "../../../config/firebase";
 import { collection, addDoc, getDocs, doc, updateDoc, query, where } from "firebase/firestore";
@@ -622,7 +621,7 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
 
       const updatedPermissions = {};
       permissionCategories.forEach(category => {
-        updatedPermissions[category] = roleToEdit.permissions?.[category] || { View: false, Edit: false, Delete: false };
+        updatedPermissions[category] = roleToEdit.permissions?.[category] || { create: false, update: false, display: false, delete: false };
       });
 
       setPermissions(updatedPermissions);
@@ -635,8 +634,6 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
       setSelectedUsers([]);
     }
   }, [roleToEdit]);
-
-
 
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({
@@ -722,23 +719,38 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
       fetchRoles();
     } catch (error) {
       console.error("Error saving document: ", error);
+      alert("Failed to save role: " + error.message);
     }
   };
 
   if (!isOpen) return null;
 
   const permissionCategories = [
-    "Roles",
-    "Courses",
-    "Batches",
+    "instituteSetup",
+    "Users",
     "Sessions",
-    "Curriculum",
-    "Performance",
-    "Learners",
-    "Staff",
-    "Reports",
-    "Centers",
+    "Course",
+    "curriculums",
+    "Batch",
+    "attendance",
+    "assignments",
+    "performance",
+    "student",
+    "enquiries",
+    "Instructor",
+    "roles",
+    "questions",
+    "fee",
+    "invoice",
+    "FinancePartner",
     "Holidays",
+    "Leaves",
+    "JopOpenings",
+    "Companies",
+    "templates",
+    "invoices",
+    "activityLogs",
+    "enquiryForms"
   ];
 
   return (
@@ -770,7 +782,7 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
         {permissionCategories.map((category, index) => (
           <div key={index} className="border-b">
             <button
-              className="w-full text-left p-2 font-medium bg-black-100 hover:bg-gray-200 flex justify-between"
+              className="w-full text-left p-2 font-medium bg-gray-100 hover:bg-gray-200 flex justify-between"
               onClick={() => toggleSection(category)}
             >
               {category}
@@ -778,19 +790,14 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
             </button>
             {expandedSections[category] && (
               <div className="p-2 pl-4 bg-white">
-                {["View", "Edit", "Delete"].map((perm) => (
+                {["create", "update", "display", "delete"].map((perm) => (
                   <label key={perm} className="flex items-center space-x-2 mt-2">
                     <input
                       type="checkbox"
-                      checked={!!permissions[category]?.[perm]} // Ensure it always evaluates to a boolean
-                      onChange={() => handlePermissionChange(category, perm)}
-                    />
-                    {/* <input
-                      type="checkbox"
                       checked={permissions[category]?.[perm] || false}
                       onChange={() => handlePermissionChange(category, perm)}
-                    /> */}
-                    <span>{perm}</span>
+                    />
+                    <span className="capitalize">{perm}</span>
                   </label>
                 ))}
               </div>

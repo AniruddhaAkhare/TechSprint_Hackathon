@@ -443,9 +443,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
     <>
       <ToastContainer position="top-right" autoClose={3000} />
       <div
-        // className={`fixed inset-y-0 right-0 z-50 bg-white w-full shadow-lg transform transition-transform duration-300 ${
-        //   isOpen ? "translate-x-0" : "translate-x-full"
-        // } p-4 sm:p-6 overflow-y-auto`
+        // 
         className={`fixed inset-y-0 right-0 z-50 bg-white w-full sm:w-3/4 md:w-2/5 shadow-lg transform transition-transform duration-300 ${
             isOpen ? "translate-x-0" : "translate-x-full"
           } p-4 sm:p-6 overflow-y-auto`}
@@ -554,7 +552,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
               value={city}
               onChange={(e) => handleChange(e.target.value)}
               placeholder="Enter city"
-              disabled={(!canUpdate && company) || (!canCreate && !company)}
+              // disabled={(!canUpdate && company) || (!canCreate && !company)}
               className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             />
             {citySuggestions.length > 0 && (

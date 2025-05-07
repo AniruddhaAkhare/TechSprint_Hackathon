@@ -744,7 +744,7 @@ export default function StudentDetails() {
   const canUpdate = rolePermissions?.student?.update || false;
   const canDelete = rolePermissions?.student?.delete || false;
   const canDisplay = rolePermissions?.student?.display || false;
-  const canEnroll = rolePermissions?.student?.enroll || true;
+  // const canEnroll = rolePermissions?.student?.enroll || true;
 
   // Debounced search handler
   const debouncedSetSearchQuery = useMemo(
@@ -925,20 +925,20 @@ export default function StudentDetails() {
   };
 
   const handleStudentSelect = (id) => {
-    if (!canEnroll) {
-      toast.error("You don't have permission to enroll students");
-      return;
-    }
+    // if (!canEnroll) {
+    //   toast.error("You don't have permission to enroll students");
+    //   return;
+    // }
     setSelectedStudents((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     );
   };
 
   const handleCourseSelect = (e) => {
-    if (!canEnroll) {
-      toast.error("You don't have permission to enroll students");
-      return;
-    }
+    // if (!canEnroll) {
+    //   toast.error("You don't have permission to enroll students");
+    //   return;
+    // }
     setSelectedCourse([e.target.value]);
   };
 
@@ -978,10 +978,10 @@ export default function StudentDetails() {
   };
 
   const handleBulkEnrollment = async () => {
-    if (!canEnroll) {
-      toast.error("You don't have permission to enroll students");
-      return;
-    }
+    // if (!canEnroll) {
+    //   toast.error("You don't have permission to enroll students");
+    //   return;
+    // }
     if (selectedStudents.length === 0 || selectedCourse.length === 0) {
       toast.error("Please select at least one student and one course.");
       return;
@@ -1109,7 +1109,7 @@ export default function StudentDetails() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-100 sticky top-0 z-10">
-                  {canEnroll && (
+                  {/* {canEnroll && ( */}
                     <th className="p-3 text-sm font-medium text-gray-600 text-left">
                       <input
                         type="checkbox"
@@ -1121,7 +1121,7 @@ export default function StudentDetails() {
                         className="rounded"
                       />
                     </th>
-                  )}
+                  {/* )} */}
                   <th className="p-3 text-sm font-medium text-gray-600 text-left">First Name</th>
                   <th className="p-3 text-sm font-medium text-gray-600 text-left">Last Name</th>
                   <th className="p-3 text-sm font-medium text-gray-600 text-left">Email</th>
@@ -1137,7 +1137,7 @@ export default function StudentDetails() {
               <tbody>
                 {filteredStudents.map((student) => (
                   <tr key={student.id} className="border-b hover:bg-gray-50 cursor-pointer">
-                    {canEnroll && (
+                    {/* {canEnroll && ( */}
                       <td className="p-3 min-w-40">
                         <input
                           type="checkbox"
@@ -1146,7 +1146,7 @@ export default function StudentDetails() {
                           className="rounded"
                         />
                       </td>
-                    )}
+                    {/* )} */}
                     <td
                       className="p-3 text-gray-700 cursor-pointer hover:text-blue-600 min-w-40"
                       onClick={() => navigate(`/studentdetails/${student.id}`)}
@@ -1228,7 +1228,7 @@ export default function StudentDetails() {
           </div>
         </div>
 
-        {canEnroll && (
+        {/* {canEnroll && ( */}
           <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-lg font-medium text-gray-700 mb-4">Bulk Enrollment</h2>
             <div className="space-y-4">
@@ -1258,7 +1258,7 @@ export default function StudentDetails() {
               </button>
             </div>
           </div>
-        )}
+        {/* )} */}
 
         {canDelete && openDelete && (
           <Dialog open={openDelete} handler={() => setOpenDelete(false)}>

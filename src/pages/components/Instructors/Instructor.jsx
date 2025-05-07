@@ -255,7 +255,7 @@ export default function Instructor() {
         action,
         details,
       };
-      console.log("Logging from Instructor:", logData); // Debug
+      console.log("Logging from Instructor:", logData); 
       await addDoc(activityLogsCollectionRef, logData);
     } catch (error) {
       console.error("Error logging activity in Instructor:", error);
@@ -344,7 +344,7 @@ export default function Instructor() {
                 {instructorList
                   .filter((i) => i.f_name.toLowerCase().includes(searchTerm.toLowerCase()))
                   .map((instructor) => (
-                    <tr key={instructor.id} className="border-b hover:bg-gray-50">
+                    <tr key={instructor.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>
                       <td className="p-3 text-gray-700">
                         {capitalizeFirstLetter(instructor.f_name)}{" "}
                         {capitalizeFirstLetter(instructor.l_name)}

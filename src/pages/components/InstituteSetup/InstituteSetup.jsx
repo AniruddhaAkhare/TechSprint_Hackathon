@@ -190,9 +190,9 @@ const InstituteSetup = () => {
             <li className={activeStep === "Contact Information" ? "active" : ""} onClick={() => setActiveStep("Contact Information")}>
               4 Contact Information
             </li>
-            <li className={activeStep === "System Configuration" ? "active" : ""} onClick={() => setActiveStep("System Configuration")}>
+            {/* <li className={activeStep === "System Configuration" ? "active" : ""} onClick={() => setActiveStep("System Configuration")}>
               5 System Configuration
-            </li>
+            </li> */}
           </ul>
         </div>
 

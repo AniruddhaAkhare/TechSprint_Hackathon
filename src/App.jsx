@@ -878,6 +878,10 @@ import LeaveApplication from './pages/components/HRManagement/Leave/LeaveApplica
 import Companies from './pages/components/PlacementManagement/Companies/Companies.jsx';
 import JobOpenings from './pages/components/PlacementManagement/JobOpenings/JobOpenings.jsx';
 import RecruiterView from './pages/components/PlacementManagement/JobOpenings/RecruiterView.jsx';
+import EmployeeProfile from './pages/components/HRManagement/EmployeeDirectory/EmployeeProfile.jsx';
+import ActiveStatus from './pages/ActiveStatus.jsx';
+import EmployeeRegistrationForm from './pages/home/EmployeeRegistrationForm.jsx';
+import AfterEmployeeRegistration from './pages/home/AfterEmployeeRegistration.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -900,160 +904,122 @@ export default function App() {
     <BrowserRouter>
       {loading ? (
         <div className="text-center p-4">Loading...</div>
-        ) : (
+      ) : (
+        <>
+          {user && <ActiveStatus />}
           <div style={{ display: 'flex' }}>
-          {user && <Sidebar />}
-          <div style={{ flex: 1, padding: '20px' }}>
-            <Routes>
-          <Route path="/enquiry/:formId" element={<SubmitEnquiryForm />} />
-              {/* Public Routes */}
-              <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
-              <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/dashboard" />} />
-              <Route path="/register" element={!user ? <RegisterForm /> : <Navigate to="/dashboard" />} />
-              <Route path="/forgetPassword" element={!user ? <ForgetPasswordForm /> : <Navigate to="/dashboard" />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/roles" element={<ProtectedRoute permissionSection="roles"><Roles /></ProtectedRoute>} />
-              <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
+            {user && <Sidebar />}
+            <div style={{ flex: 1, padding: '20px' }}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
+                <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/dashboard" />} />
+                <Route path="/register" element={!user ? <RegisterForm /> : <Navigate to="/dashboard" />} />
+                <Route path="/registration-welcome" element={<AfterEmployeeRegistration/>} />
+                <Route path="/employee-registration" element={!user ? <EmployeeRegistrationForm /> : <Navigate to="/dashboard" />} />
 
-              {/* Protected Routes */}
-              <Route path="/instituteSetup" element={<ProtectedRoute permissionSection="instituteSetup"><InstituteSetup /></ProtectedRoute>} />
-              <Route path="/my-profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                
+                <Route path="/forgetPassword" element={!user ? <ForgetPasswordForm /> : <Navigate to="/dashboard" />} />
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/roles" element={<ProtectedRoute permissionSection="roles"><Roles /></ProtectedRoute>} />
+                <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
 
-              {/* Course Delivery Routes */}
-              <Route path="/courses" element={<ProtectedRoute permissionSection="Course"><Courses /></ProtectedRoute>} />
-              <Route path="/createCourses" element={<ProtectedRoute permissionSection="Course" action="create"><CreateCourses /></ProtectedRoute>} />
-              <Route path="/editCourse/:id" element={<ProtectedRoute permissionSection="Course" action="update"><EditCourse /></ProtectedRoute>} />
-              <Route path="/courses/:courseId/learners" element={<ProtectedRoute permissionSection="Course"><IndividualCourseStudnets /></ProtectedRoute>} />
-              <Route path="/courses/:courseId/batches" element={<ProtectedRoute permissionSection="Course"><IndividualCourseBatch /></ProtectedRoute>} />
-              <Route path="/course-analytics-dashboard" element={<ProtectedRoute permissionSection="Course"><CourseAnalyticsDashboard /></ProtectedRoute>} />
+                {/* Protected Routes */}
+                <Route path="/instituteSetup" element={<ProtectedRoute permissionSection="instituteSetup"><InstituteSetup /></ProtectedRoute>} />
+                <Route path="/my-profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                {/* Course Delivery Routes */}
+                <Route path="/courses" element={<ProtectedRoute permissionSection="Course"><Courses /></ProtectedRoute>} />
+                <Route path="/createCourses" element={<ProtectedRoute permissionSection="Course" action="create"><CreateCourses /></ProtectedRoute>} />
+                <Route path="/editCourse/:id" element={<ProtectedRoute permissionSection="Course" action="update"><EditCourse /></ProtectedRoute>} />
+                <Route path="/courses/:courseId/learners" element={<ProtectedRoute permissionSection="Course"><IndividualCourseStudnets /></ProtectedRoute>} />
+                <Route path="/courses/:courseId/batches" element={<ProtectedRoute permissionSection="Course"><IndividualCourseBatch /></ProtectedRoute>} />
+                <Route path="/course-analytics-dashboard" element={<ProtectedRoute permissionSection="Course"><CourseAnalyticsDashboard /></ProtectedRoute>} />
 
-              
-              {/* Batch Routes */}
-              <Route path="/batches" element={<ProtectedRoute permissionSection="Batch"><Batches /></ProtectedRoute>} />
-              <Route path="/createBatch" element={<ProtectedRoute permissionSection="Batch" action="create"><CreateBatch /></ProtectedRoute>} />
-              <Route path="/batches/:batchId/add-material" element={<ProtectedRoute permissionSection="Batch" action="create"><AddMaterial /></ProtectedRoute>} />
+                {/* Batch Routes */}
+                <Route path="/batches" element={<ProtectedRoute permissionSection="Batch"><Batches /></ProtectedRoute>} />
+                <Route path="/createBatch" element={<ProtectedRoute permissionSection="Batch" action="create"><CreateBatch /></ProtectedRoute>} />
+                <Route path="/batches/:batchId/add-material" element={<ProtectedRoute permissionSection="Batch" action="create"><AddMaterial /></ProtectedRoute>} />
 
-              {/* Curriculum Routes */}
-              <Route path="/curriculum" element={<ProtectedRoute permissionSection="curriculums"><Curriculum /></ProtectedRoute>} />
-              <Route path="/createCurriculum" element={<ProtectedRoute permissionSection="curriculums" action="create"><CreateCurriculum /></ProtectedRoute>} />
-              <Route path="/curriculum/:curriculumId" element={<ProtectedRoute permissionSection="curriculums" action="update"><CurriculumEditor /></ProtectedRoute>} />
-              <Route path="/curriculum/:curriculumId/section/:sectionId" element={<ProtectedRoute permissionSection="curriculums"><SectionMaterials /></ProtectedRoute>} />
-              <Route path="/curriculum/:curriculumId/section/:sectionId/add-material" element={<ProtectedRoute permissionSection="curriculums" action="create"><AddMaterial /></ProtectedRoute>} />
-              <Route path="/curriculum/:curriculumId/section/:sectionId/session/:sessionId/add-material" element={<ProtectedRoute permissionSection="curriculums" action="create"><AddMaterial /></ProtectedRoute>} />
-              <Route path="/edit-curriculum/:id" element={<ProtectedRoute permissionSection="curriculums" action="update"><EditCurriculum /></ProtectedRoute>} />
+                {/* Curriculum Routes */}
+                <Route path="/curriculum" element={<ProtectedRoute permissionSection="curriculums"><Curriculum /></ProtectedRoute>} />
+                <Route path="/createCurriculum" element={<ProtectedRoute permissionSection="curriculums" action="create"><CreateCurriculum /></ProtectedRoute>} />
+                <Route path="/curriculum/:curriculumId" element={<ProtectedRoute permissionSection="curriculums" action="update"><CurriculumEditor /></ProtectedRoute>} />
+                <Route path="/curriculum/:curriculumId/section/:sectionId" element={<ProtectedRoute permissionSection="curriculums"><SectionMaterials /></ProtectedRoute>} />
+                <Route path="/curriculum/:curriculumId/section/:sectionId/add-material" element={<ProtectedRoute permissionSection="curriculums" action="create"><AddMaterial /></ProtectedRoute>} />
+                <Route path="/curriculum/:curriculumId/section/:sectionId/session/:sessionId/add-material" element={<ProtectedRoute permissionSection="curriculums" action="create"><AddMaterial /></ProtectedRoute>} />
+                <Route path="/edit-curriculum/:id" element={<ProtectedRoute permissionSection="curriculums" action="update"><EditCurriculum /></ProtectedRoute>} />
 
-              {/* Session Routes */}
-              {/* <Route path="/calendar" element={<ProtectedRoute permissionSection="Sessions"><Calendar /></ProtectedRoute>} /> */}
-              <Route path="/sessions" element={<ProtectedRoute permissionSection="Sessions"><Sessions /></ProtectedRoute>} />
-              <Route path="/createSession" element={<ProtectedRoute permissionSection="Sessions" action="create"><CreateSession /></ProtectedRoute>} />
-              {/* <Route path="/zoom" element={<ProtectedRoute permissionSection="Sessions"><ZoomSession /></ProtectedRoute>} /> */}
-              <Route path="/subjects" element={<ProtectedRoute permissionSection="Sessions"><Subjects /></ProtectedRoute>} />
-              <Route path="/createSubjects" element={<ProtectedRoute permissionSection="Sessions" action="create"><CreateSubjects /></ProtectedRoute>} />
-              <Route path="/assignment" element={<ProtectedRoute permissionSection="assignments"><Assignments /></ProtectedRoute>} />
-              <Route path="/feedback" element={<ProtectedRoute permissionSection="feedback"><Feedback /></ProtectedRoute>} />
+                {/* Session Routes */}
+                <Route path="/sessions" element={<ProtectedRoute permissionSection="Sessions"><Sessions /></ProtectedRoute>} />
+                <Route path="/createSession" element={<ProtectedRoute permissionSection="Sessions" action="create"><CreateSession /></ProtectedRoute>} />
+                <Route path="/subjects" element={<ProtectedRoute permissionSection="Sessions"><Subjects /></ProtectedRoute>} />
+                <Route path="/createSubjects" element={<ProtectedRoute permissionSection="Sessions" action="create"><CreateSubjects /></ProtectedRoute>} />
+                <Route path="/assignment" element={<ProtectedRoute permissionSection="assignments"><Assignments /></ProtectedRoute>} />
+                <Route path="/feedback" element={<ProtectedRoute permissionSection="feedback"><Feedback /></ProtectedRoute>} />
 
-              {/* Instructor Routes */}
-              <Route path="/instructor" element={<ProtectedRoute permissionSection="Instructor"><Instructor /></ProtectedRoute>} />
+                {/* Instructor Routes */}
+                <Route path="/instructor" element={<ProtectedRoute permissionSection="Instructor"><Instructor /></ProtectedRoute>} />
 
-              {/* Enquiry */}
-              <Route path="/enquiry/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} />
-              {/* <Route path="/enquiry-form/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} /> */}
-              <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><KanbanBoard /></ProtectedRoute>} />
-              {/* <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryDashboard /></ProtectedRoute>} /> */}
-              <Route path="/enquiry-analytics" element={<ProtectedRoute permissionSection="enquiries"><EnquiryAnalyticsPage /></ProtectedRoute>} />
-              <Route path="/addFormForEnquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryForms /></ProtectedRoute>} />
-              <Route path="/enquiry/:id" element={<EnquiryFormPage />} />
+                {/* Enquiry Routes */}
+                <Route path="/enquiry/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} />
+                <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><KanbanBoard /></ProtectedRoute>} />
+                <Route path="/enquiry-analytics" element={<ProtectedRoute permissionSection="enquiries"><EnquiryAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/addFormForEnquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryForms /></ProtectedRoute>} />
+                <Route path="/enquiry/:id" element={<EnquiryFormPage />} />
 
-              {/* Student Routes */}
-              <Route path="/studentdetails" element={<ProtectedRoute permissionSection="student"><StudentDetails /></ProtectedRoute>} />
-              <Route path="/question-bank" element={<ProtectedRoute permissionSection="questions"><QuestionBank /></ProtectedRoute>} />
-              <Route path="/question-template" element={<ProtectedRoute permissionSection="templates"><QuestionTemplate /></ProtectedRoute>} />
-              <Route path="/studentdetails/addstudent" element={<ProtectedRoute permissionSection="student" action="create"><AddStudent /></ProtectedRoute>} />
-              <Route path="/studentdetails/updatestudent/:studentId" element={<ProtectedRoute permissionSection="student" action="update"><EditStudent /></ProtectedRoute>} />
-              <Route path="/studentdetails/:studentId" element={<ProtectedRoute permissionSection="student"><StudentInfo /></ProtectedRoute>} />
-              <Route path="/add-course/:studentId" element={<ProtectedRoute permissionSection="enrollments"><AddCourse /></ProtectedRoute>} />
-              <Route path="/attendance" element={<ProtectedRoute permissionSection="attendance"><Attendance /></ProtectedRoute>} />
-              <Route path="/attendance-dashboard" element={<ProtectedRoute permissionSection="attendance"><AttendanceDashboard /></ProtectedRoute>} />
+                {/* Student Routes */}
+                <Route path="/studentdetails" element={<ProtectedRoute permissionSection="student"><StudentDetails /></ProtectedRoute>} />
+                <Route path="/question-bank" element={<ProtectedRoute permissionSection="questions"><QuestionBank /></ProtectedRoute>} />
+                <Route path="/question-template" element={<ProtectedRoute permissionSection="templates"><QuestionTemplate /></ProtectedRoute>} />
+                <Route path="/studentdetails/addstudent" element={<ProtectedRoute permissionSection="student" action="create"><AddStudent /></ProtectedRoute>} />
+                <Route path="/studentdetails/updatestudent/:studentId" element={<ProtectedRoute permissionSection="student" action="update"><EditStudent /></ProtectedRoute>} />
+                <Route path="/studentdetails/:studentId" element={<ProtectedRoute permissionSection="student"><StudentInfo /></ProtectedRoute>} />
+                <Route path="/add-course/:studentId" element={<ProtectedRoute permissionSection="enrollments"><AddCourse /></ProtectedRoute>} />
+                <Route path="/attendance" element={<ProtectedRoute permissionSection="attendance"><Attendance /></ProtectedRoute>} />
+                <Route path="/attendance-dashboard" element={<ProtectedRoute permissionSection="attendance"><AttendanceDashboard /></ProtectedRoute>} />
 
+                {/* Performance Routes */}
+                <Route path="/addPerformance" element={<ProtectedRoute permissionSection="performance"><AddPerformance /></ProtectedRoute>} />
+                <Route path="/mocktestsessions" element={<ProtectedRoute permissionSection="mockTests"><MockTestSessions /></ProtectedRoute>} />
+                <Route path="/createMockTest" element={<ProtectedRoute permissionSection="mockTests" action="create"><CreateMockTest /></ProtectedRoute>} />
+                <Route path="/createExaminationRemarks" element={<ProtectedRoute permissionSection="examination"><CreateExaminationRemarks /></ProtectedRoute>} />
+                <Route path="/attendenceremark" element={<ProtectedRoute permissionSection="attendance"><AttendanceRemarks /></ProtectedRoute>} />
+                <Route path="/createAttendanceRemarks" element={<ProtectedRoute permissionSection="attendance" action="create"><CreateAttendenceRemarks /></ProtectedRoute>} />
+                <Route path="/feesremark" element={<ProtectedRoute permissionSection="fee"><FeesRemarks /></ProtectedRoute>} />
+                <Route path="/createFeesRemarks" element={<ProtectedRoute permissionSection="fee" action="create"><CreateFeesRemarks /></ProtectedRoute>} />
 
+                {/* Finance and Invoices */}
+                <Route path="/financePartners" element={<ProtectedRoute permissionSection="FinancePartner"><FinancePartner /></ProtectedRoute>} />
+                <Route path="/addFinancePartner" element={<ProtectedRoute permissionSection="FinancePartner" action="create"><AddFinancePartner /></ProtectedRoute>} />
+                <Route path="/invoices" element={<ProtectedRoute permissionSection="invoice"><Invoices /></ProtectedRoute>} />
+                <Route path="/invoices/createInvoice" element={<ProtectedRoute permissionSection="invoice" action="create"><CreateInvoice /></ProtectedRoute>} />
+                <Route path="/invoices/updateInvoice/:id" element={<ProtectedRoute permissionSection="invoice" action="update"><UpdateInvoice /></ProtectedRoute>} />
 
-              {/* Performance Routes */}
-              <Route path="/addPerformance" element={<ProtectedRoute permissionSection="performance"><AddPerformance /></ProtectedRoute>} />
-              <Route path="/mocktestsessions" element={<ProtectedRoute permissionSection="mockTests"><MockTestSessions /></ProtectedRoute>} />
-              <Route path="/createMockTest" element={<ProtectedRoute permissionSection="mockTests" action="create"><CreateMockTest /></ProtectedRoute>} />
-              <Route path="/createExaminationRemarks" element={<ProtectedRoute permissionSection="examination"><CreateExaminationRemarks /></ProtectedRoute>} />
-              <Route path="/attendenceremark" element={<ProtectedRoute permissionSection="attendance"><AttendanceRemarks /></ProtectedRoute>} />
-              <Route path="/createAttendanceRemarks" element={<ProtectedRoute permissionSection="attendance" action="create"><CreateAttendenceRemarks /></ProtectedRoute>} />
-              <Route path="/feesremark" element={<ProtectedRoute permissionSection="fee"><FeesRemarks /></ProtectedRoute>} />
-              <Route path="/createFeesRemarks" element={<ProtectedRoute permissionSection="fee" action="create"><CreateFeesRemarks /></ProtectedRoute>} />
+                {/* Reports */}
+                <Route path="/reports" element={<ProtectedRoute permissionSection="fee"><InstallmentReport /></ProtectedRoute>} />
+                <Route path="/reports-dashboard" element={<ProtectedRoute permissionSection="fee"><InstallmentDashboard /></ProtectedRoute>} />
 
-              {/* Finance and Invoices */}
-              <Route path="/financePartners" element={<ProtectedRoute permissionSection="FinancePartner"><FinancePartner /></ProtectedRoute>} />
-              <Route path="/addFinancePartner" element={<ProtectedRoute permissionSection="FinancePartner" action="create"><AddFinancePartner /></ProtectedRoute>} />
-              <Route path="/invoices" element={<ProtectedRoute permissionSection="invoice"><Invoices /></ProtectedRoute>} />
-              <Route path="/invoices/createInvoice" element={<ProtectedRoute permissionSection="invoice" action="create"><CreateInvoice /></ProtectedRoute>} />
-              <Route path="/invoices/updateInvoice/:id" element={<ProtectedRoute permissionSection="invoice" action="update"><UpdateInvoice /></ProtectedRoute>} />
+                {/* Roles */}
+                <Route path="/roles" element={<ProtectedRoute permissionSection="roles"><Role /></ProtectedRoute>} />
+                <Route path="/users" element={<ProtectedRoute permissionSection="Users"><User /></ProtectedRoute>} />
+                <Route path="/activity-logs" element={<ProtectedRoute permissionSection="activityLogs"><AdminLogs /></ProtectedRoute>} />
 
-              {/* Reports */}
-              <Route path="/reports" element={<ProtectedRoute permissionSection="fee"><InstallmentReport /></ProtectedRoute>} />
-              <Route path="/reports-dashboard" element={<ProtectedRoute permissionSection="fee"><InstallmentDashboard /></ProtectedRoute>} />
+                {/* HR */}
+                <Route path="/employee-attendance" element={<ProtectedRoute permissionSection="Users"><EmployeeAttendance /></ProtectedRoute>} />
+                <Route path="/holiday-calendar" element={<HolidayCalendar />} />
+                <Route path="/employee-attendance/:email" element={<EmployeePage />} />
+                <Route path="/leave-management" element={<HRLeaveApproval />} />
+                <Route path="/leave-application" element={<LeaveApplication />} />
+                <Route path="/employee-profile/:employeeId" element={<EmployeeProfile />} />
 
-
-              {/* Roles */}
-              <Route
-                path="/roles"
-                element={<ProtectedRoute permissionSection="roles"><Role /></ProtectedRoute>}
-              />
-              <Route
-                path="/users"
-                element={<ProtectedRoute permissionSection="Users"><User /></ProtectedRoute>}
-              />
-              <Route
-                path="/activity-logs"
-                element={<ProtectedRoute permissionSection="activityLogs"><AdminLogs /></ProtectedRoute>}
-              />
-
-
-              {/* HR */}
-              <Route
-                path="/employee-attendance"
-                element={<ProtectedRoute permissionSection="Users"><EmployeeAttendance /></ProtectedRoute>}
-              />
-              <Route
-                path="/holiday-calendar"
-                element={<HolidayCalendar />}
-              />
-              <Route
-                path="/employee-attendance/:email"
-                element={<EmployeePage />}
-              />
-              <Route
-                path="/leave-management"
-                element={<HRLeaveApproval />}
-              />
-              <Route
-                path="/leave-application"
-                element={<LeaveApplication />}
-              />
-
-              {/* Placement */}
-              <Route
-                path="/companies"
-                element={<Companies />}
-              />
-              <Route
-                path="/job-openings"
-                element={<JobOpenings />}
-              />
-              <Route
-                path="/recruiter-view/:id"
-                element={<RecruiterView />}
-              />
-              
-
-            </Routes>
+                {/* Placement */}
+                <Route path="/companies" element={<Companies />} />
+                <Route path="/job-openings" element={<JobOpenings />} />
+                <Route path="/recruiter-view/:id" element={<RecruiterView />} />
+              </Routes>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </BrowserRouter>
   );

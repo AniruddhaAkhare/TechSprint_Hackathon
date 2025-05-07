@@ -15,12 +15,20 @@ const QuestionBank = () => {
   const [selectedQuestions, setSelectedQuestions] = useState([]);
   const { user, rolePermissions } = useAuth();
 
-  const canCreate = rolePermissions.templates?.create || false;
-  const canUpdate = rolePermissions.templates?.update || false;
-  const canDelete = rolePermissions.templates?.delete || false;
+  const canCreate = rolePermissions.questions?.create || false;
+  const canUpdate = rolePermissions.questions?.update || false;
+  const canDelete = rolePermissions.questions?.delete || false;
+  const canView = rolePermissions.questions?.display || false;
 
   useEffect(() => {
     const fetchQuestions = async () => {
+      if(!canView){
+        return (
+          <div className="p-6 bg-gray-100 min-h-screen text-center py-8 text-gray-500">
+              You don't have permission to view templates.
+          </div>
+      );
+      }
       try {
         const q = query(collection(db, 'questions'));
         const querySnapshot = await getDocs(q);
@@ -283,3 +291,4 @@ const QuestionBank = () => {
 };
 
 export default QuestionBank;
+
