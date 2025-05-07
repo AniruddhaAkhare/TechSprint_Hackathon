@@ -770,7 +770,7 @@ export default function Courses() {
           </FormControl>
         </div>
 
-        <div className="rounded-lg shadow-md overflow-x-auto">
+        <div className="rounded-lg shadow-md overflow-x-auto max-h-[70vh] overflow-y-auto">
           <table className="w-full table-auto">
             <thead className="bg-gray-100">
               <tr>

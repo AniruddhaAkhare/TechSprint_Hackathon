@@ -259,8 +259,8 @@ export default function EnquiryForms() {
           />
         </div>
 
-        <div className="rounded-lg shadow-md overflow-x-auto">
-          <table className="w-full table-auto">
+        <div className="rounded-lg shadow-md max-h-[70vh] overflow-x-auto overflow-y-auto ">
+          <table className="w-full border-collapse" >
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Sr No</th>

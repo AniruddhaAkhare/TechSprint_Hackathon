@@ -164,6 +164,7 @@ import Fees from "./Fees";
 import Batches from "./Batches";
 import StudentProfile from "./StudentProfile";
 import Result from "./Result";
+import Placement from "./Placement";
 
 export default function StudentInfo() {
     const navigate = useNavigate();
@@ -223,7 +224,7 @@ export default function StudentInfo() {
     };
 
     return (
-        <div className="p-2">
+        <div className="p-4 fixed inset-0 left-[300px]">
         {/* <div className="min-h-screen bg-gray-50 p-6 ml-80 w-[calc(100vw-20rem)]"> */}
             <div className="max-w-8xl mx-auto">
                 {/* Header */}
@@ -298,6 +299,12 @@ export default function StudentInfo() {
                         >
                             Result
                         </button>
+                        <button
+                            onClick={() => handleFormSelection(6)}
+                            className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 6 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
+                        >
+                            Placements
+                        </button>
                     </div>
                 </div>
 
@@ -308,6 +315,8 @@ export default function StudentInfo() {
                     {selectedForm === 3 && <Fees studentId={studentId} />}
                     {selectedForm === 4 && <Batches studentId={studentId} />}
                     {selectedForm === 5 && <Result studentId={studentId} />}
+                    {selectedForm === 6 && <Placement studentId={studentId} />}
+
                 </div>
             </div>
         </div>

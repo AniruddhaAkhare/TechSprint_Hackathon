@@ -272,7 +272,7 @@ export default function JobOpenings() {
         </div>
 
         {/* Right Panel: Job Details and Applications */}
-        <div className="md:w-2/3 bg-white p-6 rounded-lg shadow-md">
+        <div className="md:w-2/3 bg-white p-6 rounded-lg shadow-md max-h-[85vh] overflow-y-auto">
           {selectedJob ? (
             <>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">{selectedJob.title}</h2>
