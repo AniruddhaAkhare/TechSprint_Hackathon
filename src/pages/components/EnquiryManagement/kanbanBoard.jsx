@@ -1375,10 +1375,6 @@
 // export default KanbanBoard;
 
 
-
-
-
-
 import React, { useEffect, useState, useRef } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { db, auth } from "../../../config/firebase";
@@ -1465,6 +1461,7 @@ const KanbanBoard = () => {
     lastTouched: 150,
     lastUpdatedBy: 150,
   });
+  const [notePopupPosition, setNotePopupPosition] = useState({ top: 0, left: 0 });
   const addButtonRef = useRef(null);
   const resizingColumn = useRef(null);
   const startX = useRef(0);
@@ -1525,7 +1522,32 @@ const KanbanBoard = () => {
     setCallTime("");
     setCallDate("");
     setCallScheduledTime("");
+    
+    // Calculate popup position based on the button's position
+    const button = event.currentTarget;
+    const rect = button.getBoundingClientRect();
+    const scrollY = window.scrollY || window.pageYOffset;
+    const scrollX = window.scrollX || window.pageXOffset;
+    
+    setNotePopupPosition({
+      top: rect.bottom + scrollY + 5, // 5px below the button
+      left: rect.left + scrollX, // Align with the button's left edge
+    });
+    
     setIsTypePopupOpen(true);
+  };
+
+  const handleCloseNotePopup = () => {
+    setIsTypePopupOpen(false);
+    setSelectedEnquiry(null);
+    setNoteType("general-enquiry");
+    setNewNote("");
+    setCallDuration("");
+    setCallType("incoming");
+    setCallTime("");
+    setCallDate("");
+    setCallScheduledTime("");
+    setNotePopupPosition({ top: 0, left: 0 });
   };
 
   const handleTypeSubmit = async () => {
@@ -1588,6 +1610,7 @@ const KanbanBoard = () => {
       setCallTime("");
       setCallDate("");
       setCallScheduledTime("");
+      setNotePopupPosition({ top: 0, left: 0 });
       alert("Note added successfully!");
     } catch (error) {
       console.error("Error adding note:", error);
@@ -2430,45 +2453,51 @@ const KanbanBoard = () => {
           </div>
         )}
       </div>
-      {canView && (
-        <EnquiryModal
-          isOpen={isModalOpen}
-          onRequestClose={() => {
-            setIsModalOpen(false);
-            setSelectedEnquiry(null);
-            setIsNotesMode(false);
-            setNewNote("");
-            setNoteType("general-enquiry");
-          }}
-          courses={courses}
-          branches={branches}
-          instructors={instructors}
-          availableTags={availableTags}
-          rolePermissions={rolePermissions}
-          selectedEnquiry={selectedEnquiry}
-          isNotesMode={isNotesMode}
-          noteType={noteType}
-          setNoteType={setNoteType}
-          newNote={newNote}
-          setNewNote={setNewNote}
-        />
-      )}
-      {canUpdate && (
-        <TagsModal
-          isOpen={isTagsModalOpen}
-          onRequestClose={() => setIsTagsModalOpen(false)}
-          availableTags={availableTags}
-          setAvailableTags={setAvailableTags}
-        />
-      )}
-      {canUpdate && isTypePopupOpen && addButtonRef.current && (
+      <EnquiryModal
+        isOpen={isModalOpen}
+        onRequestClose={() => {
+          setIsModalOpen(false);
+          setSelectedEnquiry(null);
+          setIsNotesMode(false);
+          setNewNote("");
+          setNoteType("general-enquiry");
+        }}
+        courses={courses}
+        branches={branches}
+        instructors={instructors}
+        availableTags={availableTags}
+        rolePermissions={rolePermissions}
+        selectedEnquiry={selectedEnquiry}
+        isNotesMode={isNotesMode}
+        noteType={noteType}
+        setNoteType={setNoteType}
+        newNote={newNote}
+        setNewNote={setNewNote}
+      />
+      <TagsModal
+        isOpen={isTagsModalOpen}
+        onRequestClose={() => setIsTagsModalOpen(false)}
+        availableTags={availableTags}
+        setAvailableTags={setAvailableTags}
+      />
+      {isTypePopupOpen && (
         <div
-          className="absolute bg-white p-6 rounded-lg shadow-lg w-96 z-50 sm:mt-12 mt-2 right-auto"
+          className="absolute bg-white p-6 rounded-lg shadow-lg w-96 z-50 border border-gray-200"
           style={{
-            top: window.innerWidth < 640 ? addButtonRef.current.offsetHeight + 5 : 0,
+            top: `${notePopupPosition.top}px`,
+            // left: `${notePopupPosition.left}px`,
+            transform: `translate(0, 0)`,
           }}
         >
-          <h3 className="text-lg font-semibold mb-4">Add Note</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Add Note</h3>
+            <button
+              onClick={handleCloseNotePopup}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <FaTimesCircle className="text-xl" />
+            </button>
+          </div>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">Note Type</label>
             <select
