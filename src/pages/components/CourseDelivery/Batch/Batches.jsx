@@ -379,8 +379,8 @@ export default function Batches() {
           </button>
         </div>
 
-        <div className="rounded-lg shadow-md overflow-x-auto">
-          <table className="w-full table-auto">
+        <div className="rounded-lg shadow-md">
+          <table className="w-full table-auto overflow-x-auto overflow-y-auto">
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">

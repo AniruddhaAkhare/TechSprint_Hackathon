@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
-import { collection, getDocs, addDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, addDoc, updateDoc, doc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { useAuth } from "../../../../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -29,6 +29,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
   const [skills, setSkills] = useState([]);
   const [newSkill, setNewSkill] = useState("");
   const [poc, setPoc] = useState("");
+  const [deadline, setDeadline] = useState(""); // New deadline field
   const [companies, setCompanies] = useState([]);
   const [pocs, setPocs] = useState([]);
 
@@ -84,6 +85,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
         setDescription(job.description || "");
         setSkills(job.skills || []);
         setPoc(job.poc || "");
+        setDeadline(job.deadline ? job.deadline.toDate().toISOString().split("T")[0] : "");
         setPocs(companies.find((c) => c.id === job.companyId)?.pointsOfContact || []);
       } else {
         resetForm();
@@ -120,6 +122,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
     setSkills([]);
     setNewSkill("");
     setPoc("");
+    setDeadline(""); // Reset deadline
     setPocs([]);
     logActivity("RESET_FORM", {});
   };
@@ -162,10 +165,14 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
       return;
     }
 
-    if (!title.trim() || !companyId || !jobType || !experienceMin || !experienceMax || !salary || !locationType || !poc) {
+    if (!title.trim() || !companyId || !jobType || !experienceMin || !experienceMax || !salary || !locationType || !poc || !deadline) {
       toast.error("Please fill in all required fields");
       return;
     }
+
+    const deadlineDate = new Date(deadline);
+    const currentDate = new Date();
+    const jobStatus = deadlineDate < currentDate ? "Inactive" : "Open";
 
     const jobData = {
       title,
@@ -181,7 +188,8 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
       description,
       skills,
       poc,
-      status: "Open",
+      status: jobStatus,
+      deadline: Timestamp.fromDate(deadlineDate),
       createdAt: serverTimestamp(),
     };
 
@@ -189,11 +197,11 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
       if (job) {
         await updateDoc(doc(db, "JobOpenings", job.id), jobData);
         toast.success("Job opening updated successfully!");
-        logActivity("UPDATE_JOB", { title });
+        logActivity("UPDATE_JOB", { title, deadline });
       } else {
         const docRef = await addDoc(collection(db, "JobOpenings"), jobData);
         toast.success("Job opening added successfully!");
-        logActivity("CREATE_JOB", { title, jobId: docRef.id });
+        logActivity("CREATE_JOB", { title, jobId: docRef.id, deadline });
         // Auto-email to POC (pseudo-code, implement with your email service)
         // sendEmail(poc.email, `New Job Opening: ${title}`, `A new job opening has been published: ${title}`);
       }
@@ -397,6 +405,22 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
               </select>
             </div>
           )}
+
+          {/* Deadline */}
+          <div>
+            <label htmlFor="deadline" className="block text-sm font-medium text-gray-700">
+              Deadline
+            </label>
+            <input
+              type="date"
+              id="deadline"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              required
+              disabled={(!canUpdate && job) || (!canCreate && !job)}
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            />
+          </div>
 
           {/* Location */}
           <div>
