@@ -962,6 +962,7 @@ export default function App() {
                 {/* Instructor Routes */}
                 <Route path="/instructor" element={<ProtectedRoute permissionSection="Instructor"><Instructor /></ProtectedRoute>} />
 
+
                 {/* Enquiry Routes */}
                 <Route path="/enquiry/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} />
                 <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><KanbanBoard /></ProtectedRoute>} />
