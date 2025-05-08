@@ -10,8 +10,12 @@
         ],
         "shikshasaarathi-com": [
           "shikshasaarathi"
+        ],
+        "form": [
+          "form-shikshasaarathi-com"
         ]
       }
     }
-  }
+  },
+  "etags": {}
 }

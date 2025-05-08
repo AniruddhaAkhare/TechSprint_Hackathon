@@ -866,8 +866,8 @@ import AttendanceDashboard from './StudentInformation/AttendanceDashboard.jsx'
 import EnquiryDashboard from './pages/components/EnquiryManagement/EnquiryDashboard.jsx';
 import EnquiryAnalyticsPage from './pages/components/EnquiryManagement/EnquiryAnalyticsPage.jsx';
 import EnquiryForms from './pages/components/EnquiryForm/EnquiryForm.jsx';
-// import SubmitEnquiryForm from './pages/components/EnquiryForm/SubmitEnquiryForm.jsx';
 import SubmitEnquiryForm from './pages/components/EnquiryForm/SubmitEnquiryForm.jsx';
+// import SubmitEnquiryForm from './pages/components/EnquiryForm/SubmitEnquiryForm.jsx';
 import EnquiryFormPage from "./pages/components/EnquiryForm/EnquiryFormPage";
 import ProfilePage from './pages/home/ProfilePage.jsx';
 import EmployeeAttendance from './pages/components/HRManagement/TimeAndAttendanceTracking/EmployeeAttendance.jsx';
@@ -878,6 +878,9 @@ import LeaveApplication from './pages/components/HRManagement/Leave/LeaveApplica
 import Companies from './pages/components/PlacementManagement/Companies/Companies.jsx';
 import JobOpenings from './pages/components/PlacementManagement/JobOpenings/JobOpenings.jsx';
 import RecruiterView from './pages/components/PlacementManagement/JobOpenings/RecruiterView.jsx';
+<<<<<<< HEAD
+import UniqueEnquiryForm from '../formEnquiry/UniqueEnquiryForm.jsx';
+=======
 import EmployeeProfile from './pages/components/HRManagement/EmployeeDirectory/EmployeeProfile.jsx';
 import ActiveStatus from './pages/ActiveStatus.jsx';
 import EmployeeRegistrationForm from './pages/home/EmployeeRegistrationForm.jsx';
@@ -961,6 +964,28 @@ export default function App() {
                 {/* Instructor Routes */}
                 <Route path="/instructor" element={<ProtectedRoute permissionSection="Instructor"><Instructor /></ProtectedRoute>} />
 
+<<<<<<< HEAD
+              {/* Enquiry */}
+              <Route path="/enquiry/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} />
+              {/* <Route path="/enquiry-form/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} /> */}
+              <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><KanbanBoard /></ProtectedRoute>} />
+              {/* <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryDashboard /></ProtectedRoute>} /> */}
+              <Route path="/enquiry-analytics" element={<ProtectedRoute permissionSection="enquiries"><EnquiryAnalyticsPage /></ProtectedRoute>} />
+              <Route path="/addFormForEnquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryForms /></ProtectedRoute>} />
+              <Route path="/enquiry/:id" element={<EnquiryFormPage />} />
+              <Route path='/:formId' element={<UniqueEnquiryForm/>}/>
+              
+              {/* Student Routes */}
+              <Route path="/studentdetails" element={<ProtectedRoute permissionSection="student"><StudentDetails /></ProtectedRoute>} />
+              <Route path="/question-bank" element={<ProtectedRoute permissionSection="questions"><QuestionBank /></ProtectedRoute>} />
+              <Route path="/question-template" element={<ProtectedRoute permissionSection="templates"><QuestionTemplate /></ProtectedRoute>} />
+              <Route path="/studentdetails/addstudent" element={<ProtectedRoute permissionSection="student" action="create"><AddStudent /></ProtectedRoute>} />
+              <Route path="/studentdetails/updatestudent/:studentId" element={<ProtectedRoute permissionSection="student" action="update"><EditStudent /></ProtectedRoute>} />
+              <Route path="/studentdetails/:studentId" element={<ProtectedRoute permissionSection="student"><StudentInfo /></ProtectedRoute>} />
+              <Route path="/add-course/:studentId" element={<ProtectedRoute permissionSection="enrollments"><AddCourse /></ProtectedRoute>} />
+              <Route path="/attendance" element={<ProtectedRoute permissionSection="attendance"><Attendance /></ProtectedRoute>} />
+              <Route path="/attendance-dashboard" element={<ProtectedRoute permissionSection="attendance"><AttendanceDashboard /></ProtectedRoute>} />
+=======
                 {/* Enquiry Routes */}
                 <Route path="/enquiry/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} />
                 <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><KanbanBoard /></ProtectedRoute>} />
@@ -979,6 +1004,7 @@ export default function App() {
                 <Route path="/add-course/:studentId" element={<ProtectedRoute permissionSection="enrollments"><AddCourse /></ProtectedRoute>} />
                 <Route path="/attendance" element={<ProtectedRoute permissionSection="attendance"><Attendance /></ProtectedRoute>} />
                 <Route path="/attendance-dashboard" element={<ProtectedRoute permissionSection="attendance"><AttendanceDashboard /></ProtectedRoute>} />
+>>>>>>> 0952d598347a5c1917fcfc3dc560df59f23fb5cf
 
                 {/* Performance Routes */}
                 <Route path="/addPerformance" element={<ProtectedRoute permissionSection="performance"><AddPerformance /></ProtectedRoute>} />

@@ -15,7 +15,15 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
   const [callDuration, setCallDuration] = useState("");
   const [callType, setCallType] = useState("incoming");
   const [callTime, setCallTime] = useState("");
-  const [callDate, setCallDate] = useState("");
+
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0]; // Returns YYYY-MM-DD
+  };
+
+
+  const [callDate, setCallDate] = useState(getTodayDate());
+  const [callLogDate, setCallLogDate] = useState(getTodayDate());
   const [callScheduledTime, setCallScheduledTime] = useState("");
   const [showReminder, setShowReminder] = useState(false);
   const [reminderDetails, setReminderDetails] = useState({ name: "", date: "", time: "" });
@@ -137,7 +145,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           }]
           : []),
       ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
+  
       setNewEnquiry({
         ...selectedEnquiry,
         notes: Array.isArray(selectedEnquiry.notes) ? selectedEnquiry.notes : [],
@@ -147,14 +155,16 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         closingDate: selectedEnquiry.closingDate || "",
         lostReason: selectedEnquiry.lostReason || "",
         createdAt: selectedEnquiry.createdAt || defaultCreatedAt,
-        createdBy: selectedEnquiry.createdBy || currentUser?.displayName || currentUser?.email || "Unknown User",
-        owner: selectedEnquiry.owner || selectedEnquiry.assignTo || selectedEnquiry.createdBy || currentUser?.displayName || currentUser?.email || "Unknown User",
+        createdBy: selectedEnquiry.createdBy || currentUser?.displayName || "Unknown User",
+        owner: selectedEnquiry.owner || selectedEnquiry.assignTo || selectedEnquiry.createdBy || currentUser?.displayName || "Unknown User",
         history: selectedEnquiry.history || inferredHistory,
       });
       setIsEditing(false);
     } else {
-      const newCreatedAt = new Date().toISOString();
-      const userIdentity = currentUser?.displayName || currentUser?.email || "Unknown User";
+      const newCreatedAt = new Date();
+      const defaultClosingDate = new Date(newCreatedAt);
+      defaultClosingDate.setDate(newCreatedAt.getDate() + 7);
+      const userIdentity = currentUser?.displayName || "Unknown User";
       setEditingEnquiryId(null);
       setIsEditing(true);
       setCurrentSection(1);
@@ -182,9 +192,9 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         graduationPassOutYear: "",
         postGraduationStream: "",
         postGraduationPercentage: "",
-        // postGraduationStream:"",
         postGraduationCollegeName: "",
         postGraduationPassOutYear: "",
+        educationBreak: "",
         branch: "",
         course: "",
         source: "",
@@ -201,13 +211,14 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         guardianContact: "",
         courseMotivation: "",
         stage: "",
-        closingDate: "",
+        closingDate: defaultClosingDate.toISOString().split("T")[0], // Set default closing date (YYYY-MM-DD)
         lostReason: "",
-        createdAt: newCreatedAt,
+        createdAt: newCreatedAt.toISOString(),
         createdBy: userIdentity,
-        owner: userIdentity, // Initialize owner as same as createdBy
+        owner: userIdentity,
         history: [],
-
+        lastModifiedTime: "",
+        lastTouched: "",
       });
     }
   }, [selectedEnquiry, currentUser]);
@@ -235,7 +246,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         Key: fileKey,
         Body: new Uint8Array(fileBuffer),
         ContentType: "audio/webm",
-        // ACL: "public-read",
+        ACL: "public-read",
       };
 
       console.log("Uploading to S3 with params:", { bucketName, fileKey });
@@ -496,6 +507,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
     }
   };
 
+
   const handleAddNoteToFirebase = async (updatedNotes, noteObject) => {
     if (!editingEnquiryId) {
       alert("No enquiry selected to add note.");
@@ -505,7 +517,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       alert("You don't have permission to update enquiries");
       return;
     }
-
+  
     try {
       const enquiryRef = doc(db, "enquiries", editingEnquiryId);
       const historyEntry = {
@@ -517,7 +529,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       await updateDoc(enquiryRef, {
         notes: updatedNotes,
         history: updatedHistory,
-        lastTouched: new Date().toISOString(), // Update Last Touched
+        lastTouched: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
       setNewEnquiry((prev) => ({
@@ -527,7 +539,8 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       }));
       if (noteObject.type === "call-schedule" && noteObject.callDate && noteObject.callScheduledTime) {
         const callDateTime = new Date(`${noteObject.callDate}T${noteObject.callScheduledTime}`);
-        const timeUntilReminder = callDateTime - new Date() - 10 * 60 * 1000;
+        const now = new Date();
+        const timeUntilReminder = callDateTime.getTime() - now.getTime() - 10 * 60 * 1000; // 10 minutes before
         if (timeUntilReminder > 0) {
           setTimeout(() => {
             setReminderDetails({
@@ -536,9 +549,30 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
               time: noteObject.callScheduledTime,
             });
             setShowReminder(true);
+            // Play buzzer sound
+            const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3"); // Replace with your buzzer sound URL
+            audio.play().catch((error) => console.error("Error playing buzzer:", error));
           }, timeUntilReminder);
         }
       }
+      // if (noteObject.type === "call-schedule" && noteObject.callDate && noteObject.callScheduledTime) {
+      //   const callDateTime = new Date(`${noteObject.callDate}T${noteObject.callScheduledTime}`);
+      //   const now = new Date();
+      //   const timeUntilReminder = callDateTime.getTime() - now.getTime() - 10 * 60 * 1000; // 10 minutes before
+      //   if (timeUntilReminder > 0) {
+      //     setTimeout(() => {
+      //       setReminderDetails({
+      //         name: newEnquiry.name || "this lead",
+      //         date: noteObject.callDate,
+      //         time: noteObject.callScheduledTime,
+      //       });
+      //       setShowReminder(true);
+      //       // Play buzzer sound
+      //       const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3"); // Replace with your buzzer sound URL
+      //       audio.play().catch((error) => console.error("Error playing buzzer:", error));
+      //     }, timeUntilReminder);
+      //   }
+      // }
       onRequestClose();
       alert("Note added successfully!");
     } catch (error) {
@@ -548,22 +582,36 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
 
 
 
+
   const handleAddNote = async () => {
     if (!newNote.trim()) {
       alert("Please add a note before submitting.");
       return;
     }
+  
+    if (noteType === "call-schedule") {
+      const selectedDate = new Date(callDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Normalize to start of day
+      if (selectedDate < today) {
+        alert("Cannot schedule a call in the past.");
+        return;
+      }
+    }
+  
     const noteObject = {
       content: newNote,
       type: noteType,
       callDuration: noteType === "call-log" ? callDuration : null,
       callType: noteType === "call-log" ? callType : null,
       callTime: noteType === "call-log" ? callTime : null,
+      callLogDate: noteType === "call-log" ? callLogDate : null, // Include callLogDate
       callDate: noteType === "call-schedule" ? callDate : null,
       callScheduledTime: noteType === "call-schedule" ? callScheduledTime : null,
       createdAt: new Date().toISOString(),
       addedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
     };
+  
     const updatedNotes = [...newEnquiry.notes, noteObject];
     setNewEnquiry((prev) => ({
       ...prev,
@@ -572,63 +620,24 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
     await handleAddNoteToFirebase(updatedNotes, noteObject);
   };
 
+
   const handleAddEnquiry = async () => {
-    // const requiredFields = ["name", "email", "phone"];
-    // const missingFields = requiredFields.filter((field) => !newEnquiry[field]);
-
-    // if (missingFields.length > 0) {
-    //   alert(`Please fill in all required fields: ${missingFields.join(", ")}`);
-    //   return;
-    // }
-
-    // if (newEnquiry.stage === "closed-lost" && !newEnquiry.lostReason) {
-    //   alert("Please select a Lost Reason for Closed Lost status.");
-    //   return;
-    // }
-
-    // if (!canCreate && !editingEnquiryId) {
-    //   alert("You don't have permission to create enquiries");
-    //   return;
-    // }
-
-    // try {
-    //   const emailQuery = query(collection(db, "enquiries"), where("email", "==", newEnquiry.email));
-    //   const phoneQuery = query(collection(db, "enquiries"), where("phone", "==", newEnquiry.phone));
-    //   const [emailSnapshot, phoneSnapshot] = await Promise.all([getDocs(emailQuery), getDocs(phoneQuery)]);
-
-    //   let emailConflict = !emailSnapshot.empty;
-    //   let phoneConflict = !phoneSnapshot.empty;
-
-    //   if (editingEnquiryId) {
-    //     const emailDocs = emailSnapshot.docs.filter((doc) => doc.id !== editingEnquiryId);
-    //     const phoneDocs = phoneSnapshot.docs.filter((doc) => doc.id !== editingEnquiryId);
-    //     emailConflict = emailDocs.length > 0;
-    //     phoneConflict = phoneDocs.length > 0;
-    //   }
-
-    //   if (emailConflict) {
-    //     alert("An enquiry with this email already exists.");
-    //     return;
-    //   }
-
-    //   if (phoneConflict) {
-    //     alert("An enquiry with this phone number already exists.");
-    //     return;
-    //   }
-    const requiredFields = ["name", "email", "phone"];
-    const missingFields = requiredFields.filter((field) => !newEnquiry[field]);
-  
-    if (missingFields.length > 0) {
-      alert(`Please fill in all required fields: ${missingFields.join(", ")}`);
+    if (!newEnquiry.name) {
+      alert("Please fill in the required field: Name");
       return;
     }
   
-    if (!validateEmail(newEnquiry.email)) {
+    if (!newEnquiry.email && !newEnquiry.phone) {
+      alert("Please provide either an email or a phone number.");
+      return;
+    }
+  
+    if (newEnquiry.email && !validateEmail(newEnquiry.email)) {
       alert("Please enter a valid email address (e.g., example@domain.com)");
       return;
     }
   
-    if (!validatePhone(newEnquiry.phone)) {
+    if (newEnquiry.phone && !validatePhone(newEnquiry.phone)) {
       alert("Please enter a valid 10-digit phone number (e.g., 1234567890)");
       return;
     }
@@ -644,18 +653,28 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
     }
   
     try {
-      const emailQuery = query(collection(db, "enquiries"), where("email", "==", newEnquiry.email));
-      const phoneQuery = query(collection(db, "enquiries"), where("phone", "==", newEnquiry.phone));
-      const [emailSnapshot, phoneSnapshot] = await Promise.all([getDocs(emailQuery), getDocs(phoneQuery)]);
+      const emailQuery = newEnquiry.email ? query(collection(db, "enquiries"), where("email", "==", newEnquiry.email)) : null;
+      const phoneQuery = newEnquiry.phone ? query(collection(db, "enquiries"), where("phone", "==", newEnquiry.phone)) : null;
+      const queries = [];
+      if (emailQuery) queries.push(getDocs(emailQuery));
+      if (phoneQuery) queries.push(getDocs(phoneQuery));
+      const snapshots = await Promise.all(queries);
   
-      let emailConflict = !emailSnapshot.empty;
-      let phoneConflict = !phoneSnapshot.empty;
-  
-      if (editingEnquiryId) {
-        const emailDocs = emailSnapshot.docs.filter((doc) => doc.id !== editingEnquiryId);
-        const phoneDocs = phoneSnapshot.docs.filter((doc) => doc.id !== editingEnquiryId);
-        emailConflict = emailDocs.length > 0;
-        phoneConflict = phoneDocs.length > 0;
+      let emailConflict = false;
+      let phoneConflict = false;
+      if (emailQuery) {
+        const emailSnapshot = snapshots[0];
+        emailConflict = !emailSnapshot.empty;
+        if (editingEnquiryId) {
+          emailConflict = emailSnapshot.docs.some((doc) => doc.id !== editingEnquiryId);
+        }
+      }
+      if (phoneQuery) {
+        const phoneSnapshot = snapshots[phoneQuery ? snapshots.length - 1 : 0];
+        phoneConflict = !phoneSnapshot.empty;
+        if (editingEnquiryId) {
+          phoneConflict = phoneSnapshot.docs.some((doc) => doc.id !== editingEnquiryId);
+        }
       }
   
       if (emailConflict) {
@@ -667,9 +686,9 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         alert("An enquiry with this phone number already exists.");
         return;
       }
-      
+  
       const selectedCourse = courses.find((course) => course.name === newEnquiry.course);
-
+  
       const enquiryData = {
         ...newEnquiry,
         stage: editingEnquiryId ? newEnquiry.stage : "pre-qualified",
@@ -681,16 +700,16 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         lastModifiedTime: new Date().toISOString(),
         tags: Array.isArray(newEnquiry.tags) ? newEnquiry.tags : [],
         createdBy: newEnquiry.createdBy || currentUser?.displayName || currentUser?.email || "Unknown User",
-        owner: newEnquiry.assignTo || newEnquiry.owner, // Update owner to assignTo if set
+        owner: newEnquiry.assignTo || newEnquiry.owner,
         history: newEnquiry.history || [],
       };
-
+  
       const historyEntry = {
         action: editingEnquiryId ? `Updated enquiry` : `Created enquiry`,
         performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
         timestamp: new Date().toISOString(),
       };
-
+  
       if (editingEnquiryId && newEnquiry.stage !== selectedEnquiry?.stage) {
         enquiryData.history = [
           ...enquiryData.history,
@@ -701,7 +720,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           },
         ];
       }
-
+  
       if (newEnquiry.assignTo && newEnquiry.assignTo !== selectedEnquiry?.assignTo) {
         enquiryData.history = [
           ...enquiryData.history,
@@ -712,9 +731,9 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           },
         ];
       }
-
+  
       enquiryData.history = [...enquiryData.history, historyEntry];
-
+  
       if (editingEnquiryId) {
         if (!canUpdate) {
           alert("You don't have permission to update enquiries");
@@ -726,12 +745,12 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         const docRef = await addDoc(collection(db, "enquiries"), enquiryData);
         setEditingEnquiryId(docRef.id);
       }
-
+  
       setNewEnquiry((prev) => ({
         ...prev,
         history: enquiryData.history,
       }));
-
+  
       if (currentSection < 4 && !isNotesMode) {
         setCurrentSection(currentSection + 1);
       } else {
@@ -784,7 +803,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           owner: "",
           history: [],
           lastModifiedTime: "",
-          lastTouched: ""
+          lastTouched: "",
         });
         setEditingEnquiryId(null);
         setIsEditing(false);
@@ -795,18 +814,56 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       alert(`Failed to save enquiry: ${error.message}`);
     }
   };
-
-  const handleTagToggle = (tag) => {
-    setNewEnquiry((prev) => {
-      const updatedTags = prev.tags.includes(tag)
-        ? prev.tags.filter((t) => t !== tag)
-        : [...prev.tags, tag];
-      return {
+ 
+  const handleTagToggle = async (tag) => {
+    if (!canUpdate) {
+      alert("You don't have permission to update enquiries");
+      return;
+    }
+  
+    try {
+      const enquiryRef = doc(db, "enquiries", editingEnquiryId);
+      const isTagAdded = !newEnquiry.tags.includes(tag);
+      const updatedTags = isTagAdded
+        ? [...newEnquiry.tags, tag]
+        : newEnquiry.tags.filter((t) => t !== tag);
+  
+      const historyEntry = {
+        action: `${isTagAdded ? "Added" : "Removed"} tag: "${tag}"`,
+        performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+        timestamp: new Date().toISOString(),
+      };
+      const updatedHistory = [...(newEnquiry.history || []), historyEntry];
+  
+      await updateDoc(enquiryRef, {
+        tags: updatedTags,
+        history: updatedHistory,
+        lastTouched: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+  
+      setNewEnquiry((prev) => ({
         ...prev,
         tags: updatedTags,
-      };
-    });
+        history: updatedHistory,
+        lastTouched: new Date().toISOString(),
+      }));
+    } catch (error) {
+      alert(`Failed to update tags: ${error.message}`);
+    }
   };
+
+  // const handleTagToggle = (tag) => {
+  //   setNewEnquiry((prev) => {
+  //     const updatedTags = prev.tags.includes(tag)
+  //       ? prev.tags.filter((t) => t !== tag)
+  //       : [...prev.tags, tag];
+  //     return {
+  //       ...prev,
+  //       tags: updatedTags,
+  //     };
+  //   });
+  // };
 
   const formatDateSafely = (dateString, formatString) => {
     if (!dateString) return "Not available";
@@ -1131,90 +1188,20 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                     </div>
                   )}
                 </div>
+
                 <div className="mb-3 sm:mb-4 sm:col-span-1">
-                  <div className="mb-4 sm:mb-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Creator Name</label>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.createdBy)}</p>
-                  </div>
-                  <div className="mb-3 sm:mb-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Owner Name</label>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.owner)}</p>
-                  </div>
-                </div>
-                {/* <div className="mb-3 sm:mb-4 sm:col-span-2">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Address</label>
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={newEnquiry.streetAddress}
-                        onChange={(e) => setNewEnquiry({ ...newEnquiry, streetAddress: e.target.value })}
-                        placeholder="Street Address"
-                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        required
-                      />
-                      <input
-                        type="text"
-                        value={newEnquiry.city}
-                        onChange={(e) => setNewEnquiry({ ...newEnquiry, city: e.target.value })}
-                        placeholder="City"
-                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        required
-                      />
-                      <input
-                        type="text"
-                        value={newEnquiry.stateRegionProvince}
-                        onChange={(e) => setNewEnquiry({ ...newEnquiry, stateRegionProvince: e.target.value })}
-                        placeholder="State/Region/Province"
-                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        required
-                      />
-                      <input
-                        type="text"
-                        value={newEnquiry.postalZipCode}
-                        onChange={(e) => setNewEnquiry({ ...newEnquiry, postalZipCode: e.target.value })}
-                        placeholder="Postal/Zip Code"
-                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        required
-                      />
-                      <select
-                        value={newEnquiry.country}
-                        onChange={(e) => setNewEnquiry({ ...newEnquiry, country: e.target.value })}
-                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        required
-                      >
-                        <option value="">Select country</option>
-                        <option value="India">India</option>
-                        <option value="USA">USA</option>
-                        <option value="UK">UK</option>
-                        <option value="Canada">Canada</option>
-                        <option value="Australia">Australia</option>
-                      </select>
-                    </div>
-                  ) : (
-                    <div className="mt-1 text-xs sm:text-sm text-gray-900">
-                      <p>{renderField(newEnquiry.streetAddress)}</p>
-                      <p>{renderField(newEnquiry.city)}</p>
-                      <p>{renderField(newEnquiry.stateRegionProvince)}</p>
-                      <p>{renderField(newEnquiry.postalZipCode)}</p>
-                      <p>{renderField(newEnquiry.country)}</p>
-                    </div>
-                  )}
-                </div> */}
-                <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Creation Date and Time</label>
-                  <p className="mt-1 text-xs sm:text-sm text-gray-900">
-                    {formatDateSafely(newEnquiry.createdAt, "MMM d, yyyy h:mm a")}
-                  </p>
-                </div>
-                {/* <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Creator Name</label>
-                  <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.createdBy)}</p>
-                </div> */}
-                {/* <div className="mb-3 sm:mb-4">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Owner Name</label>
-                  <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.owner)}</p>
-                </div> */}
+  <div className="mb-4 sm:mb-4">
+    <label className="block text-xs sm:text-sm font-medium text-gray-700">Creator Name</label>
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.createdBy)}</p>
+  </div>
+  <div className="mb-3 sm:mb-4">
+    <label className="block text-xs sm:text-sm font-medium text-gray-700">Owner Name</label>
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.owner)}</p>
+  </div>
+</div>
+
+
+            
                 <div className="mb-3 sm:mb-4">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">Last Modified Time</label>
                   <p className="mt-1 text-xs sm:text-sm text-gray-900">
@@ -1230,572 +1217,6 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
               </div>
             </div>
           )}
-
-          {/* {currentSection === 2 && (
-            <div>
-              <h3 className="text-base sm:text-lg font-medium mb-2">School & HSC Details</h3>
-              <div>
-    <h3 className="text-base sm:text-lg font-medium mb-2">School & HSC Details</h3>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-      SSC Fields (Left Side)
-      <div className="space-y-4">
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700">SSC Percentage</label>
-          {isEditing ? (
-            <input
-              type="number"
-              value={newEnquiry.sscPercentage}
-              onChange={(e) => setNewEnquiry({ ...newEnquiry, sscPercentage: e.target.value })}
-              placeholder="Enter SSC percentage"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              min="0"
-              max="100"
-              step="0.01"
-            />
-          ) : (
-            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.sscPercentage)}</p>
-          )}
-        </div>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700">School Name</label>
-          {isEditing ? (
-            <input
-              type="text"
-              value={newEnquiry.schoolName}
-              onChange={(e) => setNewEnquiry({ ...newEnquiry, schoolName: e.target.value })}
-              placeholder="Enter school name"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-          ) : (
-            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.schoolName)}</p>
-          )}
-        </div>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700">SSC Pass Out Year</label>
-          {isEditing ? (
-            <input
-              type="number"
-              value={newEnquiry.sscPassOutYear}
-              onChange={(e) => setNewEnquiry({ ...newEnquiry, sscPassOutYear: e.target.value })}
-              placeholder="Enter SSC pass out year"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              min="1900"
-              max={new Date().getFullYear()}
-            />
-          ) : (
-            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.sscPassOutYear)}</p>
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700">HSC Percentage</label>
-          {isEditing ? (
-            <input
-              type="number"
-              value={newEnquiry.hscPercentage}
-              onChange={(e) => setNewEnquiry({ ...newEnquiry, hscPercentage: e.target.value })}
-              placeholder="Enter HSC percentage"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              min="0"
-              max="100"
-              step="0.01"
-            />
-          ) : (
-            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.hscPercentage)}</p>
-          )}
-        </div>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700">Junior College Name</label>
-          {isEditing ? (
-            <input
-              type="text"
-              value={newEnquiry.juniorCollegeName}
-              onChange={(e) => setNewEnquiry({ ...newEnquiry, juniorCollegeName: e.target.value })}
-              placeholder="Enter junior college name"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-          ) : (
-            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.juniorCollegeName)}</p>
-          )}
-        </div>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700">HSC Pass Out Year</label>
-          {isEditing ? (
-            <input
-              type="number"
-              value={newEnquiry.hscPassOutYear}
-              onChange={(e) => setNewEnquiry({ ...newEnquiry, hscPassOutYear: e.target.value })}
-              placeholder="Enter HSC pass out year"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              min="1900"
-              max={new Date().getFullYear()}
-            />
-          ) : (
-            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.hscPassOutYear)}</p>
-          )}
-        </div>
-      </div>
-    </div>
-               <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Field</th>
-                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">SSC Percentage</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={newEnquiry.sscPercentage}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, sscPercentage: e.target.value })}
-                          placeholder="Enter SSC percentage"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.sscPercentage)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">School Name</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={newEnquiry.schoolName}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, schoolName: e.target.value })}
-                          placeholder="Enter school name"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.schoolName)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">SSC Pass Out Year</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={newEnquiry.sscPassOutYear}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, sscPassOutYear: e.target.value })}
-                          placeholder="Enter SSC pass out year"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          min="1900"
-                          max={new Date().getFullYear()}
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.sscPassOutYear)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">HSC Percentage</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={newEnquiry.hscPercentage}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, hscPercentage: e.target.value })}
-                          placeholder="Enter HSC percentage"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.hscPercentage)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Junior College Name</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={newEnquiry.juniorCollegeName}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, juniorCollegeName: e.target.value })}
-                          placeholder="Enter junior college name"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.juniorCollegeName)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">HSC Pass Out Year</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={newEnquiry.hscPassOutYear}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, hscPassOutYear: e.target.value })}
-                          placeholder="Enter HSC pass out year"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          min="1900"
-                          max={new Date().getFullYear()}
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.hscPassOutYear)}</p>
-                      )}
-                    </td>
-                  </tr>
-                </tbody>
-              </table> 
-
-              <h3 className="text-base sm:text-lg font-medium mb-2 mt-6">Undergraduate and Post-graduate Details</h3>
-              <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Field</th>
-                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Degree</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <select
-                          value={newEnquiry.degree}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, degree: e.target.value })}
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        >
-                          <option value="">Select degree</option>
-                          <option value="High School">High School</option>
-                          <option value="Bachelor's">Bachelor's</option>
-                          <option value="Master's">Master's</option>
-                          <option value="PhD">PhD</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.degree)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Graduation Stream</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <select
-                          value={newEnquiry.graduationStream}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, graduationStream: e.target.value })}
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        >
-                          <option value="">Select graduation stream</option>
-                          <option value="B.Com/M.Com">B.Com/M.Com</option>
-                          <option value="B.E/B.Tech">B.E/B.Tech</option>
-                          <option value="BA">BA</option>
-                          <option value="BBA">BBA</option>
-                          <option value="BCA/MCA">BCA/MCA</option>
-                          <option value="BSc/MSc">BSc/MSc</option>
-                          <option value="M.E/M.Tech">M.E/M.Tech</option>
-                          <option value="MBA">MBA</option>
-                          <option value="Others">Others</option>
-                        </select>
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationStream)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">College Name</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={newEnquiry.collegeName}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, collegeName: e.target.value })}
-                          placeholder="Enter college name"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.collegeName)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Graduation Percentage</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={newEnquiry.graduationPercentage}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, graduationPercentage: e.target.value })}
-                          placeholder="Enter graduation percentage"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationPercentage)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Graduation Pass Out Year</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={newEnquiry.graduationPassOutYear}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, graduationPassOutYear: e.target.value })}
-                          placeholder="Enter graduation pass out year"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          min="1900"
-                          max={new Date().getFullYear()}
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationPassOutYear)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Post Graduation Stream</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={newEnquiry.postGraduationStream}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationStream: e.target.value })}
-                          placeholder="Enter post graduation stream"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationStream)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Post Graduation College Name</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={newEnquiry.postGraduationCollegeName}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationCollegeName: e.target.value })}
-                          placeholder="Enter post graduation college name"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationCollegeName)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Post-Graduation Percentage</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={newEnquiry.postGraduationPercentage}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationPercentage: e.target.value })}
-                          placeholder="Enter post graduation percentage"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationPercentage)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Post Graduation Pass Out Year</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={newEnquiry.postGraduationPassOutYear}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, postGraduationPassOutYear: e.target.value })}
-                          placeholder="Enter post graduation pass out year"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          min="1900"
-                          max={new Date().getFullYear()}
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationPassOutYear)}</p>
-                      )}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <h3 className="text-base sm:text-lg font-medium mb-2 mt-6">Professional Details</h3>
-              <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Field</th>
-                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Current Job Title</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={newEnquiry.currentJobTitle}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, currentJobTitle: e.target.value })}
-                          placeholder="Enter current job title"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.currentJobTitle)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Company Name</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={newEnquiry.workingCompanyName}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, workingCompanyName: e.target.value })}
-                          placeholder="Enter company name"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workingCompanyName)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Working Domain</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={newEnquiry.workingDomain}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, workingDomain: e.target.value })}
-                          placeholder="Enter working domain"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workingDomain)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Experience in Years</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={newEnquiry.experienceInYears}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, experienceInYears: e.target.value })}
-                          placeholder="Enter experience in years"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          min="0"
-                          step="0.1"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.experienceInYears)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Current Salary</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={newEnquiry.currentSalary}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, currentSalary: e.target.value })}
-                          placeholder="Enter current salary"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          min="0"
-                          step="0.01"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.currentSalary)}</p>
-                      )}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <h3 className="text-base sm:text-lg font-medium mb-2 mt-6">Guardian Details</h3>
-              <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Field</th>
-                    <th className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Guardian Name</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={newEnquiry.guardianName}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, guardianName: e.target.value })}
-                          placeholder="Enter guardian name"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.guardianName)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Guardian Contact</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={newEnquiry.guardianContact}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, guardianContact: e.target.value })}
-                          placeholder="Enter guardian contact"
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.guardianContact)}</p>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-xs sm:text-sm font-medium text-gray-700">Guardian Relation</td>
-                    <td className="border border-gray-300 p-2">
-                      {isEditing ? (
-                        <select
-                          value={newEnquiry.guardianRelation}
-                          onChange={(e) => setNewEnquiry({ ...newEnquiry, guardianRelation: e.target.value })}
-                          className="p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        >
-                          <option value="">Select relation</option>
-                          <option value="Parent">Parent</option>
-                          <option value="Sibling">Sibling</option>
-                          <option value="Spouse">Spouse</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.guardianRelation)}</p>
-                      )}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )} */}
 
           {currentSection === 2 && (
             <div>
@@ -2062,6 +1483,25 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                       <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationPassOutYear)}</p>
                     )}
                   </div>
+                  <div>
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">Education Break</label>
+  {isEditing ? (
+    <select
+      value={newEnquiry.educationBreak || ""}
+      onChange={(e) => setNewEnquiry({ ...newEnquiry, educationBreak: e.target.value })}
+      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+    >
+      <option value="">Select education break</option>
+      <option value="No Break">No Break</option>
+      <option value="0 to 1 Years">0 to 1 Years</option>
+      <option value="1 - 3 Years">1 - 3 Years</option>
+      <option value="3 - 5 Years">3 - 5 Years</option>
+      <option value="5+ Years">5+ Years</option>
+    </select>
+  ) : (
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.educationBreak)}</p>
+  )}
+</div>
                 </div>
               </div>
 
@@ -2097,20 +1537,6 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                       <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workingCompanyName)}</p>
                     )}
                   </div>
-                  {/* <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Working Domain</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={newEnquiry.workingDomain}
-                        onChange={(e) => setNewEnquiry({ ...newEnquiry, workingDomain: e.target.value })}
-                        placeholder="Enter working domain"
-                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      />
-                    ) : (
-                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workingDomain)}</p>
-                    )}
-                  </div> */}
 
                   <div>
   <label className="block text-xs sm:text-sm font-medium text-gray-700">Working Domain</label>
@@ -2150,7 +1576,28 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
 
                 {/* Professional Fields (Right Side) */}
                 <div className="space-y-4">
-                  <div>
+                <div>
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">Experience in Years</label>
+  {isEditing ? (
+    <select
+      value={newEnquiry.experienceInYears}
+      onChange={(e) => setNewEnquiry({ ...newEnquiry, experienceInYears: e.target.value })}
+      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+    >
+      <option value="">Select experience</option>
+      <option value="Fresher">Fresher</option>
+      <option value="0 to 1 Years">0 to 1 Years</option>
+      <option value="1 - 3 Years">1 - 3 Years</option>
+      <option value="3 - 5 Years">3 - 5 Years</option>
+      <option value="5 - 10 Years">5 - 10 Years</option>
+      <option value="10 - 15 Years">10 - 15 Years</option>
+      <option value="15+ Years">15+ Years</option>
+    </select>
+  ) : (
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.experienceInYears)}</p>
+  )}
+</div>
+                  {/* <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700">Experience in Years</label>
                     {isEditing ? (
                       <input
@@ -2165,7 +1612,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                     ) : (
                       <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.experienceInYears)}</p>
                     )}
-                  </div>
+                  </div> */}
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700">Current Salary</label>
                     {isEditing ? (
@@ -2182,6 +1629,26 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                       <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.currentSalary)}</p>
                     )}
                   </div>
+
+                  <div>
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">Work Break</label>
+  {isEditing ? (
+    <select
+      value={newEnquiry.workBreak || ""}
+      onChange={(e) => setNewEnquiry({ ...newEnquiry, workBreak: e.target.value })}
+      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+    >
+      <option value="">Select work break</option>
+      <option value="No Break">No Break</option>
+      <option value="0 to 1 Years">0 to 1 Years</option>
+      <option value="1 - 3 Years">1 - 3 Years</option>
+      <option value="3 - 5 Years">3 - 5 Years</option>
+      <option value="5+ Years">5+ Years</option>
+    </select>
+  ) : (
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workBreak)}</p>
+  )}
+</div>
                 </div>
               </div>
 
@@ -2489,63 +1956,75 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           </select>
         </div>
         {noteType === "call-log" && (
-          <div className="space-y-3 sm:space-y-4 mb-3 sm:mb-4">
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Duration (minutes)</label>
-              <input
-                type="number"
-                value={callDuration}
-                onChange={(e) => setCallDuration(e.target.value)}
-                placeholder="Enter call duration"
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                min="0"
-                step="1"
-              />
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Type</label>
-              <select
-                value={callType}
-                onChange={(e) => setCallType(e.target.value)}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              >
-                <option value="incoming">Incoming</option>
-                <option value="outgoing">Outgoing</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Time</label>
-              <input
-                type="time"
-                value={callTime}
-                onChange={(e) => setCallTime(e.target.value)}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              />
-            </div>
-          </div>
-        )}
-        {noteType === "call-schedule" && (
-          <div className="space-y-3 sm:space-y-4 mb-3 sm:mb-4">
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Date</label>
-              <input
-                type="date"
-                value={callDate}
-                onChange={(e) => setCallDate(e.target.value)}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Time</label>
-              <input
-                type="time"
-                value={callScheduledTime}
-                onChange={(e) => setCallScheduledTime(e.target.value)}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              />
-            </div>
-          </div>
-        )}
+  <div className="space-y-3 sm:space-y-4 mb-3 sm:mb-4">
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Date</label>
+      <input
+        type="date"
+        value={callLogDate}
+        onChange={(e) => setCallLogDate(e.target.value)}
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      />
+    </div>
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Duration (minutes)</label>
+      <input
+        type="number"
+        value={callDuration}
+        onChange={(e) => setCallDuration(e.target.value)}
+        placeholder="Enter call duration"
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        min="0"
+        step="1"
+      />
+    </div>
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Type</label>
+      <select
+        value={callType}
+        onChange={(e) => setCallType(e.target.value)}
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      >
+        <option value="incoming">Incoming</option>
+        <option value="outgoing">Outgoing</option>
+      </select>
+    </div>
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Time</label>
+      <input
+        type="time"
+        value={callTime}
+        onChange={(e) => setCallTime(e.target.value)}
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      />
+    </div>
+  </div>
+)}
+{noteType === "call-schedule" && (
+  <div className="space-y-3 sm:space-y-4 mb-3 sm:mb-4">
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Date</label>
+      <input
+        type="date"
+        value={callDate}
+        onChange={(e) => setCallDate(e.target.value)}
+        min={getTodayDate()} // Prevent past dates
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      />
+    </div>
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Time</label>
+      <input
+        type="time"
+        value={callScheduledTime}
+        onChange={(e) => setCallScheduledTime(e.target.value)}
+        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      />
+    </div>
+  </div>
+)}
+
+      
         <div className="mb-3 sm:mb-4">
           <label className="block text-xs sm:text-sm font-medium text-gray-700">Note</label>
           <textarea
@@ -2557,20 +2036,22 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           />
         </div>
         <div className="flex justify-end gap-2 mb-3 sm:mb-4">
-          <button
-            onClick={() => {
-              setNewNote("");
-              setNoteType("general-enquiry");
-              setCallDuration("");
-              setCallType("incoming");
-              setCallTime("");
-              setCallDate("");
-              setCallScheduledTime("");
-            }}
-            className="px-3 py-1 sm:px-4 sm:py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 text-sm"
-          >
-            Clear
-          </button>
+        <button
+  onClick={() => {
+    setNewNote("");
+    setNoteType("general-enquiry");
+    setCallDuration("");
+    setCallType("incoming");
+    setCallTime("");
+    setCallDate(getTodayDate()); // Reset to today
+    setCallLogDate(getTodayDate()); // Reset to today
+    setCallScheduledTime("");
+  }}
+  className="px-3 py-1 sm:px-4 sm:py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 text-sm"
+>
+  Clear
+</button>
+       
           <button
             onClick={handleAddNote}
             disabled={!canUpdate || !newNote?.trim()}
@@ -2618,12 +2099,13 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                         </p>
                       </div>
                       {note.type === "call-log" && (
-                        <div className="text-xs sm:text-sm text-gray-600 mb-2">
-                          <p>Duration: {note.callDuration || "Not specified"} minutes</p>
-                          <p>Type: {note.callType || "Not specified"}</p>
-                          <p>Time: {note.callTime || "Not specified"}</p>
-                        </div>
-                      )}
+  <div className="text-xs sm:text-sm text-gray-600 mb-2">
+    <p>Date: {note.callLogDate || "Not specified"}</p>
+    <p>Duration: {note.callDuration || "Not specified"} minutes</p>
+    <p>Type: {note.callType || "Not specified"}</p>
+    <p>Time: {note.callTime || "Not specified"}</p>
+  </div>
+)}
                       {note.type === "call-schedule" && (
                         <div className="text-xs sm:text-sm text-gray-600 mb-2">
                           <p>Date: {note.callDate || "Not specified"}</p>
@@ -2678,66 +2160,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
   </div>
 )}
 
-          {/* {currentSection === 4 && (
-            <div>
-              <h3 className="text-base sm:text-lg font-medium mb-2">Notes</h3>
-              <div className="space-y-4">
-                {newEnquiry.notes && newEnquiry.notes.length > 0 ? (
-                  newEnquiry.notes.map((note, index) => (
-                    <div key={index} className="border border-gray-200 rounded-md p-3 sm:p-4 bg-gray-50">
-                      <div className="flex justify-between items-center">
-                        <p className="text-xs sm:text-sm font-medium text-gray-700">{formatNoteType(note.type)}</p>
-                        <p className="text-xs sm:text-sm text-gray-500">{formatDateSafely(note.createdAt, "MMM d, yyyy h:mm a")}</p>
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-900 mt-1">{note.content}</p>
-                      {note.type === "office-visit" && note.audioUrl && (
-                        <div className="mt-2">
-                          {audioStatus[index] === "loading" ? (
-                            <p className="text-xs sm:text-sm text-gray-500">Loading audio...</p>
-                          ) : audioError[index] || audioStatus[index] === "invalid" ? (
-                            <div>
-                              <p className="text-xs sm:text-sm text-red-600">{audioError[index]}</p>
-                              <a
-                                href={note.audioUrl}
-                                download
-                                className="text-xs sm:text-sm text-blue-600 hover:underline"
-                              >
-                                Download Audio
-                              </a>
-                            </div>
-                          ) : (
-                            <audio
-                              controls
-                              src={note.audioUrl}
-                              onError={(e) => handleAudioError(index, e)}
-                              className="w-full max-w-md"
-                            >
-                              Your browser does not support the audio element.
-                            </audio>
-                          )}
-                          {canUpdate && audioStatus[index] === "valid" && (
-                            <button
-                              onClick={() => deleteRecording(note, index)}
-                              className="mt-2 px-2 py-1 text-xs sm:text-sm text-red-600 hover:text-red-800"
-                            >
-                              Delete Recording
-                            </button>
-                          )}
-                        </div>
-                      )}
-                      {note.addedBy && (
-                        <p className="text-xs sm:text-sm text-gray-500 mt-1">Added by: {note.addedBy}</p>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs sm:text-sm text-gray-500">No notes available.</p>
-                )}
-              </div>
-            </div>
-          )} */}
-
-
+         
 
           {currentSection === 5 && (
             <div>
@@ -2811,6 +2234,22 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
 
       {/* Reminder Popup */}
       {showReminder && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+      <h3 className="text-lg font-semibold mb-4">Call Reminder</h3>
+      <p className="mb-4">You have a scheduled call with <strong>{reminderDetails.name}</strong> in 10 minutes:</p>
+      <p className="mb-4">Date: {reminderDetails.date ? format(new Date(reminderDetails.date), "MMM d, yyyy") : "Not specified"}</p>
+      <p className="mb-4">Time: {reminderDetails.time || "Not specified"}</p>
+      <button
+        onClick={() => setShowReminder(false)}
+        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+      >
+        Dismiss
+      </button>
+    </div>
+  </div>
+)}
+      {/* {showReminder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Call Reminder</h3>
@@ -2825,7 +2264,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
             </button>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
