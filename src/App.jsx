@@ -866,8 +866,8 @@ import AttendanceDashboard from './StudentInformation/AttendanceDashboard.jsx'
 import EnquiryDashboard from './pages/components/EnquiryManagement/EnquiryDashboard.jsx';
 import EnquiryAnalyticsPage from './pages/components/EnquiryManagement/EnquiryAnalyticsPage.jsx';
 import EnquiryForms from './pages/components/EnquiryForm/EnquiryForm.jsx';
-// import SubmitEnquiryForm from './pages/components/EnquiryForm/SubmitEnquiryForm.jsx';
 import SubmitEnquiryForm from './pages/components/EnquiryForm/SubmitEnquiryForm.jsx';
+// import SubmitEnquiryForm from './pages/components/EnquiryForm/SubmitEnquiryForm.jsx';
 import EnquiryFormPage from "./pages/components/EnquiryForm/EnquiryFormPage";
 import ProfilePage from './pages/home/ProfilePage.jsx';
 import EmployeeAttendance from './pages/components/HRManagement/TimeAndAttendanceTracking/EmployeeAttendance.jsx';
@@ -878,6 +878,7 @@ import LeaveApplication from './pages/components/HRManagement/Leave/LeaveApplica
 import Companies from './pages/components/PlacementManagement/Companies/Companies.jsx';
 import JobOpenings from './pages/components/PlacementManagement/JobOpenings/JobOpenings.jsx';
 import RecruiterView from './pages/components/PlacementManagement/JobOpenings/RecruiterView.jsx';
+import UniqueEnquiryForm from '../formEnquiry/UniqueEnquiryForm.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -963,7 +964,8 @@ export default function App() {
               <Route path="/enquiry-analytics" element={<ProtectedRoute permissionSection="enquiries"><EnquiryAnalyticsPage /></ProtectedRoute>} />
               <Route path="/addFormForEnquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryForms /></ProtectedRoute>} />
               <Route path="/enquiry/:id" element={<EnquiryFormPage />} />
-
+              <Route path='/:formId' element={<UniqueEnquiryForm/>}/>
+              
               {/* Student Routes */}
               <Route path="/studentdetails" element={<ProtectedRoute permissionSection="student"><StudentDetails /></ProtectedRoute>} />
               <Route path="/question-bank" element={<ProtectedRoute permissionSection="questions"><QuestionBank /></ProtectedRoute>} />
