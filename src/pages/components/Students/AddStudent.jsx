@@ -236,7 +236,7 @@ export default function AddStudent() {
     fetchCourses();
     fetchBatches();
     fetchCenters();
-    fetchFeeTemplates();
+    // fetchFeeTemplates();
   }, []);
 
   const fetchCourses = async () => {
@@ -278,18 +278,18 @@ export default function AddStudent() {
     }
   };
 
-  const fetchFeeTemplates = async () => {
-    try {
-      const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
-      if (templateSnapshot.empty) {
-        alert("No fee templates found.");
-        return;
-      }
-      setFeeTemplates(templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    } catch (error) {
-      console.error("Error in fetching payment type:", error);
-    }
-  };
+  // const fetchFeeTemplates = async () => {
+  //   try {
+  //     const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
+  //     if (templateSnapshot.empty) {
+  //       alert("No fee templates found.");
+  //       return;
+  //     }
+  //     setFeeTemplates(templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  //   } catch (error) {
+  //     console.error("Error in fetching payment type:", error);
+  //   }
+  // };
 
   const handleAddStudent = async (e) => {
     e.preventDefault();
@@ -638,7 +638,7 @@ export default function AddStudent() {
                   type="date"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
-                  required
+                  // required
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>

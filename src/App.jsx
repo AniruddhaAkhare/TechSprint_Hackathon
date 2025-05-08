@@ -882,6 +882,7 @@ import EmployeeProfile from './pages/components/HRManagement/EmployeeDirectory/E
 import ActiveStatus from './pages/ActiveStatus.jsx';
 import EmployeeRegistrationForm from './pages/home/EmployeeRegistrationForm.jsx';
 import AfterEmployeeRegistration from './pages/home/AfterEmployeeRegistration.jsx';
+import BulkAddStudents from './pages/components/Students/BulkAddStudents.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -969,6 +970,7 @@ export default function App() {
 
                 {/* Student Routes */}
                 <Route path="/studentdetails" element={<ProtectedRoute permissionSection="student"><StudentDetails /></ProtectedRoute>} />
+                <Route path="/studentdetails/bulkadd" element={<ProtectedRoute permissionSection="student"><BulkAddStudents /></ProtectedRoute>} />
                 <Route path="/question-bank" element={<ProtectedRoute permissionSection="questions"><QuestionBank /></ProtectedRoute>} />
                 <Route path="/question-template" element={<ProtectedRoute permissionSection="templates"><QuestionTemplate /></ProtectedRoute>} />
                 <Route path="/studentdetails/addstudent" element={<ProtectedRoute permissionSection="student" action="create"><AddStudent /></ProtectedRoute>} />

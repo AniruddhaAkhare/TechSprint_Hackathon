@@ -224,7 +224,7 @@ export default function StudentInfo() {
     };
 
     return (
-        <div className="p-4 fixed inset-0 left-[300px]">
+        <div className="p-4 fixed inset-0 left-[300px] min-h-screen overflow-scroll">
         {/* <div className="min-h-screen bg-gray-50 p-6 ml-80 w-[calc(100vw-20rem)]"> */}
             <div className="max-w-8xl mx-auto">
                 {/* Header */}

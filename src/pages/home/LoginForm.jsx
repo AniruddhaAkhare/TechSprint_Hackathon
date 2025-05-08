@@ -21,7 +21,11 @@ export default function LoginForm() {
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            navigate('/dashboard');
+            if(user){
+                navigate('/dashboard');
+            }else{
+                navigate("/registration-welcome")
+            }
         } catch (error) {
             console.error('Login error:', error);
             setError(error.message || 'Failed to log in. Please check your credentials and try again.');
