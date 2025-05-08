@@ -52,7 +52,6 @@ const Sidebar = () => {
   const canViewStudents = rolePermissions?.student?.display || false;
   const canViewInstructors = rolePermissions?.Instructor?.display || false;
   const canViewRoles = rolePermissions?.roles?.display || false;
-  const canViewFees = rolePermissions?.reports?.display || false;
   const canViewQuestionBank = rolePermissions?.questions?.display || false;
   const canViewQuestionTemplate = rolePermissions?.templates?.display || false;
   const canViewInvoices = rolePermissions?.invoice?.display || false;
@@ -63,6 +62,8 @@ const Sidebar = () => {
   const canViewLeaves = rolePermissions?.Leaves?.display || false;
   const canViewCompanies = rolePermissions?.Companies?.display || false;
   const canViewJobOpenings = rolePermissions?.JobOpenings?.display || false;
+  const canViewEnquiryForms = rolePermissions?.enquiryForms?.display || false;
+  const canViewHolidays = rolePermissions?.Holidays?.display || false;
 
 
 
@@ -70,22 +71,21 @@ const Sidebar = () => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         try {
-          const userDocRef = doc(db, "Instructor", currentUser.email);
+          const userDocRef = doc(db, "Users", currentUser.email);
           const userDocSnap = await getDoc(userDocRef);
           if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
             setUser({
-              f_name: userData.f_name || "",
-              l_name: userData.l_name || "",
-              initials: `${userData.f_name?.charAt(0) || ""}${userData.l_name?.charAt(0) || ""}`.toUpperCase(),
+              name: userData.displayname || "",
+              // initials: `${userData.f_name?.charAt(0) || ""}${userData.l_name?.charAt(0) || ""}`.toUpperCase(),
             });
           } else {
-            setUser({ f_name: "User", l_name: "", initials: "U" });
+            setUser({ name: "User"});
           }
         } catch (err) {
           console.error("Error fetching user data:", err);
           setError("Failed to fetch user data: " + err.message);
-          setUser({ f_name: "User", l_name: "", initials: "U" });
+          setUser({name: "User"});
         }
 
         try {
@@ -220,7 +220,9 @@ const Sidebar = () => {
           Sales And Marketing
           {accordionState.enquiry ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
         </li>
-        {accordionState.enquiry && canViewEnquiry && (
+        {accordionState.enquiry &&
+        <>
+        {canViewEnquiry && (
           <Link to="/enquiry" className="nav-link" >
             <li className="nav-item">
               <FaQuestionCircle className="nav-icon" />
@@ -228,7 +230,7 @@ const Sidebar = () => {
             </li>
           </Link>
         )}
-        {accordionState.enquiry && canViewEnquiry && (
+        {canViewEnquiryForms && (
           <Link to="/addFormForEnquiry" className="nav-link" >
             <li className="nav-item">
               <FaQuestionCircle className="nav-icon" />
@@ -237,11 +239,13 @@ const Sidebar = () => {
           </Link>
         )}
 
+        </>
+        }
         <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("academic")}>
           Academic
           {accordionState.academic ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
         </li>
-        {accordionState.academic && (
+        {accordionState.academic &&(
           <>
             {canViewCourses && (
               <Link to="/courses" className="nav-link">
@@ -390,7 +394,7 @@ const Sidebar = () => {
                 </li>
               </Link>
             )}
-            {canViewUsers && (
+            {canViewHolidays && (
               <Link to="/holiday-calendar" className="nav-link">
                 <li className="nav-item">
                   <FaUsers className="nav-icon" />

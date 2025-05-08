@@ -134,7 +134,7 @@ const ApplicationManagement = ({ jobId }) => {
     fetchStudents();
     fetchCenters();
     fetchCourses();
-    fetchBatches();
+    // fetchBatches();
     fetchEnrollments();
   }, [jobId]);
 

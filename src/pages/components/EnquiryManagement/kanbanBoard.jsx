@@ -1427,7 +1427,9 @@ const KanbanBoard = () => {
   const [instructors, setInstructors] = useState([]);
   const [owners, setOwners] = useState([]);
   const [availableTags, setAvailableTags] = useState(["High Priority", "Follow Up", "Hot Lead", "Career Change", "Corporate Enquiry", "International"]);
-  const [rolePermissions] = useState({ enquiries: { create: true, update: true, delete: true, display: true } });
+  const [rolePermissions] = useState({
+    enquiries: { create: true, update: true, delete: true, display: true }
+  });
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
   const [isNotesMode, setIsNotesMode] = useState(false);
   const [noteType, setNoteType] = useState("general-enquiry");
@@ -1466,7 +1468,7 @@ const KanbanBoard = () => {
   const startWidth = useRef(0);
   const gridRef = useRef(null);
 
-  const canDisplay = rolePermissions.enquiries?.display || false;
+  const canView = rolePermissions.enquiries?.display || false;
   const canCreate = rolePermissions.enquiries?.create || false;
   const canUpdate = rolePermissions.enquiries?.update || false;
   const canDelete = rolePermissions.enquiries?.delete || false;
@@ -1489,7 +1491,7 @@ const KanbanBoard = () => {
     return value || placeholder;
   };
 
-  if (!canDisplay) {
+  if (!canView) {
     return (
       <div className="p-6 bg-gray-100 min-h-screen text-center py-8 text-gray-500">
         You don't have permission to view enquiries.
@@ -1498,12 +1500,20 @@ const KanbanBoard = () => {
   }
 
   const handleViewEnquiry = (enquiry) => {
+    if (!canView) {
+      alert("You don't have permission to view enquiry details.");
+      return;
+    }
     setSelectedEnquiry(enquiry);
     setIsNotesMode(false);
     setIsModalOpen(true);
   };
 
-  const handleAddNotes = (enquiry, event) => {
+  const handleAddNotes = (enquiry) => {
+    if (!canUpdate) {
+      alert("You don't have permission to add notes.");
+      return;
+    }
     setSelectedEnquiry(enquiry);
     setNoteType("general-enquiry");
     setNewNote("");
@@ -1619,6 +1629,8 @@ const KanbanBoard = () => {
   };
 
   useEffect(() => {
+    if (!canView) return;
+
     const unsubscribeTags = onSnapshot(collection(db, "tags"), (snapshot) => {
       const tagsData = snapshot.docs.map((doc) => doc.data().name);
       setAvailableTags(tagsData.length > 0 ? tagsData : ["High Priority", "Follow Up", "Hot Lead", "Career Change", "Corporate Enquiry", "International"]);
@@ -1679,6 +1691,7 @@ const KanbanBoard = () => {
   }, [filters, searchTerm]);
 
   const filteredEnquiries = (items) => {
+    if (!canView) return [];
     return items.filter((enquiry) => {
       const matchesSearch =
         !searchTerm ||
@@ -1700,7 +1713,7 @@ const KanbanBoard = () => {
         const startDate = filters.createdAtRange.startDate ? new Date(filters.createdAtRange.startDate) : null;
         const endDate = filters.createdAtRange.endDate ? new Date(filters.createdAtRange.endDate) : null;
         if (startDate && endDate) {
-          endDate.setHours(23, 59, 59, 999); // Include entire end date
+          endDate.setHours(23, 59, 59, 999);
           return createdAt >= startDate && createdAt <= endDate;
         }
         if (startDate) return createdAt >= startDate;
@@ -1718,7 +1731,7 @@ const KanbanBoard = () => {
         const startDate = filters.lastTouchedRange.startDate ? new Date(filters.lastTouchedRange.startDate) : null;
         const endDate = filters.lastTouchedRange.endDate ? new Date(filters.lastTouchedRange.endDate) : null;
         if (startDate && endDate) {
-          endDate.setHours(23, 59, 59, 999); // Include entire end date
+          endDate.setHours(23, 59, 59, 999);
           return lastTouched >= startDate && lastTouched <= endDate;
         }
         if (startDate) return lastTouched >= startDate;
@@ -1757,6 +1770,10 @@ const KanbanBoard = () => {
   };
 
   const handleSort = (key) => {
+    if (!canView) {
+      alert("You don't have permission to sort enquiries.");
+      return;
+    }
     setSortConfig((prev) => ({
       key,
       direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
@@ -1797,6 +1814,10 @@ const KanbanBoard = () => {
   };
 
   const onDragEnd = async (result) => {
+    if (!canUpdate) {
+      alert("You don't have permission to update enquiry stages.");
+      return;
+    }
     const { source, destination } = result;
     if (!destination) return;
 
@@ -1832,6 +1853,7 @@ const KanbanBoard = () => {
       } catch (error) {
         console.error("Error updating Firestore:", error);
         setColumns(columns);
+        alert(`Failed to update stage: ${error.message}`);
       }
     }
   };
@@ -1851,10 +1873,18 @@ const KanbanBoard = () => {
   };
 
   const handleAddEnquiryClick = () => {
+    if (!canCreate) {
+      alert("You don't have permission to create enquiries.");
+      return;
+    }
     setIsEnquiryTypeModalOpen(true);
   };
 
   const handleEnquiryTypeSelect = (type) => {
+    if (!canCreate) {
+      alert("You don't have permission to create enquiries.");
+      return;
+    }
     setIsEnquiryTypeModalOpen(false);
     if (type === "single") {
       setSelectedEnquiry(null);
@@ -1867,6 +1897,10 @@ const KanbanBoard = () => {
   };
 
   const handleFileUpload = (event) => {
+    if (!canCreate) {
+      alert("You don't have permission to create enquiries.");
+      return;
+    }
     const file = event.target.files[0];
     if (!file) return;
 
@@ -1920,6 +1954,10 @@ const KanbanBoard = () => {
   };
 
   const handleBulkEnquiryChange = (index, field, value) => {
+    if (!canCreate) {
+      alert("You don't have permission to create enquiries.");
+      return;
+    }
     const updatedEnquiries = [...bulkEnquiries];
     updatedEnquiries[index][field] = value;
     setBulkEnquiries(updatedEnquiries);
@@ -1994,10 +2032,18 @@ const KanbanBoard = () => {
   };
 
   const handleAddBulkEnquiryRow = () => {
+    if (!canCreate) {
+      alert("You don't have permission to create enquiries.");
+      return;
+    }
     setBulkEnquiries([...bulkEnquiries, { fullName: "", phoneNumber: "", email: "", college: "" }]);
   };
 
   const handleRemoveBulkEnquiryRow = (index) => {
+    if (!canCreate) {
+      alert("You don't have permission to create enquiries.");
+      return;
+    }
     if (bulkEnquiries.length === 1) {
       alert("At least one enquiry is required.");
       return;
@@ -2008,6 +2054,10 @@ const KanbanBoard = () => {
   };
 
   const handleSelectForAction = (enquiryId) => {
+    if (!canUpdate && !canDelete) {
+      alert("You don't have permission to select enquiries for update or deletion.");
+      return;
+    }
     setSelectedEnquiries((prev) =>
       prev.includes(enquiryId)
         ? prev.filter((id) => id !== enquiryId)
@@ -2044,6 +2094,10 @@ const KanbanBoard = () => {
   };
 
   const handleMassUpdateClick = () => {
+    if (!canUpdate) {
+      alert("You don't have permission to update enquiries.");
+      return;
+    }
     if (selectedEnquiries.length === 0) {
       alert("No enquiries selected for update.");
       return;
@@ -2170,13 +2224,15 @@ const KanbanBoard = () => {
             <p className="text-gray-500 text-sm sm:text-base">Manage and track enquiries from initial contact to conversion.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto relative">
-            <button
-              onClick={() => setIsTagsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto hover:bg-gray-100"
-            >
-              <FaCircle className="text-gray-400" />
-              Manage Tags
-            </button>
+            {canUpdate && (
+              <button
+                onClick={() => setIsTagsModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 w-full sm:w-auto hover:bg-gray-100"
+              >
+                <FaCircle className="text-gray-400" />
+                Manage Tags
+              </button>
+            )}
             {canCreate && (
               <div className="relative" ref={addButtonRef}>
                 <button
@@ -2227,38 +2283,42 @@ const KanbanBoard = () => {
             </button>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <div className="relative w-full sm:w-64">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search enquiries..."
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <FiltersDropdown
-              filters={filters}
-              setFilters={setFilters}
-              availableTags={availableTags}
-              branches={branches}
-              courses={courses}
-              instructors={instructors}
-              owners={owners}
-              initialColumns={initialColumns}
-            />
-            {view === "kanban" && (
-              <StageVisibilityDropdown
-                stageVisibility={stageVisibility}
-                setStageVisibility={setStageVisibility}
-                initialColumns={initialColumns}
-              />
+            {canView && (
+              <>
+                <div className="relative w-full sm:w-64">
+                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search enquiries..."
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <FiltersDropdown
+                  filters={filters}
+                  setFilters={setFilters}
+                  availableTags={availableTags}
+                  branches={branches}
+                  courses={courses}
+                  instructors={instructors}
+                  owners={owners}
+                  initialColumns={initialColumns}
+                />
+                {view === "kanban" && (
+                  <StageVisibilityDropdown
+                    stageVisibility={stageVisibility}
+                    setStageVisibility={setStageVisibility}
+                    initialColumns={initialColumns}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
-        {view === "kanban" && (
+        {view === "kanban" && canView && (
           <DragDropContext onDragEnd={onDragEnd}>
             <div className="flex overflow-x-auto gap-4 h-full">
               {Object.entries(columns)
@@ -2279,7 +2339,7 @@ const KanbanBoard = () => {
             </div>
           </DragDropContext>
         )}
-        {view === "list" && (
+        {view === "list" && canView && (
           <div className="bg-white rounded-lg shadow-md overflow-x-auto h-full relative">
             <div
               ref={gridRef}
@@ -2552,7 +2612,7 @@ const KanbanBoard = () => {
           </div>
         </div>
       )}
-      {isEnquiryTypeModalOpen && (
+      {canCreate && isEnquiryTypeModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Add Enquiry</h3>
@@ -2580,7 +2640,7 @@ const KanbanBoard = () => {
           </div>
         </div>
       )}
-      {isBulkEnquiryModalOpen && (
+      {canCreate && isBulkEnquiryModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-4xl w-full overflow-y-auto max-h-[80vh]">
             <h3 className="text-lg font-semibold mb-4">Add Bulk Enquiries</h3>
@@ -2704,7 +2764,7 @@ const KanbanBoard = () => {
           </div>
         </div>
       )}
-      {isMassUpdateModalOpen && (
+      {canUpdate && isMassUpdateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Mass Update Enquiries</h3>

@@ -595,7 +595,9 @@ const Dashboard = () => {
   if (error) return <div className="text-center text-red-500 text-sm sm:text-base p-4">Error: {error}</div>;
 
   return (
+    <>
     <div className="p-4 fixed inset-0 left-[300px]">
+      
       <h1 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">Dashboard</h1>
       {/* <CheckInOut /> */}
       {/* Card Grid */}
@@ -679,6 +681,7 @@ const Dashboard = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -15,6 +15,9 @@ const Header = () => {
           <a href="#about" className="text-gray-600 hover:text-indigo-600">About Us</a>
           <a href="#contact" className="text-gray-600 hover:text-indigo-600">Contact</a>
         </nav>
+        <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition" onClick={()=>{navigate('/employee-registration')}}>
+          Registration
+        </button>
         <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition" onClick={()=>{navigate('/login')}}>
           Login
         </button>
