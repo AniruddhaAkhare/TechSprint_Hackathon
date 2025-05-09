@@ -27,6 +27,49 @@ const InstallmentsForm = ({
   user,
   studentId,
 }) => {
+  // Validation function to check if total of registration and installments exceeds total fees
+  const validateTotalFees = (newRegistrationAmount, newInstallmentDetails) => {
+    const registrationAmount = parseFloat(newRegistrationAmount || 0);
+    const totalInstallments = newInstallmentDetails.reduce(
+      (sum, installment) => sum + parseFloat(installment.dueAmount || 0),
+      0
+    );
+    const totalFees = parseFloat(fullFeesDetails.feeAfterDiscount || 0);
+    return registrationAmount + totalInstallments <= totalFees;
+  };
+
+  const handleRegistrationChangeWithValidation = (courseIndex, field, value) => {
+    // Create a temporary registration object to test the new value
+    const updatedRegistration = { ...registration, [field]: value };
+    if (field === "amount" && !validateTotalFees(value, installmentDetails)) {
+      alert("Total of registration and installments cannot exceed total fees.");
+      return;
+    }
+    handleRegistrationChange(courseIndex, field, value);
+  };
+
+  const handleInstallmentChangeWithValidation = (
+    courseIndex,
+    installmentIndex,
+    field,
+    value
+  ) => {
+    // Create a temporary installment details array to test the new value
+    const updatedInstallmentDetails = [...installmentDetails];
+    updatedInstallmentDetails[installmentIndex] = {
+      ...updatedInstallmentDetails[installmentIndex],
+      [field]: value,
+    };
+    if (
+      field === "dueAmount" &&
+      !validateTotalFees(registration.amount, updatedInstallmentDetails)
+    ) {
+      alert("Total of registration and installments cannot exceed total fees.");
+      return;
+    }
+    handleInstallmentChange(courseIndex, installmentIndex, field, value);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-4">
@@ -107,7 +150,11 @@ const InstallmentsForm = ({
                 <TextField
                   value={registration.amount || ""}
                   onChange={(e) =>
-                    handleRegistrationChange(courseIndex, "amount", e.target.value)
+                    handleRegistrationChangeWithValidation(
+                      courseIndex,
+                      "amount",
+                      e.target.value
+                    )
                   }
                   size="small"
                   disabled={!canUpdate}
@@ -118,7 +165,11 @@ const InstallmentsForm = ({
                   type="date"
                   value={registration.date || ""}
                   onChange={(e) =>
-                    handleRegistrationChange(courseIndex, "date", e.target.value)
+                    handleRegistrationChangeWithValidation(
+                      courseIndex,
+                      "date",
+                      e.target.value
+                    )
                   }
                   size="small"
                   disabled={!canUpdate}
@@ -128,7 +179,7 @@ const InstallmentsForm = ({
                 <Select
                   value={registration.paymentMethod || ""}
                   onChange={(e) =>
-                    handleRegistrationChange(
+                    handleRegistrationChangeWithValidation(
                       courseIndex,
                       "paymentMethod",
                       e.target.value
@@ -153,7 +204,7 @@ const InstallmentsForm = ({
                 <TextField
                   value={registration.receivedBy || ""}
                   onChange={(e) =>
-                    handleRegistrationChange(
+                    handleRegistrationChangeWithValidation(
                       courseIndex,
                       "receivedBy",
                       e.target.value
@@ -167,7 +218,7 @@ const InstallmentsForm = ({
                 <TextField
                   value={registration.remark || ""}
                   onChange={(e) =>
-                    handleRegistrationChange(
+                    handleRegistrationChangeWithValidation(
                       courseIndex,
                       "remark",
                       e.target.value
@@ -181,7 +232,7 @@ const InstallmentsForm = ({
                 <Select
                   value={registration.status || "Pending"}
                   onChange={(e) =>
-                    handleRegistrationChange(
+                    handleRegistrationChangeWithValidation(
                       courseIndex,
                       "status",
                       e.target.value
@@ -246,7 +297,7 @@ const InstallmentsForm = ({
                   <TextField
                     value={installment.number || ""}
                     onChange={(e) =>
-                      handleInstallmentChange(
+                      handleInstallmentChangeWithValidation(
                         courseIndex,
                         installmentIndex,
                         "number",
@@ -262,7 +313,7 @@ const InstallmentsForm = ({
                     type="date"
                     value={installment.dueDate || ""}
                     onChange={(e) =>
-                      handleInstallmentChange(
+                      handleInstallmentChangeWithValidation(
                         courseIndex,
                         installmentIndex,
                         "dueDate",
@@ -277,7 +328,7 @@ const InstallmentsForm = ({
                   <TextField
                     value={installment.dueAmount || ""}
                     onChange={(e) =>
-                      handleInstallmentChange(
+                      handleInstallmentChangeWithValidation(
                         courseIndex,
                         installmentIndex,
                         "dueAmount",
@@ -293,7 +344,7 @@ const InstallmentsForm = ({
                     type="date"
                     value={installment.paidDate || ""}
                     onChange={(e) =>
-                      handleInstallmentChange(
+                      handleInstallmentChangeWithValidation(
                         courseIndex,
                         installmentIndex,
                         "paidDate",
@@ -308,7 +359,7 @@ const InstallmentsForm = ({
                   <TextField
                     value={installment.paidAmount || ""}
                     onChange={(e) =>
-                      handleInstallmentChange(
+                      handleInstallmentChangeWithValidation(
                         courseIndex,
                         installmentIndex,
                         "paidAmount",
@@ -323,7 +374,7 @@ const InstallmentsForm = ({
                   <TextField
                     value={installment.paymentMode || ""}
                     onChange={(e) =>
-                      handleInstallmentChange(
+                      handleInstallmentChangeWithValidation(
                         courseIndex,
                         installmentIndex,
                         "paymentMode",
@@ -338,7 +389,7 @@ const InstallmentsForm = ({
                   <TextField
                     value={installment.pdcStatus || ""}
                     onChange={(e) =>
-                      handleInstallmentChange(
+                      handleInstallmentChangeWithValidation(
                         courseIndex,
                         installmentIndex,
                         "pdcStatus",
@@ -353,7 +404,7 @@ const InstallmentsForm = ({
                   <TextField
                     value={installment.receivedBy || ""}
                     onChange={(e) =>
-                      handleInstallmentChange(
+                      handleInstallmentChangeWithValidation(
                         courseIndex,
                         installmentIndex,
                         "receivedBy",
@@ -368,7 +419,7 @@ const InstallmentsForm = ({
                   <TextField
                     value={installment.remark || ""}
                     onChange={(e) =>
-                      handleInstallmentChange(
+                      handleInstallmentChangeWithValidation(
                         courseIndex,
                         installmentIndex,
                         "remark",
@@ -383,7 +434,7 @@ const InstallmentsForm = ({
                   <Select
                     value={installment.status || "Pending"}
                     onChange={(e) =>
-                      handleInstallmentChange(
+                      handleInstallmentChangeWithValidation(
                         courseIndex,
                         installmentIndex,
                         "status",

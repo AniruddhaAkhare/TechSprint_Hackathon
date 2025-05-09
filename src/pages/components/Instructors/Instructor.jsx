@@ -20,7 +20,6 @@ export default function Instructor() {
   const roleCollectionRef = collection(db, "roles");
   const activityLogsCollectionRef = collection(db, "activityLogs");
 
-  // Define permissions for Instructor
   const canCreate = rolePermissions?.Instructor?.create || false;
   const canUpdate = rolePermissions?.Instructor?.update || false;
   const canDelete = rolePermissions?.Instructor?.delete || false;
@@ -28,7 +27,7 @@ export default function Instructor() {
 
   const countryCodes = [
     { code: "+1", label: "USA (+1)" },
-    { code: "+1", label: "Canada (+1)" }, // Note: Canada shares +1 with the USA, but you might differentiate by region if needed
+    { code: "+1", label: "Canada (+1)" }, 
     { code: "+7", label: "Russia (+7)" },
     { code: "+20", label: "Egypt (+20)" },
     { code: "+27", label: "South Africa (+27)" },

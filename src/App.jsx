@@ -879,7 +879,7 @@ import Companies from './pages/components/PlacementManagement/Companies/Companie
 import JobOpenings from './pages/components/PlacementManagement/JobOpenings/JobOpenings.jsx';
 import RecruiterView from './pages/components/PlacementManagement/JobOpenings/RecruiterView.jsx';
 import UniqueEnquiryForm from '../formEnquiry/UniqueEnquiryForm.jsx';
-import EmployeeProfile from './pages/components/HRManagement/EmployeeDirectory/EmployeeProfile.jsx';
+import EmployeeProfile from './pages/components/Instructors/EmployeeProfile.jsx';
 import ActiveStatus from './pages/ActiveStatus.jsx';
 import EmployeeRegistrationForm from './pages/home/EmployeeRegistrationForm.jsx';
 import AfterEmployeeRegistration from './pages/home/AfterEmployeeRegistration.jsx';

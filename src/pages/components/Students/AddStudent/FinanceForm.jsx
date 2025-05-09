@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Typography,
   TextField,
@@ -12,7 +12,11 @@ import {
   TableRow,
   FormControl,
   InputLabel,
+  Button,
 } from "@mui/material";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { useAuth } from "../../../../context/AuthContext";
 
 const FinanceForm = ({
   courseIndex,
@@ -25,8 +29,121 @@ const FinanceForm = ({
   user,
   studentId,
 }) => {
+  const { user: authUser } = useAuth();
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const [attachmentError, setAttachmentError] = useState({});
+
+  // S3 Client Configuration
+  const s3Client = new S3Client({
+    region: import.meta.env.VITE_AWS_REGION,
+    credentials: {
+      accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+      secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+    },
+  });
+
+  // Validate file type and size
+  const validateFile = (file, docType) => {
+    const validFormats = ["application/pdf", "image/jpeg", "image/png"];
+    if (!validFormats.includes(file.type)) {
+      setAttachmentError((prev) => ({
+        ...prev,
+        [docType]: "Invalid file format. Only PDF, JPG, and PNG are supported.",
+      }));
+      return false;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setAttachmentError((prev) => ({
+        ...prev,
+        [docType]: "File size exceeds 2MB.",
+      }));
+      return false;
+    }
+    setAttachmentError((prev) => ({ ...prev, [docType]: "" }));
+    return true;
+  };
+
+  // Function to upload file to S3
+  const uploadToS3 = async (file, docType) => {
+    const bucket = import.meta.env.VITE_S3_BUCKET_NAME;
+    if (!bucket) {
+      throw new Error("S3 bucket name is not configured.");
+    }
+    try {
+      setUploading(true);
+      setError("");
+      const arrayBuffer = await file.arrayBuffer();
+      const key = `student/${studentId}/course_${courseIndex}/${docType}_${Date.now()}_${file.name}`;
+      const params = {
+        Bucket: bucket,
+        Key: key,
+        Body: new Uint8Array(arrayBuffer),
+        ContentType: file.type,
+      };
+      await s3Client.send(new PutObjectCommand(params));
+      const url = `https://${bucket}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${key}`;
+      console.log(`S3 Upload Success for ${docType}:`, { url, key });
+      return url;
+    } catch (err) {
+      setError(`Failed to upload ${docType}: ${err.message}`);
+      console.error(`S3 Upload Error for ${docType}:`, err);
+      throw err;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Function to generate pre-signed URL for viewing
+  const viewDocument = async (s3Url, docType) => {
+    try {
+      if (!s3Url) {
+        setError(`No ${docType} uploaded yet.`);
+        return;
+      }
+      const key = s3Url.split(`https://${import.meta.env.VITE_S3_BUCKET_NAME}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/`)[1];
+      const command = new GetObjectCommand({
+        Bucket: import.meta.env.VITE_S3_BUCKET_NAME,
+        Key: key,
+      });
+      const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+      console.log(`Generated Pre-signed URL for ${docType}:`, url);
+      window.open(url, "_blank");
+    } catch (err) {
+      setError(`Failed to generate view URL for ${docType}: ${err.message}`);
+      console.error(`View Error for ${docType}:`, err);
+    }
+  };
+
+  // Modified handleFileChange to validate and upload to S3
+  const handleFileChangeWithS3 = async (courseIndex, docType, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!validateFile(file, docType)) {
+      return;
+    }
+
+    try {
+      const s3Url = await uploadToS3(file, docType);
+      const fileData = { name: file.name, s3Url };
+      console.log(`Updating financeDetails for ${docType}:`, fileData);
+      handleFileChange(courseIndex, docType, fileData);
+    } catch (err) {
+      // Error is already set in uploadToS3
+    }
+  };
+
+  // Debug financeDetails to check state updates
+  console.log("Current financeDetails:", financeDetails);
+
   return (
     <div className="space-y-4">
+      {error && (
+        <Typography color="error" variant="body2">
+          {error}
+        </Typography>
+      )}
       <div className="flex items-center space-x-4">
         <Typography variant="subtitle1" className="text-gray-700">
           Total Fees: {fullFeesDetails?.totalFees || 0}
@@ -286,10 +403,7 @@ const FinanceForm = ({
               financePartners
                 .find((p) => p.name === financeDetails.financePartner)
                 ?.scheme?.map((schemeItem, idx) => (
-                  <MenuItem
-                    key={idx}
-                    value={schemeItem.plan}
-                  >
+                  <MenuItem key={idx} value={schemeItem.plan}>
                     {schemeItem.plan}
                     {schemeItem.description && ` - ${schemeItem.description}`}
                   </MenuItem>
@@ -405,46 +519,39 @@ const FinanceForm = ({
               <TableCell className="text-gray-800 font-medium min-w-40">
                 Status
               </TableCell>
+              <TableCell className="text-gray-800 font-medium min-w-40">
+                Action
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            <TableRow>
-              <TableCell>6 Months Bank Statement</TableCell>
-              <TableCell>
-                <input
-                  type="file"
-                  onChange={(e) => handleFileChange(courseIndex, "bankStatement", e)}
-                  className="mt-1"
-                  disabled={!canUpdate}
-                />
-              </TableCell>
-              <TableCell>
-                {financeDetails.bankStatement ? (
-                  <Typography variant="body2" className="text-green-600">
-                    Uploaded: {financeDetails.bankStatement.name}
-                  </Typography>
-                ) : (
-                  <Typography variant="body2" className="text-gray-600">
-                    Not Uploaded
-                  </Typography>
-                )}
-              </TableCell>
-            </TableRow>
-            {financeDetails.bankStatement && (
-              <TableRow>
-                <TableCell>Payment Slip</TableCell>
+            {[
+              { type: "photo", label: "Applicant Photo" },
+              { type: "bankStatement", label: "6 Months Bank Statement" },
+              { type: "paymentSlip", label: "Payment Slip" },
+              { type: "aadharCard", label: "Aadhar Card" },
+              { type: "panCard", label: "PAN Card" },
+            ].map((doc) => (
+              <TableRow key={doc.type}>
+                <TableCell>{doc.label}</TableCell>
                 <TableCell>
                   <input
                     type="file"
-                    onChange={(e) => handleFileChange(courseIndex, "paymentSlip", e)}
+                    accept="application/pdf,image/jpeg,image/png"
+                    onChange={(e) => handleFileChangeWithS3(courseIndex, doc.type, e)}
                     className="mt-1"
-                    disabled={!canUpdate}
+                    disabled={!canUpdate || uploading}
                   />
+                  {attachmentError[doc.type] && (
+                    <Typography color="error" variant="body2" className="mt-1">
+                      {attachmentError[doc.type]}
+                    </Typography>
+                  )}
                 </TableCell>
                 <TableCell>
-                  {financeDetails.paymentSlip ? (
+                  {financeDetails[doc.type]?.s3Url ? (
                     <Typography variant="body2" className="text-green-600">
-                      Uploaded: {financeDetails.paymentSlip.name}
+                      Uploaded: {financeDetails[doc.type].name}
                     </Typography>
                   ) : (
                     <Typography variant="body2" className="text-gray-600">
@@ -452,56 +559,20 @@ const FinanceForm = ({
                     </Typography>
                   )}
                 </TableCell>
-              </TableRow>
-            )}
-            {financeDetails.paymentSlip && (
-              <TableRow>
-                <TableCell>Aadhar Card</TableCell>
                 <TableCell>
-                  <input
-                    type="file"
-                    onChange={(e) => handleFileChange(courseIndex, "aadharCard", e)}
-                    className="mt-1"
-                    disabled={!canUpdate}
-                  />
-                </TableCell>
-                <TableCell>
-                  {financeDetails.aadharCard ? (
-                    <Typography variant="body2" className="text-green-600">
-                      Uploaded: {financeDetails.aadharCard.name}
-                    </Typography>
-                  ) : (
-                    <Typography variant="body2" className="text-gray-600">
-                      Not Uploaded
-                    </Typography>
-                  )}
+                  <Button
+                    variant="text"
+                    color="primary"
+                    onClick={() =>
+                      viewDocument(financeDetails[doc.type]?.s3Url, doc.label)
+                    }
+                    disabled={!financeDetails[doc.type]?.s3Url}
+                  >
+                    View
+                  </Button>
                 </TableCell>
               </TableRow>
-            )}
-            {financeDetails.aadharCard && (
-              <TableRow>
-                <TableCell>PAN Card</TableCell>
-                <TableCell>
-                  <input
-                    type="file"
-                    onChange={(e) => handleFileChange(courseIndex, "panCard", e)}
-                    className="mt-1"
-                    disabled={!canUpdate}
-                  />
-                </TableCell>
-                <TableCell>
-                  {financeDetails.panCard ? (
-                    <Typography variant="body2" className="text-green-600">
-                      Uploaded: {financeDetails.panCard.name}
-                    </Typography>
-                  ) : (
-                    <Typography variant="body2" className="text-gray-600">
-                      Not Uploaded
-                    </Typography>
-                  )}
-                </TableCell>
-              </TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
       </TableContainer>

@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { db } from "../../../../config/firebase";
+import { db } from "../../../config/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import EProfile from "./EProfile";
+import EProfile from "../HRManagement/EmployeeDirectory/EProfile";
 
 export default function EmployeeProfile() {
     const navigate = useNavigate();
