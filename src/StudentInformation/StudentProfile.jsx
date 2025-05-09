@@ -62,15 +62,15 @@ export default function StudentProfile() {
                 <h2 className="text-lg font-medium text-gray-700 mb-4">Personal Details</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-600">First Name</label>
+                        <label className="block text-sm font-medium text-gray-600">Name</label>
                         <input
                             type="text"
-                            value={student.first_name || "N/A"}
+                            value={student.Name || "N/A"}
                             readOnly
                             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:outline-none"
                         />
                     </div>
-                    <div>
+                    {/* <div>
                         <label className="block text-sm font-medium text-gray-600">Last Name</label>
                         <input
                             type="text"
@@ -78,7 +78,7 @@ export default function StudentProfile() {
                             readOnly
                             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:outline-none"
                         />
-                    </div>
+                    </div> */}
                     <div>
                         <label className="block text-sm font-medium text-gray-600">Email</label>
                         <input

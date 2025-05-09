@@ -872,7 +872,7 @@ import EnquiryFormPage from "./pages/components/EnquiryForm/EnquiryFormPage";
 import ProfilePage from './pages/home/ProfilePage.jsx';
 import EmployeeAttendance from './pages/components/HRManagement/TimeAndAttendanceTracking/EmployeeAttendance.jsx';
 import HolidayCalendar from './pages/components/HRManagement/HolidayCalendar.jsx';
-import EmployeePage from './pages/components/HRManagement/TimeAndAttendanceTracking/Employeepage.jsx';
+import EmployeePage from './pages/components/HRManagement/TimeAndAttendanceTracking/EmployeePage.jsx';
 import HRLeaveApproval from './pages/components/HRManagement/Leave/HRLeaveApproval.jsx';
 import LeaveApplication from './pages/components/HRManagement/Leave/LeaveApplication.jsx';
 import Companies from './pages/components/PlacementManagement/Companies/Companies.jsx';
@@ -884,6 +884,7 @@ import ActiveStatus from './pages/ActiveStatus.jsx';
 import EmployeeRegistrationForm from './pages/home/EmployeeRegistrationForm.jsx';
 import AfterEmployeeRegistration from './pages/home/AfterEmployeeRegistration.jsx';
 import BulkAddStudents from './pages/components/Students/BulkAddStudents.jsx';
+import AddEmployee from './pages/components/HRManagement/EmployeeDirectory/AddEmployee.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -1017,6 +1018,7 @@ export default function App() {
                 <Route path="/leave-management" element={<HRLeaveApproval />} />
                 <Route path="/leave-application" element={<LeaveApplication />} />
                 <Route path="/employee-profile/:employeeId" element={<EmployeeProfile />} />
+                <Route path="/add-employee" element={<AddEmployee/>}/>
 
                 {/* Placement */}
                 <Route path="/companies" element={<Companies />} />

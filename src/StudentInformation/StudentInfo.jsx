@@ -171,8 +171,7 @@ export default function StudentInfo() {
     const { studentId } = useParams();
 
     const [student, setStudent] = useState({
-        first_name: "",
-        last_name: "",
+        Name: "",
         email: "",
         phone: "",
         residential_address: [],
@@ -198,8 +197,8 @@ export default function StudentInfo() {
                 if (studentSnap.exists()) {
                     const data = studentSnap.data();
                     setStudent({
-                        first_name: data.first_name || "",
-                        last_name: data.last_name || "",
+                        Name: data.Name || "",
+                        // last_name: data.last_name || "",
                         email: data.email || "",
                         phone: data.phone || "",
                         date_of_birth: data.date_of_birth ? data.date_of_birth.toDate().toISOString().split("T")[0] : "N/A",
@@ -238,7 +237,7 @@ export default function StudentInfo() {
                         </button>
                         <div>
                             <h1 className="text-2xl font-semibold text-gray-800 mb-0 p-0 ml-0">
-                                {student.first_name} {student.last_name}
+                                {student.Name}
                             </h1>
                             <p className="text-sm text-gray-600 mt-0 p-0 ml-0">{student.email}</p>
                         </div>

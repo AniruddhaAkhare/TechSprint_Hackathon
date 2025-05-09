@@ -170,7 +170,7 @@ const Fees = ({ studentId }) => {
                 <>
                     <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={closeDetails} />
                     <div className="fixed right-0 top-0 w-2/4 h-full bg-white shadow-lg p-6 z-50 overflow-y-auto">
-                        <h2 className="text-xl font-semibold text-gray-800">{`${learner.first_name} ${learner.last_name}`}</h2>
+                        <h2 className="text-xl font-semibold text-gray-800">{`${learner.Name}`}</h2>
                         <p className="text-sm text-gray-600 mt-1">Course: {selectedCourse.name}</p>
                         <p className="text-sm text-gray-600">Mode: {selectedCourse.mode || 'Not specified'}</p>
 

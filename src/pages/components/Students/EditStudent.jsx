@@ -14,8 +14,7 @@ export default function EditStudent() {
     const navigate = useNavigate();
     const { rolePermissions, user } = useAuth();
     const [student, setStudent] = useState({
-        first_name: "",
-        last_name: "",
+        Name: "",
         email: "",
         phoneNumber: "",
         status: "",
@@ -277,8 +276,7 @@ export default function EditStudent() {
                 const studentPhone = data.phone || "";
                 const guardianPhone = data.guardian_details?.phone || "";
                 setStudent({
-                    first_name: data.first_name || "",
-                    last_name: data.last_name || "",
+                    Name: data.Name || "",
                     email: data.email || "",
                     phoneNumber: studentPhone.startsWith("+") ? studentPhone.slice(studentPhone.indexOf("+") + 3) : studentPhone,
                     status: data.status || "",
@@ -296,7 +294,7 @@ export default function EditStudent() {
                     preferred_centers: data.preferred_centers || [],
                     guardian_details: {
                         name: data.guardian_details?.name || "",
-                        phone: guardianPhone.startsWith("+") ? guardianPhone.slice(guardianPhone.indexOf("+") + 3) : guardianPhone,
+                        phone: FguardianPhone.startsWith("+") ? guardianPhone.slice(guardianPhone.indexOf("+") + 3) : guardianPhone,
                         email: data.guardian_details?.email || "",
                         relation: data.guardian_details?.relation || "",
                         occupation: data.guardian_details?.occupation || "",
@@ -530,7 +528,7 @@ export default function EditStudent() {
             return;
         }
 
-        if (!student.first_name || !student.last_name || !student.email || !student.phoneNumber || !student.date_of_birth) {
+        if (!student.Name || !student.email || !student.phoneNumber || !student.date_of_birth) {
             toast.error("Please fill necessary fields: First Name, Last Name, Email, Phone Number, Date of Birth");
             return;
         }
@@ -541,8 +539,7 @@ export default function EditStudent() {
         try {
             const studentRef = doc(db, "student", studentId);
             await updateDoc(studentRef, {
-                first_name: student.first_name,
-                last_name: student.last_name,
+                Name: student.Name,
                 email: student.email,
                 phone: fullPhoneNumber,
                 status: student.status,
@@ -667,26 +664,13 @@ export default function EditStudent() {
                             <h2 className="text-lg font-medium text-gray-700 mb-4">Personal Details</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600">First Name</label>
+                                    <label className="block text-sm font-medium text-gray-600">Name</label>
                                     <input
                                         type="text"
-                                        name="first_name"
-                                        value={student.first_name}
+                                        name="name"
+                                        value={student.Name}
                                         onChange={handleChange}
-                                        placeholder="First Name"
-                                        required
-                                        disabled={!canUpdate}
-                                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600">Last Name</label>
-                                    <input
-                                        type="text"
-                                        name="last_name"
-                                        value={student.last_name}
-                                        onChange={handleChange}
-                                        placeholder="Last Name"
+                                        placeholder="Name"
                                         required
                                         disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

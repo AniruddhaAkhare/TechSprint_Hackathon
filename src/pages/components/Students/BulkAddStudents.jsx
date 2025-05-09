@@ -38,8 +38,7 @@ export default function BulkAddStudents() {
     }
     const template = [
       {
-        first_name: "",
-        last_name: "",
+        name: "",
         email: "",
         phone: "",
         goal: "",
@@ -50,8 +49,7 @@ export default function BulkAddStudents() {
     const csv = Papa.unparse(template, {
       header: true,
       columns: [
-        "first_name",
-        "last_name",
+        "name",
         "email",
         "phone",
         "goal",
@@ -106,8 +104,7 @@ export default function BulkAddStudents() {
 
     parsedData.forEach((student, index) => {
       const {
-        first_name,
-        last_name,
+        name,
         email,
         phone,
         goal,
@@ -116,8 +113,8 @@ export default function BulkAddStudents() {
       } = student;
 
       // Validate required fields
-      if (!first_name || !last_name || !email) {
-        errors.push(`Row ${index + 2}: Missing required fields (first_name, last_name, email)`);
+      if (!name || !email) {
+        errors.push(`Row ${index + 2}: Missing required fields (name, email)`);
         return;
       }
 
@@ -138,8 +135,7 @@ export default function BulkAddStudents() {
       // Prepare student data
       const studentRef = doc(collection(db, "student"));
       const studentData = {
-        first_name: first_name.trim(),
-        last_name: last_name.trim(),
+        name: name.trim(),
         email: email.trim(),
         phone: phone ? phone.trim() : "",
         goal: goal ? goal.trim() : "",
@@ -202,7 +198,7 @@ export default function BulkAddStudents() {
               </Button>
               <p className="text-sm text-gray-600 mt-2">
                 Download the template, fill in the student details, and upload the CSV file below.
-                Required fields: first_name, last_name, email. Optional fields: phone, goal, preferred_centers (comma-separated IDs), status (enquiry, enrolled, deferred, completed).
+                Required fields: name, email. Optional fields: phone, goal, preferred_centers (comma-separated IDs), status (enquiry, enrolled, deferred, completed).
               </p>
             </div>
             <div>

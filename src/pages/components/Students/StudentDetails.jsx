@@ -154,8 +154,8 @@ export default function StudentDetails() {
     if (query) {
       filtered = filtered.filter((student) =>
         [
-          student.first_name,
-          student.last_name,
+          student.Name,
+          // student.last_name,
           student.email,
           student.phone,
         ].some((field) => field?.toLowerCase().includes(query.toLowerCase()))
@@ -330,8 +330,8 @@ export default function StudentDetails() {
                       className="rounded"
                     />
                   </th> */}
-                  <th className="p-3 text-sm font-medium text-gray-600 text-left">First Name</th>
-                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Last Name</th>
+                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Name</th>
+                  {/* <th className="p-3 text-sm font-medium text-gray-600 text-left">Last Name</th> */}
                   <th className="p-3 text-sm font-medium text-gray-600 text-left">Email</th>
                   <th className="p-3 text-sm font-medium text-gray-600 text-left">Phone</th>
                   <th className="p-3 text-sm font-medium text-gray-600 text-left">Preferred Learning Centers</th>
@@ -357,13 +357,7 @@ export default function StudentDetails() {
                       className="p-3 text-gray-700 cursor-pointer hover:text-blue-600 min-w-40"
                       onClick={() => navigate(`/studentdetails/${student.id}`)}
                     >
-                      {student.first_name || "N/A"}
-                    </td>
-                    <td
-                      className="p-3 text-gray-700 cursor-pointer hover:text-blue-600 min-w-40"
-                      onClick={() => navigate(`/studentdetails/${student.id}`)}
-                    >
-                      {student.last_name || "N/A"}
+                      {student.Name || "N/A"}
                     </td>
                     <td
                       className="p-3 text-gray-700 cursor-pointer hover:text-blue-600 min-w-40"

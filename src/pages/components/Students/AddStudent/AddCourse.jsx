@@ -630,7 +630,7 @@ const AddCourse = () => {
       }
       const studentData = studentDoc.data();
       const studentEmail = studentData.email || "";
-      const studentName = `${studentData.firstName} ${studentData.lastName}`.trim();
+      const studentName = `${studentData.Name}`.trim() || "";
 
       // Prepare updated entries
       const updatedEntries = courseEntries.map((entry) => {

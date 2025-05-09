@@ -39,20 +39,21 @@
         }
       ]
     },
-   
+    {
+      "site": "form-shikshasaarathi-com",
+      "public": "build",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
         {
-          "site": "form-shikshasaarathi-com",
-          "public": "build",
-          "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-          "rewrites": [
-            {
-              "source": "**",
-              "destination": "/index.html"
-            }
-          ]
+          "source": "**",
+          "destination": "/index.html"
         }
-   
-  
+      ]
+    }
   ],
   "functions": [
     {

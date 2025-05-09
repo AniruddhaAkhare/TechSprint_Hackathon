@@ -62,7 +62,7 @@ const AddInstructor = ({
     else if (!/^\d{7,15}$/.test(formData.phone)) newErrors.phone = "Phone number must be 7-15 digits";
     if (!formData.specialization.trim()) newErrors.specialization = "Specialization is required";
     if (!formData.center) newErrors.center = "Center is required";
-    if (!formData.role) newErrors.role = "Role is required";
+    // if (!formData.role) newErrors.role = "Role is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
