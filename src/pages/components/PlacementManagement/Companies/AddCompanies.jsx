@@ -210,12 +210,16 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
   const [domain, setDomain] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [url, setUrl] = useState("");
   const [city, setCity] = useState("");
   const [citySuggestions, setCitySuggestions] = useState([]);
   const [pointsOfContact, setPointsOfContact] = useState([]);
   const [newPOC, setNewPOC] = useState({ name: "", countryCode: "+91", mobile: "", email: "" });
   const [status, setStatus] = useState("Active");
   const [transactionCount, setTransactionCount] = useState(0);
+  const [fromDate, setFromDate] = useState();
+  const [toDate, setToDate] = useState();
+  const [companyType, setCompanyType] = useState();
 
   // Permission checks
   const canDisplay = rolePermissions?.Companies?.display || false;
@@ -267,9 +271,13 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
         setPhone(company.phone || "");
         setEmail(company.email || "");
         setCity(company.city || "");
+        setUrl(company.url || "");
         setPointsOfContact(company.pointsOfContact || []);
         setStatus(company.status || "Active");
         setNewPOC({ name: "", countryCode: "+91", mobile: "", email: "" });
+        setFromDate(company.fromDate || "");
+        setToDate(company.toDate || "");
+        setCompanyType(company.companyType || "");
       } else {
         resetForm();
       }
@@ -282,12 +290,16 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
     setPhone("");
     setEmail("");
     setCity("");
+    setUrl("");
     setCitySuggestions([]);
     setPointsOfContact([]);
     setStatus("Active");
     setTransactionCount(0);
     setNewPOC({ name: "", countryCode: "+91", mobile: "", email: "" });
     logActivity("RESET_FORM", {});
+    setFromDate("");
+    setToDate("");
+    setCompanyType("");
   };
 
   const validateEmail = (email) => {
@@ -353,10 +365,14 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
       domain,
       phone,
       email,
+      url,
       city,
       pointsOfContact,
       status,
       createdAt: serverTimestamp(),
+      toDate,
+      fromDate,
+      companyType,
     };
 
     try {
@@ -444,8 +460,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
       <ToastContainer position="top-right" autoClose={3000} />
       <div
         // 
-        className={`fixed inset-y-0 right-0 z-50 bg-white w-full sm:w-3/4 md:w-2/5 shadow-lg transform transition-transform duration-300 ${
-            isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-y-0 right-0 z-50 bg-white w-full sm:w-3/4 md:w-2/5 shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
           } p-4 sm:p-6 overflow-y-auto`}
       >
         <div className="flex justify-between items-center mb-4 sm:mb-6">
@@ -495,7 +510,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
               id="domain"
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
-              disabled={(!canUpdate && company) || (!canCreate && !company)}
+              // disabled={(!canUpdate && company) || (!canCreate && !company)}
               className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             >
               <option value="">Select Domain</option>
@@ -505,6 +520,31 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label htmlFor="companyType" className="block text-sm font-medium text-gray-700">
+              Company Type
+            </label>
+            <select
+              id="companyType"
+              value={companyType}
+              onChange={(e) => setCompanyType(e.target.value)}
+              // required
+              // disabled={company ? !canUpdate : !canCreate}
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              aria-describedby="companyTypeError"
+            >
+              <option value="" disabled>
+                Select company type
+              </option>
+              <option value="Startup">Startup</option>
+              <option value="Mid-level">Mid-level</option>
+              <option value="MNC">MNC</option>
+            </select>
+            <p id="companyTypeError" className="mt-1 text-sm text-red-600 hidden">
+              Please select a company type
+            </p>
           </div>
 
           {/* Phone */}
@@ -518,7 +558,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
               placeholder="Enter 10-digit phone number"
-              required
+              // required
               disabled={(!canUpdate && company) || (!canCreate && !company)}
               className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             />
@@ -535,10 +575,75 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter email address"
-              required
+              // required
               disabled={(!canUpdate && company) || (!canCreate && !company)}
               className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             />
+          </div>
+          <div>
+            <label htmlFor="careerPage" className="block text-sm font-medium text-gray-700">
+              Career Page URL
+            </label>
+            <input
+              type="url"
+              id="careerPage"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://example.com/careers"
+              // required
+              // disabled={company ? !canUpdate : !canCreate}
+              pattern="https?://.+"
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              aria-describedby="careerPageError"
+            />
+            <p id="careerPageError" className="mt-1 text-sm text-red-600 hidden">
+              Please enter a valid URL starting with http:// or https://
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Hiring Period
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="hiringFrom" className="block text-sm font-medium text-gray-600">
+                  From
+                </label>
+                <input
+                  type="date"
+                  id="hiringFrom"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  // required
+                  // disabled={company ? !canUpdate : !canCreate}
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  aria-describedby="hiringFromError"
+                />
+                <p id="hiringFromError" className="mt-1 text-sm text-red-600 hidden">
+                  Please select a valid start date
+                </p>
+              </div>
+              <div>
+                <label htmlFor="hiringTo" className="block text-sm font-medium text-gray-600">
+                  To
+                </label>
+                <input
+                  type="date"
+                  id="hiringTo"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  min={fromDate || undefined}
+                  // required
+                  // disabled={company ? !canUpdate : !canCreate}
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  aria-describedby="hiringToError"
+                />
+                <p id="hiringToError" className="mt-1 text-sm text-red-600 hidden">
+                  End date must be after the start date
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* City */}
@@ -550,7 +655,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
               type="text"
               id="city"
               value={city}
-              onChange={(e) => handleChange(e.target.value)}
+              onChange={(e) => handleCityChange(e.target.value)}
               placeholder="Enter city"
               // disabled={(!canUpdate && company) || (!canCreate && !company)}
               className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
@@ -582,7 +687,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
                 value={newPOC.name}
                 onChange={(e) => handlePOCChange("name", e.target.value)}
                 placeholder="Contact Name"
-                disabled={(!canUpdate && company) || (!canCreate && !company)}
+                // disabled={(!canUpdate && company) || (!canCreate && !company)}
                 className="w-full min-w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 disabled:bg-gray-100"
               />
               <input
@@ -590,13 +695,13 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
                 value={newPOC.email}
                 onChange={(e) => handlePOCChange("email", e.target.value)}
                 placeholder="Email Address"
-                disabled={(!canUpdate && company) || (!canCreate && !company)}
+                // disabled={(!canUpdate && company) || (!canCreate && !company)}
                 className="w-full min-w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 disabled:bg-gray-100"
               />
               <select
                 value={newPOC.countryCode}
                 onChange={(e) => handlePOCChange("countryCode", e.target.value)}
-                disabled={(!canUpdate && company) || (!canCreate && !company)}
+                // disabled={(!canUpdate && company) || (!canCreate && !company)}
                 className="w-full min-w-40 sm:w-1/3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 disabled:bg-gray-100"
               >
                 {countryCodes.map((country) => (
@@ -610,14 +715,14 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
                 value={newPOC.mobile}
                 onChange={(e) => handlePOCChange("mobile", e.target.value)}
                 placeholder="Mobile Number (7-15 digits)"
-                disabled={(!canUpdate && company) || (!canCreate && !company)}
+                // disabled={(!canUpdate && company) || (!canCreate && !company)}
                 className="w-full min-w-40 sm:w-2/3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 disabled:bg-gray-100"
               />
             </div>
             <button
               type="button"
               onClick={handleAddPOC}
-              disabled={(!canUpdate && company) || (!canCreate && !company)}
+              // disabled={(!canUpdate && company) || (!canCreate && !company)}
               className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               Add POC
@@ -669,8 +774,8 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
               id="status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              required
-              disabled={(!canUpdate && company) || (!canCreate && !company)}
+              // required
+              // disabled={(!canUpdate && company) || (!canCreate && !company)}
               className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             >
               <option value="Active">Active</option>
@@ -689,7 +794,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
           <div className="flex justify-end mt-4">
             <button
               type="submit"
-              disabled={(!canUpdate && company) || (!canCreate && !company)}
+              // disabled={(!canUpdate && company) || (!canCreate && !company)}
               className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {company ? "Update Company" : "Save Company"}

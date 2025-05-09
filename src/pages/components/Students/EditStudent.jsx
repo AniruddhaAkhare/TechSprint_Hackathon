@@ -14,8 +14,7 @@ export default function EditStudent() {
     const navigate = useNavigate();
     const { rolePermissions, user } = useAuth();
     const [student, setStudent] = useState({
-        first_name: "",
-        last_name: "",
+        Name: "",
         email: "",
         phoneNumber: "",
         status: "",
@@ -252,7 +251,6 @@ export default function EditStudent() {
     useEffect(() => {
         if (!canDisplay) {
             toast.error("You don't have permission to view this page");
-            // logActivity("UNAUTHORIZED_ACCESS_ATTEMPT", { page: "EditStudent" });
             navigate("/unauthorized");
             return;
         }
@@ -264,7 +262,6 @@ export default function EditStudent() {
                 fetchCenters(),
                 fetchFeeTemplates(),
             ]);
-            // logActivity("FETCH_DATA", { entities: ["student", "courses", "batches", "centers", "feeTemplates"] });
             setTimeout(() => setIsOpen(true), 10); // Trigger slide-in animation
         };
         fetchData();
@@ -279,8 +276,7 @@ export default function EditStudent() {
                 const studentPhone = data.phone || "";
                 const guardianPhone = data.guardian_details?.phone || "";
                 setStudent({
-                    first_name: data.first_name || "",
-                    last_name: data.last_name || "",
+                    Name: data.Name || "",
                     email: data.email || "",
                     phoneNumber: studentPhone.startsWith("+") ? studentPhone.slice(studentPhone.indexOf("+") + 3) : studentPhone,
                     status: data.status || "",
@@ -298,7 +294,7 @@ export default function EditStudent() {
                     preferred_centers: data.preferred_centers || [],
                     guardian_details: {
                         name: data.guardian_details?.name || "",
-                        phoneNumber: guardianPhone.startsWith("+") ? guardianPhone.slice(guardianPhone.indexOf("+") + 3) : guardianPhone,
+                        phone: FguardianPhone.startsWith("+") ? guardianPhone.slice(guardianPhone.indexOf("+") + 3) : guardianPhone,
                         email: data.guardian_details?.email || "",
                         relation: data.guardian_details?.relation || "",
                         occupation: data.guardian_details?.occupation || "",
@@ -306,16 +302,13 @@ export default function EditStudent() {
                 });
                 setCountryCode(studentPhone.startsWith("+") ? studentPhone.slice(0, studentPhone.indexOf("+") + 3) : "+91");
                 setGuardianCountryCode(guardianPhone.startsWith("+") ? guardianPhone.slice(0, guardianPhone.indexOf("+") + 3) : "+91");
-                // logActivity("FETCH_STUDENT_SUCCESS", { studentId });
             } else {
                 toast.error("Student not found");
-                // logActivity("FETCH_STUDENT_NOT_FOUND", { studentId });
                 navigate("/studentdetails");
             }
         } catch (error) {
             console.error("Error fetching student data:", error);
             toast.error("Failed to fetch student data");
-            // logActivity("FETCH_STUDENT_ERROR", { error: error.message });
         }
     };
 
@@ -323,11 +316,9 @@ export default function EditStudent() {
         try {
             const querySnapshot = await getDocs(collection(db, "Course"));
             setCourses(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            // logActivity("FETCH_COURSES_SUCCESS", { count: querySnapshot.docs.length });
         } catch (error) {
             console.error("Error fetching courses:", error);
             toast.error("Failed to fetch courses");
-            // logActivity("FETCH_COURSES_ERROR", { error: error.message });
         }
     };
 
@@ -335,11 +326,9 @@ export default function EditStudent() {
         try {
             const querySnapshot = await getDocs(collection(db, "Batch"));
             setBatches(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            // logActivity("FETCH_BATCHES_SUCCESS", { count: querySnapshot.docs.length });
         } catch (error) {
             console.error("Error fetching batches:", error);
             toast.error("Failed to fetch batches");
-            // logActivity("FETCH_BATCHES_ERROR", { error: error.message });
         }
     };
 
@@ -349,7 +338,6 @@ export default function EditStudent() {
             if (instituteSnapshot.empty) {
                 console.error("No instituteSetup document found");
                 setCenters([]);
-                // logActivity("FETCH_CENTERS_WARNING", { message: "No instituteSetup found" });
                 return;
             }
             const instituteId = instituteSnapshot.docs[0].id;
@@ -360,11 +348,9 @@ export default function EditStudent() {
             const centerSnapshot = await getDocs(centerQuery);
             const centersList = centerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setCenters(centersList);
-            // logActivity("FETCH_CENTERS_SUCCESS", { count: centersList.length });
         } catch (error) {
             console.error("Error fetching centers:", error);
             toast.error("Failed to fetch centers");
-            // logActivity("FETCH_CENTERS_ERROR", { error: error.message });
         }
     };
 
@@ -373,11 +359,9 @@ export default function EditStudent() {
             const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
             const templates = templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setFeeTemplates(templates);
-            // logActivity("FETCH_FEE_TEMPLATES_SUCCESS", { count: templates.length });
         } catch (error) {
             console.error("Error fetching fee templates:", error);
             toast.error("Failed to fetch fee templates");
-            // logActivity("FETCH_FEE_TEMPLATES_ERROR", { error: error.message });
         }
     };
 
@@ -429,7 +413,6 @@ export default function EditStudent() {
     const addCourse = () => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addCourse" });
             return;
         }
         setStudent(prev => ({ ...prev, courseDetails: [...prev.courseDetails, { courseName: '', batch: '', branch: '', mode: '', fee: 0 }] }));
@@ -439,7 +422,6 @@ export default function EditStudent() {
     const addEducation = () => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addEducation" });
             return;
         }
         setStudent(prev => ({ ...prev, educationDetails: [...prev.educationDetails, { level: '', institute: '', degree: '', specialization: '', grade: '', passingyr: '' }] }));
@@ -449,7 +431,6 @@ export default function EditStudent() {
     const addInstallment = () => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addInstallment" });
             return;
         }
         setStudent(prev => ({ ...prev, installmentDetails: [...prev.installmentDetails, { number: '', dueAmount: '', dueDate: '', paidOn: '', amtPaid: '', modeOfPayment: '', pdcStatus: '', remark: '' }] }));
@@ -459,7 +440,6 @@ export default function EditStudent() {
     const addExperience = () => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addExperience" });
             return;
         }
         setStudent(prev => ({ ...prev, experienceDetails: [...prev.experienceDetails, { companyName: '', designation: '', salary: '', years: '', description: '' }] }));
@@ -469,7 +449,6 @@ export default function EditStudent() {
     const removeCourse = (index) => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "removeCourse", index });
             return;
         }
         setStudent(prev => ({ ...prev, courseDetails: prev.courseDetails.filter((_, i) => i !== index) }));
@@ -479,7 +458,6 @@ export default function EditStudent() {
     const deleteEducation = (index) => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "deleteEducation", index });
             return;
         }
         setStudent(prev => ({ ...prev, educationDetails: prev.educationDetails.filter((_, i) => i !== index) }));
@@ -489,7 +467,6 @@ export default function EditStudent() {
     const deleteInstallment = (index) => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "deleteInstallment", index });
             return;
         }
         setStudent(prev => ({ ...prev, installmentDetails: prev.installmentDetails.filter((_, i) => i !== index) }));
@@ -499,7 +476,6 @@ export default function EditStudent() {
     const deleteExperience = (index) => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "deleteExperience", index });
             return;
         }
         setStudent(prev => ({ ...prev, experienceDetails: prev.experienceDetails.filter((_, i) => i !== index) }));
@@ -509,7 +485,6 @@ export default function EditStudent() {
     const handleAddCenter = () => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "addCenter", centerId: selectedCenter });
             return;
         }
         if (selectedCenter && !student.preferred_centers.includes(selectedCenter)) {
@@ -522,24 +497,39 @@ export default function EditStudent() {
     const handleRemoveCenter = (centerId) => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "removeCenter", centerId });
             return;
         }
         setStudent(prev => ({ ...prev, preferred_centers: prev.preferred_centers.filter(id => id !== centerId) }));
         logActivity("REMOVE CENTER", { centerId });
     };
 
+    // Validate and format date for Firestore Timestamp
+    const validateDate = (dateValue, fieldName, isRequired = false) => {
+        if (!dateValue && !isRequired) {
+            return null; // Allow null for optional fields
+        }
+        if (!dateValue && isRequired) {
+            toast.warn(`${fieldName} is required; using current date`);
+            return Timestamp.fromDate(new Date());
+        }
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) {
+            console.warn(`Invalid date value for ${fieldName}: ${dateValue}`);
+            toast.warn(`Invalid ${fieldName} provided; using current date`);
+            return Timestamp.fromDate(new Date());
+        }
+        return Timestamp.fromDate(date);
+    };
+
     const handleUpdate = async (e) => {
         e.preventDefault();
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "updateStudent" });
             return;
         }
 
-        if (!student.first_name || !student.last_name || !student.email || !student.phoneNumber) {
-            toast.error("Please fill necessary fields");
-            // logActivity("INVALID_UPDATE_ATTEMPT", { missingFields: { first_name: !student.first_name, last_name: !student.last_name, email: !student.email, phoneNumber: !student.phoneNumber } });
+        if (!student.Name || !student.email || !student.phoneNumber || !student.date_of_birth) {
+            toast.error("Please fill necessary fields: First Name, Last Name, Email, Phone Number, Date of Birth");
             return;
         }
 
@@ -549,17 +539,15 @@ export default function EditStudent() {
         try {
             const studentRef = doc(db, "student", studentId);
             await updateDoc(studentRef, {
-                first_name: student.first_name,
-                last_name: student.last_name,
+                Name: student.Name,
                 email: student.email,
                 phone: fullPhoneNumber,
                 status: student.status,
                 goal: student.goal,
                 residential_address: student.address,
                 billing_address: student.billingAddress,
-                date_of_birth: Timestamp.fromDate(new Date(student.date_of_birth)),
-                admission_date: Timestamp.fromDate(new Date(student.admission_date)),
-                course_details: student.courseDetails,
+                date_of_birth: validateDate(student.date_of_birth, "Date of Birth", true),
+                admission_date: validateDate(student.admission_date, "Admission Date", false),
                 education_details: student.educationDetails,
                 experience_details: student.experienceDetails,
                 preferred_centers: student.preferred_centers,
@@ -575,14 +563,12 @@ export default function EditStudent() {
         } catch (error) {
             console.error("Error updating student:", error);
             toast.error("Failed to update student");
-            // logActivity("UPDATE_STUDENT_ERROR", { error: error.message });
         }
     };
 
     const handleDelete = async () => {
         if (!canDelete) {
             toast.error("You don't have permission to delete students");
-            // logActivity("UNAUTHORIZED_DELETE_ATTEMPT", { action: "deleteStudent" });
             return;
         }
 
@@ -595,7 +581,6 @@ export default function EditStudent() {
             } catch (error) {
                 console.error("Error deleting student:", error);
                 toast.error("Failed to delete student");
-                // logActivity("DELETE_STUDENT_ERROR", { error: error.message });
             }
         } else {
             logActivity("CANCEL DELETE STUDENT", {});
@@ -606,14 +591,12 @@ export default function EditStudent() {
         setIsOpen(false);
         setTimeout(() => {
             navigate("/studentdetails");
-            // logActivity("NAVIGATE_BACK", { from: "EditStudent" });
         }, 300);
     };
 
     const handleFeeSummary = () => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "feeSummary" });
             return;
         }
         let totalFees = 0;
@@ -625,13 +608,11 @@ export default function EditStudent() {
         const discountAmount = (totalFees * (student.discount / 100)) || 0;
         const finalTotal = totalFees - discountAmount;
         setStudent(prev => ({ ...prev, total: finalTotal }));
-        // logActivity("CALCULATE_FEE_SUMMARY", { totalFees, discountAmount, finalTotal });
     };
 
     const handleTemplateChange = async (e) => {
         if (!canUpdate) {
             toast.error("You don't have permission to update student details");
-            // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "changeFeeTemplate", templateId: e.target.value });
             return;
         }
         const templateId = e.target.value;
@@ -647,7 +628,6 @@ export default function EditStudent() {
         } catch (error) {
             console.error("Error applying fee template:", error);
             toast.error("Failed to apply fee template");
-            // logActivity("APPLY_FEE_TEMPLATE_ERROR", { templateId, error: error.message });
         }
     };
 
@@ -684,26 +664,13 @@ export default function EditStudent() {
                             <h2 className="text-lg font-medium text-gray-700 mb-4">Personal Details</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600">First Name</label>
+                                    <label className="block text-sm font-medium text-gray-600">Name</label>
                                     <input
                                         type="text"
-                                        name="first_name"
-                                        value={student.first_name}
+                                        name="name"
+                                        value={student.Name}
                                         onChange={handleChange}
-                                        placeholder="First Name"
-                                        required
-                                        disabled={!canUpdate}
-                                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600">Last Name</label>
-                                    <input
-                                        type="text"
-                                        name="last_name"
-                                        value={student.last_name}
-                                        onChange={handleChange}
-                                        placeholder="Last Name"
+                                        placeholder="Name"
                                         required
                                         disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

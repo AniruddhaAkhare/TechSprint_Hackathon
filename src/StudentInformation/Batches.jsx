@@ -161,7 +161,7 @@ const Batches = () => {
     return (
         <div className="p-4">
             <ToastContainer position="top-right" autoClose={3000} />
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">My Batches</h2>
+            {/* <h2 className="text-2xl font-semibold text-gray-800 mb-6">My Batches</h2> */}
 
             {batches.length === 0 ? (
                 <div className="bg-white rounded-lg shadow-md p-4 text-center">

@@ -1,7 +1,11 @@
-import React, { useState } from "react";
 import { db } from "../../../../config/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { useAuth } from "../../../../context/AuthContext";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { useState } from "react";
+import { useEffect } from "react";
+import { s3Client } from "../../../../config/aws-config";
+import { debugS3Config } from "../../../../config/aws-config";
 
 const LeaveApplication = () => {
   const { user } = useAuth();
@@ -11,13 +15,85 @@ const LeaveApplication = () => {
     leaveType: "",
     reason: "",
   });
+  const [attachmentFile, setAttachmentFile] = useState(null);
+  const [attachmentError, setAttachmentError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const leaveTypes = ["Sick Leave", "Casual Leave", "Annual Leave", "Maternity Leave", "Paternity Leave"];
 
+  useEffect(() => {
+    debugS3Config();
+    console.log("Environment Variables Debug:", {
+      bucket: import.meta.env.VITE_S3_BUCKET_NAME || "Not Set",
+      region: import.meta.env.VITE_AWS_REGION || "Not Set",
+      accessKey: import.meta.env.VITE_AWS_ACCESS_KEY_ID ? "Set" : "Not Set",
+      secretKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY ? "Set" : "Not Set",
+    });
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAttachmentChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log("Selected File Debug:", {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        isFile: file instanceof File,
+        isBlob: file instanceof Blob,
+      });
+      const validFormats = ["application/pdf", "image/jpeg", "image/png"];
+      if (!validFormats.includes(file.type)) {
+        setAttachmentError("Invalid file format. Only PDF, JPG, and PNG are supported.");
+        setAttachmentFile(null);
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        setAttachmentError("File size exceeds 2MB.");
+        setAttachmentFile(null);
+        return;
+      }
+      setAttachmentError("");
+      setAttachmentFile(file);
+    }
+  };
+
+  const uploadToS3 = async (file) => {
+    const bucket = import.meta.env.VITE_S3_BUCKET_NAME;
+    if (!bucket) {
+      throw new Error("S3 bucket name is not configured.");
+    }
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const params = {
+        Bucket: bucket,
+        Key: `leave-attachments/${user.uid}/${Date.now()}_${file.name}`,
+        Body: new Uint8Array(arrayBuffer),
+        ContentType: file.type,
+      };
+      console.log("S3 Upload Params Debug:", {
+        bucket: params.Bucket,
+        key: params.Key,
+        contentType: params.ContentType,
+        bodyType: typeof params.Body,
+        bodyLength: params.Body.length,
+      });
+      await s3Client.send(new PutObjectCommand(params));
+      const url = `https://${params.Bucket}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${params.Key}`;
+      return url;
+    } catch (error) {
+      console.error("Detailed S3 Upload Error:", {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+        params,
+      });
+      throw new Error(`Failed to upload attachment: ${error.message}`);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -47,49 +123,59 @@ const LeaveApplication = () => {
     }
 
     try {
+      let attachmentUrl = "";
+      if (attachmentFile) {
+        attachmentUrl = await uploadToS3(attachmentFile);
+      }
+
       await addDoc(collection(db, "Leaves"), {
         email: user.email,
         startDate: start.toISOString(),
         endDate: end.toISOString(),
         leaveType,
         reason,
+        attachmentUrl,
         status: "Pending",
         createdAt: new Date().toISOString(),
         userId: user.uid,
       });
+
       setSuccess("Leave application submitted successfully!");
       setFormData({ startDate: "", endDate: "", leaveType: "", reason: "" });
-      sendApplicationEmail(user.email, leaveType, start, end, reason);
+      setAttachmentFile(null);
+      setAttachmentError("");
+      // sendApplicationEmail(user.email, leaveType, start, end, reason, attachmentUrl);
     } catch (error) {
       console.error("Error submitting leave application:", error);
-      setError("Failed to submit leave application.");
+      setError(error.message || "Failed to submit leave application.");
     }
   };
 
-  const sendApplicationEmail = async (email, leaveType, startDate, endDate, reason) => {
-    try {
-      await fetch("https://api.zeptomail.com/v1.1/email", {
-        method: "POST",
-        headers: {
-          Authorization: `Zoho-enczapikey ${import.meta.env.VITE_ZOHO_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fromAddress: "noreply@shikshasaarathi.com",
-          toAddress: email,
-          subject: "Leave Application Submitted",
-          htmlbody: `<p>You have submitted a leave application:</p>
-                     <p><strong>Type:</strong> ${leaveType}</p>
-                     <p><strong>From:</strong> ${startDate.toLocaleDateString()}</p>
-                     <p><strong>To:</strong> ${endDate.toLocaleDateString()}</p>
-                     <p><strong>Reason:</strong> ${reason}</p>
-                     <p>Status: Pending</p>`,
-        }),
-      });
-    } catch (error) {
-      console.error("Error sending application email:", error);
-    }
-  };
+  // const sendApplicationEmail = async (email, leaveType, startDate, endDate, reason, attachmentUrl) => {
+  //   try {
+  //     await fetch("https://api.zeptomail.com/v1.1/email", {
+  //       method: "POST",
+  //       headers: {
+  //         Authorization: `Zoho-enczapikey ${import.meta.env.VITE_ZOHO_API_KEY}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         fromAddress: "noreply@shikshasaarathi.com",
+  //         toAddress: email,
+  //         subject: "Leave Application Submitted",
+  //         htmlbody: `<p>You have submitted a leave application:</p>
+  //                    <p><strong>Type:</strong> ${leaveType}</p>
+  //                    <p><strong>From:</strong> ${startDate.toLocaleDateString()}</p>
+  //                    <p><strong>To:</strong> ${endDate.toLocaleDateString()}</p>
+  //                    <p><strong>Reason:</strong> ${reason}</p>
+  //                    ${attachmentUrl ? `<p><strong>Attachment:</strong> <a href="${attachmentUrl}">View Attachment</a></p>` : ""}
+  //                    <p>Status: Pending</p>`,
+  //       }),
+  //     });
+  //   } catch (error) {
+  //     console.error("Error sending application email:", error);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-8 px-4 p-4 fixed inset-0 left-[300px]">
@@ -193,6 +279,22 @@ const LeaveApplication = () => {
               rows="4"
               required
             ></textarea>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Attachment (Optional)
+            </label>
+            <input
+              type="file"
+              accept="application/pdf,image/jpeg,image/png"
+              onChange={handleAttachmentChange}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+            {attachmentFile && <p className="text-sm mt-1">Selected file: {attachmentFile.name}</p>}
+            {attachmentError && <p className="text-red-700 text-sm mt-1">{attachmentError}</p>}
+            <p className="text-sm text-gray-500 mt-1">
+              Supported formats: PDF, JPG, PNG. Max size: 2MB.
+            </p>
           </div>
           <button
             type="submit"

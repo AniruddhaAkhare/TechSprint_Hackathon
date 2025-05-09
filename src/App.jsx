@@ -872,7 +872,7 @@ import EnquiryFormPage from "./pages/components/EnquiryForm/EnquiryFormPage";
 import ProfilePage from './pages/home/ProfilePage.jsx';
 import EmployeeAttendance from './pages/components/HRManagement/TimeAndAttendanceTracking/EmployeeAttendance.jsx';
 import HolidayCalendar from './pages/components/HRManagement/HolidayCalendar.jsx';
-import EmployeePage from './pages/components/HRManagement/TimeAndAttendanceTracking/Employeepage.jsx';
+import EmployeePage from './pages/components/HRManagement/TimeAndAttendanceTracking/EmployeePage.jsx';
 import HRLeaveApproval from './pages/components/HRManagement/Leave/HRLeaveApproval.jsx';
 import LeaveApplication from './pages/components/HRManagement/Leave/LeaveApplication.jsx';
 import Companies from './pages/components/PlacementManagement/Companies/Companies.jsx';
@@ -883,6 +883,8 @@ import EmployeeProfile from './pages/components/HRManagement/EmployeeDirectory/E
 import ActiveStatus from './pages/ActiveStatus.jsx';
 import EmployeeRegistrationForm from './pages/home/EmployeeRegistrationForm.jsx';
 import AfterEmployeeRegistration from './pages/home/AfterEmployeeRegistration.jsx';
+import BulkAddStudents from './pages/components/Students/BulkAddStudents.jsx';
+import AddEmployee from './pages/components/HRManagement/EmployeeDirectory/AddEmployee.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -982,15 +984,19 @@ export default function App() {
               <Route path="/add-course/:studentId" element={<ProtectedRoute permissionSection="enrollments"><AddCourse /></ProtectedRoute>} />
               <Route path="/attendance" element={<ProtectedRoute permissionSection="attendance"><Attendance /></ProtectedRoute>} />
               <Route path="/attendance-dashboard" element={<ProtectedRoute permissionSection="attendance"><AttendanceDashboard /></ProtectedRoute>} />
+
                 {/* Enquiry Routes */}
                 <Route path="/enquiry/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} />
                 <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><KanbanBoard /></ProtectedRoute>} />
                 <Route path="/enquiry-analytics" element={<ProtectedRoute permissionSection="enquiries"><EnquiryAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/addFormForEnquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryForms /></ProtectedRoute>} />
                 <Route path="/enquiry/:id" element={<EnquiryFormPage />} />
+                <Route path='/:formId' element={<UniqueEnquiryForm/>}/>
+
 
                 {/* Student Routes */}
                 <Route path="/studentdetails" element={<ProtectedRoute permissionSection="student"><StudentDetails /></ProtectedRoute>} />
+                <Route path="/studentdetails/bulkadd" element={<ProtectedRoute permissionSection="student"><BulkAddStudents /></ProtectedRoute>} />
                 <Route path="/question-bank" element={<ProtectedRoute permissionSection="questions"><QuestionBank /></ProtectedRoute>} />
                 <Route path="/question-template" element={<ProtectedRoute permissionSection="templates"><QuestionTemplate /></ProtectedRoute>} />
                 <Route path="/studentdetails/addstudent" element={<ProtectedRoute permissionSection="student" action="create"><AddStudent /></ProtectedRoute>} />
@@ -1033,6 +1039,7 @@ export default function App() {
                 <Route path="/leave-management" element={<HRLeaveApproval />} />
                 <Route path="/leave-application" element={<LeaveApplication />} />
                 <Route path="/employee-profile/:employeeId" element={<EmployeeProfile />} />
+                <Route path="/add-employee" element={<AddEmployee/>}/>
 
                 {/* Placement */}
                 <Route path="/companies" element={<Companies />} />

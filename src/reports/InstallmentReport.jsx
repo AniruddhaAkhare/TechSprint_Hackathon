@@ -4,7 +4,6 @@ import { collection, getDocs } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-// Utility function to get date ranges for filtering
 const getDateRange = (filter) => {
   const today = new Date();
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -29,14 +28,13 @@ const getDateRange = (filter) => {
   }
 };
 
-// Utility function to check if a date is within a range
 const isDateInRange = (dateStr, start, end) => {
-  if (!dateStr || (!start && !end)) return true; // For 'all', include all dates
+  if (!dateStr || (!start && !end)) return true;
   const date = new Date(dateStr);
-  return date >= start && date <= end;
+  if (isNaN(date.getTime())) return false;
+  return (!start || date >= start) && (!end || date <= end);
 };
 
-// Utility function to ensure a value is a number
 const toNumber = (value) => {
   const num = Number(value);
   return isNaN(num) ? 0 : num;
@@ -49,9 +47,9 @@ const InstallmentReport = () => {
   const [totalReceived, setTotalReceived] = useState(0);
   const [totalPending, setTotalPending] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [expandedRows, setExpandedRows] = useState({});
   const navigate = useNavigate();
 
-  // Permission check
   const canDisplayReports = rolePermissions?.enrollments?.display || false;
 
   useEffect(() => {
@@ -59,61 +57,91 @@ const InstallmentReport = () => {
       if (!canDisplayReports) return;
       try {
         setLoading(true);
+        setFeeData([]);
+        setTotalReceived(0);
+        setTotalPending(0);
 
-        // Fetch students
         const studentSnapshot = await getDocs(collection(db, 'student'));
         const studentMap = {};
         studentSnapshot.forEach((doc) => {
-          studentMap[doc.id] = (doc.data().first_name) + " " + (doc.data().last_name) || 'Unknown';
+          studentMap[doc.id] = doc.data().Name || 'Unknown';
         });
 
-        // Fetch enrollments
         const enrollmentSnapshot = await getDocs(collection(db, 'enrollments'));
         const data = [];
-        let received = 0;
-        let pending = 0;
+        let totalReceivedAcc = 0;
+        let totalPendingAcc = 0;
 
         const { start, end } = getDateRange(filter);
+
+        // Aggregate by student and course
+        const enrollmentMap = {};
 
         for (const enrollmentDoc of enrollmentSnapshot.docs) {
           const studentId = enrollmentDoc.id;
           const studentName = studentMap[studentId] || 'Unknown';
           const courses = enrollmentDoc.data().courses || [];
 
-          courses.forEach((course) => {
-            const courseName = course.selectedCourse?.name || 'Unknown';
-            const totalFees =
-              course.feeTemplate === 'Free'
-                ? 0
-                : toNumber(
-                  course.fullFeesDetails?.feeAfterDiscount ||
-                  course.fullFeesDetails?.totalFees ||
-                  course.financeDetails?.feeAfterDiscount ||
-                  0
-                );
+          for (const course of courses) {
+            const courseName = course.selectedCourse?.name || 'Unknown Course';
+            const key = `${studentId}-${courseName}`;
 
+            // Initialize enrollment data
+            if (!enrollmentMap[key]) {
+              enrollmentMap[key] = {
+                studentId,
+                studentName,
+                courseName,
+                totalFees: 0,
+                transactions: [],
+                totalPaid: 0,
+                remaining: 0,
+              };
+            }
+
+            // Calculate total fees
+            let totalFees = 0;
+            if (course.feeTemplate === 'Free') {
+              totalFees = 0;
+            } else if (course.feeTemplate === 'FullFees') {
+              totalFees = toNumber(course.fullFeesDetails?.feeAfterDiscount || course.fullFeesDetails?.totalFees || 0);
+            } else if (course.feeTemplate === 'Installments') {
+              const regAmount = toNumber(course.registration?.amount || 0);
+              const installmentTotal = (course.installmentDetails || []).reduce(
+                (sum, inst) => sum + toNumber(inst.dueAmount || 0),
+                0
+              );
+              totalFees = regAmount + installmentTotal;
+            } else if (course.feeTemplate === 'Finance') {
+              totalFees = toNumber(course.financeDetails?.feeAfterDiscount || 0);
+            }
+
+            enrollmentMap[key].totalFees = totalFees;
+
+            // Process transactions
             if (course.feeTemplate === 'FullFees') {
               const { fullFeesDetails } = course;
 
-              // Registration
+              // Registration Payment
               if (fullFeesDetails?.registration?.amount) {
                 const regAmount = toNumber(fullFeesDetails.registration.amount);
                 const status = fullFeesDetails.registration.status || 'Pending';
-                const dateField = status === 'Paid' ? fullFeesDetails.registration.date : fullFeesDetails.registration.date || new Date().toISOString().split('T')[0];
-                const inRange = isDateInRange(dateField, start, end);
+                const dateField = fullFeesDetails.registration.date || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
 
-                if (inRange) {
-                  data.push({
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: 'FullFees (Registration)',
-                    totalFees,
-                    received: status === 'Paid' ? regAmount : 0,
-                    pending: status === 'Pending' ? regAmount : 0,
+                if (inRange || (filter === 'all' && dateField)) {
+                  enrollmentMap[key].transactions.push({
+                    type: 'FullFees (Registration)',
+                    amount: regAmount,
+                    status,
+                    date: dateField,
                   });
-                  if (status === 'Paid') received += regAmount;
-                  else pending += regAmount;
+                  if (status === 'Paid') {
+                    enrollmentMap[key].totalPaid += regAmount;
+                    totalReceivedAcc += regAmount;
+                  } else {
+                    totalPendingAcc += regAmount;
+                  }
                 }
               }
 
@@ -121,173 +149,171 @@ const InstallmentReport = () => {
               if (fullFeesDetails?.finalPayment?.amount) {
                 const finalAmount = toNumber(fullFeesDetails.finalPayment.amount);
                 const status = fullFeesDetails.finalPayment.status || 'Pending';
-                const dateField = status === 'Paid' ? fullFeesDetails.finalPayment.date : fullFeesDetails.finalPayment.date || new Date().toISOString().split('T')[0];
-                const inRange = isDateInRange(dateField, start, end);
+                const dateField = fullFeesDetails.finalPayment.date || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
 
-                if (inRange) {
-                  data.push({
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: 'FullFees (Final Payment)',
-                    totalFees,
-                    received: status === 'Paid' ? finalAmount : 0,
-                    pending: status === 'Pending' ? finalAmount : 0,
+                if (inRange || (filter === 'all' && dateField)) {
+                  enrollmentMap[key].transactions.push({
+                    type: 'FullFees (Final Payment)',
+                    amount: finalAmount,
+                    status,
+                    date: dateField,
                   });
-                  if (status === 'Paid') received += finalAmount;
-                  else pending += finalAmount;
+                  if (status === 'Paid') {
+                    enrollmentMap[key].totalPaid += finalAmount;
+                    totalReceivedAcc += finalAmount;
+                  } else {
+                    totalPendingAcc += finalAmount;
+                  }
                 }
               }
             } else if (course.feeTemplate === 'Installments') {
               const { installmentDetails, registration } = course;
 
-              // Registration
+              // Registration Payment
               if (registration?.amount) {
                 const regAmount = toNumber(registration.amount);
                 const status = registration.status || 'Pending';
-                const dateField = status === 'Paid' ? registration.date : registration.date || new Date().toISOString().split('T')[0];
-                const inRange = isDateInRange(dateField, start, end);
+                const dateField = registration.date || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
 
-                if (inRange) {
-                  data.push({
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: 'Installments (Registration)',
-                    totalFees,
-                    received: status === 'Paid' ? regAmount : 0,
-                    pending: status === 'Pending' ? regAmount : 0,
+                if (inRange || (filter === 'all' && dateField)) {
+                  enrollmentMap[key].transactions.push({
+                    type: 'Installments (Registration)',
+                    amount: regAmount,
+                    status,
+                    date: dateField,
                   });
-                  if (status === 'Paid') received += regAmount;
-                  else pending += regAmount;
+                  if (status === 'Paid') {
+                    enrollmentMap[key].totalPaid += regAmount;
+                    totalReceivedAcc += regAmount;
+                  } else {
+                    totalPendingAcc += regAmount;
+                  }
                 }
               }
 
               // Installments
               (installmentDetails || []).forEach((installment, idx) => {
-                const dueAmount = toNumber(installment.dueAmount);
-                const paidAmount = toNumber(installment.paidAmount);
+                const dueAmount = toNumber(installment.dueAmount || 0);
+                const paidAmount = toNumber(installment.paidAmount || 0);
                 const status = installment.status || 'Pending';
-                const dateField = status === 'Paid' ? installment.paidDate : installment.dueDate || new Date().toISOString().split('T')[0];
-                const inRange = isDateInRange(dateField, start, end);
+                const dateField = status === 'Paid' ? installment.paidDate : installment.dueDate || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
 
-                if (inRange && (dueAmount > 0 || paidAmount > 0)) {
-                  data.push({
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: `Installments (No. ${installment.number || idx + 1})`,
-                    totalFees,
-                    received: status === 'Paid' ? (paidAmount || dueAmount) : 0,
-                    pending: status === 'Pending' ? dueAmount : 0,
+                if ((inRange || (filter === 'all' && dateField)) && (dueAmount > 0 || paidAmount > 0)) {
+                  enrollmentMap[key].transactions.push({
+                    type: `Installments (No. ${installment.number || idx + 1})`,
+                    amount: status === 'Paid' ? paidAmount : dueAmount,
+                    status,
+                    date: dateField,
                   });
-                  if (status === 'Paid') received += paidAmount || dueAmount;
-                  else pending += dueAmount;
+                  if (status === 'Paid') {
+                    enrollmentMap[key].totalPaid += paidAmount;
+                    totalReceivedAcc += paidAmount;
+                  } else {
+                    totalPendingAcc += dueAmount;
+                  }
                 }
               });
             } else if (course.feeTemplate === 'Finance') {
               const { financeDetails } = course;
-
-              // Registration
-              if (financeDetails?.registration?.amount) {
-                const regAmount = toNumber(financeDetails.registration.amount);
-                const status = financeDetails.registration.status || 'Pending';
-                const dateField = status === 'Paid' ? financeDetails.registration.date : financeDetails.registration.date || new Date().toISOString().split('T')[0];
-                const inRange = isDateInRange(dateField, start, end);
-
-                if (inRange) {
-                  data.push({
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: 'Finance (Registration)',
-                    totalFees,
-                    received: status === 'Paid' ? regAmount : 0,
-                    pending: status === 'Pending' ? regAmount : 0,
-                  });
-                  if (status === 'Paid') received += regAmount;
-                  else pending += regAmount;
-                }
-              }
-
-              // Down Payment
+            
+              // Set total fees to Total Loan (TL)
+              const totalFees = toNumber(financeDetails?.totalLoan || financeDetails?.feeAfterDiscount || 89000);
+              enrollmentMap[key].totalFees = totalFees;
+            
+              // Downpayment (DP) - ₹23,018
               if (financeDetails?.downPayment) {
                 const downPayment = toNumber(financeDetails.downPayment);
-                // Assume downPayment is "Paid" if downPaymentDate exists, otherwise "Pending"
                 const status = financeDetails.downPaymentDate ? 'Paid' : 'Pending';
-                const dateField = financeDetails.downPaymentDate || new Date().toISOString().split('T')[0];
-                const inRange = isDateInRange(dateField, start, end);
-
-                if (inRange) {
-                  data.push({
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: 'Finance (Down Payment)',
-                    totalFees,
-                    received: status === 'Paid' ? downPayment : 0,
-                    pending: status === 'Pending' ? downPayment : 0,
+                const dateField = financeDetails.downPaymentDate || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
+            
+                if (inRange || (filter === 'all' && dateField)) {
+                  enrollmentMap[key].transactions.push({
+                    type: 'Finance (Downpayment)',
+                    amount: downPayment,
+                    status,
+                    date: dateField,
                   });
-                  if (status === 'Paid') received += downPayment;
-                  else pending += downPayment;
+                  if (status === 'Paid') {
+                    enrollmentMap[key].totalPaid += downPayment;
+                    totalReceivedAcc += downPayment;
+                    totalPendingAcc += (totalFees - downPayment);
+
+                  } else {
+                    totalPendingAcc += downPayment;
+                  }
                 }
               }
-
-              // Loan Amount (only if Disbursed)
-              if (financeDetails?.loanAmount && financeDetails.loanStatus === 'Disbursed') {
-                const loanAmount = toNumber(financeDetails.loanAmount);
-                const status = 'Paid'; // Disbursed means received
-                const dateField = financeDetails.downPaymentDate || new Date().toISOString().split('T')[0];
-                const inRange = isDateInRange(dateField, start, end);
-
-                if (inRange) {
-                  data.push({
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: 'Finance (Loan)',
-                    totalFees,
-                    received: loanAmount,
-                    pending: 0,
+            
+              // Disburse Amount (DA) - ₹60,206
+              if (financeDetails?.disburseAmount) {
+                const disburseAmount = toNumber(financeDetails.disburseAmount);
+                const status = financeDetails.disburseDate ? 'Approved' : (financeDetails.loanStatus || 'Pending');
+                const dateField = financeDetails.disburseDate || financeDetails.loanApprovalDate || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
+            
+                if (inRange || (filter === 'all' && dateField)) {
+                  enrollmentMap[key].transactions.push({
+                    type: 'Finance (Disburse Amount)',
+                    amount: disburseAmount,
+                    status,
+                    date: dateField,
                   });
-                  received += loanAmount;
-                }
-              } else if (financeDetails?.loanAmount && financeDetails.loanStatus !== 'Disbursed') {
-                const loanAmount = toNumber(financeDetails.loanAmount);
-                const status = 'Pending';
-                const dateField = financeDetails.downPaymentDate || new Date().toISOString().split('T')[0];
-                const inRange = isDateInRange(dateField, start, end);
-
-                if (inRange) {
-                  data.push({
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: 'Finance (Loan)',
-                    totalFees,
-                    received: 0,
-                    pending: loanAmount,
-                  });
-                  pending += loanAmount;
+                  if (status === 'Approved') {
+                    enrollmentMap[key].totalPaid += disburseAmount;
+                    totalReceivedAcc += disburseAmount;
+                  } else if (status === 'Pending') {
+                    totalPendingAcc += disburseAmount;
+                  }
                 }
               }
-            } else if (course.feeTemplate === 'Free') {
-              data.push({
-                studentId,
-                studentName,
-                courseName,
-                feeTemplate: 'Free',
-                totalFees: 0,
-                received: 0,
-                pending: 0,
+            
+              // Subvention Fee (SF) - ₹5,776 (track for reporting, no impact on paid/pending)
+              if (financeDetails?.subventionFee) {
+                const subventionFee = toNumber(financeDetails.subventionFee);
+                const dateField = financeDetails.subventionFeeDate || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
+            
+                if (inRange || (filter === 'all' && dateField)) {
+                  enrollmentMap[key].transactions.push({
+                    type: 'Finance (Subvention Fee)',
+                    amount: subventionFee,
+                    status: 'Paid to Partner',
+                    date: dateField,
+                  });
+                  // Subvention fee is an institutional cost, so it doesn't affect totalPaid or totalPending
+                }
+              }
+            
+              // Calculate remaining balance
+              enrollmentMap[key].remaining = totalFees - enrollmentMap[key].totalPaid;
+            } else if (course.feeTemplate === 'Free' && filter === 'all') {
+              enrollmentMap[key].transactions.push({
+                type: 'Free',
+                amount: 0,
+                status: 'N/A',
+                date: null,
               });
             }
-          });
+
+            // Calculate remaining balance
+            enrollmentMap[key].remaining = totalFees - enrollmentMap[key].totalPaid;
+          }
         }
 
+        // Convert enrollmentMap to array
+        Object.values(enrollmentMap).forEach((enrollment) => {
+          if (enrollment.transactions.length > 0) {
+            data.push(enrollment);
+          }
+        });
+
         setFeeData(data);
-        setTotalReceived(received);
-        setTotalPending(pending);
+        setTotalReceived(totalReceivedAcc);
+        setTotalPending(totalPendingAcc);
       } catch (error) {
         console.error('Error fetching fee data:', error);
       } finally {
@@ -302,6 +328,13 @@ const InstallmentReport = () => {
     setFilter(e.target.value);
   };
 
+  const toggleRow = (index) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
   if (!canDisplayReports) {
     return (
       <div className="p-6 text-red-600 text-center">
@@ -309,7 +342,6 @@ const InstallmentReport = () => {
       </div>
     );
   }
-  // console.log(feeData);
 
   return (
     <div className="p-4 min-h-screen fixed inset-0 left-[300px]">
@@ -322,8 +354,6 @@ const InstallmentReport = () => {
           Analytics
         </button>
       </div>
-      
-
 
       {/* Filter Dropdown */}
       <div className="mb-6">
@@ -359,10 +389,11 @@ const InstallmentReport = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
       ) : (
-        <div className=" bg-white rounded-lg shadow overflow-x-auto overflow-y-auto max-h-[calc(100vh-350px)]">
+        <div className="bg-white rounded-lg shadow overflow-x-auto overflow-y-auto max-h-[calc(100vh-350px)]">
           <table className="w-full divide-y divide-gray-200">
             <thead className="bg-blue-50">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Student Name
                 </th>
@@ -370,34 +401,90 @@ const InstallmentReport = () => {
                   Course
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fee Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total Fees
                 </th>
-                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Discount
-                </th> */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Received
+                  Total Paid
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pending
+                  Remaining
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {feeData.length > 0 ? (
                 feeData.map((row, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.studentName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.courseName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.feeTemplate}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹{toNumber(row.totalFees).toFixed(2)}</td>
-                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.discountType}+{row.discount}</td> */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">₹{toNumber(row.received).toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">₹{toNumber(row.pending).toFixed(2)}</td>
-                  </tr>
+                  <React.Fragment key={index}>
+                    <tr className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <button
+                          onClick={() => toggleRow(index)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          {expandedRows[index] ? '▼' : '▶'}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {row.studentName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {row.courseName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ₹{toNumber(row.totalFees).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
+                        ₹{toNumber(row.totalPaid).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                        ₹{toNumber(row.remaining).toFixed(2)}
+                      </td>
+                    </tr>
+                    {expandedRows[index] && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-4 bg-gray-50">
+                          <div className="overflow-x-auto">
+                            <table className="w-full divide-y divide-gray-200">
+                              <thead className="bg-gray-100">
+                                <tr>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Transaction Type
+                                  </th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Amount
+                                  </th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                  </th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Date
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white divide-y divide-gray-200">
+                                {row.transactions.map((txn, txnIndex) => (
+                                  <tr key={txnIndex}>
+                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                      {txn.type}
+                                    </td>
+                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                      ₹{toNumber(txn.amount).toFixed(2)}
+                                    </td>
+                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                      {txn.status}
+                                    </td>
+                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                      {txn.date ? new Date(txn.date).toLocaleDateString() : 'N/A'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))
               ) : (
                 <tr>

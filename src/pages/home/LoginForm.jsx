@@ -21,7 +21,8 @@ export default function LoginForm() {
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            navigate('/dashboard');
+                navigate('/dashboard');
+        
         } catch (error) {
             console.error('Login error:', error);
             setError(error.message || 'Failed to log in. Please check your credentials and try again.');

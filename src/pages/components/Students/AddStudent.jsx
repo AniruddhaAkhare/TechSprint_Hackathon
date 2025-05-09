@@ -8,8 +8,7 @@ import sendWelcomeEmail from "../../../services/sendWelcomeEmail.jsx";
 
 export default function AddStudent() {
   const [isOpen, setIsOpen] = useState(true);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [Name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [countryCode, setCountryCode] = useState("+91"); 
@@ -236,7 +235,7 @@ export default function AddStudent() {
     fetchCourses();
     fetchBatches();
     fetchCenters();
-    fetchFeeTemplates();
+    // fetchFeeTemplates();
   }, []);
 
   const fetchCourses = async () => {
@@ -278,22 +277,22 @@ export default function AddStudent() {
     }
   };
 
-  const fetchFeeTemplates = async () => {
-    try {
-      const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
-      if (templateSnapshot.empty) {
-        alert("No fee templates found.");
-        return;
-      }
-      setFeeTemplates(templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    } catch (error) {
-      console.error("Error in fetching payment type:", error);
-    }
-  };
+  // const fetchFeeTemplates = async () => {
+  //   try {
+  //     const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
+  //     if (templateSnapshot.empty) {
+  //       alert("No fee templates found.");
+  //       return;
+  //     }
+  //     setFeeTemplates(templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  //   } catch (error) {
+  //     console.error("Error in fetching payment type:", error);
+  //   }
+  // };
 
   const handleAddStudent = async (e) => {
     e.preventDefault();
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim()) {
+    if (!Name.trim() || !email.trim() || !phone.trim()) {
       alert("Please fill all required fields.");
       return;
     }
@@ -315,8 +314,7 @@ export default function AddStudent() {
 
     try {
       const studentDocRef = await addDoc(collection(db, 'student'), {
-        first_name: capitalizeFirstLetter(firstName),
-        last_name: capitalizeFirstLetter(lastName),
+        Name: capitalizeFirstLetter(Name),
         email,
         phone: fullPhoneNumber,
         residential_address: address,
@@ -389,13 +387,13 @@ export default function AddStudent() {
       try {
         console.log("Preparing to send welcome email", {
           toEmail: email,
-          fullName: `${capitalizeFirstLetter(firstName)} ${capitalizeFirstLetter(lastName)}`,
+          fullName: `${capitalizeFirstLetter(Name)}`,
         }); // Debug log
         
         
         await sendWelcomeEmail({
           toEmail: email,
-          fullName: `${capitalizeFirstLetter(firstName)} ${capitalizeFirstLetter(lastName)}`
+          fullName: `${capitalizeFirstLetter(Name)}`
         });
         console.log("Welcome email sent successfully to:", email); // Debug log
         alert("Student added successfully! Welcome email sent.");
@@ -576,23 +574,12 @@ export default function AddStudent() {
             <h2 className="text-lg font-medium text-gray-700 mb-4">Personal Details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600">First Name</label>
+                <label className="block text-sm font-medium text-gray-600">Name</label>
                 <input
                   type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="First Name"
-                  required
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Last Name</label>
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Last Name"
+                  value={Name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Name"
                   required
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -638,7 +625,7 @@ export default function AddStudent() {
                   type="date"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
-                  required
+                  // required
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
