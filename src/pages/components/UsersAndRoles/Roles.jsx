@@ -138,7 +138,7 @@ export default function Roles() {
       return;
     }
     try {
-      const newRole = { name: newRoleName, permissions: newRolePermissions };
+      const newRole = { name: newRoleName, permissions: newRolePermissions, isDefault: false };
       const roleRef = await addDoc(collection(db, 'roles'), newRole);
       const newRoleId = roleRef.id;
       setRoles([...roles, { id: newRoleId, ...newRole }]);
@@ -148,6 +148,7 @@ export default function Roles() {
         roleId: newRoleId,
         name: newRoleName,
         permissions: newRolePermissions,
+        isDefault: false,
       });
 
       setNewRoleName('');
@@ -177,7 +178,6 @@ export default function Roles() {
         invoices: { create: false, update: false, display: false, delete: false },
         activityLogs: { create: false, update: false, display: false, delete: false },
         enquiryForms: { create: false, update: false, display: false, delete: false },
-
       });
       alert('Role created successfully!');
     } catch (error) {
@@ -193,6 +193,10 @@ export default function Roles() {
     }
     if (!editingRole || !editingRole.id) {
       alert('No role selected for editing.');
+      return;
+    }
+    if (editingRole.isDefault) {
+      alert('Default roles cannot be updated.');
       return;
     }
     try {
@@ -225,8 +229,13 @@ export default function Roles() {
       if (!canDelete) alert('You do not have permission to delete roles.');
       return;
     }
+    const roleToDelete = roles.find(r => r.id === deleteId);
+    if (roleToDelete.isDefault) {
+      alert('Default roles cannot be deleted.');
+      setOpenDelete(false);
+      return;
+    }
     try {
-      const roleToDelete = roles.find(r => r.id === deleteId);
       await deleteDoc(doc(db, 'roles', deleteId));
 
       // Log the deletion
@@ -234,6 +243,7 @@ export default function Roles() {
         roleId: deleteId,
         name: roleToDelete.name,
         permissions: roleToDelete.permissions,
+        isDefault: roleToDelete.isDefault,
       });
 
       setRoles(roles.filter(r => r.id !== deleteId));
@@ -248,6 +258,10 @@ export default function Roles() {
   const startEditing = (role) => {
     if (!canUpdate) {
       alert('You do not have permission to edit roles.');
+      return;
+    }
+    if (role.isDefault) {
+      alert('Default roles cannot be edited.');
       return;
     }
     const fullPermissions = {
@@ -290,6 +304,7 @@ export default function Roles() {
               <tr>
                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Sr No</th>
                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Role Name</th>
+                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Default</th>
                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Actions</th>
               </tr>
             </thead>
@@ -298,9 +313,10 @@ export default function Roles() {
                 <tr key={role.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 text-gray-600">{index + 1}</td>
                   <td className="px-4 py-3 text-gray-800">{role.name}</td>
+                  <td className="px-4 py-3 text-gray-800">{role.isDefault ? 'Yes' : 'No'}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      {canUpdate && (
+                      {canUpdate && !role.isDefault && (
                         <button
                           onClick={() => startEditing(role)}
                           className="text-blue-600 hover:underline"
@@ -308,7 +324,7 @@ export default function Roles() {
                           Edit
                         </button>
                       )}
-                      {canDelete && (
+                      {canDelete && !role.isDefault && (
                         <button
                           onClick={() => {
                             setDeleteId(role.id);
@@ -325,7 +341,7 @@ export default function Roles() {
               ))}
               {roles.length === 0 && (
                 <tr>
-                  <td colSpan="3" className="px-4 py-3 text-center text-gray-500">
+                  <td colSpan="4" className="px-4 py-3 text-center text-gray-500">
                     No roles found
                   </td>
                 </tr>
