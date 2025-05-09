@@ -263,7 +263,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         Key: fileKey,
         Body: new Uint8Array(fileBuffer),
         ContentType: "audio/webm",
-        ACL: "public-read",
+        // ACL: "public-read",
       };
 
       console.log("Uploading to S3 with params:", { bucketName, fileKey });
