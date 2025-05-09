@@ -885,14 +885,24 @@ import EmployeeRegistrationForm from './pages/home/EmployeeRegistrationForm.jsx'
 import AfterEmployeeRegistration from './pages/home/AfterEmployeeRegistration.jsx';
 import BulkAddStudents from './pages/components/Students/BulkAddStudents.jsx';
 import AddEmployee from './pages/components/HRManagement/EmployeeDirectory/AddEmployee.jsx';
+import { CheckInReminderProvider } from './context/CheckInRemainderContext.jsx';
+import { ToastContainer } from 'react-toastify';
+import AddStaff from './pages/components/Instructors/AddStaff.jsx';
+import EditStaff from './pages/components/Instructors/EditStaff.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
   const auth = getAuth();
 
   const ProtectedRoute = ({ children, permissionSection, action = 'display' }) => {
-    if (loading) return <div className="text-center p-4">Loading...</div>;
-    if (!user) return <Navigate to="/login" />;
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+        </div>
+      );
+    }
+        if (!user) return <Navigate to="/login" />;
     if (permissionSection && rolePermissions[permissionSection]?.[action] !== true) {
       return <div className="p-4 text-red-600">Access Denied: Insufficient Permissions</div>;
     }
@@ -906,10 +916,14 @@ export default function App() {
   return (
     <BrowserRouter>
       {loading ? (
-        <div className="text-center p-4">Loading...</div>
+        
+            <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+            </div>
       ) : (
         <>
           {user && <ActiveStatus />}
+          <CheckInReminderProvider>
           <div style={{ display: 'flex' }}>
             {user && <Sidebar />}
             <div style={{ flex: 1, padding: '20px' }}>
@@ -962,6 +976,9 @@ export default function App() {
 
                 {/* Instructor Routes */}
                 <Route path="/instructor" element={<ProtectedRoute permissionSection="Instructor"><Instructor /></ProtectedRoute>} />
+                <Route path="/addstaff" element={<ProtectedRoute permissionSection="Instructor"><AddStaff /></ProtectedRoute>} />
+                <Route path="/editstaff" element={<ProtectedRoute permissionSection="Instructor"><EditStaff /></ProtectedRoute>} />
+
 
 
                 {/* Enquiry Routes */}
@@ -1027,6 +1044,18 @@ export default function App() {
               </Routes>
             </div>
           </div>
+          <ToastContainer
+          position="top-right"
+          autoClose={10000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+          </CheckInReminderProvider>
         </>
       )}
     </BrowserRouter>

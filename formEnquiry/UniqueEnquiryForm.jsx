@@ -116,10 +116,8 @@ const UniqueEnquiryForm = () => {
 
   if (!formData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
-          <h2 className="text-xl font-semibold">Loading...</h2>
-        </div>
+      <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
       </div>
     );
   }

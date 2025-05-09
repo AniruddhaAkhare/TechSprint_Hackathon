@@ -4,6 +4,7 @@ import { getDocs, collection, deleteDoc, doc, query, orderBy, where } from "fire
 import AddInstructor from "./AddInstructor";
 import { useAuth } from "../../../context/AuthContext"; // Adjust the import path as needed
 import { useNavigate } from "react-router-dom";
+import AddStaff from "./AddStaff";
 
 export default function Instructor() {
   const navigate = useNavigate();
@@ -305,6 +306,16 @@ export default function Instructor() {
               onClick={() => {
                 setSelectedInstructor({});
                 setOpenDrawer(true);
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+            >
+              + Add Instructor
+            </button>
+          )}
+          {canCreate && (
+            <button
+              onClick={() => {
+                navigate('/addstaff');
               }}
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
             >

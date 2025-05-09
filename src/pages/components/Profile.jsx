@@ -76,12 +76,12 @@ export default function Profile() {
                         </div>
                     </>
                 ) : (
-                    <div className="text-center">
-                        <p className="text-gray-500 text-lg">Loading your profile...</p>
-                        <div className="mt-4 flex justify-center">
-                            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                    </div>
+                    
+                          <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+                            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+                          </div>
+                        
+                      
                 )}
             </div>
         </div>
