@@ -867,7 +867,7 @@ import EnquiryDashboard from './pages/components/EnquiryManagement/EnquiryDashbo
 import EnquiryAnalyticsPage from './pages/components/EnquiryManagement/EnquiryAnalyticsPage.jsx';
 import EnquiryForms from './pages/components/EnquiryForm/EnquiryForm.jsx';
 import SubmitEnquiryForm from './pages/components/EnquiryForm/SubmitEnquiryForm.jsx';
-// import SubmitEnquiryForm from './pages/components/EnquiryForm/SubmitEnquiryForm.jsx';
+import ViewEnquiries from './pages/components/EnquiryForm/ViewEnquiries.jsx';
 import EnquiryFormPage from "./pages/components/EnquiryForm/EnquiryFormPage";
 import ProfilePage from './pages/home/ProfilePage.jsx';
 import EmployeeAttendance from './pages/components/HRManagement/TimeAndAttendanceTracking/EmployeeAttendance.jsx';
@@ -962,7 +962,8 @@ export default function App() {
                 <Route path="/instructor" element={<ProtectedRoute permissionSection="Instructor"><Instructor /></ProtectedRoute>} />
 
               {/* Enquiry */}
-              <Route path="/enquiry/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} />
+              <Route path="/enquiries/:formId" element={<ProtectedRoute permissionSection="enquiries"><ViewEnquiries /></ProtectedRoute>} />
+              {/* <Route path="/enquiry/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} /> */}
               {/* <Route path="/enquiry-form/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} /> */}
               <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><KanbanBoard /></ProtectedRoute>} />
               {/* <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryDashboard /></ProtectedRoute>} /> */}

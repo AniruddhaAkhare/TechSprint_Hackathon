@@ -8,7 +8,8 @@ import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 Modal.setAppElement("#root");
 
-const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, availableTags, rolePermissions, selectedEnquiry, isNotesMode, noteType, setNoteType, newNote, setNewNote }) => {
+const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availableTags, rolePermissions, selectedEnquiry, isNotesMode, noteType, setNoteType, newNote, setNewNote }) => {
+  const [salesRoleIds, setSalesRoleIds] = useState([]);
   const [currentSection, setCurrentSection] = useState(1);
   const [isEditing, setIsEditing] = useState(false);
   const [editingEnquiryId, setEditingEnquiryId] = useState(null);
@@ -21,6 +22,22 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
     return today.toISOString().split("T")[0]; // Returns YYYY-MM-DD
   };
 
+  useEffect(() => {
+    const fetchSalesRoleIds = async () => {
+      try {
+        const rolesQuery = query(collection(db, 'roles'), where('name', '==', 'Sales'));
+        const rolesSnapshot = await getDocs(rolesQuery);
+        const roleIds = rolesSnapshot.docs.map(doc => doc.id);
+        console.log("Sales role IDs:", roleIds);
+        setSalesRoleIds(roleIds);
+      } catch (error) {
+        console.error('Error fetching Sales role IDs:', error);
+        setSalesRoleIds([]);
+      }
+    };
+
+    fetchSalesRoleIds();
+  }, []);
 
   const [callDate, setCallDate] = useState(getTodayDate());
   const [callLogDate, setCallLogDate] = useState(getTodayDate());
@@ -145,7 +162,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           }]
           : []),
       ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  
+
       setNewEnquiry({
         ...selectedEnquiry,
         notes: Array.isArray(selectedEnquiry.notes) ? selectedEnquiry.notes : [],
@@ -453,7 +470,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
-  
+
   const validatePhone = (phone) => {
     const phoneRegex = /^\d{10}$/;
     return phoneRegex.test(phone);
@@ -517,7 +534,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       alert("You don't have permission to update enquiries");
       return;
     }
-  
+
     try {
       const enquiryRef = doc(db, "enquiries", editingEnquiryId);
       const historyEntry = {
@@ -540,7 +557,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       if (noteObject.type === "call-schedule" && noteObject.callDate && noteObject.callScheduledTime) {
         const callDateTime = new Date(`${noteObject.callDate}T${noteObject.callScheduledTime}`);
         const now = new Date();
-        const timeUntilReminder = callDateTime.getTime() - now.getTime() - 10 * 60 * 1000; // 10 minutes before
+        const timeUntilReminder = callDateTime.getTime() - now.getTime() - 5 * 60 * 1000; // 5 minutes before
         if (timeUntilReminder > 0) {
           setTimeout(() => {
             setReminderDetails({
@@ -550,29 +567,13 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
             });
             setShowReminder(true);
             // Play buzzer sound
-            const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3"); // Replace with your buzzer sound URL
+            const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3"); // Replace with your preferred buzzer sound URL
             audio.play().catch((error) => console.error("Error playing buzzer:", error));
           }, timeUntilReminder);
+        } else {
+          console.warn("Scheduled call is too soon or in the past; reminder not set.");
         }
       }
-      // if (noteObject.type === "call-schedule" && noteObject.callDate && noteObject.callScheduledTime) {
-      //   const callDateTime = new Date(`${noteObject.callDate}T${noteObject.callScheduledTime}`);
-      //   const now = new Date();
-      //   const timeUntilReminder = callDateTime.getTime() - now.getTime() - 10 * 60 * 1000; // 10 minutes before
-      //   if (timeUntilReminder > 0) {
-      //     setTimeout(() => {
-      //       setReminderDetails({
-      //         name: newEnquiry.name || "this lead",
-      //         date: noteObject.callDate,
-      //         time: noteObject.callScheduledTime,
-      //       });
-      //       setShowReminder(true);
-      //       // Play buzzer sound
-      //       const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3"); // Replace with your buzzer sound URL
-      //       audio.play().catch((error) => console.error("Error playing buzzer:", error));
-      //     }, timeUntilReminder);
-      //   }
-      // }
       onRequestClose();
       alert("Note added successfully!");
     } catch (error) {
@@ -588,7 +589,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       alert("Please add a note before submitting.");
       return;
     }
-  
+
     if (noteType === "call-schedule") {
       const selectedDate = new Date(callDate);
       const today = new Date();
@@ -598,7 +599,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         return;
       }
     }
-  
+
     const noteObject = {
       content: newNote,
       type: noteType,
@@ -611,7 +612,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       createdAt: new Date().toISOString(),
       addedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
     };
-  
+
     const updatedNotes = [...newEnquiry.notes, noteObject];
     setNewEnquiry((prev) => ({
       ...prev,
@@ -626,32 +627,32 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       alert("Please fill in the required field: Name");
       return;
     }
-  
+
     if (!newEnquiry.email && !newEnquiry.phone) {
       alert("Please provide either an email or a phone number.");
       return;
     }
-  
+
     if (newEnquiry.email && !validateEmail(newEnquiry.email)) {
       alert("Please enter a valid email address (e.g., example@domain.com)");
       return;
     }
-  
+
     if (newEnquiry.phone && !validatePhone(newEnquiry.phone)) {
       alert("Please enter a valid 10-digit phone number (e.g., 1234567890)");
       return;
     }
-  
+
     if (newEnquiry.stage === "closed-lost" && !newEnquiry.lostReason) {
       alert("Please select a Lost Reason for Closed Lost status.");
       return;
     }
-  
+
     if (!canCreate && !editingEnquiryId) {
       alert("You don't have permission to create enquiries");
       return;
     }
-  
+
     try {
       const emailQuery = newEnquiry.email ? query(collection(db, "enquiries"), where("email", "==", newEnquiry.email)) : null;
       const phoneQuery = newEnquiry.phone ? query(collection(db, "enquiries"), where("phone", "==", newEnquiry.phone)) : null;
@@ -659,7 +660,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       if (emailQuery) queries.push(getDocs(emailQuery));
       if (phoneQuery) queries.push(getDocs(phoneQuery));
       const snapshots = await Promise.all(queries);
-  
+
       let emailConflict = false;
       let phoneConflict = false;
       if (emailQuery) {
@@ -676,19 +677,19 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           phoneConflict = phoneSnapshot.docs.some((doc) => doc.id !== editingEnquiryId);
         }
       }
-  
+
       if (emailConflict) {
         alert("An enquiry with this email already exists.");
         return;
       }
-  
+
       if (phoneConflict) {
         alert("An enquiry with this phone number already exists.");
         return;
       }
-  
+
       const selectedCourse = courses.find((course) => course.name === newEnquiry.course);
-  
+
       const enquiryData = {
         ...newEnquiry,
         stage: editingEnquiryId ? newEnquiry.stage : "pre-qualified",
@@ -703,13 +704,13 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         owner: newEnquiry.assignTo || newEnquiry.owner,
         history: newEnquiry.history || [],
       };
-  
+
       const historyEntry = {
         action: editingEnquiryId ? `Updated enquiry` : `Created enquiry`,
         performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
         timestamp: new Date().toISOString(),
       };
-  
+
       if (editingEnquiryId && newEnquiry.stage !== selectedEnquiry?.stage) {
         enquiryData.history = [
           ...enquiryData.history,
@@ -720,7 +721,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           },
         ];
       }
-  
+
       if (newEnquiry.assignTo && newEnquiry.assignTo !== selectedEnquiry?.assignTo) {
         enquiryData.history = [
           ...enquiryData.history,
@@ -731,9 +732,9 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           },
         ];
       }
-  
+
       enquiryData.history = [...enquiryData.history, historyEntry];
-  
+
       if (editingEnquiryId) {
         if (!canUpdate) {
           alert("You don't have permission to update enquiries");
@@ -745,12 +746,12 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
         const docRef = await addDoc(collection(db, "enquiries"), enquiryData);
         setEditingEnquiryId(docRef.id);
       }
-  
+
       setNewEnquiry((prev) => ({
         ...prev,
         history: enquiryData.history,
       }));
-  
+
       if (currentSection < 4 && !isNotesMode) {
         setCurrentSection(currentSection + 1);
       } else {
@@ -814,34 +815,34 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
       alert(`Failed to save enquiry: ${error.message}`);
     }
   };
- 
+
   const handleTagToggle = async (tag) => {
     if (!canUpdate) {
       alert("You don't have permission to update enquiries");
       return;
     }
-  
+
     try {
       const enquiryRef = doc(db, "enquiries", editingEnquiryId);
       const isTagAdded = !newEnquiry.tags.includes(tag);
       const updatedTags = isTagAdded
         ? [...newEnquiry.tags, tag]
         : newEnquiry.tags.filter((t) => t !== tag);
-  
+
       const historyEntry = {
         action: `${isTagAdded ? "Added" : "Removed"} tag: "${tag}"`,
         performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
         timestamp: new Date().toISOString(),
       };
       const updatedHistory = [...(newEnquiry.history || []), historyEntry];
-  
+
       await updateDoc(enquiryRef, {
         tags: updatedTags,
         history: updatedHistory,
         lastTouched: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
-  
+
       setNewEnquiry((prev) => ({
         ...prev,
         tags: updatedTags,
@@ -853,17 +854,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
     }
   };
 
-  // const handleTagToggle = (tag) => {
-  //   setNewEnquiry((prev) => {
-  //     const updatedTags = prev.tags.includes(tag)
-  //       ? prev.tags.filter((t) => t !== tag)
-  //       : [...prev.tags, tag];
-  //     return {
-  //       ...prev,
-  //       tags: updatedTags,
-  //     };
-  //   });
-  // };
+
 
   const formatDateSafely = (dateString, formatString) => {
     if (!dateString) return "Not available";
@@ -1190,18 +1181,18 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                 </div>
 
                 <div className="mb-3 sm:mb-4 sm:col-span-1">
-  <div className="mb-4 sm:mb-4">
-    <label className="block text-xs sm:text-sm font-medium text-gray-700">Creator Name</label>
-    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.createdBy)}</p>
-  </div>
-  <div className="mb-3 sm:mb-4">
-    <label className="block text-xs sm:text-sm font-medium text-gray-700">Owner Name</label>
-    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.owner)}</p>
-  </div>
-</div>
+                  <div className="mb-4 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Creator Name</label>
+                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.createdBy)}</p>
+                  </div>
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Owner Name</label>
+                    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.owner)}</p>
+                  </div>
+                </div>
 
 
-            
+
                 <div className="mb-3 sm:mb-4">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">Last Modified Time</label>
                   <p className="mt-1 text-xs sm:text-sm text-gray-900">
@@ -1484,24 +1475,24 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                     )}
                   </div>
                   <div>
-  <label className="block text-xs sm:text-sm font-medium text-gray-700">Education Break</label>
-  {isEditing ? (
-    <select
-      value={newEnquiry.educationBreak || ""}
-      onChange={(e) => setNewEnquiry({ ...newEnquiry, educationBreak: e.target.value })}
-      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-    >
-      <option value="">Select education break</option>
-      <option value="No Break">No Break</option>
-      <option value="0 to 1 Years">0 to 1 Years</option>
-      <option value="1 - 3 Years">1 - 3 Years</option>
-      <option value="3 - 5 Years">3 - 5 Years</option>
-      <option value="5+ Years">5+ Years</option>
-    </select>
-  ) : (
-    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.educationBreak)}</p>
-  )}
-</div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Education Break</label>
+                    {isEditing ? (
+                      <select
+                        value={newEnquiry.educationBreak || ""}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, educationBreak: e.target.value })}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="">Select education break</option>
+                        <option value="No Break">No Break</option>
+                        <option value="0 to 1 Years">0 to 1 Years</option>
+                        <option value="1 - 3 Years">1 - 3 Years</option>
+                        <option value="3 - 5 Years">3 - 5 Years</option>
+                        <option value="5+ Years">5+ Years</option>
+                      </select>
+                    ) : (
+                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.educationBreak)}</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1539,80 +1530,65 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                   </div>
 
                   <div>
-  <label className="block text-xs sm:text-sm font-medium text-gray-700">Working Domain</label>
-  {isEditing ? (
-    <select
-      value={newEnquiry.workingDomain || ""}
-      onChange={(e) => setNewEnquiry({ ...newEnquiry, workingDomain: e.target.value })}
-      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-    >
-      <option value="" disabled>Select working domain</option>
-      <option value="Banking and Finance">Banking and Finance</option>
-      <option value="Manufacturing">Manufacturing</option>
-      <option value="Information Technology (IT) & Services">Information Technology (IT) & Services</option>
-      <option value="Healthcare & Pharmaceuticals">Healthcare & Pharmaceuticals</option>
-      <option value="Education & EdTech">Education & EdTech</option>
-      <option value="Retail & E-commerce">Retail & E-commerce</option>
-      <option value="Telecommunications">Telecommunications</option>
-      <option value="Logistics & Supply Chain">Logistics & Supply Chain</option>
-      <option value="Automotive">Automotive</option>
-      <option value="Real Estate & Construction">Real Estate & Construction</option>
-      <option value="Media & Entertainment">Media & Entertainment</option>
-      <option value="Hospitality & Tourism">Hospitality & Tourism</option>
-      <option value="Energy & Utilities">Energy & Utilities</option>
-      <option value="FMCG (Fast-Moving Consumer Goods)">FMCG (Fast-Moving Consumer Goods)</option>
-      <option value="Agriculture & Agritech">Agriculture & Agritech</option>
-      <option value="Legal & Professional Services">Legal & Professional Services</option>
-      <option value="Aerospace & Defense">Aerospace & Defense</option>
-      <option value="Government & Public Sector">Government & Public Sector</option>
-      <option value="Insurance">Insurance</option>
-      <option value="Non-Profit & NGOs">Non-Profit & NGOs</option>
-    </select>
-  ) : (
-    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workingDomain)}</p>
-  )}
-</div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Working Domain</label>
+                    {isEditing ? (
+                      <select
+                        value={newEnquiry.workingDomain || ""}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, workingDomain: e.target.value })}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="" disabled>Select working domain</option>
+                        <option value="Banking and Finance">Banking and Finance</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                        <option value="Information Technology (IT) & Services">Information Technology (IT) & Services</option>
+                        <option value="Healthcare & Pharmaceuticals">Healthcare & Pharmaceuticals</option>
+                        <option value="Education & EdTech">Education & EdTech</option>
+                        <option value="Retail & E-commerce">Retail & E-commerce</option>
+                        <option value="Telecommunications">Telecommunications</option>
+                        <option value="Logistics & Supply Chain">Logistics & Supply Chain</option>
+                        <option value="Automotive">Automotive</option>
+                        <option value="Real Estate & Construction">Real Estate & Construction</option>
+                        <option value="Media & Entertainment">Media & Entertainment</option>
+                        <option value="Hospitality & Tourism">Hospitality & Tourism</option>
+                        <option value="Energy & Utilities">Energy & Utilities</option>
+                        <option value="FMCG (Fast-Moving Consumer Goods)">FMCG (Fast-Moving Consumer Goods)</option>
+                        <option value="Agriculture & Agritech">Agriculture & Agritech</option>
+                        <option value="Legal & Professional Services">Legal & Professional Services</option>
+                        <option value="Aerospace & Defense">Aerospace & Defense</option>
+                        <option value="Government & Public Sector">Government & Public Sector</option>
+                        <option value="Insurance">Insurance</option>
+                        <option value="Non-Profit & NGOs">Non-Profit & NGOs</option>
+                      </select>
+                    ) : (
+                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workingDomain)}</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Professional Fields (Right Side) */}
                 <div className="space-y-4">
-                <div>
-  <label className="block text-xs sm:text-sm font-medium text-gray-700">Experience in Years</label>
-  {isEditing ? (
-    <select
-      value={newEnquiry.experienceInYears}
-      onChange={(e) => setNewEnquiry({ ...newEnquiry, experienceInYears: e.target.value })}
-      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-    >
-      <option value="">Select experience</option>
-      <option value="Fresher">Fresher</option>
-      <option value="0 to 1 Years">0 to 1 Years</option>
-      <option value="1 - 3 Years">1 - 3 Years</option>
-      <option value="3 - 5 Years">3 - 5 Years</option>
-      <option value="5 - 10 Years">5 - 10 Years</option>
-      <option value="10 - 15 Years">10 - 15 Years</option>
-      <option value="15+ Years">15+ Years</option>
-    </select>
-  ) : (
-    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.experienceInYears)}</p>
-  )}
-</div>
-                  {/* <div>
+                  <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700">Experience in Years</label>
                     {isEditing ? (
-                      <input
-                        type="number"
+                      <select
                         value={newEnquiry.experienceInYears}
                         onChange={(e) => setNewEnquiry({ ...newEnquiry, experienceInYears: e.target.value })}
-                        placeholder="Enter experience in years"
                         className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        min="0"
-                        step="0.1"
-                      />
+                      >
+                        <option value="">Select experience</option>
+                        <option value="Fresher">Fresher</option>
+                        <option value="0 to 1 Years">0 to 1 Years</option>
+                        <option value="1 - 3 Years">1 - 3 Years</option>
+                        <option value="3 - 5 Years">3 - 5 Years</option>
+                        <option value="5 - 10 Years">5 - 10 Years</option>
+                        <option value="10 - 15 Years">10 - 15 Years</option>
+                        <option value="15+ Years">15+ Years</option>
+                      </select>
                     ) : (
                       <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.experienceInYears)}</p>
                     )}
-                  </div> */}
+                  </div>
+
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700">Current Salary</label>
                     {isEditing ? (
@@ -1631,24 +1607,24 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                   </div>
 
                   <div>
-  <label className="block text-xs sm:text-sm font-medium text-gray-700">Work Break</label>
-  {isEditing ? (
-    <select
-      value={newEnquiry.workBreak || ""}
-      onChange={(e) => setNewEnquiry({ ...newEnquiry, workBreak: e.target.value })}
-      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-    >
-      <option value="">Select work break</option>
-      <option value="No Break">No Break</option>
-      <option value="0 to 1 Years">0 to 1 Years</option>
-      <option value="1 - 3 Years">1 - 3 Years</option>
-      <option value="3 - 5 Years">3 - 5 Years</option>
-      <option value="5+ Years">5+ Years</option>
-    </select>
-  ) : (
-    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workBreak)}</p>
-  )}
-</div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Work Break</label>
+                    {isEditing ? (
+                      <select
+                        value={newEnquiry.workBreak || ""}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, workBreak: e.target.value })}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="">Select work break</option>
+                        <option value="No Break">No Break</option>
+                        <option value="0 to 1 Years">0 to 1 Years</option>
+                        <option value="1 - 3 Years">1 - 3 Years</option>
+                        <option value="3 - 5 Years">3 - 5 Years</option>
+                        <option value="5+ Years">5+ Years</option>
+                      </select>
+                    ) : (
+                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.workBreak)}</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1763,27 +1739,34 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
                       <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.referredBy)}</p>
                     )}
                   </div>
+
                   <div className="mb-3 sm:mb-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Assign To</label>
-                    {isEditing ? (
-                      <select
-                        value={newEnquiry.assignTo}
-                        onChange={(e) => setNewEnquiry({ ...newEnquiry, assignTo: e.target.value, owner: e.target.value || newEnquiry.owner })}
-                        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      >
-                        <option value="">Select counselor</option>
-                        {instructors
-                          .filter((instructor) => instructor.role === "Sales")
-                          .map((instructor) => (
-                            <option key={instructor.id} value={`${instructor.f_name} ${instructor.l_name}`}>
-                              {instructor.f_name} {instructor.l_name}
-                            </option>
-                          ))}
-                      </select>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700">Assign To</label>
+                {isEditing ? (
+                  <select
+                    value={newEnquiry.assignTo}
+                    onChange={(e) => setNewEnquiry({ ...newEnquiry, assignTo: e.target.value, owner: e.target.value || newEnquiry.owner })}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  >
+                    <option value="">Select counselor</option>
+                    {salesRoleIds.length > 0 && Users && Array.isArray(Users) && Users.length > 0 ? (
+                      Users
+                        .filter((user) => salesRoleIds.includes(user.role))
+                        .map((user) => (
+                          <option key={user.id} value={user.displayName}>
+                            {user.displayName || 'Unknown User'}
+                          </option>
+                        ))
                     ) : (
-                      <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.assignTo)}</p>
+                      <option value="" disabled>
+                        No counselors available
+                      </option>
                     )}
-                  </div>
+                  </select>
+                ) : (
+                  <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.assignTo)}</p>
+                )}
+              </div>
                 </div>
                 <div className="space-y-3 sm:space-y-4">
                   <div className="mb-3 sm:mb-4">
@@ -1936,232 +1919,228 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
               )}
             </div>
           )}
-
-{currentSection === 4 && (
-  <div>
-    <h3 className="text-base sm:text-lg font-medium mb-2">Notes</h3>
-    {(!isNotesMode || (isNotesMode && selectedEnquiry)) && (
-      <>
-        <div className="mb-3 sm:mb-4">
-          <label className="block text-xs sm:text-sm font-medium text-gray-700">Note Type</label>
-          <select
-            value={noteType || "general-enquiry"}
-            onChange={(e) => setNoteType(e.target.value)}
-            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-          >
-            <option value="general-enquiry">General Enquiry</option>
-            <option value="call-log">Call Log</option>
-            <option value="call-schedule">Call Schedule</option>
-            <option value="office-visit">Office Visit</option>
-          </select>
-        </div>
-        {noteType === "call-log" && (
-  <div className="space-y-3 sm:space-y-4 mb-3 sm:mb-4">
-    <div>
-      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Date</label>
-      <input
-        type="date"
-        value={callLogDate}
-        onChange={(e) => setCallLogDate(e.target.value)}
-        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-      />
-    </div>
-    <div>
-      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Duration (minutes)</label>
-      <input
-        type="number"
-        value={callDuration}
-        onChange={(e) => setCallDuration(e.target.value)}
-        placeholder="Enter call duration"
-        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-        min="0"
-        step="1"
-      />
-    </div>
-    <div>
-      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Type</label>
-      <select
-        value={callType}
-        onChange={(e) => setCallType(e.target.value)}
-        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-      >
-        <option value="incoming">Incoming</option>
-        <option value="outgoing">Outgoing</option>
-      </select>
-    </div>
-    <div>
-      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Time</label>
-      <input
-        type="time"
-        value={callTime}
-        onChange={(e) => setCallTime(e.target.value)}
-        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-      />
-    </div>
-  </div>
-)}
-{noteType === "call-schedule" && (
-  <div className="space-y-3 sm:space-y-4 mb-3 sm:mb-4">
-    <div>
-      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Date</label>
-      <input
-        type="date"
-        value={callDate}
-        onChange={(e) => setCallDate(e.target.value)}
-        min={getTodayDate()} // Prevent past dates
-        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-      />
-    </div>
-    <div>
-      <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Time</label>
-      <input
-        type="time"
-        value={callScheduledTime}
-        onChange={(e) => setCallScheduledTime(e.target.value)}
-        className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-      />
-    </div>
-  </div>
-)}
-
-      
-        <div className="mb-3 sm:mb-4">
-          <label className="block text-xs sm:text-sm font-medium text-gray-700">Note</label>
-          <textarea
-            value={newNote || ""}
-            onChange={(e) => setNewNote(e.target.value)}
-            placeholder="Add your note here..."
-            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            rows="4"
-          />
-        </div>
-        <div className="flex justify-end gap-2 mb-3 sm:mb-4">
-        <button
-  onClick={() => {
-    setNewNote("");
-    setNoteType("general-enquiry");
-    setCallDuration("");
-    setCallType("incoming");
-    setCallTime("");
-    setCallDate(getTodayDate()); // Reset to today
-    setCallLogDate(getTodayDate()); // Reset to today
-    setCallScheduledTime("");
-  }}
-  className="px-3 py-1 sm:px-4 sm:py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 text-sm"
->
-  Clear
-</button>
-       
-          <button
-            onClick={handleAddNote}
-            disabled={!canUpdate || !newNote?.trim()}
-            className={`px-3 py-1 sm:px-4 sm:py-2 rounded-md text-sm ${!canUpdate || !newNote?.trim() ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"}`}
-          >
-            Add Note
-          </button>
-        </div>
-      </>
-    )}
-    <div>
-      {newEnquiry.notes && newEnquiry.notes.length > 0 ? (
-        Object.entries(
-          newEnquiry.notes.reduce((acc, note) => {
-            const noteDate = formatDateSafely(note.createdAt, "yyyy-MM-dd");
-            if (!acc[noteDate]) {
-              acc[noteDate] = [];
-            }
-            acc[noteDate].push(note);
-            return acc;
-          }, {})
-        )
-          .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA))
-          .map(([date, notes]) => (
-            <div key={date} className="mb-6">
-              <div className="sticky top-0 bg-white py-2 z-10">
-                <h4 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-1">
-                  {formatDateSafely(date, "MMMM d, yyyy")}
-                </h4>
-              </div>
-              <div className="space-y-3 sm:space-y-4 mt-2">
-                {notes
-                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                  .map((note, index) => (
-                    <div key={index} className="border border-gray-200 rounded-md p-3 sm:p-4 bg-gray-50">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
-                        <p className="text-xs sm:text-sm font-medium text-gray-700">
-                          {formatNoteType(note.type)}
-                          <span className="text-xs text-gray-500 ml-2">
-                            {formatDateSafely(note.createdAt, "h:mm a")}
-                          </span>
-                        </p>
-                        <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0">
-                          by {note.addedBy}
-                        </p>
+          {currentSection === 4 && (
+            <div>
+              <h3 className="text-base sm:text-lg font-medium mb-2">Notes</h3>
+              {(!isNotesMode || (isNotesMode && selectedEnquiry)) && (
+                <>
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Note Type</label>
+                    <select
+                      value={noteType || "general-enquiry"}
+                      onChange={(e) => setNoteType(e.target.value)}
+                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    >
+                      <option value="general-enquiry">General Enquiry</option>
+                      <option value="call-log">Call Log</option>
+                      <option value="call-schedule">Call Schedule</option>
+                      <option value="office-visit">Office Visit</option>
+                    </select>
+                  </div>
+                  {noteType === "call-log" && (
+                    <div className="space-y-3 sm:space-y-4 mb-3 sm:mb-4">
+                      <div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Date</label>
+                        <input
+                          type="date"
+                          value={callLogDate}
+                          onChange={(e) => setCallLogDate(e.target.value)}
+                          className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
                       </div>
-                      {note.type === "call-log" && (
-  <div className="text-xs sm:text-sm text-gray-600 mb-2">
-    <p>Date: {note.callLogDate || "Not specified"}</p>
-    <p>Duration: {note.callDuration || "Not specified"} minutes</p>
-    <p>Type: {note.callType || "Not specified"}</p>
-    <p>Time: {note.callTime || "Not specified"}</p>
-  </div>
-)}
-                      {note.type === "call-schedule" && (
-                        <div className="text-xs sm:text-sm text-gray-600 mb-2">
-                          <p>Date: {note.callDate || "Not specified"}</p>
-                          <p>Time: {note.callScheduledTime || "Not specified"}</p>
-                        </div>
-                      )}
-                      {note.type === "office-visit" && note.audioUrl && (
-                        <div className="mt-2">
-                          {audioStatus[index] === "loading" ? (
-                            <p className="text-xs sm:text-sm text-gray-500">Loading audio...</p>
-                          ) : audioError[index] || audioStatus[index] === "invalid" ? (
-                            <div>
-                              <p className="text-xs sm:text-sm text-red-600">{audioError[index]}</p>
-                              <a
-                                href={note.audioUrl}
-                                download
-                                className="text-xs sm:text-sm text-blue-600 hover:underline"
-                              >
-                                Download Audio
-                              </a>
-                            </div>
-                          ) : (
-                            <audio
-                              controls
-                              src={note.audioUrl}
-                              onError={(e) => handleAudioError(index, e)}
-                              className="w-full max-w-md"
-                            >
-                              Your browser does not support the audio element.
-                            </audio>
-                          )}
-                          {canUpdate && audioStatus[index] === "valid" && (
-                            <button
-                              onClick={() => deleteRecording(note, index)}
-                              className="mt-2 px-2 py-1 text-xs sm:text-sm text-red-600 hover:text-red-800"
-                            >
-                              Delete Recording
-                            </button>
-                          )}
-                        </div>
-                      )}
-                      <p className="text-xs sm:text-sm text-gray-900 mt-1">{note.content}</p>
+                      <div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Duration (minutes)</label>
+                        <input
+                          type="number"
+                          value={callDuration}
+                          onChange={(e) => setCallDuration(e.target.value)}
+                          placeholder="Enter call duration"
+                          className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          min="0"
+                          step="1"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Type</label>
+                        <select
+                          value={callType}
+                          onChange={(e) => setCallType(e.target.value)}
+                          className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        >
+                          <option value="incoming">Incoming</option>
+                          <option value="outgoing">Outgoing</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Time</label>
+                        <input
+                          type="time"
+                          value={callTime}
+                          onChange={(e) => setCallTime(e.target.value)}
+                          className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
                     </div>
-                  ))}
+                  )}
+                  {noteType === "call-schedule" && (
+                    <div className="space-y-3 sm:space-y-4 mb-3 sm:mb-4">
+                      <div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Date</label>
+                        <input
+                          type="date"
+                          value={callDate}
+                          onChange={(e) => setCallDate(e.target.value)}
+                          min={getTodayDate()} // Prevent past dates
+                          className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700">Call Time</label>
+                        <input
+                          type="time"
+                          value={callScheduledTime}
+                          onChange={(e) => setCallScheduledTime(e.target.value)}
+                          className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Note</label>
+                    <textarea
+                      value={newNote || ""}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      placeholder="Add your note here..."
+                      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      rows="4"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 mb-3 sm:mb-4">
+                    <button
+                      onClick={() => {
+                        setNewNote("");
+                        setNoteType("general-enquiry");
+                        setCallDuration("");
+                        setCallType("incoming");
+                        setCallTime("");
+                        setCallDate(getTodayDate()); // Reset to today
+                        setCallLogDate(getTodayDate()); // Reset to today
+                        setCallScheduledTime("");
+                      }}
+                      className="px-3 py-1 sm:px-4 sm:py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 text-sm"
+                    >
+                      Clear
+                    </button>
+
+                    <button
+                      onClick={handleAddNote}
+                      disabled={!canUpdate || !newNote?.trim()}
+                      className={`px-3 py-1 sm:px-4 sm:py-2 rounded-md text-sm ${!canUpdate || !newNote?.trim() ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"}`}
+                    >
+                      Add Note
+                    </button>
+                  </div>
+                </>
+              )}
+              <div>
+                {newEnquiry.notes && newEnquiry.notes.length > 0 ? (
+                  Object.entries(
+                    newEnquiry.notes.reduce((acc, note) => {
+                      const noteDate = formatDateSafely(note.createdAt, "yyyy-MM-dd");
+                      if (!acc[noteDate]) {
+                        acc[noteDate] = [];
+                      }
+                      acc[noteDate].push(note);
+                      return acc;
+                    }, {})
+                  )
+                    .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA))
+                    .map(([date, notes]) => (
+                      <div key={date} className="mb-6">
+                        <div className="sticky top-0 bg-white py-2 z-10">
+                          <h4 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-1">
+                            {formatDateSafely(date, "MMMM d, yyyy")}
+                          </h4>
+                        </div>
+                        <div className="space-y-3 sm:space-y-4 mt-2">
+                          {notes
+                            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                            .map((note, index) => (
+                              <div key={index} className="border border-gray-200 rounded-md p-3 sm:p-4 bg-gray-50">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
+                                  <p className="text-xs sm:text-sm font-medium text-gray-700">
+                                    {formatNoteType(note.type)}
+                                    <span className="text-xs text-gray-500 ml-2">
+                                      {formatDateSafely(note.createdAt, "h:mm a")}
+                                    </span>
+                                  </p>
+                                  <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0">
+                                    by {note.addedBy}
+                                  </p>
+                                </div>
+                                {note.type === "call-log" && (
+                                  <div className="text-xs sm:text-sm text-gray-600 mb-2">
+                                    <p>Date: {note.callLogDate || "Not specified"}</p>
+                                    <p>Duration: {note.callDuration || "Not specified"} minutes</p>
+                                    <p>Type: {note.callType || "Not specified"}</p>
+                                    <p>Time: {note.callTime || "Not specified"}</p>
+                                  </div>
+                                )}
+                                {note.type === "call-schedule" && (
+                                  <div className="text-xs sm:text-sm text-gray-600 mb-2">
+                                    <p>Date: {note.callDate || "Not specified"}</p>
+                                    <p>Time: {note.callScheduledTime || "Not specified"}</p>
+                                  </div>
+                                )}
+                                {note.type === "office-visit" && note.audioUrl && (
+                                  <div className="mt-2">
+                                    {audioStatus[index] === "loading" ? (
+                                      <p className="text-xs sm:text-sm text-gray-500">Loading audio...</p>
+                                    ) : audioError[index] || audioStatus[index] === "invalid" ? (
+                                      <div>
+                                        <p className="text-xs sm:text-sm text-red-600">{audioError[index]}</p>
+                                        <a
+                                          href={note.audioUrl}
+                                          download
+                                          className="text-xs sm:text-sm text-blue-600 hover:underline"
+                                        >
+                                          Download Audio
+                                        </a>
+                                      </div>
+                                    ) : (
+                                      <audio
+                                        controls
+                                        src={note.audioUrl}
+                                        onError={(e) => handleAudioError(index, e)}
+                                        className="w-full max-w-md"
+                                      >
+                                        Your browser does not support the audio element.
+                                      </audio>
+                                    )}
+                                    {canUpdate && audioStatus[index] === "valid" && (
+                                      <button
+                                        onClick={() => deleteRecording(note, index)}
+                                        className="mt-2 px-2 py-1 text-xs sm:text-sm text-red-600 hover:text-red-800"
+                                      >
+                                        Delete Recording
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                                <p className="text-xs sm:text-sm text-gray-900 mt-1">{note.content}</p>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <p className="text-xs sm:text-sm text-gray-500">No notes available.</p>
+                )}
               </div>
             </div>
-          ))
-      ) : (
-        <p className="text-xs sm:text-sm text-gray-500">No notes available.</p>
-      )}
-    </div>
-  </div>
-)}
-
-         
-
+          )}
           {currentSection === 5 && (
             <div>
               <h3 className="text-base sm:text-lg font-medium">History</h3>
@@ -2231,43 +2210,38 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
           )}
         </div>
       </Modal>
-
-      {/* Reminder Popup */}
       {showReminder && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-      <h3 className="text-lg font-semibold mb-4">Call Reminder</h3>
-      <p className="mb-4">You have a scheduled call with <strong>{reminderDetails.name}</strong> in 10 minutes:</p>
-      <p className="mb-4">Date: {reminderDetails.date ? format(new Date(reminderDetails.date), "MMM d, yyyy") : "Not specified"}</p>
-      <p className="mb-4">Time: {reminderDetails.time || "Not specified"}</p>
-      <button
-        onClick={() => setShowReminder(false)}
-        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-      >
-        Dismiss
-      </button>
-    </div>
-  </div>
-)}
-      {/* {showReminder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Call Reminder</h3>
-            <p className="mb-4">You have a scheduled call with <strong>{reminderDetails.name}</strong> in 10 minutes:</p>
+            <p className="mb-4">You have a scheduled call with <strong>{reminderDetails.name}</strong> in 5 minutes:</p>
             <p className="mb-4">Date: {reminderDetails.date ? format(new Date(reminderDetails.date), "MMM d, yyyy") : "Not specified"}</p>
             <p className="mb-4">Time: {reminderDetails.time || "Not specified"}</p>
-            <button
-              onClick={() => setShowReminder(false)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Dismiss
-            </button>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowReminder(false);
+                  setTimeout(() => {
+                    setShowReminder(true);
+                    const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
+                    audio.play().catch((error) => console.error("Error playing buzzer:", error));
+                  }, 2 * 60 * 1000); // Snooze for 2 minutes
+                }}
+                className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
+              >
+                Snooze
+              </button>
+              <button
+                onClick={() => setShowReminder(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
         </div>
-      )} */}
+      )}
     </div>
   );
 };
-
 export default EnquiryModal;
-
