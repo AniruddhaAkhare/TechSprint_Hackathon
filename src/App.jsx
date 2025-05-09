@@ -977,7 +977,7 @@ export default function App() {
                 {/* Instructor Routes */}
                 <Route path="/instructor" element={<ProtectedRoute permissionSection="Instructor"><Instructor /></ProtectedRoute>} />
                 <Route path="/addstaff" element={<ProtectedRoute permissionSection="Instructor"><AddStaff /></ProtectedRoute>} />
-                <Route path="/editstaff" element={<ProtectedRoute permissionSection="Instructor"><EditStaff /></ProtectedRoute>} />
+                <Route path="/editstaff/:staffId" element={<ProtectedRoute permissionSection="Instructor"><EditStaff /></ProtectedRoute>} />
 
 
               {/* Enquiry */}

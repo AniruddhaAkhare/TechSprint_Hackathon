@@ -29,9 +29,9 @@ export default function EditStaff() {
     const [isOpen, setIsOpen] = useState(false);
 
     // Define permissions
-    const canDisplay = rolePermissions?.instructor?.display || false;
-    const canUpdate = rolePermissions?.instructor?.update || false;
-    const canDelete = rolePermissions?.instructor?.delete || false;
+    const canDisplay = rolePermissions?.Instructor?.display || false;
+    const canUpdate = rolePermissions?.Instructor?.update || false;
+    const canDelete = rolePermissions?.Instructor?.delete || false;
 
     // Activity logging function
     const logActivity = async (action, details) => {
@@ -315,6 +315,15 @@ export default function EditStaff() {
         }
         logActivity("FIELD CHANGED", { field: name, value });
     };
+
+       const addEducation = () => {
+            if (!canUpdate) {
+                toast.error("You don't have permission to update student details");
+                return;
+            }
+            setStaff(prev => ({ ...prev, educationDetails: [...prev.educationDetails, { level: '', institute: '', degree: '', specialization: '', grade: '', passingyr: '' }] }));
+            logActivity("ADD EDUCATION", {});
+        };
 
 
     const addExperience = () => {
@@ -698,8 +707,8 @@ export default function EditStaff() {
                                         />
                                     </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-md font-medium text-gray-600 mb-2">Billing Address</h3>
+                                {/* <div> */}
+                                    {/* <h3 className="text-md font-medium text-gray-600 mb-2">Billing Address</h3>
                                     <div className="space-y-3">
                                         <input
                                             type="text"
@@ -773,8 +782,8 @@ export default function EditStaff() {
                                             disabled={!canUpdate}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
-                                    </div>
-                                </div>
+                                    </div> */}
+                                {/* </div> */}
                             </div>
                         </div>
 
@@ -1028,7 +1037,7 @@ export default function EditStaff() {
                                         <option value="deferred">Deferred</option>
                                     </select>
                                 </div>
-                                <div>
+                                {/* <div>
                                     <label className="block text-sm font-medium text-gray-600">Preferred Learning Centers</label>
                                     <div className="flex items-center space-x-2">
                                         <select
@@ -1060,30 +1069,8 @@ export default function EditStaff() {
                                             Add
                                         </button>
                                     </div>
-                                    {staff.preferred_centers.length > 0 && (
-                                        <div className="mt-2">
-                                            <p className="text-sm font-medium text-gray-600">Selected Centers:</p>
-                                            <ul className="mt-1 space-y-1">
-                                                {staff.preferred_centers.map((centerId) => {
-                                                    const center = centers.find(c => c.id === centerId);
-                                                    return (
-                                                        <li key={centerId} className="flex items-center justify-between bg-gray-100 p-2 rounded-md">
-                                                            <span>{center?.name || "Unknown Center"}</span>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleRemoveCenter(centerId)}
-                                                                disabled={!canUpdate}
-                                                                className="text-red-500 hover:text-red-700 disabled:text-gray-400"
-                                                            >
-                                                                <FontAwesomeIcon icon={faXmark} />
-                                                            </button>
-                                                        </li>
-                                                    );
-                                                })}
-                                            </ul>
-                                        </div>
-                                    )}
-                                </div>
+                                    
+                                </div> */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-600">Date of Joining</label>
                                     <input
