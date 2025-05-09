@@ -1,62 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../config/firebase";
-import { collection, getDocs, doc, updateDoc, getDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
+import { useCheckInReminder } from "../../context/CheckInRemainderContext";
 import "./CheckInOut.css";
 
 const CheckInOut = () => {
   const { user } = useAuth();
-  const [branches, setBranches] = useState([]);
-  const [userStatus, setUserStatus] = useState({
-    checkedIn: false,
-    branchId: null,
-    branchName: null,
-    active: false,
-    lastCheckIn: null,
-  });
+  const { userStatus, branches } = useCheckInReminder(); // Use context for userStatus and branches
   const [error, setError] = useState("");
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [currentDuration, setCurrentDuration] = useState(null);
   const [liveDuration, setLiveDuration] = useState(null);
-  const CHECK_IN_RADIUS = 100; 
-  const AUTO_CHECKOUT_INTERVAL = 300000; 
-  const GRACE_PERIOD = 2; 
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userRef = doc(db, "Users", user.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          setUserStatus({
-            checkedIn: userData.checkedIn || false,
-            branchId: userData.branchId || null,
-            branchName: userData.branchName || null,
-            active: userData.active || false,
-            lastCheckIn: userData.lastCheckIn || null,
-          });
-        }
-
-        const querySnapshot = await getDocs(collection(db, "instituteSetup"));
-        if (!querySnapshot.empty) {
-          const instituteId = querySnapshot.docs[0].id;
-          const branchesSnapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
-          const branchList = branchesSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setBranches(branchList.filter((branch) => branch.isActive && branch.latitude && branch.longitude));
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to load data.");
-      }
-    };
-    if (user) {
-      fetchData();
-    }
-  }, [user]);
+  const CHECK_IN_RADIUS = 100; // 100 meters
+  const AUTO_CHECKOUT_INTERVAL = 300000; // 5 minutes
+  const GRACE_PERIOD = 2;
 
   useEffect(() => {
     let timer;
@@ -67,7 +25,9 @@ const CheckInOut = () => {
           const now = new Date();
           const durationMs = now - checkInTime;
           const hours = Math.floor(durationMs / (1000 * 60 * 60));
-          const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+          const minutes = Math.floor(
+            (durationMs % (1000 * 60 * 60)) / (1000 * 60)
+          );
           const seconds = Math.floor((durationMs % (1000 * 60)) / 1000);
           setLiveDuration(`${hours}h ${minutes}m ${seconds}s`);
         }, 1000);
@@ -78,7 +38,6 @@ const CheckInOut = () => {
     return () => clearInterval(timer);
   }, [userStatus.checkedIn, userStatus.lastCheckIn]);
 
-  // New useEffect for periodic location checking
   useEffect(() => {
     let locationCheckInterval;
     let outOfRangeCount = 0;
@@ -110,12 +69,11 @@ const CheckInOut = () => {
               handleAutoCheckOut();
             }
           } else {
-            outOfRangeCount = 0; // Reset if user is back in range
+            outOfRangeCount = 0;
           }
         },
         (error) => {
           console.error("Error checking location:", error);
-          // Optionally handle location errors (e.g., permission denied)
         },
         {
           enableHighAccuracy: false,
@@ -126,7 +84,10 @@ const CheckInOut = () => {
     };
 
     if (userStatus.checkedIn) {
-      locationCheckInterval = setInterval(checkUserLocation, AUTO_CHECKOUT_INTERVAL);
+      locationCheckInterval = setInterval(
+        checkUserLocation,
+        AUTO_CHECKOUT_INTERVAL
+      );
     }
 
     return () => clearInterval(locationCheckInterval);
@@ -167,7 +128,10 @@ const CheckInOut = () => {
       return;
     }
 
-    if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
+    if (
+      window.location.protocol !== "https:" &&
+      window.location.hostname !== "localhost"
+    ) {
       setError("Geolocation requires a secure context (HTTPS).");
       return;
     }
@@ -190,13 +154,6 @@ const CheckInOut = () => {
               active: true,
               lastCheckIn: timestamp,
             });
-            setUserStatus({
-              checkedIn: true,
-              branchId: proximity.branchId,
-              branchName: proximity.branchName,
-              active: true,
-              lastCheckIn: timestamp,
-            });
             setError("");
             // sendCheckInEmail(user.email, proximity.branchName, timestamp);
           } catch (error) {
@@ -213,13 +170,15 @@ const CheckInOut = () => {
         let errorMessage = "Unable to fetch your location: ";
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage += "Location access was denied. Please enable location permissions.";
+            errorMessage +=
+              "Location access was denied. Please enable location permissions.";
             break;
           case error.POSITION_UNAVAILABLE:
             errorMessage += "Location information is unavailable.";
             break;
           case error.TIMEOUT:
-            errorMessage += "The request timed out. Please try again or check your network.";
+            errorMessage +=
+              "The request timed out. Please try again or check your network.";
             break;
           default:
             errorMessage += "An unknown error occurred.";
@@ -245,7 +204,9 @@ const CheckInOut = () => {
       }
 
       const userData = userSnap.data();
-      const checkInTime = userData.lastCheckIn ? new Date(userData.lastCheckIn) : null;
+      const checkInTime = userData.lastCheckIn
+        ? new Date(userData.lastCheckIn)
+        : null;
       const checkOutTime = new Date();
       const timestamp = checkOutTime.toISOString();
       let durationHours = 0;
@@ -255,16 +216,20 @@ const CheckInOut = () => {
         durationHours = (durationMs / (1000 * 60 * 60)).toFixed(2);
       }
 
-      const dateStr = checkOutTime.toISOString().split('T')[0];
+      const dateStr = checkOutTime.toISOString().split("T")[0];
       const dailyDurations = userData.dailyDurations || [];
-      const existingDayIndex = dailyDurations.findIndex((entry) => entry.date === dateStr);
+      const existingDayIndex = dailyDurations.findIndex(
+        (entry) => entry.date === dateStr
+      );
 
       if (existingDayIndex >= 0) {
         if (!dailyDurations[existingDayIndex].sessions) {
           dailyDurations[existingDayIndex].sessions = [];
         }
-        dailyDurations[existingDayIndex].totalDuration = 
-          (parseFloat(dailyDurations[existingDayIndex].totalDuration || 0) + parseFloat(durationHours)).toFixed(2);
+        dailyDurations[existingDayIndex].totalDuration = (
+          parseFloat(dailyDurations[existingDayIndex].totalDuration || 0) +
+          parseFloat(durationHours)
+        ).toFixed(2);
         dailyDurations[existingDayIndex].sessions.push({
           checkIn: userData.lastCheckIn,
           checkOut: timestamp,
@@ -293,13 +258,6 @@ const CheckInOut = () => {
         dailyDurations: dailyDurations,
       });
 
-      setUserStatus({
-        checkedIn: false,
-        branchId: null,
-        branchName: null,
-        active: false,
-        lastCheckIn: null,
-      });
       setCurrentDuration(durationHours);
       setLiveDuration(null);
       setError("");
@@ -320,7 +278,9 @@ const CheckInOut = () => {
       }
 
       const userData = userSnap.data();
-      const checkInTime = userData.lastCheckIn ? new Date(userData.lastCheckIn) : null;
+      const checkInTime = userData.lastCheckIn
+        ? new Date(userData.lastCheckIn)
+        : null;
       const checkOutTime = new Date();
       const timestamp = checkOutTime.toISOString();
       let durationHours = 0;
@@ -330,21 +290,25 @@ const CheckInOut = () => {
         durationHours = (durationMs / (1000 * 60 * 60)).toFixed(2);
       }
 
-      const dateStr = checkOutTime.toISOString().split('T')[0];
+      const dateStr = checkOutTime.toISOString().split("T")[0];
       const dailyDurations = userData.dailyDurations || [];
-      const existingDayIndex = dailyDurations.findIndex((entry) => entry.date === dateStr);
+      const existingDayIndex = dailyDurations.findIndex(
+        (entry) => entry.date === dateStr
+      );
 
       if (existingDayIndex >= 0) {
         if (!dailyDurations[existingDayIndex].sessions) {
           dailyDurations[existingDayIndex].sessions = [];
         }
-        dailyDurations[existingDayIndex].totalDuration = 
-          (parseFloat(dailyDurations[existingDayIndex].totalDuration || 0) + parseFloat(durationHours)).toFixed(2);
+        dailyDurations[existingDayIndex].totalDuration = (
+          parseFloat(dailyDurations[existingDayIndex].totalDuration || 0) +
+          parseFloat(durationHours)
+        ).toFixed(2);
         dailyDurations[existingDayIndex].sessions.push({
           checkIn: userData.lastCheckIn,
           checkOut: timestamp,
           duration: parseFloat(durationHours),
-          autoCheckout: true, // Indicate this was an auto-checkout
+          autoCheckout: true,
         });
       } else {
         dailyDurations.push({
@@ -370,16 +334,11 @@ const CheckInOut = () => {
         dailyDurations: dailyDurations,
       });
 
-      setUserStatus({
-        checkedIn: false,
-        branchId: null,
-        branchName: null,
-        active: false,
-        lastCheckIn: null,
-      });
       setCurrentDuration(durationHours);
       setLiveDuration(null);
-      setError("You have been automatically checked out as you left the branch location.");
+      setError(
+        "You have been automatically checked out as you left the branch location."
+      );
       // sendCheckOutEmail(user.email, timestamp, durationHours, true);
     } catch (error) {
       console.error("Error during auto-checkout:", error);
@@ -387,53 +346,14 @@ const CheckInOut = () => {
     }
   };
 
-  // const sendCheckInEmail = async (email, branchName, timestamp) => {
-  //   try {
-  //     await fetch("https://api.zeptomail.com/v1.1/email", {
-  //       method: "POST",
-  //       headers: {
-  //         Authorization: `Zoho-enczapikey ${import.meta.env.VITE_ZOHO_API_KEY}`,
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         fromAddress: "noreply@shikshasaarathi.com",
-  //         toAddress: email,
-  //         subject: "Check-In Confirmation",
-  //         htmlbody: `<p>You have successfully checked in at ${branchName} on ${new Date(timestamp).toLocaleString()}.</p>`,
-  //       }),
-  //     });
-  //   } catch (error) {
-  //     console.error("Error sending check-in email:", error);
-  //   }
-  // };
-
-  // const sendCheckOutEmail = async (email, timestamp, duration, isAutoCheckout = false) => {
-  //   try {
-  //     await fetch("https://api.zeptomail.com/v1.1/email", {
-  //       method: "POST",
-  //       headers: {
-  //         Authorization: `Zoho-enczapikey ${import.meta.env.VITE_ZOHO_API_KEY}`,
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         fromAddress: "noreply@shikshasaarathi.com",
-  //         toAddress: email,
-  //         subject: isAutoCheckout ? "Automatic Check-Out Notification" : "Check-Out Confirmation",
-  //         htmlbody: `<p>You have ${isAutoCheckout ? "been automatically" : "successfully"} checked out on ${new Date(timestamp).toLocaleString()}.</p><p>Duration: ${duration} hours</p>`,
-  //       }),
-  //     });
-  //   } catch (error) {
-  //     console.error("Error sending check-out email:", error);
-  //   }
-  // };
-
   return (
     <div className="check-in-out p-4">
       <h3 className="text-2xl font-bold mb-4">Check-In/Check-Out</h3>
       {error && <p className="error text-red-500 mb-4">{error}</p>}
       <div className="status mb-4">
         <p>
-          Status: <span className={userStatus.active ? "text-green-500" : "text-red-500"}>
+          Status:{" "}
+          <span className={userStatus.active ? "text-green-500" : "text-red-500"}>
             {userStatus.active ? "Active" : "Inactive"}
           </span>
         </p>
@@ -451,7 +371,9 @@ const CheckInOut = () => {
         {!userStatus.checkedIn ? (
           <button
             className={`bg-blue-500 text-white px-4 py-2 rounded ${
-              isFetchingLocation ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
+              isFetchingLocation
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-blue-600"
             }`}
             onClick={handleCheckIn}
             disabled={isFetchingLocation}

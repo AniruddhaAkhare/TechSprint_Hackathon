@@ -871,8 +871,13 @@ const Dashboard = () => {
     ],
   };
 
-  if (loading) return <div className="text-center text-lg sm:text-xl p-4">Loading...</div>;
-  if (error) return <div className="text-center text-red-500 text-sm sm:text-base p-4">Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+      </div>
+    );
+  }  if (error) return <div className="text-center text-red-500 text-sm sm:text-base p-4">Error: {error}</div>;
 
   return (
     <div className="p-4 fixed inset-0 left-[300px]">

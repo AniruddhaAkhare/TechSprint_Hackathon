@@ -360,18 +360,24 @@ const Fees = ({ studentId }) => {
                             <div className="mt-6">
                                 <h4 className="text-md font-medium text-gray-700 mb-3">Finance Details</h4>
                                 <div className="space-y-2">
+                                    <div className='grid grid-cols-2 gap-4'>
                                     <p className="text-sm text-gray-600">
                                         <span className="font-medium">Finance Partner:</span> {selectedCourse.financeDetails?.financePartner || 'N/A'}
                                     </p>
                                     <p className="text-sm text-gray-600">
                                         <span className="font-medium">Contact Person:</span> {selectedCourse.financeDetails?.contactPerson || 'N/A'}
                                     </p>
+                                    </div>
+                                    <div className='grid grid-cols-2 gap-4'>
                                     <p className="text-sm text-gray-600">
                                         <span className="font-medium">Scheme:</span> {selectedCourse.financeDetails?.scheme || 'N/A'}
                                     </p>
                                     <p className="text-sm text-gray-600">
                                         <span className="font-medium">Loan Amount:</span> ₹{selectedCourse.financeDetails?.loanAmount || 0}
                                     </p>
+                                    </div>
+                                    <div className='grid grid-cols-2 gap-4'>
+
                                     <p className="text-sm text-gray-600">
                                         <span className="font-medium">Down Payment:</span> ₹{selectedCourse.financeDetails?.downPayment || 0}
                                     </p>
@@ -380,12 +386,18 @@ const Fees = ({ studentId }) => {
                                             ? new Date(selectedCourse.financeDetails.downPaymentDate).toLocaleDateString()
                                             : 'N/A'}
                                     </p>
+                                    </div>
+                                    <div className='grid grid-cols-2 gap-4'>
+
                                     <p className="text-sm text-gray-600">
                                         <span className="font-medium">Applicant Name:</span> {selectedCourse.financeDetails?.applicantName || 'N/A'}
                                     </p>
                                     <p className="text-sm text-gray-600">
                                         <span className="font-medium">Relationship:</span> {selectedCourse.financeDetails?.relationship || 'N/A'}
                                     </p>
+                                    </div>
+                                    <div className='grid grid-cols-2 gap-4'>
+
                                     <p className="text-sm text-gray-600">
                                         <span className="font-medium">Loan Status:</span>
                                         <span className={
@@ -402,6 +414,7 @@ const Fees = ({ studentId }) => {
                                             ? `${selectedCourse.financeDetails.discountValue}${selectedCourse.financeDetails.discountType === 'percentage' ? '%' : '₹'}`
                                             : 'None'}
                                     </p>
+                                    </div>
                                     <p className="text-sm text-gray-600">
                                         <span className="font-medium">Discount Reason:</span> {selectedCourse.financeDetails?.discountReason || 'N/A'}
                                     </p>

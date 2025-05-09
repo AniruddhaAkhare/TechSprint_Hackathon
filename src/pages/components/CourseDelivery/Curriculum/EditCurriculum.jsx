@@ -359,7 +359,11 @@ const EditCurriculum = () => {
   }
 
   if (!curriculum) {
-    return <div className="p-6 text-center text-gray-600">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+      </div>
+    );
   }
 
   return (

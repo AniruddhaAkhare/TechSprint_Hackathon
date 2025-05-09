@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { db } from "../../../config/firebase";
 import { getDocs, collection, deleteDoc, doc, query, orderBy, where } from "firebase/firestore";
 import AddInstructor from "./AddInstructor";
-import { useAuth } from "../../../context/AuthContext"; // Adjust the import path as needed
+import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function Instructor() {
@@ -218,7 +218,7 @@ export default function Instructor() {
     }
     const fetchData = async () => {
       try {
-        const instructorsQuery = query(instructorCollectionRef, orderBy("f_name"));
+        const instructorsQuery = query(instructorCollectionRef, orderBy("Name"));
         const instructors = await getDocs(instructorsQuery);
         setInstructorList(instructors.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
 
@@ -300,11 +300,21 @@ export default function Instructor() {
         {/* Header Section */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-800">Staff Details</h1>
-          {canCreate && (
+          {/* {canCreate && (
             <button
               onClick={() => {
                 setSelectedInstructor({});
                 setOpenDrawer(true);
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+            >
+              + Add Instructor
+            </button>
+          )} */}
+          {canCreate && (
+            <button
+              onClick={() => {
+                navigate('/addstaff');
               }}
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
             >
@@ -342,28 +352,26 @@ export default function Instructor() {
               </thead>
               <tbody>
                 {instructorList
-                  .filter((i) => i.f_name.toLowerCase().includes(searchTerm.toLowerCase()))
+                  .filter((i) => i.Name.toLowerCase().includes(searchTerm.toLowerCase()))
                   .map((instructor) => (
-                    <tr key={instructor.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>
-                      <td className="p-3 text-gray-700">
-                        {capitalizeFirstLetter(instructor.f_name)}{" "}
-                        {capitalizeFirstLetter(instructor.l_name)}
+                    <tr key={instructor.id} className="border-b hover:bg-gray-50 cursor-pointer" >
+                      <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>
+                        {capitalizeFirstLetter(instructor.Name)}{" "}
                       </td>
-                      <td className="p-3 text-gray-700">{instructor.email || "N/A"}</td>
-                      <td className="p-3 text-gray-700">
+                      <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>{instructor.email || "N/A"}</td>
+                      <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>
                         {instructor.phone ? `+91 ${instructor.phone}` : "N/A"}
                       </td>
-                      <td className="p-3 text-gray-700">{instructor.specialization || "N/A"}</td>
-                      <td className="p-3 text-gray-700">{instructor.center || "N/A"}</td>
-                      <td className="p-3 text-gray-700">{instructor.role || "N/A"}</td>
+                      <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>{instructor.specialization || "N/A"}</td>
+                      <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>{instructor.center || "N/A"}</td>
+                      <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>{instructor.role || "N/A"}</td>
                       {(canUpdate || canDelete) && (
                         <td className="p-3">
                           <div className="flex space-x-2">
                             {canUpdate && (
                               <button
                                 onClick={() => {
-                                  setSelectedInstructor(instructor);
-                                  setOpenDrawer(true);
+                                  navigate(`/editstaff/${instructor.id}`)
                                 }}
                                 className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition duration-200"
                               >
