@@ -56,7 +56,7 @@ const FiltersDropdown = ({ filters, setFilters, availableTags, branches, courses
         Filters
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg p-4 w-96 z-50 max-h-[60vh] overflow-y-auto">
+        <div className="absolute top-full right-2 mt-2 bg-white rounded-lg shadow-lg p-4 w-96 z-50 max-h-[60vh] overflow-y-auto">
           <h3 className="text-lg font-semibold mb-4">Filter Enquiries</h3>
           
           <div className="mb-4">

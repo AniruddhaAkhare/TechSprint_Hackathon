@@ -51,10 +51,10 @@
 
 //   console.log("User permissions:", rolePermissions);
 
-//   const canCreate = rolePermissions?.enquiryForms?.create || false;
-//   const canUpdate = rolePermissions?.enquiryForms?.update || false;
-//   const canDelete = rolePermissions?.enquiryForms?.delete || false;
-//   const canDisplay = rolePermissions?.enquiryForms?.display || false;
+//   const canCreate = rolePermissions?.enquiries?.create || false;
+//   const canUpdate = rolePermissions?.enquiries?.update || false;
+//   const canDelete = rolePermissions?.enquiries?.delete || false;
+//   const canDisplay = rolePermissions?.enquiries?.display || false;
 
 //   const FormsCollectionRef = collection(db, "enquiryForms");
 //   const EnquiriesCollectionRef = collection(db, "enquiries");
@@ -391,6 +391,7 @@
 
 
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom"; // Add useNavigate for navigation
 import { db } from "../../../config/firebase";
 import {
   getDoc,
@@ -409,6 +410,7 @@ import {
 } from "firebase/firestore";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 import { Select, MenuItem, FormControl } from "@mui/material";
+
 import { useAuth } from "../../../context/AuthContext";
 import debounce from "lodash/debounce";
 import CreateEnquiryForm from "./CreateEnquiryForm";
@@ -416,6 +418,7 @@ import FormViewer from "./FormViewer";
 
 export default function EnquiryForms() {
   const { user, rolePermissions } = useAuth();
+  const navigate = useNavigate(); // Initialize useNavigate for navigation
   const [currentForm, setCurrentForm] = useState(null);
   const [forms, setForms] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -429,21 +432,7 @@ export default function EnquiryForms() {
   const [enquiryCounts, setEnquiryCounts] = useState({});
   const [selectedForm, setSelectedForm] = useState(null);
 
-  // Define permissions
-  const canView = rolePermissions?.enquiryForms?.display || false;
-  const canCreate = rolePermissions?.enquiryForms?.create || false;
-  const canUpdate = rolePermissions?.enquiryForms?.update || false;
-  const canDelete = rolePermissions?.enquiryForms?.delete || false;
-
-  const FormsCollectionRef = collection(db, "enquiryForms");
-  const EnquiriesCollectionRef = collection(db, "enquiries");
-  const LogsCollectionRef = collection(db, "activityLogs");
-
   const handleViewForm = (form) => {
-    if (!canView) {
-      alert("You do not have permission to view enquiry forms.");
-      return;
-    }
     console.log("Viewing form:", form);
     setSelectedForm(form);
   };
@@ -451,6 +440,26 @@ export default function EnquiryForms() {
   const handleCloseViewer = () => {
     setSelectedForm(null);
   };
+
+  // New handler for viewing enquiries
+  const handleViewEnquiries = (formId) => {
+    console.log("Viewing enquiries for form:", formId);
+    // Navigate to a new route to view enquiries for this form
+    navigate(`/enquiries/${formId}`);
+  };
+
+  console.log("User permissions:", rolePermissions);
+
+  const canCreate = rolePermissions?.enquiries?.create || false;
+  const canUpdate = rolePermissions?.enquiries?.update || false;
+  const canDelete = rolePermissions?.enquiries?.delete || false;
+  const canDisplay = rolePermissions?.enquiries?.display || false;
+  // Add permission check for viewing enquiries (if applicable)
+  const canViewEnquiries = rolePermissions?.enquiries?.display || false; // Adjust based on your permission structure
+
+  const FormsCollectionRef = collection(db, "enquiryForms");
+  const EnquiriesCollectionRef = collection(db, "enquiries");
+  const LogsCollectionRef = collection(db, "activityLogs");
 
   const toggleSidebar = () => setIsOpen((prev) => !prev);
 
@@ -481,7 +490,6 @@ export default function EnquiryForms() {
   };
 
   const fetchEnquiryCounts = useCallback(async () => {
-    if (!canView) return;
     try {
       const snapshot = await getDocs(EnquiriesCollectionRef);
       const counts = {};
@@ -495,11 +503,11 @@ export default function EnquiryForms() {
     } catch (err) {
       console.error("Error fetching enquiry counts:", err.message);
     }
-  }, [canView]);
+  }, []);
 
   const fetchForms = useCallback(() => {
-    if (!canView) {
-      console.log("Cannot fetch forms: canView is false");
+    if (!canDisplay) {
+      console.log("Cannot fetch forms: canDisplay is false");
       return;
     }
     console.log("Fetching forms from enquiryForms collection");
@@ -521,14 +529,10 @@ export default function EnquiryForms() {
       }
     );
     return unsubscribe;
-  }, [canView]);
+  }, [canDisplay]);
 
   const debouncedSearch = useCallback(
     debounce((term) => {
-      if (!canView) {
-        setSearchResults([]);
-        return;
-      }
       console.log("Searching with term:", term);
       if (!term.trim()) {
         setSearchResults(forms);
@@ -543,15 +547,15 @@ export default function EnquiryForms() {
       console.log("Search results:", results);
       setSearchResults(results);
     }, 300),
-    [forms, canView]
+    [forms]
   );
 
   useEffect(() => {
-    if (!canView) return;
+    if (!canDisplay) return;
     const unsubscribeForms = fetchForms();
     fetchEnquiryCounts();
     return () => unsubscribeForms && unsubscribeForms();
-  }, [fetchForms, fetchEnquiryCounts, canView]);
+  }, [fetchForms, fetchEnquiryCounts, canDisplay]);
 
   useEffect(() => {
     debouncedSearch(searchTerm);
@@ -600,9 +604,7 @@ export default function EnquiryForms() {
 
   const deleteForm = async () => {
     if (!deleteId || !canDelete) {
-      if (!canDelete) {
-        alert("You do not have permission to delete enquiry forms.");
-      }
+      if (!canDelete) alert("You do not have permission to delete enquiry forms.");
       return;
     }
     try {
@@ -624,7 +626,7 @@ export default function EnquiryForms() {
     }
   };
 
-  if (!canView) {
+  if (!canDisplay) {
     return (
       <div className="p-4 text-red-600 text-center">
         Access Denied: You do not have permission to view enquiry forms.
@@ -648,17 +650,15 @@ export default function EnquiryForms() {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md">
-        {canView && (
-          <div className="mb-6 flex items-center space-x-4">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search forms by name, user, or role..."
-              className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        )}
+        <div className="mb-6 flex items-center space-x-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search forms by name, user, or role..."
+            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
         <div className="rounded-lg shadow-md max-h-[70vh] overflow-x-auto overflow-y-auto">
           <table className="w-full border-collapse">
@@ -690,20 +690,23 @@ export default function EnquiryForms() {
                             );
                           } else if (action === "update" && canUpdate) {
                             handleEditClick(form);
-                          } else if (action === "view" && canView)                     {
+                          } else if (action === "view") {
                             handleViewForm(form);
+                          } else if (action === "viewEnquiries" && canViewEnquiries) {
+                            handleViewEnquiries(form.id);
                           }
                         }}
                         displayEmpty
                         renderValue={() => "Actions"}
-                        disabled={!canView && !canUpdate && !canDelete}
+                        disabled={!canUpdate && !canDelete && !canViewEnquiries}
                       >
                         <MenuItem value="" disabled>
                           Actions
                         </MenuItem>
-                        {canView && <MenuItem value="view">View Form</MenuItem>}
                         {canUpdate && <MenuItem value="update">Update</MenuItem>}
+                        <MenuItem value="view">View Form</MenuItem>
                         {canDelete && <MenuItem value="delete">Delete</MenuItem>}
+                        {canViewEnquiries && <MenuItem value="viewEnquiries">View Enquiries</MenuItem>}
                       </Select>
                     </FormControl>
                   </td>
@@ -711,7 +714,7 @@ export default function EnquiryForms() {
               ))}
               {!(searchResults.length > 0 || searchTerm.trim() ? searchResults : forms).length && (
                 <tr>
-                  <td colSpan="4" className="px-4 py-3 text-center text-gray-600">
+                  <td colSpan="5" className="px-4 py-3 text-center text-gray-600">
                     No enquiry forms found.
                   </td>
                 </tr>
@@ -721,29 +724,30 @@ export default function EnquiryForms() {
         </div>
       </div>
 
-      {canCreate && isOpen && (
-        <>
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={handleClose} />
-          <div
-            className={`fixed top-0 right-0 h-full w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${
-              isOpen ? "translate-x-0" : "translate-x-full"
-            } z-50 overflow-y-auto`}
-          >
-            <CreateEnquiryForm
-              isOpen={isOpen}
-              toggleSidebar={handleClose}
-              form={currentForm}
-              logActivity={logActivity}
-            />
-          </div>
-        </>
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={handleClose} />
       )}
 
-      {canView && selectedForm && (
+      {isOpen && (
+        <div
+          className={`fixed top-0 right-0 h-full w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${
+            isOpen ? "translate-x-0" : "translate-x-full"
+          } z-50 overflow-y-auto`}
+        >
+          <CreateEnquiryForm
+            isOpen={isOpen}
+            toggleSidebar={handleClose}
+            form={currentForm}
+            logActivity={logActivity}
+          />
+        </div>
+      )}
+
+      {selectedForm && (
         <FormViewer form={selectedForm} onClose={handleCloseViewer} />
       )}
 
-      {canDelete && openDelete && (
+      {canDelete && (
         <Dialog
           open={openDelete}
           handler={() => setOpenDelete(false)}
@@ -779,5 +783,3 @@ export default function EnquiryForms() {
     </div>
   );
 }
-
-

@@ -158,7 +158,40 @@ const FormViewer = ({ form, onClose }) => {
         )}
 
         <div className="space-y-4">
-          {form.fields?.length > 0 ? (
+        {form.fields?.length > 0 ? (
+  form.fields.map((field) => {
+    const fieldConfig = allEnquiryFields.find((f) => f.id === field.id);
+    if (!fieldConfig) {
+      console.warn(`Field with ID ${field.id} not found`);
+      return null;
+    }
+    
+    const hasDefaultValue = field.defaultValue && field.defaultValue.trim() !== "";
+    
+    return (
+      <div key={field.id} className="mb-4">
+        <label className="block text-gray-700 text-sm font-medium mb-2">
+          {fieldConfig.label}
+        </label>
+        {hasDefaultValue ? (
+          <p className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+            {field.defaultValue}
+          </p>
+        ) : (
+          <input
+            type={fieldConfig.type || 'text'}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder={fieldConfig.label}
+            readOnly
+          />
+        )}
+      </div>
+    );
+  })
+) : (
+  <p className="text-gray-600">No fields available for this form.</p>
+)}
+          {/* {form.fields?.length > 0 ? (
             form.fields.map((field) => {
               const fieldConfig = allEnquiryFields.find((f) => f.id === field.id);
               if (!fieldConfig) {
@@ -176,7 +209,7 @@ const FormViewer = ({ form, onClose }) => {
             })
           ) : (
             <p className="text-gray-600">No fields available for this form.</p>
-          )}
+          )} */}
         </div>
       </div>
     </div>

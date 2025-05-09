@@ -1,167 +1,2365 @@
+// // // // // // // // import React, { useState, useEffect } from "react";
+// // // // // // // // import { useParams } from "react-router-dom";
+// // // // // // // // import { db } from "../../../config/firebase";
+// // // // // // // // import { doc, getDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+// // // // // // // // import { allEnquiryFields } from "./enquiryFields.jsx";
+// // // // // // // // import { Button, Input } from "@material-tailwind/react";
+// // // // // // // // import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+
+// // // // // // // // const SubmitEnquiryForm = () => {
+// // // // // // // //   const { formId } = useParams();
+// // // // // // // //   const [formData, setFormData] = useState(null);
+// // // // // // // //   const [formValues, setFormValues] = useState({});
+// // // // // // // //   const [errors, setErrors] = useState({});
+// // // // // // // //   const [loading, setLoading] = useState(false);
+// // // // // // // //   const [submitError, setSubmitError] = useState(null);
+// // // // // // // //   const [submitted, setSubmitted] = useState(false);
+
+// // // // // // // //   // Sample options for select fields, matching FormViewer.js fallback
+// // // // // // // //   const selectOptions = {
+// // // // // // // //     country: ["India", "USA", "UK", "Canada", "Australia"],
+// // // // // // // //     gender: ["Male", "Female", "Prefer not to disclose"],
+// // // // // // // //     studentType: ["School", "College", "Professional"],
+// // // // // // // //     graduationStream: ["Science", "Commerce", "Arts", "Engineering"],
+// // // // // // // //     branch: ["Main Branch", "City Branch", "Online"],
+// // // // // // // //     course: ["Computer Science", "Business Studies", "Mathematics"],
+// // // // // // // //     source: ["Website", "Referral", "Advertisement"],
+// // // // // // // //     assignTo: ["Admissions Team", "Counselor A", "Counselor B"],
+// // // // // // // //     degree: ["Bachelors", "Masters", "Diploma"],
+// // // // // // // //     stage: ["prequalified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"],
+// // // // // // // //   };
+
+// // // // // // // //   useEffect(() => {
+// // // // // // // //     const fetchForm = async () => {
+// // // // // // // //       try {
+// // // // // // // //         const formRef = doc(db, "enquiryForms", formId);
+// // // // // // // //         const formSnap = await getDoc(formRef);
+// // // // // // // //         if (formSnap.exists()) {
+// // // // // // // //           setFormData(formSnap.data());
+// // // // // // // //           // Initialize form values with default values
+// // // // // // // //           const initialValues = {};
+// // // // // // // //           formSnap.data().fields.forEach((field) => {
+// // // // // // // //             initialValues[field.id] = field.defaultValue || "";
+// // // // // // // //           });
+// // // // // // // //           setFormValues(initialValues);
+// // // // // // // //         } else {
+// // // // // // // //           setSubmitError("Form not found");
+// // // // // // // //         }
+// // // // // // // //       } catch (err) {
+// // // // // // // //         setSubmitError(`Error fetching form: ${err.message}`);
+// // // // // // // //       }
+// // // // // // // //     };
+// // // // // // // //     fetchForm();
+// // // // // // // //   }, [formId]);
+
+// // // // // // // //   const handleChange = (fieldId, value) => {
+// // // // // // // //     setFormValues((prev) => ({ ...prev, [fieldId]: value }));
+// // // // // // // //     if (errors[fieldId]) {
+// // // // // // // //       setErrors((prev) => ({ ...prev, [fieldId]: null }));
+// // // // // // // //     }
+// // // // // // // //   };
+
+// // // // // // // //   const validateForm = () => {
+// // // // // // // //     const newErrors = {};
+// // // // // // // //     const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+// // // // // // // //     formData.fields.forEach((field) => {
+// // // // // // // //       const fieldDef = flatFields.find((f) => f.id === field.id);
+// // // // // // // //       if (fieldDef?.required && !formValues[field.id]?.trim()) {
+// // // // // // // //         newErrors[field.id] = `${fieldDef.label} is required`;
+// // // // // // // //       }
+// // // // // // // //       if (fieldDef?.type === "email" && formValues[field.id]) {
+// // // // // // // //         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// // // // // // // //         if (!emailRegex.test(formValues[field.id])) {
+// // // // // // // //           newErrors[field.id] = "Invalid email format";
+// // // // // // // //         }
+// // // // // // // //       }
+// // // // // // // //       if (fieldDef?.type === "number" && formValues[field.id] && isNaN(formValues[field.id])) {
+// // // // // // // //         newErrors[field.id] = `${fieldDef.label} must be a number`;
+// // // // // // // //       }
+// // // // // // // //     });
+// // // // // // // //     setErrors(newErrors);
+// // // // // // // //     return Object.keys(newErrors).length === 0;
+// // // // // // // //   };
+
+// // // // // // // //   const handleSubmit = async (e) => {
+// // // // // // // //     e.preventDefault();
+// // // // // // // //     if (!validateForm()) {
+// // // // // // // //       return;
+// // // // // // // //     }
+// // // // // // // //     try {
+// // // // // // // //       setLoading(true);
+// // // // // // // //       setSubmitError(null);
+// // // // // // // //       const enquiryData = {
+// // // // // // // //         formId,
+// // // // // // // //         ...formValues,
+// // // // // // // //         status: formValues.stage || "prequalified",
+// // // // // // // //         createdAt: serverTimestamp(),
+// // // // // // // //       };
+// // // // // // // //       await addDoc(collection(db, "enquiries"), enquiryData);
+// // // // // // // //       setSubmitted(true);
+// // // // // // // //       setFormValues({});
+// // // // // // // //     } catch (err) {
+// // // // // // // //       setSubmitError(`Error submitting enquiry: ${err.message}`);
+// // // // // // // //     } finally {
+// // // // // // // //       setLoading(false);
+// // // // // // // //     }
+// // // // // // // //   };
+
+// // // // // // // //   if (submitError) {
+// // // // // // // //     return (
+// // // // // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // // // // //           <h2 className="text-xl font-semibold text-red-600">{submitError}</h2>
+// // // // // // // //         </div>
+// // // // // // // //       </div>
+// // // // // // // //     );
+// // // // // // // //   }
+
+// // // // // // // //   if (!formData) {
+// // // // // // // //     return (
+// // // // // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // // // // //           <h2 className="text-xl font-semibold">Loading...</h2>
+// // // // // // // //         </div>
+// // // // // // // //       </div>
+// // // // // // // //     );
+// // // // // // // //   }
+
+// // // // // // // //   if (submitted) {
+// // // // // // // //     return (
+// // // // // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // // // // //           <h2 className="text-xl font-semibold text-green-600">Enquiry Submitted Successfully!</h2>
+// // // // // // // //           <p className="mt-2 text-gray-600">Thank you for your submission.</p>
+// // // // // // // //           <Button
+// // // // // // // //             color="blue"
+// // // // // // // //             className="mt-4"
+// // // // // // // //             onClick={() => {
+// // // // // // // //               setSubmitted(false);
+// // // // // // // //               setFormValues(
+// // // // // // // //                 formData.fields.reduce((acc, field) => {
+// // // // // // // //                   acc[field.id] = field.defaultValue || "";
+// // // // // // // //                   return acc;
+// // // // // // // //                 }, {})
+// // // // // // // //               );
+// // // // // // // //             }}
+// // // // // // // //           >
+// // // // // // // //             Submit Another
+// // // // // // // //           </Button>
+// // // // // // // //         </div>
+// // // // // // // //       </div>
+// // // // // // // //     );
+// // // // // // // //   }
+
+// // // // // // // //   const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+
+// // // // // // // //   return (
+// // // // // // // //     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // // // //       <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl w-full">
+// // // // // // // //         <h2 className="text-2xl font-semibold text-gray-800 mb-6">{formData.name}</h2>
+// // // // // // // //         <form onSubmit={handleSubmit} className="space-y-4">
+// // // // // // // //           {formData.fields.map((field) => {
+// // // // // // // //             const fieldDef = flatFields.find((f) => f.id === field.id);
+// // // // // // // //             if (!fieldDef) return null;
+
+// // // // // // // //             const isError = !!errors[field.id];
+
+// // // // // // // //             return (
+// // // // // // // //               <div key={field.id}>
+// // // // // // // //                 {fieldDef.type === "textarea" ? (
+// // // // // // // //                   <div>
+// // // // // // // //                     <label
+// // // // // // // //                       htmlFor={field.id}
+// // // // // // // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // // // // // // //                     >
+// // // // // // // //                       {fieldDef.label}
+// // // // // // // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // // // // // // //                     </label>
+// // // // // // // //                     <textarea
+// // // // // // // //                       id={field.id}
+// // // // // // // //                       value={formValues[field.id] || ""}
+// // // // // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // // // // //                       className={`w-full px-3 py-2 border ${
+// // // // // // // //                         isError ? "border-red-500" : "border-gray-300"
+// // // // // // // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // // // // // // //                       rows={4}
+// // // // // // // //                       disabled={loading}
+// // // // // // // //                     />
+// // // // // // // //                   </div>
+// // // // // // // //                 ) : fieldDef.type === "select" ? (
+// // // // // // // //                   <FormControl fullWidth error={isError}>
+// // // // // // // //                     <InputLabel>{fieldDef.label}</InputLabel>
+// // // // // // // //                     <Select
+// // // // // // // //                       id={field.id}
+// // // // // // // //                       value={formValues[field.id] || ""}
+// // // // // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // // // // //                       label={fieldDef.label}
+// // // // // // // //                       disabled={loading}
+// // // // // // // //                     >
+// // // // // // // //                       <MenuItem value="">
+// // // // // // // //                         <em>Select {fieldDef.label}</em>
+// // // // // // // //                       </MenuItem>
+// // // // // // // //                       {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
+// // // // // // // //                         <MenuItem key={option} value={option}>
+// // // // // // // //                           {option}
+// // // // // // // //                         </MenuItem>
+// // // // // // // //                       ))}
+// // // // // // // //                     </Select>
+// // // // // // // //                   </FormControl>
+// // // // // // // //                 ) : (
+// // // // // // // //                   <div>
+// // // // // // // //                     <label
+// // // // // // // //                       htmlFor={field.id}
+// // // // // // // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // // // // // // //                     >
+// // // // // // // //                       {fieldDef.label}
+// // // // // // // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // // // // // // //                     </label>
+// // // // // // // //                     <input
+// // // // // // // //                       type={fieldDef.type}
+// // // // // // // //                       id={field.id}
+// // // // // // // //                       value={formValues[field.id] || ""}
+// // // // // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // // // // //                       className={`w-full px-3 py-2 border ${
+// // // // // // // //                         isError ? "border-red-500" : "border-gray-300"
+// // // // // // // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // // // // // // //                       disabled={loading}
+// // // // // // // //                     />
+// // // // // // // //                   </div>
+// // // // // // // //                 )}
+// // // // // // // //                 {isError && (
+// // // // // // // //                   <p className="mt-1 text-sm text-red-500">{errors[field.id]}</p>
+// // // // // // // //                 )}
+// // // // // // // //               </div>
+// // // // // // // //             );
+// // // // // // // //           })}
+// // // // // // // //           {submitError && (
+// // // // // // // //             <p className="text-sm text-red-500">{submitError}</p>
+// // // // // // // //           )}
+// // // // // // // //           <div className="flex justify-end">
+// // // // // // // //             <Button
+// // // // // // // //               type="submit"
+// // // // // // // //               color="blue"
+// // // // // // // //               disabled={loading}
+// // // // // // // //               className={loading ? "opacity-50 cursor-not-allowed" : ""}
+// // // // // // // //             >
+// // // // // // // //               {loading ? "Submitting..." : "Submit"}
+// // // // // // // //             </Button>
+// // // // // // // //           </div>
+// // // // // // // //         </form>
+// // // // // // // //       </div>
+// // // // // // // //     </div>
+// // // // // // // //   );
+// // // // // // // // };
+
+// // // // // // // // export default SubmitEnquiryForm;
+
+
+// // // // // // // import React, { useState, useEffect } from "react";
+// // // // // // // import { useParams } from "react-router-dom";
+// // // // // // // import { db } from "../../../config/firebase";
+// // // // // // // import { doc, getDoc, addDoc, updateDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
+// // // // // // // import { allEnquiryFields } from "./enquiryFields.jsx";
+// // // // // // // import { Button, Input } from "@material-tailwind/react";
+// // // // // // // import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+
+// // // // // // // const SubmitEnquiryForm = () => {
+// // // // // // //   const { formId } = useParams();
+// // // // // // //   const [formData, setFormData] = useState(null);
+// // // // // // //   const [formValues, setFormValues] = useState({});
+// // // // // // //   const [errors, setErrors] = useState({});
+// // // // // // //   const [loading, setLoading] = useState(false);
+// // // // // // //   const [submitError, setSubmitError] = useState(null);
+// // // // // // //   const [submitted, setSubmitted] = useState(false);
+
+// // // // // // //   // Sample options for select fields, matching FormViewer.js fallback
+// // // // // // //   const selectOptions = {
+// // // // // // //     country: ["India", "USA", "UK", "Canada", "Australia"],
+// // // // // // //     gender: ["Male", "Female", "Prefer not to disclose"],
+// // // // // // //     studentType: ["School", "College", "Professional"],
+// // // // // // //     graduationStream: ["Science", "Commerce", "Arts", "Engineering"],
+// // // // // // //     branch: ["Main Branch", "City Branch", "Online"],
+// // // // // // //     course: ["Computer Science", "Business Studies", "Mathematics"],
+// // // // // // //     source: ["Website", "Referral", "Advertisement"],
+// // // // // // //     assignTo: ["Admissions Team", "Counselor A", "Counselor B"],
+// // // // // // //     degree: ["Bachelors", "Masters", "Diploma"],
+// // // // // // //     stage: ["prequalified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"],
+// // // // // // //   };
+
+// // // // // // //   useEffect(() => {
+// // // // // // //     const fetchForm = async () => {
+// // // // // // //       try {
+// // // // // // //         const formRef = doc(db, "enquiryForms", formId);
+// // // // // // //         const formSnap = await getDoc(formRef);
+// // // // // // //         if (formSnap.exists()) {
+// // // // // // //           setFormData(formSnap.data());
+// // // // // // //           // Initialize form values with default values
+// // // // // // //           const initialValues = {};
+// // // // // // //           formSnap.data().fields.forEach((field) => {
+// // // // // // //             initialValues[field.id] = field.defaultValue || "";
+// // // // // // //           });
+// // // // // // //           setFormValues(initialValues);
+// // // // // // //         } else {
+// // // // // // //           setSubmitError("Form not found");
+// // // // // // //         }
+// // // // // // //       } catch (err) {
+// // // // // // //         setSubmitError(`Error fetching form: ${err.message}`);
+// // // // // // //       }
+// // // // // // //     };
+// // // // // // //     fetchForm();
+// // // // // // //   }, [formId]);
+
+// // // // // // //   const handleChange = (fieldId, value) => {
+// // // // // // //     setFormValues((prev) => ({ ...prev, [fieldId]: value }));
+// // // // // // //     if (errors[fieldId]) {
+// // // // // // //       setErrors((prev) => ({ ...prev, [fieldId]: null }));
+// // // // // // //     }
+// // // // // // //   };
+
+// // // // // // //   const validateForm = () => {
+// // // // // // //     const newErrors = {};
+// // // // // // //     const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+// // // // // // //     formData.fields.forEach((field) => {
+// // // // // // //       const fieldDef = flatFields.find((f) => f.id === field.id);
+// // // // // // //       if (fieldDef?.required && !formValues[field.id]?.trim()) {
+// // // // // // //         newErrors[field.id] = `${fieldDef.label} is required`;
+// // // // // // //       }
+// // // // // // //       if (fieldDef?.type === "email" && formValues[field.id]) {
+// // // // // // //         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// // // // // // //         if (!emailRegex.test(formValues[field.id])) {
+// // // // // // //           newErrors[field.id] = "Invalid email format";
+// // // // // // //         }
+// // // // // // //       }
+// // // // // // //       if (fieldDef?.type === "number" && formValues[field.id] && isNaN(formValues[field.id])) {
+// // // // // // //         newErrors[field.id] = `${fieldDef.label} must be a number`;
+// // // // // // //       }
+// // // // // // //     });
+// // // // // // //     setErrors(newErrors);
+// // // // // // //     return Object.keys(newErrors).length === 0;
+// // // // // // //   };
+
+// // // // // // //   const handleSubmit = async (e) => {
+// // // // // // //     e.preventDefault();
+// // // // // // //     if (!validateForm()) {
+// // // // // // //       return;
+// // // // // // //     }
+// // // // // // //     try {
+// // // // // // //       setLoading(true);
+// // // // // // //       setSubmitError(null);
+  
+// // // // // // //       // Prepare enquiry data
+// // // // // // //       const enquiryData = {
+// // // // // // //         formId,
+// // // // // // //         ...formValues,
+// // // // // // //         status: formValues.stage || "prequalified",
+// // // // // // //         createdAt: serverTimestamp(),
+// // // // // // //         updatedAt: serverTimestamp(),
+// // // // // // //       };
+  
+// // // // // // //       // Check for existing enquiry by email
+// // // // // // //       const email = formValues.email?.trim();
+// // // // // // //       let existingEnquiry = null;
+  
+// // // // // // //       if (email) {
+// // // // // // //         const enquiriesRef = collection(db, "enquiries");
+// // // // // // //         const emailQuery = query(enquiriesRef, where("email", "==", email));
+// // // // // // //         const emailSnapshot = await getDocs(emailQuery);
+// // // // // // //         if (!emailSnapshot.empty) {
+// // // // // // //           existingEnquiry = { id: emailSnapshot.docs[0].id, ...emailSnapshot.docs[0].data() };
+// // // // // // //         }
+// // // // // // //       }
+  
+// // // // // // //       if (existingEnquiry) {
+// // // // // // //         // Overwrite existing enquiry, preserving only createdAt
+// // // // // // //         const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
+// // // // // // //         const updatedData = {
+// // // // // // //           ...enquiryData,
+// // // // // // //           createdAt: existingEnquiry.createdAt || serverTimestamp(), // Preserve original createdAt
+// // // // // // //         };
+// // // // // // //         await updateDoc(enquiryRef, updatedData);
+// // // // // // //         console.log(`Overwrote existing enquiry with ID: ${existingEnquiry.id}`);
+// // // // // // //       } else {
+// // // // // // //         // Create new enquiry
+// // // // // // //         await addDoc(collection(db, "enquiries"), enquiryData);
+// // // // // // //         console.log("Created new enquiry");
+// // // // // // //       }
+  
+// // // // // // //       setSubmitted(true);
+// // // // // // //       setFormValues(
+// // // // // // //         formData.fields.reduce((acc, field) => {
+// // // // // // //           acc[field.id] = field.defaultValue || "";
+// // // // // // //           return acc;
+// // // // // // //         }, {})
+// // // // // // //       );
+// // // // // // //     } catch (err) {
+// // // // // // //       setSubmitError(`Error submitting enquiry: ${err.message}`);
+// // // // // // //     } finally {
+// // // // // // //       setLoading(false);
+// // // // // // //     }
+// // // // // // //   };
+
+
+// // // // // // //   // const handleSubmit = async (e) => {
+// // // // // // //   //   e.preventDefault();
+// // // // // // //   //   if (!validateForm()) {
+// // // // // // //   //     return;
+// // // // // // //   //   }
+// // // // // // //   //   try {
+// // // // // // //   //     setLoading(true);
+// // // // // // //   //     setSubmitError(null);
+
+// // // // // // //   //     // Prepare enquiry data
+// // // // // // //   //     const enquiryData = {
+// // // // // // //   //       formId,
+// // // // // // //   //       ...formValues,
+// // // // // // //   //       status: formValues.stage || "prequalified",
+// // // // // // //   //       createdAt: serverTimestamp(),
+// // // // // // //   //       updatedAt: serverTimestamp(),
+// // // // // // //   //     };
+
+// // // // // // //   //     // Check for existing enquiry by email or phone
+// // // // // // //   //     const email = formValues.email?.trim();
+// // // // // // //   //     const phone = formValues.phone?.trim();
+// // // // // // //   //     let existingEnquiry = null;
+
+// // // // // // //   //     if (email || phone) {
+// // // // // // //   //       const enquiriesRef = collection(db, "enquiries");
+// // // // // // //   //       const queries = [];
+// // // // // // //   //       if (email) {
+// // // // // // //   //         queries.push(query(enquiriesRef, where("email", "==", email)));
+// // // // // // //   //       }
+// // // // // // //   //       if (phone) {
+// // // // // // //   //         queries.push(query(enquiriesRef, where("phone", "==", phone)));
+// // // // // // //   //       }
+
+// // // // // // //   //       // Execute queries
+// // // // // // //   //       const querySnapshots = await Promise.all(queries.map((q) => getDocs(q)));
+// // // // // // //   //       for (const snapshot of querySnapshots) {
+// // // // // // //   //         if (!snapshot.empty) {
+// // // // // // //   //           existingEnquiry = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+// // // // // // //   //           break; // Take the first match
+// // // // // // //   //         }
+// // // // // // //   //       }
+// // // // // // //   //     }
+
+// // // // // // //   //     if (existingEnquiry) {
+// // // // // // //   //       // Update existing enquiry
+// // // // // // //   //       const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
+// // // // // // //   //       const updatedData = {
+// // // // // // //   //         ...existingEnquiry, // Preserve existing fields
+// // // // // // //   //         ...enquiryData, // Overwrite with new form values
+// // // // // // //   //         updatedAt: serverTimestamp(),
+// // // // // // //   //         // Ensure createdAt is not overwritten
+// // // // // // //   //         createdAt: existingEnquiry.createdAt || serverTimestamp(),
+// // // // // // //   //       };
+// // // // // // //   //       await updateDoc(enquiryRef, updatedData);
+// // // // // // //   //       console.log(`Updated existing enquiry with ID: ${existingEnquiry.id}`);
+// // // // // // //   //     } else {
+// // // // // // //   //       // Create new enquiry
+// // // // // // //   //       await addDoc(collection(db, "enquiries"), enquiryData);
+// // // // // // //   //       console.log("Created new enquiry");
+// // // // // // //   //     }
+
+// // // // // // //   //     setSubmitted(true);
+// // // // // // //   //     setFormValues(
+// // // // // // //   //       formData.fields.reduce((acc, field) => {
+// // // // // // //   //         acc[field.id] = field.defaultValue || "";
+// // // // // // //   //         return acc;
+// // // // // // //   //       }, {})
+// // // // // // //   //     );
+// // // // // // //   //   } catch (err) {
+// // // // // // //   //     setSubmitError(`Error submitting enquiry: ${err.message}`);
+// // // // // // //   //   } finally {
+// // // // // // //   //     setLoading(false);
+// // // // // // //   //   }
+// // // // // // //   // };
+
+// // // // // // //   if (submitError) {
+// // // // // // //     return (
+// // // // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // // // //           <h2 className="text-xl font-semibold text-red-600">{submitError}</h2>
+// // // // // // //         </div>
+// // // // // // //       </div>
+// // // // // // //     );
+// // // // // // //   }
+
+// // // // // // //   if (!formData) {
+// // // // // // //     return (
+// // // // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // // // //           <h2 className="text-xl font-semibold">Loading...</h2>
+// // // // // // //         </div>
+// // // // // // //       </div>
+// // // // // // //     );
+// // // // // // //   }
+
+// // // // // // //   if (submitted) {
+// // // // // // //     return (
+// // // // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // // // //           <h2 className="text-xl font-semibold text-green-600">Enquiry Submitted Successfully!</h2>
+// // // // // // //           <p className="mt-2 text-gray-600">Thank you for your submission.</p>
+// // // // // // //           <Button
+// // // // // // //             color="blue"
+// // // // // // //             className="mt-4"
+// // // // // // //             onClick={() => {
+// // // // // // //               setSubmitted(false);
+// // // // // // //               setFormValues(
+// // // // // // //                 formData.fields.reduce((acc, field) => {
+// // // // // // //                   acc[field.id] = field.defaultValue || "";
+// // // // // // //                   return acc;
+// // // // // // //                 }, {})
+// // // // // // //               );
+// // // // // // //             }}
+// // // // // // //           >
+// // // // // // //             Submit Another
+// // // // // // //           </Button>
+// // // // // // //         </div>
+// // // // // // //       </div>
+// // // // // // //     );
+// // // // // // //   }
+
+// // // // // // //   const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+
+// // // // // // //   return (
+// // // // // // //     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // // //       <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl w-full">
+// // // // // // //         <h2 className="text-2xl font-semibold text-gray-800 mb-6">{formData.name}</h2>
+// // // // // // //         <form onSubmit={handleSubmit} className="space-y-4">
+// // // // // // //           {formData.fields.map((field) => {
+// // // // // // //             const fieldDef = flatFields.find((f) => f.id === field.id);
+// // // // // // //             if (!fieldDef) return null;
+
+// // // // // // //             const isError = !!errors[field.id];
+
+// // // // // // //             return (
+// // // // // // //               <div key={field.id}>
+// // // // // // //                 {fieldDef.type === "textarea" ? (
+// // // // // // //                   <div>
+// // // // // // //                     <label
+// // // // // // //                       htmlFor={field.id}
+// // // // // // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // // // // // //                     >
+// // // // // // //                       {fieldDef.label}
+// // // // // // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // // // // // //                     </label>
+// // // // // // //                     <textarea
+// // // // // // //                       id={field.id}
+// // // // // // //                       value={formValues[field.id] || ""}
+// // // // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // // // //                       className={`w-full px-3 py-2 border ${
+// // // // // // //                         isError ? "border-red-500" : "border-gray-300"
+// // // // // // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // // // // // //                       rows={4}
+// // // // // // //                       disabled={loading}
+// // // // // // //                     />
+// // // // // // //                   </div>
+// // // // // // //                 ) : fieldDef.type === "select" ? (
+// // // // // // //                   <FormControl fullWidth error={isError}>
+// // // // // // //                     <InputLabel>{fieldDef.label}</InputLabel>
+// // // // // // //                     <Select
+// // // // // // //                       id={field.id}
+// // // // // // //                       value={formValues[field.id] || ""}
+// // // // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // // // //                       label={fieldDef.label}
+// // // // // // //                       disabled={loading}
+// // // // // // //                     >
+// // // // // // //                       <MenuItem value="">
+// // // // // // //                         <em>Select {fieldDef.label}</em>
+// // // // // // //                       </MenuItem>
+// // // // // // //                       {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
+// // // // // // //                         <MenuItem key={option} value={option}>
+// // // // // // //                           {option}
+// // // // // // //                         </MenuItem>
+// // // // // // //                       ))}
+// // // // // // //                     </Select>
+// // // // // // //                   </FormControl>
+// // // // // // //                 ) : (
+// // // // // // //                   <div>
+// // // // // // //                     <label
+// // // // // // //                       htmlFor={field.id}
+// // // // // // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // // // // // //                     >
+// // // // // // //                       {fieldDef.label}
+// // // // // // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // // // // // //                     </label>
+// // // // // // //                     <input
+// // // // // // //                       type={fieldDef.type}
+// // // // // // //                       id={field.id}
+// // // // // // //                       value={formValues[field.id] || ""}
+// // // // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // // // //                       className={`w-full px-3 py-2 border ${
+// // // // // // //                         isError ? "border-red-500" : "border-gray-300"
+// // // // // // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // // // // // //                       disabled={loading}
+// // // // // // //                     />
+// // // // // // //                   </div>
+// // // // // // //                 )}
+// // // // // // //                 {isError && (
+// // // // // // //                   <p className="mt-1 text-sm text-red-500">{errors[field.id]}</p>
+// // // // // // //                 )}
+// // // // // // //               </div>
+// // // // // // //             );
+// // // // // // //           })}
+// // // // // // //           {submitError && (
+// // // // // // //             <p className="text-sm text-red-500">{submitError}</p>
+// // // // // // //           )}
+// // // // // // //           <div className="flex justify-end">
+// // // // // // //             <Button
+// // // // // // //               type="submit"
+// // // // // // //               color="blue"
+// // // // // // //               disabled={loading}
+// // // // // // //               className={loading ? "opacity-50 cursor-not-allowed" : ""}
+// // // // // // //             >
+// // // // // // //               {loading ? "Submitting..." : "Submit"}
+// // // // // // //             </Button>
+// // // // // // //           </div>
+// // // // // // //         </form>
+// // // // // // //       </div>
+// // // // // // //     </div>
+// // // // // // //   );
+// // // // // // // };
+
+// // // // // // // export default SubmitEnquiryForm;
+
+
+
+// // // // // // import React, { useState, useEffect } from "react";
+// // // // // // import { useParams } from "react-router-dom";
+// // // // // // import { db } from "../../../config/firebase";
+// // // // // // import { doc, getDoc, addDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
+// // // // // // import { allEnquiryFields } from "./enquiryFields.jsx";
+// // // // // // import { Button, Input } from "@material-tailwind/react";
+// // // // // // import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+
+// // // // // // const SubmitEnquiryForm = () => {
+// // // // // //   const { formId } = useParams();
+// // // // // //   const [formData, setFormData] = useState(null);
+// // // // // //   const [formValues, setFormValues] = useState({});
+// // // // // //   const [errors, setErrors] = useState({});
+// // // // // //   const [loading, setLoading] = useState(false);
+// // // // // //   const [submitError, setSubmitError] = useState(null);
+// // // // // //   const [submitted, setSubmitted] = useState(false);
+
+// // // // // //   // Sample options for select fields
+// // // // // //   const selectOptions = {
+// // // // // //     country: ["India", "USA", "UK", "Canada", "Australia"],
+// // // // // //     gender: ["Male", "Female", "Prefer not to disclose"],
+// // // // // //     studentType: ["School", "College", "Professional"],
+// // // // // //     graduationStream: ["Science", "Commerce", "Arts", "Engineering"],
+// // // // // //     branch: ["Main Branch", "City Branch", "Online"],
+// // // // // //     course: ["Computer Science", "Business Studies", "Mathematics"],
+// // // // // //     source: ["Website", "Referral", "Advertisement"],
+// // // // // //     assignTo: ["Admissions Team", "Counselor A", "Counselor B"],
+// // // // // //     degree: ["Bachelors", "Masters", "Diploma"],
+// // // // // //     stage: ["prequalified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"],
+// // // // // //   };
+
+// // // // // //   useEffect(() => {
+// // // // // //     const fetchForm = async () => {
+// // // // // //       try {
+// // // // // //         const formRef = doc(db, "enquiryForms", formId);
+// // // // // //         const formSnap = await getDoc(formRef);
+// // // // // //         if (formSnap.exists()) {
+// // // // // //           setFormData(formSnap.data());
+// // // // // //           const initialValues = {};
+// // // // // //           formSnap.data().fields.forEach((field) => {
+// // // // // //             initialValues[field.id] = field.defaultValue || "";
+// // // // // //           });
+// // // // // //           setFormValues(initialValues);
+// // // // // //         } else {
+// // // // // //           setSubmitError("Form not found");
+// // // // // //         }
+// // // // // //       } catch (err) {
+// // // // // //         setSubmitError(`Error fetching form: ${err.message}`);
+// // // // // //       }
+// // // // // //     };
+// // // // // //     fetchForm();
+// // // // // //   }, [formId]);
+
+// // // // // //   const handleChange = (fieldId, value) => {
+// // // // // //     setFormValues((prev) => ({ ...prev, [fieldId]: value }));
+// // // // // //     if (errors[fieldId]) {
+// // // // // //       setErrors((prev) => ({ ...prev, [fieldId]: null }));
+// // // // // //     }
+// // // // // //   };
+
+// // // // // //   const validateForm = () => {
+// // // // // //     const newErrors = {};
+// // // // // //     const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+// // // // // //     formData.fields.forEach((field) => {
+// // // // // //       const fieldDef = flatFields.find((f) => f.id === field.id);
+// // // // // //       if (fieldDef?.required && !formValues[field.id]?.trim()) {
+// // // // // //         newErrors[field.id] = `${fieldDef.label} is required`;
+// // // // // //       }
+// // // // // //       if (fieldDef?.type === "email" && formValues[field.id]) {
+// // // // // //         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// // // // // //         if (!emailRegex.test(formValues[field.id])) {
+// // // // // //           newErrors[field.id] = "Invalid email format";
+// // // // // //         }
+// // // // // //       }
+// // // // // //       if (fieldDef?.type === "number" && formValues[field.id] && isNaN(formValues[field.id])) {
+// // // // // //         newErrors[field.id] = `${fieldDef.label} must be a number`;
+// // // // // //       }
+// // // // // //     });
+// // // // // //     setErrors(newErrors);
+// // // // // //     return Object.keys(newErrors).length === 0;
+// // // // // //   };
+
+// // // // // //   const handleSubmit = async (e) => {
+// // // // // //     e.preventDefault();
+// // // // // //     if (!validateForm()) {
+// // // // // //       return;
+// // // // // //     }
+// // // // // //     try {
+// // // // // //       setLoading(true);
+// // // // // //       setSubmitError(null);
+
+// // // // // //       // Prepare enquiry data
+// // // // // //       const enquiryData = {
+// // // // // //         formId,
+// // // // // //         ...formValues,
+// // // // // //         status: formValues.stage || "prequalified",
+// // // // // //         createdAt: serverTimestamp(),
+// // // // // //         updatedAt: serverTimestamp(),
+// // // // // //       };
+
+// // // // // //       // Check for existing enquiry by email
+// // // // // //       const email = formValues.email?.trim();
+// // // // // //       let existingEnquiry = null;
+
+// // // // // //       if (email) {
+// // // // // //         const enquiriesRef = collection(db, "enquiries");
+// // // // // //         const emailQuery = query(enquiriesRef, where("email", "==", email));
+// // // // // //         const emailSnapshot = await getDocs(emailQuery);
+// // // // // //         if (!emailSnapshot.empty) {
+// // // // // //           existingEnquiry = { id: emailSnapshot.docs[0].id, ...emailSnapshot.docs[0].data() };
+// // // // // //         }
+// // // // // //       }
+
+// // // // // //       if (existingEnquiry) {
+// // // // // //         // Completely overwrite existing enquiry, preserving only createdAt
+// // // // // //         const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
+// // // // // //         const updatedData = {
+// // // // // //           ...enquiryData,
+// // // // // //           createdAt: existingEnquiry.createdAt || serverTimestamp(),
+// // // // // //         };
+// // // // // //         await setDoc(enquiryRef, updatedData, { merge: false });
+// // // // // //         console.log(`Overwrote existing enquiry with ID: ${existingEnquiry.id}`);
+// // // // // //       } else {
+// // // // // //         // Create new enquiry
+// // // // // //         await addDoc(collection(db, "enquiries"), enquiryData);
+// // // // // //         console.log("Created new enquiry");
+// // // // // //       }
+
+// // // // // //       setSubmitted(true);
+// // // // // //       setFormValues(
+// // // // // //         formData.fields.reduce((acc, field) => {
+// // // // // //           acc[field.id] = field.defaultValue || "";
+// // // // // //           return acc;
+// // // // // //         }, {})
+// // // // // //       );
+// // // // // //     } catch (err) {
+// // // // // //       setSubmitError(`Error submitting enquiry: ${err.message}`);
+// // // // // //     } finally {
+// // // // // //       setLoading(false);
+// // // // // //     }
+// // // // // //   };
+
+// // // // // //   if (submitError) {
+// // // // // //     return (
+// // // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // // //           <h2 className="text-xl font-semibold text-red-600">{submitError}</h2>
+// // // // // //         </div>
+// // // // // //       </div>
+// // // // // //     );
+// // // // // //   }
+
+// // // // // //   if (!formData) {
+// // // // // //     return (
+// // // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // // //           <h2 className="text-xl font-semibold">Loading...</h2>
+// // // // // //         </div>
+// // // // // //       </div>
+// // // // // //     );
+// // // // // //   }
+
+// // // // // //   if (submitted) {
+// // // // // //     return (
+// // // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // // //           <h2 className="text-xl font-semibold text-green-600">Enquiry Submitted Successfully!</h2>
+// // // // // //           <p className="mt-2 text-gray-600">Thank you for your submission.</p>
+// // // // // //           <Button
+// // // // // //             color="blue"
+// // // // // //             className="mt-4"
+// // // // // //             onClick={() => {
+// // // // // //               setSubmitted(false);
+// // // // // //               setFormValues(
+// // // // // //                 formData.fields.reduce((acc, field) => {
+// // // // // //                   acc[field.id] = field.defaultValue || "";
+// // // // // //                   return acc;
+// // // // // //                 }, {})
+// // // // // //               );
+// // // // // //             }}
+// // // // // //           >
+// // // // // //             Submit Another
+// // // // // //           </Button>
+// // // // // //         </div>
+// // // // // //       </div>
+// // // // // //     );
+// // // // // //   }
+
+// // // // // //   const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+
+// // // // // //   return (
+// // // // // //     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // // //       <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl w-full">
+// // // // // //         <h2 className="text-2xl font-semibold text-gray-800 mb-6">{formData.name}</h2>
+// // // // // //         <form onSubmit={handleSubmit} className="space-y-4">
+// // // // // //           {formData.fields.map((field) => {
+// // // // // //             const fieldDef = flatFields.find((f) => f.id === field.id);
+// // // // // //             if (!fieldDef) return null;
+
+// // // // // //             const isError = !!errors[field.id];
+
+// // // // // //             return (
+// // // // // //               <div key={field.id}>
+// // // // // //                 {fieldDef.type === "textarea" ? (
+// // // // // //                   <div>
+// // // // // //                     <label
+// // // // // //                       htmlFor={field.id}
+// // // // // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // // // // //                     >
+// // // // // //                       {fieldDef.label}
+// // // // // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // // // // //                     </label>
+// // // // // //                     <textarea
+// // // // // //                       id={field.id}
+// // // // // //                       value={formValues[field.id] || ""}
+// // // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // // //                       className={`w-full px-3 py-2 border ${
+// // // // // //                         isError ? "border-red-500" : "border-gray-300"
+// // // // // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // // // // //                       rows={4}
+// // // // // //                       disabled={loading}
+// // // // // //                     />
+// // // // // //                   </div>
+// // // // // //                 ) : fieldDef.type === "select" ? (
+// // // // // //                   <FormControl fullWidth error={isError}>
+// // // // // //                     <InputLabel>{fieldDef.label}</InputLabel>
+// // // // // //                     <Select
+// // // // // //                       id={field.id}
+// // // // // //                       value={formValues[field.id] || ""}
+// // // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // // //                       label={fieldDef.label}
+// // // // // //                       disabled={loading}
+// // // // // //                     >
+// // // // // //                       <MenuItem value="">
+// // // // // //                         <em>Select {fieldDef.label}</em>
+// // // // // //                       </MenuItem>
+// // // // // //                       {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
+// // // // // //                         <MenuItem key={option} value={option}>
+// // // // // //                           {option}
+// // // // // //                         </MenuItem>
+// // // // // //                       ))}
+// // // // // //                     </Select>
+// // // // // //                   </FormControl>
+// // // // // //                 ) : (
+// // // // // //                   <div>
+// // // // // //                     <label
+// // // // // //                       htmlFor={field.id}
+// // // // // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // // // // //                     >
+// // // // // //                       {fieldDef.label}
+// // // // // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // // // // //                     </label>
+// // // // // //                     <input
+// // // // // //                       type={fieldDef.type}
+// // // // // //                       id={field.id}
+// // // // // //                       value={formValues[field.id] || ""}
+// // // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // // //                       className={`w-full px-3 py-2 border ${
+// // // // // //                         isError ? "border-red-500" : "border-gray-300"
+// // // // // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // // // // //                       disabled={loading}
+// // // // // //                     />
+// // // // // //                   </div>
+// // // // // //                 )}
+// // // // // //                 {isError && (
+// // // // // //                   <p className="mt-1 text-sm text-red-500">{errors[field.id]}</p>
+// // // // // //                 )}
+// // // // // //               </div>
+// // // // // //             );
+// // // // // //           })}
+// // // // // //           {submitError && (
+// // // // // //             <p className="text-sm text-red-500">{submitError}</p>
+// // // // // //           )}
+// // // // // //           <div className="flex justify-end">
+// // // // // //             <Button
+// // // // // //               type="submit"
+// // // // // //               color="blue"
+// // // // // //               disabled={loading}
+// // // // // //               className={loading ? "opacity-50 cursor-not-allowed" : ""}
+// // // // // //             >
+// // // // // //               {loading ? "Submitting..." : "Submit"}
+// // // // // //             </Button>
+// // // // // //           </div>
+// // // // // //         </form>
+// // // // // //       </div>
+// // // // // //     </div>
+// // // // // //   );
+// // // // // // };
+
+// // // // // // export default SubmitEnquiryForm;
+
+// // // // // import React, { useState, useEffect } from "react";
+// // // // // import { useParams } from "react-router-dom";
+// // // // // import { db } from "../../../config/firebase";
+// // // // // import { doc, getDoc, addDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
+// // // // // import { allEnquiryFields } from "./enquiryFields.jsx";
+// // // // // import { Button, Input } from "@material-tailwind/react";
+// // // // // import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+
+// // // // // const SubmitEnquiryForm = () => {
+// // // // //   const { formId } = useParams();
+// // // // //   const [formData, setFormData] = useState(null);
+// // // // //   const [formValues, setFormValues] = useState({});
+// // // // //   const [errors, setErrors] = useState({});
+// // // // //   const [loading, setLoading] = useState(false);
+// // // // //   const [submitError, setSubmitError] = useState(null);
+// // // // //   const [submitted, setSubmitted] = useState(false);
+
+// // // // //   const selectOptions = {
+// // // // //     country: ["India", "USA", "UK", "Canada", "Australia"],
+// // // // //     gender: ["Male", "Female", "Prefer not to disclose"],
+// // // // //     studentType: ["School", "College", "Professional"],
+// // // // //     graduationStream: ["Science", "Commerce", "Arts", "Engineering"],
+// // // // //     branch: ["Main Branch", "City Branch", "Online"],
+// // // // //     course: ["Computer Science", "Business Studies", "Mathematics"],
+// // // // //     source: ["Website", "Referral", "Advertisement"],
+// // // // //     assignTo: ["Admissions Team", "Counselor A", "Counselor B"],
+// // // // //     degree: ["Bachelors", "Masters", "Diploma"],
+// // // // //     stage: ["prequalified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"],
+// // // // //     school: ["City High School", "Central Academy", "Other"], // Added for QR code form
+// // // // //   };
+
+// // // // //   useEffect(() => {
+// // // // //     const fetchForm = async () => {
+// // // // //       try {
+// // // // //         console.log("Fetching form with ID:", formId);
+// // // // //         const formRef = doc(db, "enquiryForms", formId);
+// // // // //         const formSnap = await getDoc(formRef);
+// // // // //         if (formSnap.exists()) {
+// // // // //           console.log("Form data:", formSnap.data());
+// // // // //           setFormData(formSnap.data());
+// // // // //           const initialValues = {};
+// // // // //           formSnap.data().fields.forEach((field) => {
+// // // // //             initialValues[field.id] = field.defaultValue || "";
+// // // // //           });
+// // // // //           setFormValues(initialValues);
+// // // // //         } else {
+// // // // //           console.error("Form not found for ID:", formId);
+// // // // //           setSubmitError("Form not found");
+// // // // //         }
+// // // // //       } catch (err) {
+// // // // //         console.error("Error fetching form:", err);
+// // // // //         setSubmitError(`Error fetching form: ${err.message}`);
+// // // // //       }
+// // // // //     };
+// // // // //     fetchForm();
+// // // // //   }, [formId]);
+
+// // // // //   const handleChange = (fieldId, value) => {
+// // // // //     console.log(`Field ${fieldId} changed to:`, value);
+// // // // //     setFormValues((prev) => ({ ...prev, [fieldId]: value }));
+// // // // //     if (errors[fieldId]) {
+// // // // //       setErrors((prev) => ({ ...prev, [fieldId]: null }));
+// // // // //     }
+// // // // //   };
+
+// // // // //   const validateForm = () => {
+// // // // //     console.log("Validating form with values:", formValues);
+// // // // //     const newErrors = {};
+// // // // //     const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+// // // // //     formData.fields.forEach((field) => {
+// // // // //       const fieldDef = flatFields.find((f) => f.id === field.id);
+// // // // //       if (fieldDef?.required && !formValues[field.id]?.trim()) {
+// // // // //         newErrors[field.id] = `${fieldDef.label} is required`;
+// // // // //       }
+// // // // //       if (fieldDef?.type === "email" && formValues[field.id]) {
+// // // // //         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// // // // //         if (!emailRegex.test(formValues[field.id])) {
+// // // // //           newErrors[field.id] = "Invalid email format";
+// // // // //         }
+// // // // //       }
+// // // // //       if (fieldDef?.type === "number" && formValues[field.id] && isNaN(formValues[field.id])) {
+// // // // //         newErrors[field.id] = `${fieldDef.label} must be a number`;
+// // // // //       }
+// // // // //     });
+// // // // //     setErrors(newErrors);
+// // // // //     console.log("Validation errors:", newErrors);
+// // // // //     return Object.keys(newErrors).length === 0;
+// // // // //   };
+
+// // // // //   const handleSubmit = async (e) => {
+// // // // //     e.preventDefault();
+// // // // //     console.log("Submitting form with values:", formValues);
+// // // // //     if (!validateForm()) {
+// // // // //       console.log("Validation failed, aborting submission");
+// // // // //       return;
+// // // // //     }
+// // // // //     try {
+// // // // //       setLoading(true);
+// // // // //       setSubmitError(null);
+
+// // // // //       // Prepare enquiry data
+// // // // //       const enquiryData = {
+// // // // //         formId,
+// // // // //         ...formValues,
+// // // // //         status: formValues.stage || "prequalified",
+// // // // //         createdAt: serverTimestamp(),
+// // // // //         updatedAt: serverTimestamp(),
+// // // // //       };
+// // // // //       console.log("Prepared enquiry data:", enquiryData);
+
+// // // // //       // Check for existing enquiry by email
+// // // // //       const email = formValues.email?.trim();
+// // // // //       let existingEnquiry = null;
+
+// // // // //       if (email) {
+// // // // //         console.log("Checking for existing enquiry with email:", email);
+// // // // //         const enquiriesRef = collection(db, "enquiries");
+// // // // //         const emailQuery = query(enquiriesRef, where("email", "==", email));
+// // // // //         const emailSnapshot = await getDocs(emailQuery);
+// // // // //         if (!emailSnapshot.empty) {
+// // // // //           existingEnquiry = { id: emailSnapshot.docs[0].id, ...emailSnapshot.docs[0].data() };
+// // // // //           console.log("Found existing enquiry:", existingEnquiry);
+// // // // //         } else {
+// // // // //           console.log("No existing enquiry found for email:", email);
+// // // // //         }
+// // // // //       } else {
+// // // // //         console.log("No email provided in form values");
+// // // // //       }
+
+// // // // //       if (existingEnquiry) {
+// // // // //         // Completely overwrite existing enquiry, preserving only createdAt
+// // // // //         const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
+// // // // //         const updatedData = {
+// // // // //           ...enquiryData,
+// // // // //           createdAt: existingEnquiry.createdAt || serverTimestamp(),
+// // // // //         };
+// // // // //         console.log("Overwriting enquiry with data:", updatedData);
+// // // // //         await setDoc(enquiryRef, updatedData, { merge: false });
+// // // // //         console.log(`Successfully overwrote enquiry with ID: ${existingEnquiry.id}`);
+// // // // //       } else {
+// // // // //         // Create new enquiry
+// // // // //         console.log("Creating new enquiry with data:", enquiryData);
+// // // // //         const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+// // // // //         console.log("Created new enquiry with ID:", newDocRef.id);
+// // // // //       }
+
+// // // // //       setSubmitted(true);
+// // // // //       setFormValues(
+// // // // //         formData.fields.reduce((acc, field) => {
+// // // // //           acc[field.id] = field.defaultValue || "";
+// // // // //           return acc;
+// // // // //         }, {})
+// // // // //       );
+// // // // //       console.log("Form reset after successful submission");
+// // // // //     } catch (err) {
+// // // // //       console.error("Error submitting enquiry:", err);
+// // // // //       setSubmitError(`Error submitting enquiry: ${err.message}`);
+// // // // //     } finally {
+// // // // //       setLoading(false);
+// // // // //     }
+// // // // //   };
+
+// // // // //   if (submitError) {
+// // // // //     return (
+// // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // //           <h2 className="text-xl font-semibold text-red-600">{submitError}</h2>
+// // // // //         </div>
+// // // // //       </div>
+// // // // //     );
+// // // // //   }
+
+// // // // //   if (!formData) {
+// // // // //     return (
+// // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // //           <h2 className="text-xl font-semibold">Loading...</h2>
+// // // // //         </div>
+// // // // //       </div>
+// // // // //     );
+// // // // //   }
+
+// // // // //   if (submitted) {
+// // // // //     return (
+// // // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // // //           <h2 className="text-xl font-semibold text-green-600">Enquiry Submitted Successfully!</h2>
+// // // // //           <p className="mt-2 text-gray-600">Thank you for your submission.</p>
+// // // // //           <Button
+// // // // //             color="blue"
+// // // // //             className="mt-4"
+// // // // //             onClick={() => {
+// // // // //               setSubmitted(false);
+// // // // //               setFormValues(
+// // // // //                 formData.fields.reduce((acc, field) => {
+// // // // //                   acc[field.id] = field.defaultValue || "";
+// // // // //                   return acc;
+// // // // //                 }, {})
+// // // // //               );
+// // // // //               console.log("Resetting form for another submission");
+// // // // //             }}
+// // // // //           >
+// // // // //             Submit Another
+// // // // //           </Button>
+// // // // //         </div>
+// // // // //       </div>
+// // // // //     );
+// // // // //   }
+
+// // // // //   const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+
+// // // // //   return (
+// // // // //     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // // //       <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl w-full">
+// // // // //         <h2 className="text-2xl font-semibold text-gray-800 mb-6">{formData.name}</h2>
+// // // // //         <form onSubmit={handleSubmit} className="space-y-4">
+// // // // //           {formData.fields.map((field) => {
+// // // // //             const fieldDef = flatFields.find((f) => f.id === field.id);
+// // // // //             if (!fieldDef) {
+// // // // //               console.warn(`Field definition not found for ID: ${field.id}`);
+// // // // //               return null;
+// // // // //             }
+
+// // // // //             const isError = !!errors[field.id];
+
+// // // // //             return (
+// // // // //               <div key={field.id}>
+// // // // //                 {fieldDef.type === "textarea" ? (
+// // // // //                   <div>
+// // // // //                     <label
+// // // // //                       htmlFor={field.id}
+// // // // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // // // //                     >
+// // // // //                       {fieldDef.label}
+// // // // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // // // //                     </label>
+// // // // //                     <textarea
+// // // // //                       id={field.id}
+// // // // //                       value={formValues[field.id] || ""}
+// // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // //                       className={`w-full px-3 py-2 border ${
+// // // // //                         isError ? "border-red-500" : "border-gray-300"
+// // // // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // // // //                       rows={4}
+// // // // //                       disabled={loading}
+// // // // //                     />
+// // // // //                   </div>
+// // // // //                 ) : fieldDef.type === "select" ? (
+// // // // //                   <FormControl fullWidth error={isError}>
+// // // // //                     <InputLabel>{fieldDef.label}</InputLabel>
+// // // // //                     <Select
+// // // // //                       id={field.id}
+// // // // //                       value={formValues[field.id] || ""}
+// // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // //                       label={fieldDef.label}
+// // // // //                       disabled={loading}
+// // // // //                     >
+// // // // //                       <MenuItem value="">
+// // // // //                         <em>Select {fieldDef.label}</em>
+// // // // //                       </MenuItem>
+// // // // //                       {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
+// // // // //                         <MenuItem key={option} value={option}>
+// // // // //                           {option}
+// // // // //                         </MenuItem>
+// // // // //                       ))}
+// // // // //                     </Select>
+// // // // //                   </FormControl>
+// // // // //                 ) : (
+// // // // //                   <div>
+// // // // //                     <label
+// // // // //                       htmlFor={field.id}
+// // // // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // // // //                     >
+// // // // //                       {fieldDef.label}
+// // // // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // // // //                     </label>
+// // // // //                     <input
+// // // // //                       type={fieldDef.type}
+// // // // //                       id={field.id}
+// // // // //                       value={formValues[field.id] || ""}
+// // // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // // //                       className={`w-full px-3 py-2 border ${
+// // // // //                         isError ? "border-red-500" : "border-gray-300"
+// // // // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // // // //                       disabled={loading}
+// // // // //                     />
+// // // // //                   </div>
+// // // // //                 )}
+// // // // //                 {isError && (
+// // // // //                   <p className="mt-1 text-sm text-red-500">{errors[field.id]}</p>
+// // // // //                 )}
+// // // // //               </div>
+// // // // //             );
+// // // // //           })}
+// // // // //           {submitError && (
+// // // // //             <p className="text-sm text-red-500">{submitError}</p>
+// // // // //           )}
+// // // // //           <div className="flex justify-end">
+// // // // //             <Button
+// // // // //               type="submit"
+// // // // //               color="blue"
+// // // // //               disabled={loading}
+// // // // //               className={loading ? "opacity-50 cursor-not-allowed" : ""}
+// // // // //             >
+// // // // //               {loading ? "Submitting..." : "Submit"}
+// // // // //             </Button>
+// // // // //           </div>
+// // // // //         </form>
+// // // // //       </div>
+// // // // //     </div>
+// // // // //   );
+// // // // // };
+
+// // // // // export default SubmitEnquiryForm;
+
+
+// // // // import React, { useState, useEffect } from "react";
+// // // // import { useParams } from "react-router-dom";
+// // // // import { db } from "../../../config/firebase";
+// // // // import { doc, getDoc, addDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
+// // // // import { allEnquiryFields } from "./enquiryFields.jsx";
+// // // // import { Button, Input } from "@material-tailwind/react";
+// // // // import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+
+// // // // const SubmitEnquiryForm = () => {
+// // // //   const { formId } = useParams();
+// // // //   const [formData, setFormData] = useState(null);
+// // // //   const [formValues, setFormValues] = useState({});
+// // // //   const [errors, setErrors] = useState({});
+// // // //   const [loading, setLoading] = useState(false);
+// // // //   const [submitError, setSubmitError] = useState(null);
+// // // //   const [submitted, setSubmitted] = useState(false);
+
+// // // //   const selectOptions = {
+// // // //     country: ["India", "USA", "UK", "Canada", "Australia"],
+// // // //     gender: ["Male", "Female", "Prefer not to disclose"],
+// // // //     studentType: ["School", "College", "Professional"],
+// // // //     graduationStream: ["Science", "Commerce", "Arts", "Engineering"],
+// // // //     branch: ["Main Branch", "City Branch", "Online"],
+// // // //     course: ["Computer Science", "Business Studies", "Mathematics"],
+// // // //     source: ["Website", "Referral", "Advertisement"],
+// // // //     assignTo: ["Admissions Team", "Counselor A", "Counselor B"],
+// // // //     degree: ["Bachelors", "Masters", "Diploma"],
+// // // //     stage: ["prequalified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"],
+// // // //     school: ["City High School", "Central Academy", "Other"],
+// // // //   };
+
+// // // //   useEffect(() => {
+// // // //     const fetchForm = async () => {
+// // // //       try {
+// // // //         console.log("Fetching form with ID:", formId);
+// // // //         const formRef = doc(db, "enquiryForms", formId);
+// // // //         const formSnap = await getDoc(formRef);
+// // // //         if (formSnap.exists()) {
+// // // //           console.log("Form data:", formSnap.data());
+// // // //           setFormData(formSnap.data());
+// // // //           const initialValues = {};
+// // // //           formSnap.data().fields.forEach((field) => {
+// // // //             initialValues[field.id] = field.defaultValue || "";
+// // // //           });
+// // // //           setFormValues(initialValues);
+// // // //         } else {
+// // // //           console.error("Form not found for ID:", formId);
+// // // //           setSubmitError("Form not found");
+// // // //         }
+// // // //       } catch (err) {
+// // // //         console.error("Error fetching form:", err);
+// // // //         setSubmitError(`Error fetching form: ${err.message}`);
+// // // //       }
+// // // //     };
+// // // //     fetchForm();
+// // // //   }, [formId]);
+
+// // // //   const handleChange = (fieldId, value) => {
+// // // //     console.log(`Field ${fieldId} changed to:`, value);
+// // // //     setFormValues((prev) => ({ ...prev, [fieldId]: value }));
+// // // //     if (errors[fieldId]) {
+// // // //       setErrors((prev) => ({ ...prev, [fieldId]: null }));
+// // // //     }
+// // // //   };
+
+// // // //   const validateForm = () => {
+// // // //     console.log("Validating form with values:", formValues);
+// // // //     const newErrors = {};
+// // // //     const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+// // // //     formData.fields.forEach((field) => {
+// // // //       const fieldDef = flatFields.find((f) => f.id === field.id);
+// // // //       if (fieldDef?.required && !formValues[field.id]?.trim()) {
+// // // //         newErrors[field.id] = `${fieldDef.label} is required`;
+// // // //       }
+// // // //       if (fieldDef?.type === "email" && formValues[field.id]) {
+// // // //         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// // // //         if (!emailRegex.test(formValues[field.id])) {
+// // // //           newErrors[field.id] = "Invalid email format";
+// // // //         }
+// // // //       }
+// // // //       if (fieldDef?.type === "number" && formValues[field.id] && isNaN(formValues[field.id])) {
+// // // //         newErrors[field.id] = `${fieldDef.label} must be a number`;
+// // // //       }
+// // // //     });
+// // // //     setErrors(newErrors);
+// // // //     console.log("Validation errors:", newErrors);
+// // // //     return Object.keys(newErrors).length === 0;
+// // // //   };
+
+// // // //   const handleSubmit = async (e) => {
+// // // //     e.preventDefault();
+// // // //     console.log("Submitting form with values:", formValues);
+// // // //     if (!validateForm()) {
+// // // //       console.log("Validation failed, aborting submission");
+// // // //       return;
+// // // //     }
+// // // //     try {
+// // // //       setLoading(true);
+// // // //       setSubmitError(null);
+
+// // // //       // Prepare enquiry data
+// // // //       const enquiryData = {
+// // // //         formId,
+// // // //         ...formValues,
+// // // //         status: formValues.stage || "prequalified",
+// // // //         createdAt: serverTimestamp(),
+// // // //         updatedAt: serverTimestamp(),
+// // // //       };
+// // // //       console.log("Prepared enquiry data:", enquiryData);
+
+// // // //       // Normalize email for matching
+// // // //       const email = formValues.email?.trim().toLowerCase();
+// // // //       let existingEnquiry = null;
+
+// // // //       if (email) {
+// // // //         console.log("Checking for existing enquiry with email:", email);
+// // // //         const enquiriesRef = collection(db, "enquiries");
+// // // //         const emailQuery = query(enquiriesRef, where("email", "==", email));
+// // // //         const emailSnapshot = await getDocs(emailQuery);
+        
+// // // //         if (!emailSnapshot.empty) {
+// // // //           existingEnquiry = { id: emailSnapshot.docs[0].id, ...emailSnapshot.docs[0].data() };
+// // // //           console.log("Found existing enquiry:", existingEnquiry);
+// // // //           // Log all matching documents (in case there are duplicates)
+// // // //           emailSnapshot.forEach((doc) => {
+// // // //             console.log("Matching enquiry document:", { id: doc.id, ...doc.data() });
+// // // //           });
+// // // //         } else {
+// // // //           console.log("No existing enquiry found for email:", email);
+// // // //         }
+// // // //       } else {
+// // // //         console.log("No email provided in form values");
+// // // //         throw new Error("Email is required to submit the enquiry");
+// // // //       }
+
+// // // //       if (existingEnquiry) {
+// // // //         // Completely overwrite existing enquiry, preserving only createdAt
+// // // //         const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
+// // // //         const updatedData = {
+// // // //           ...enquiryData,
+// // // //           createdAt: existingEnquiry.createdAt || serverTimestamp(),
+// // // //         };
+// // // //         console.log("Before overwrite - existing data:", existingEnquiry);
+// // // //         console.log("Overwriting with data:", updatedData);
+// // // //         await setDoc(enquiryRef, updatedData, { merge: false });
+        
+// // // //         // Verify the update
+// // // //         const updatedDoc = await getDoc(enquiryRef);
+// // // //         console.log("After overwrite - new data:", updatedDoc.data());
+// // // //         console.log(`Successfully overwrote enquiry with ID: ${existingEnquiry.id}`);
+// // // //       } else {
+// // // //         // Create new enquiry
+// // // //         console.log("Creating new enquiry with data:", enquiryData);
+// // // //         const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+// // // //         console.log("Created new enquiry with ID:", newDocRef.id);
+// // // //       }
+
+// // // //       setSubmitted(true);
+// // // //       setFormValues(
+// // // //         formData.fields.reduce((acc, field) => {
+// // // //           acc[field.id] = field.defaultValue || "";
+// // // //           return acc;
+// // // //         }, {})
+// // // //       );
+// // // //       console.log("Form reset after successful submission");
+// // // //     } catch (err) {
+// // // //       console.error("Error submitting enquiry:", err);
+// // // //       setSubmitError(`Error submitting enquiry: ${err.message}`);
+// // // //     } finally {
+// // // //       setLoading(false);
+// // // //     }
+// // // //   };
+
+// // // //   if (submitError) {
+// // // //     return (
+// // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // //           <h2 className="text-xl font-semibold text-red-600">{submitError}</h2>
+// // // //         </div>
+// // // //       </div>
+// // // //     );
+// // // //   }
+
+// // // //   if (!formData) {
+// // // //     return (
+// // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // //           <h2 className="text-xl font-semibold">Loading...</h2>
+// // // //         </div>
+// // // //       </div>
+// // // //     );
+// // // //   }
+
+// // // //   if (submitted) {
+// // // //     return (
+// // // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // // //           <h2 className="text-xl font-semibold text-green-600">Enquiry Submitted Successfully!</h2>
+// // // //           <p className="mt-2 text-gray-600">Thank you for your submission.</p>
+// // // //           <Button
+// // // //             color="blue"
+// // // //             className="mt-4"
+// // // //             onClick={() => {
+// // // //               setSubmitted(false);
+// // // //               setFormValues(
+// // // //                 formData.fields.reduce((acc, field) => {
+// // // //                   acc[field.id] = field.defaultValue || "";
+// // // //                   return acc;
+// // // //                 }, {})
+// // // //               );
+// // // //               console.log("Resetting form for another submission");
+// // // //             }}
+// // // //           >
+// // // //             Submit Another
+// // // //           </Button>
+// // // //         </div>
+// // // //       </div>
+// // // //     );
+// // // //   }
+
+// // // //   const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+
+// // // //   return (
+// // // //     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // // //       <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl w-full">
+// // // //         <h2 className="text-2xl font-semibold text-gray-800 mb-6">{formData.name}</h2>
+// // // //         <form onSubmit={handleSubmit} className="space-y-4">
+// // // //           {formData.fields.map((field) => {
+// // // //             const fieldDef = flatFields.find((f) => f.id === field.id);
+// // // //             if (!fieldDef) {
+// // // //               console.warn(`Field definition not found for ID: ${field.id}`);
+// // // //               return null;
+// // // //             }
+
+// // // //             const isError = !!errors[field.id];
+
+// // // //             return (
+// // // //               <div key={field.id}>
+// // // //                 {fieldDef.type === "textarea" ? (
+// // // //                   <div>
+// // // //                     <label
+// // // //                       htmlFor={field.id}
+// // // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // // //                     >
+// // // //                       {fieldDef.label}
+// // // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // // //                     </label>
+// // // //                     <textarea
+// // // //                       id={field.id}
+// // // //                       value={formValues[field.id] || ""}
+// // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // //                       className={`w-full px-3 py-2 border ${
+// // // //                         isError ? "border-red-500" : "border-gray-300"
+// // // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // // //                       rows={4}
+// // // //                       disabled={loading}
+// // // //                     />
+// // // //                   </div>
+// // // //                 ) : fieldDef.type === "select" ? (
+// // // //                   <FormControl fullWidth error={isError}>
+// // // //                     <InputLabel>{fieldDef.label}</InputLabel>
+// // // //                     <Select
+// // // //                       id={field.id}
+// // // //                       value={formValues[field.id] || ""}
+// // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // //                       label={fieldDef.label}
+// // // //                       disabled={loading}
+// // // //                     >
+// // // //                       <MenuItem value="">
+// // // //                         <em>Select {fieldDef.label}</em>
+// // // //                       </MenuItem>
+// // // //                       {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
+// // // //                         <MenuItem key={option} value={option}>
+// // // //                           {option}
+// // // //                         </MenuItem>
+// // // //                       ))}
+// // // //                     </Select>
+// // // //                   </FormControl>
+// // // //                 ) : (
+// // // //                   <div>
+// // // //                     <label
+// // // //                       htmlFor={field.id}
+// // // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // // //                     >
+// // // //                       {fieldDef.label}
+// // // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // // //                     </label>
+// // // //                     <input
+// // // //                       type={fieldDef.type}
+// // // //                       id={field.id}
+// // // //                       value={formValues[field.id] || ""}
+// // // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // // //                       className={`w-full px-3 py-2 border ${
+// // // //                         isError ? "border-red-500" : "border-gray-300"
+// // // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // // //                       disabled={loading}
+// // // //                     />
+// // // //                   </div>
+// // // //                 )}
+// // // //                 {isError && (
+// // // //                   <p className="mt-1 text-sm text-red-500">{errors[field.id]}</p>
+// // // //                 )}
+// // // //               </div>
+// // // //             );
+// // // //           })}
+// // // //           {submitError && (
+// // // //             <p className="text-sm text-red-500">{submitError}</p>
+// // // //           )}
+// // // //           <div className="flex justify-end">
+// // // //             <Button
+// // // //               type="submit"
+// // // //               color="blue"
+// // // //               disabled={loading}
+// // // //               className={loading ? "opacity-50 cursor-not-allowed" : ""}
+// // // //             >
+// // // //               {loading ? "Submitting..." : "Submit"}
+// // // //             </Button>
+// // // //           </div>
+// // // //         </form>
+// // // //       </div>
+// // // //     </div>
+// // // //   );
+// // // // };
+
+// // // // export default SubmitEnquiryForm;
+
+
+// // // import React, { useState, useEffect } from "react";
+// // // import { useParams } from "react-router-dom";
+// // // import { db } from "../../../config/firebase";
+// // // import { doc, getDoc, addDoc, setDoc, collection, query, where, getDocs, serverTimestamp, writeBatch } from "firebase/firestore";
+// // // import { allEnquiryFields } from "./enquiryFields.jsx";
+// // // import { Button, Input } from "@material-tailwind/react";
+// // // import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+
+// // // const SubmitEnquiryForm = () => {
+// // //   const { formId } = useParams();
+// // //   const [formData, setFormData] = useState(null);
+// // //   const [formValues, setFormValues] = useState({});
+// // //   const [errors, setErrors] = useState({});
+// // //   const [loading, setLoading] = useState(false);
+// // //   const [submitError, setSubmitError] = useState(null);
+// // //   const [submitted, setSubmitted] = useState(false);
+
+// // //   const selectOptions = {
+// // //     country: ["India", "USA", "UK", "Canada", "Australia"],
+// // //     gender: ["Male", "Female", "Prefer not to disclose"],
+// // //     studentType: ["School", "College", "Professional"],
+// // //     graduationStream: ["Science", "Commerce", "Arts", "Engineering"],
+// // //     branch: ["Main Branch", "City Branch", "Online"],
+// // //     course: ["Computer Science", "Business Studies", "Mathematics"],
+// // //     source: ["Website", "Referral", "Advertisement"],
+// // //     assignTo: ["Admissions Team", "Counselor A", "Counselor B"],
+// // //     degree: ["Bachelors", "Masters", "Diploma"],
+// // //     stage: ["prequalified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"],
+// // //     school: ["City High School", "Central Academy", "Other"],
+// // //   };
+
+// // //   useEffect(() => {
+// // //     const fetchForm = async () => {
+// // //       try {
+// // //         console.log("Fetching form with ID:", formId);
+// // //         const formRef = doc(db, "enquiryForms", formId);
+// // //         const formSnap = await getDoc(formRef);
+// // //         if (formSnap.exists()) {
+// // //           console.log("Form data:", formSnap.data());
+// // //           setFormData(formSnap.data());
+// // //           const initialValues = {};
+// // //           formSnap.data().fields.forEach((field) => {
+// // //             initialValues[field.id] = field.defaultValue || "";
+// // //           });
+// // //           setFormValues(initialValues);
+// // //         } else {
+// // //           console.error("Form not found for ID:", formId);
+// // //           setSubmitError("Form not found");
+// // //         }
+// // //       } catch (err) {
+// // //         console.error("Error fetching form:", err);
+// // //         setSubmitError(`Error fetching form: ${err.message}`);
+// // //       }
+// // //     };
+// // //     fetchForm();
+// // //   }, [formId]);
+
+// // //   const handleChange = (fieldId, value) => {
+// // //     console.log(`Field ${fieldId} changed to:`, value);
+// // //     setFormValues((prev) => ({ ...prev, [fieldId]: value }));
+// // //     if (errors[fieldId]) {
+// // //       setErrors((prev) => ({ ...prev, [fieldId]: null }));
+// // //     }
+// // //   };
+
+// // //   const validateForm = () => {
+// // //     console.log("Validating form with values:", formValues);
+// // //     const newErrors = {};
+// // //     const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+// // //     formData.fields.forEach((field) => {
+// // //       const fieldDef = flatFields.find((f) => f.id === field.id);
+// // //       if (fieldDef?.required && !formValues[field.id]?.trim()) {
+// // //         newErrors[field.id] = `${fieldDef.label} is required`;
+// // //       }
+// // //       if (fieldDef?.type === "email" && formValues[field.id]) {
+// // //         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// // //         if (!emailRegex.test(formValues[field.id])) {
+// // //           newErrors[field.id] = "Invalid email format";
+// // //         }
+// // //       }
+// // //       if (fieldDef?.type === "number" && formValues[field.id] && isNaN(formValues[field.id])) {
+// // //         newErrors[field.id] = `${fieldDef.label} must be a number`;
+// // //       }
+// // //     });
+// // //     setErrors(newErrors);
+// // //     console.log("Validation errors:", newErrors);
+// // //     return Object.keys(newErrors).length === 0;
+// // //   };
+
+// // //   const handleSubmit = async (e) => {
+// // //     e.preventDefault();
+// // //     console.log("Submitting form with values:", formValues);
+// // //     if (!validateForm()) {
+// // //       console.log("Validation failed, aborting submission");
+// // //       return;
+// // //     }
+// // //     try {
+// // //       setLoading(true);
+// // //       setSubmitError(null);
+
+// // //       // Prepare enquiry data
+// // //       const enquiryData = {
+// // //         formId,
+// // //         ...formValues,
+// // //         status: formValues.stage || "prequalified",
+// // //         createdAt: serverTimestamp(),
+// // //         updatedAt: serverTimestamp(),
+// // //       };
+// // //       console.log("Prepared enquiry data:", enquiryData);
+
+// // //       // Normalize email for matching
+// // //       const email = formValues.email?.trim().toLowerCase();
+// // //       console.log("Normalized email for query:", email);
+
+// // //       if (!email) {
+// // //         console.log("No email provided in form values");
+// // //         throw new Error("Email is required to submit the enquiry");
+// // //       }
+
+// // //       // Check for existing enquiry by email
+// // //       let existingEnquiries = [];
+// // //       console.log("Checking for existing enquiry with email:", email);
+// // //       const enquiriesRef = collection(db, "enquiries");
+// // //       const emailQuery = query(enquiriesRef, where("email", "==", email));
+// // //       const emailSnapshot = await getDocs(emailQuery);
+
+// // //       if (!emailSnapshot.empty) {
+// // //         emailSnapshot.forEach((doc) => {
+// // //           const enquiry = { id: doc.id, ...doc.data() };
+// // //           existingEnquiries.push(enquiry);
+// // //           console.log("Found matching enquiry:", enquiry);
+// // //         });
+// // //       } else {
+// // //         console.log("No existing enquiry found for email:", email);
+// // //       }
+
+// // //       if (existingEnquiries.length > 0) {
+// // //         // Handle multiple matches (shouldn't happen after cleanup, but just in case)
+// // //         if (existingEnquiries.length > 1) {
+// // //           console.warn("Multiple enquiries found for email:", email, existingEnquiries);
+// // //           // Keep the oldest enquiry and delete the rest
+// // //           const sortedEnquiries = existingEnquiries.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
+// // //           const keepEnquiry = sortedEnquiries[0];
+// // //           const deleteEnquiries = sortedEnquiries.slice(1);
+
+// // //           const batch = writeBatch(db);
+// // //           deleteEnquiries.forEach((enquiry) => {
+// // //             console.log("Deleting duplicate enquiry:", enquiry.id);
+// // //             batch.delete(doc(db, "enquiries", enquiry.id));
+// // //           });
+// // //           await batch.commit();
+// // //           console.log("Deleted duplicate enquiries, proceeding with overwrite");
+
+// // //           // Overwrite the kept enquiry
+// // //           const enquiryRef = doc(db, "enquiries", keepEnquiry.id);
+// // //           const updatedData = {
+// // //             ...enquiryData,
+// // //             createdAt: keepEnquiry.createdAt || serverTimestamp(),
+// // //           };
+// // //           console.log("Before overwrite - existing data:", keepEnquiry);
+// // //           console.log("Overwriting with data:", updatedData);
+// // //           await setDoc(enquiryRef, updatedData, { merge: false });
+
+// // //           // Verify the update
+// // //           const updatedDoc = await getDoc(enquiryRef);
+// // //           console.log("After overwrite - new data:", updatedDoc.data());
+// // //           console.log(`Successfully overwrote enquiry with ID: ${keepEnquiry.id}`);
+// // //         } else {
+// // //           // Single existing enquiry
+// // //           const existingEnquiry = existingEnquiries[0];
+// // //           const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
+// // //           const updatedData = {
+// // //             ...enquiryData,
+// // //             createdAt: existingEnquiry.createdAt || serverTimestamp(),
+// // //           };
+// // //           console.log("Before overwrite - existing data:", existingEnquiry);
+// // //           console.log("Overwriting with data:", updatedData);
+// // //           await setDoc(enquiryRef, updatedData, { merge: false });
+
+// // //           // Verify the update
+// // //           const updatedDoc = await getDoc(enquiryRef);
+// // //           console.log("After overwrite - new data:", updatedDoc.data());
+// // //           console.log(`Successfully overwrote enquiry with ID: ${existingEnquiry.id}`);
+// // //         }
+// // //       } else {
+// // //         // Create new enquiry
+// // //         console.log("Creating new enquiry with data:", enquiryData);
+// // //         const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+// // //         console.log("Created new enquiry with ID:", newDocRef.id);
+// // //       }
+
+// // //       setSubmitted(true);
+// // //       setFormValues(
+// // //         formData.fields.reduce((acc, field) => {
+// // //           acc[field.id] = field.defaultValue || "";
+// // //           return acc;
+// // //         }, {})
+// // //       );
+// // //       console.log("Form reset after successful submission");
+// // //     } catch (err) {
+// // //       console.error("Error submitting enquiry:", err);
+// // //       setSubmitError(`Error submitting enquiry: ${err.message}`);
+// // //     } finally {
+// // //       setLoading(false);
+// // //     }
+// // //   };
+
+// // //   if (submitError) {
+// // //     return (
+// // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // //           <h2 className="text-xl font-semibold text-red-600">{submitError}</h2>
+// // //         </div>
+// // //       </div>
+// // //     );
+// // //   }
+
+// // //   if (!formData) {
+// // //     return (
+// // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // //           <h2 className="text-xl font-semibold">Loading...</h2>
+// // //         </div>
+// // //       </div>
+// // //     );
+// // //   }
+
+// // //   if (submitted) {
+// // //     return (
+// // //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// // //           <h2 className="text-xl font-semibold text-green-600">Enquiry Submitted Successfully!</h2>
+// // //           <p className="mt-2 text-gray-600">Thank you for your submission.</p>
+// // //           <Button
+// // //             color="blue"
+// // //             className="mt-4"
+// // //             onClick={() => {
+// // //               setSubmitted(false);
+// // //               setFormValues(
+// // //                 formData.fields.reduce((acc, field) => {
+// // //                   acc[field.id] = field.defaultValue || "";
+// // //                   return acc;
+// // //                 }, {})
+// // //               );
+// // //               console.log("Resetting form for another submission");
+// // //             }}
+// // //           >
+// // //             Submit Another
+// // //           </Button>
+// // //         </div>
+// // //       </div>
+// // //     );
+// // //   }
+
+// // //   const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+
+// // //   return (
+// // //     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// // //       <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl w-full">
+// // //         <h2 className="text-2xl font-semibold text-gray-800 mb-6">{formData.name}</h2>
+// // //         <form onSubmit={handleSubmit} className="space-y-4">
+// // //           {formData.fields.map((field) => {
+// // //             const fieldDef = flatFields.find((f) => f.id === field.id);
+// // //             if (!fieldDef) {
+// // //               console.warn(`Field definition not found for ID: ${field.id}`);
+// // //               return null;
+// // //             }
+
+// // //             const isError = !!errors[field.id];
+
+// // //             return (
+// // //               <div key={field.id}>
+// // //                 {fieldDef.type === "textarea" ? (
+// // //                   <div>
+// // //                     <label
+// // //                       htmlFor={field.id}
+// // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // //                     >
+// // //                       {fieldDef.label}
+// // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // //                     </label>
+// // //                     <textarea
+// // //                       id={field.id}
+// // //                       value={formValues[field.id] || ""}
+// // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // //                       className={`w-full px-3 py-2 border ${
+// // //                         isError ? "border-red-500" : "border-gray-300"
+// // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // //                       rows={4}
+// // //                       disabled={loading}
+// // //                     />
+// // //                   </div>
+// // //                 ) : fieldDef.type === "select" ? (
+// // //                   <FormControl fullWidth error={isError}>
+// // //                     <InputLabel>{fieldDef.label}</InputLabel>
+// // //                     <Select
+// // //                       id={field.id}
+// // //                       value={formValues[field.id] || ""}
+// // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // //                       label={fieldDef.label}
+// // //                       disabled={loading}
+// // //                     >
+// // //                       <MenuItem value="">
+// // //                         <em>Select {fieldDef.label}</em>
+// // //                       </MenuItem>
+// // //                       {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
+// // //                         <MenuItem key={option} value={option}>
+// // //                           {option}
+// // //                         </MenuItem>
+// // //                       ))}
+// // //                     </Select>
+// // //                   </FormControl>
+// // //                 ) : (
+// // //                   <div>
+// // //                     <label
+// // //                       htmlFor={field.id}
+// // //                       className="block text-gray-700 text-sm font-medium mb-2"
+// // //                     >
+// // //                       {fieldDef.label}
+// // //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// // //                     </label>
+// // //                     <input
+// // //                       type={fieldDef.type}
+// // //                       id={field.id}
+// // //                       value={formValues[field.id] || ""}
+// // //                       onChange={(e) => handleChange(field.id, e.target.value)}
+// // //                       className={`w-full px-3 py-2 border ${
+// // //                         isError ? "border-red-500" : "border-gray-300"
+// // //                       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// // //                       disabled={loading}
+// // //                     />
+// // //                   </div>
+// // //                 )}
+// // //                 {isError && (
+// // //                   <p className="mt-1 text-sm text-red-500">{errors[field.id]}</p>
+// // //                 )}
+// // //               </div>
+// // //             );
+// // //           })}
+// // //           {submitError && (
+// // //             <p className="text-sm text-red-500">{submitError}</p>
+// // //           )}
+// // //           <div className="flex justify-end">
+// // //             <Button
+// // //               type="submit"
+// // //               color="blue"
+// // //               disabled={loading}
+// // //               className={loading ? "opacity-50 cursor-not-allowed" : ""}
+// // //             >
+// // //               {loading ? "Submitting..." : "Submit"}
+// // //             </Button>
+// // //           </div>
+// // //         </form>
+// // //       </div>
+// // //     </div>
+// // //   );
+// // // };
+
+// // // export default SubmitEnquiryForm;
+
 
 
 // // import React, { useState, useEffect } from "react";
-// // import { db } from "../../../config/firebase";
-// // import { doc, getDoc, collection, addDoc, updateDoc } from "firebase/firestore";
 // // import { useParams } from "react-router-dom";
-// // import { serverTimestamp } from "firebase/firestore";
+// // import { db } from "../../../config/firebase";
+// // import { doc, getDoc, addDoc, setDoc, collection, query, where, getDocs, serverTimestamp, writeBatch } from "firebase/firestore";
 // // import { allEnquiryFields } from "./enquiryFields.jsx";
+// // import { Button, Input } from "@material-tailwind/react";
+// // import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 
 // // const SubmitEnquiryForm = () => {
 // //   const { formId } = useParams();
 // //   const [formData, setFormData] = useState(null);
 // //   const [formValues, setFormValues] = useState({});
-// //   const [loading, setLoading] = useState(true);
-// //   const [error, setError] = useState(null);
-// //   const [success, setSuccess] = useState(false);
+// //   const [errors, setErrors] = useState({});
+// //   const [loading, setLoading] = useState(false);
+// //   const [submitError, setSubmitError] = useState(null);
+// //   const [submitted, setSubmitted] = useState(false);
 
-// //   const formUrl = `ttps://form.shikshasaarathi.com.web.app/${formId}`;
-// //   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(formUrl)}`;
+// //   const selectOptions = {
+// //     country: ["India", "USA", "UK", "Canada", "Australia"],
+// //     gender: ["Male", "Female", "Prefer not to disclose"],
+// //     studentType: ["School", "College", "Professional"],
+// //     graduationStream: ["Science", "Commerce", "Arts", "Engineering"],
+// //     branch: ["Main Branch", "City Branch", "Online"],
+// //     course: ["Computer Science", "Business Studies", "Mathematics"],
+// //     source: ["Website", "Referral", "Advertisement"],
+// //     assignTo: ["Admissions Team", "Counselor A", "Counselor B"],
+// //     degree: ["Bachelors", "Masters", "Diploma"],
+// //     stage: ["prequalified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"],
+// //     school: ["City High School", "Central Academy", "Other"],
+// //   };
 
 // //   useEffect(() => {
-// //     console.log("Form ID:", formId);
-// //     console.log("QR Code URL:", qrCodeUrl);
 // //     const fetchForm = async () => {
 // //       try {
-// //         setLoading(true);
+// //         console.log("Fetching form with ID:", formId);
 // //         const formRef = doc(db, "enquiryForms", formId);
 // //         const formSnap = await getDoc(formRef);
-// //         if (!formSnap.exists()) {
-// //           setError("Form not found.");
-// //           console.error("Form not found in Firestore for ID:", formId);
-// //           return;
+// //         if (formSnap.exists()) {
+// //           console.log("Form data:", formSnap.data());
+// //           setFormData(formSnap.data());
+// //           const initialValues = {};
+// //           formSnap.data().fields.forEach((field) => {
+// //             initialValues[field.id] = field.defaultValue || "";
+// //           });
+// //           setFormValues(initialValues);
+// //         } else {
+// //           console.error("Form not found for ID:", formId);
+// //           setSubmitError("Form not found");
 // //         }
-// //         const data = formSnap.data();
-// //         setFormData(data);
-// //         const initialValues = {};
-// //         data.fields.forEach((field) => {
-// //           initialValues[field.id] = field.defaultValue || "";
-// //         });
-// //         setFormValues(initialValues);
 // //       } catch (err) {
-// //         setError("Failed to load form: " + err.message);
 // //         console.error("Error fetching form:", err);
-// //       } finally {
-// //         setLoading(false);
+// //         setSubmitError(`Error fetching form: ${err.message}`);
 // //       }
 // //     };
 // //     fetchForm();
 // //   }, [formId]);
 
-// //   const handleChange = (e) => {
-// //     const { name, value } = e.target;
-// //     setFormValues((prev) => ({ ...prev, [name]: value }));
+// //   const handleChange = (fieldId, value) => {
+// //     console.log(`Field ${fieldId} changed to:`, value);
+// //     setFormValues((prev) => ({ ...prev, [fieldId]: value }));
+// //     if (errors[fieldId]) {
+// //       setErrors((prev) => ({ ...prev, [fieldId]: null }));
+// //     }
+// //   };
+
+// //   const validateForm = () => {
+// //     console.log("Validating form with values:", formValues);
+// //     const newErrors = {};
+// //     const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+// //     formData.fields.forEach((field) => {
+// //       const fieldDef = flatFields.find((f) => f.id === field.id);
+// //       if (fieldDef?.required && !formValues[field.id]?.trim()) {
+// //         newErrors[field.id] = `${fieldDef.label} is required`;
+// //       }
+// //       if (fieldDef?.type === "email" && formValues[field.id]) {
+// //         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// //         if (!emailRegex.test(formValues[field.id])) {
+// //           newErrors[field.id] = "Invalid email format";
+// //         }
+// //       }
+// //       if (fieldDef?.type === "number" && formValues[field.id] && isNaN(formValues[field.id])) {
+// //         newErrors[field.id] = `${fieldDef.label} must be a number`;
+// //       }
+// //     });
+// //     setErrors(newErrors);
+// //     console.log("Validation errors:", newErrors);
+// //     return Object.keys(newErrors).length === 0;
 // //   };
 
 // //   const handleSubmit = async (e) => {
 // //     e.preventDefault();
-// //     if (!formData) {
-// //       setError("Form data not loaded.");
+// //     console.log("Submitting form with values:", formValues);
+// //     if (!validateForm()) {
+// //       console.log("Validation failed, aborting submission");
 // //       return;
 // //     }
-
 // //     try {
 // //       setLoading(true);
-// //       setError(null);
+// //       setSubmitError(null);
 
+// //       // Prepare enquiry data
 // //       const enquiryData = {
-// //         formId: formId,
-// //         userData: formValues,
-// //         timestamp: serverTimestamp(),
-// //       };
-// //       await addDoc(collection(db, "enquiries"), enquiryData);
-
-// //       const formRef = doc(db, "enquiryForms", formId);
-// //       await updateDoc(formRef, {
-// //         enquiryCount: (formData.enquiryCount || 0) + 1,
+// //         formId,
+// //         ...formValues,
+// //         status: formValues.stage || "prequalified",
+// //         createdAt: serverTimestamp(),
 // //         updatedAt: serverTimestamp(),
-// //       });
+// //       };
+// //       console.log("Prepared enquiry data:", enquiryData);
 
-// //       setSuccess(true);
-// //       setFormValues({});
+// //       // Normalize email for matching
+// //       const email = formValues.email?.trim().toLowerCase();
+// //       console.log("Normalized email for query:", email);
+
+// //       if (!email) {
+// //         console.log("No email provided in form values");
+// //         throw new Error("Email is required to submit the enquiry");
+// //       }
+
+// //       // Check for existing enquiry by email
+// //       let existingEnquiries = [];
+// //       console.log("Checking for existing enquiry with email:", email);
+// //       const enquiriesRef = collection(db, "enquiries");
+// //       const emailQuery = query(enquiriesRef, where("email", "==", email));
+// //       const emailSnapshot = await getDocs(emailQuery);
+
+// //       if (!emailSnapshot.empty) {
+// //         emailSnapshot.forEach((doc) => {
+// //           const enquiry = { id: doc.id, ...doc.data() };
+// //           existingEnquiries.push(enquiry);
+// //           console.log("Found matching enquiry:", enquiry);
+// //         });
+// //       } else {
+// //         console.log("No existing enquiry found for email:", email);
+// //       }
+
+// //       if (existingEnquiries.length > 0) {
+// //         // Handle multiple matches (shouldn't happen after cleanup, but just in case)
+// //         if (existingEnquiries.length > 1) {
+// //           console.warn("Multiple enquiries found for email:", email, existingEnquiries);
+// //           // Keep the oldest enquiry and delete the rest
+// //           const sortedEnquiries = existingEnquiries.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
+// //           const keepEnquiry = sortedEnquiries[0];
+// //           const deleteEnquiries = sortedEnquiries.slice(1);
+
+// //           const batch = writeBatch(db);
+// //           deleteEnquiries.forEach((enquiry) => {
+// //             console.log("Deleting duplicate enquiry:", enquiry.id);
+// //             batch.delete(doc(db, "enquiries", enquiry.id));
+// //           });
+// //           await batch.commit();
+// //           console.log("Deleted duplicate enquiries, proceeding with overwrite");
+
+// //           // Overwrite the kept enquiry
+// //           const enquiryRef = doc(db, "enquiries", keepEnquiry.id);
+// //           const updatedData = {
+// //             ...enquiryData,
+// //             createdAt: keepEnquiry.createdAt || serverTimestamp(),
+// //           };
+// //           console.log("Before overwrite - existing data:", keepEnquiry);
+// //           console.log("Overwriting with data:", updatedData);
+// //           await setDoc(enquiryRef, updatedData, { merge: false });
+
+// //           // Verify the update
+// //           const updatedDoc = await getDoc(enquiryRef);
+// //           console.log("After overwrite - new data:", updatedDoc.data());
+// //           console.log(`Successfully overwrote enquiry with ID: ${keepEnquiry.id}`);
+// //         } else {
+// //           // Single existing enquiry
+// //           const existingEnquiry = existingEnquiries[0];
+// //           const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
+// //           const updatedData = {
+// //             ...enquiryData,
+// //             createdAt: existingEnquiry.createdAt || serverTimestamp(),
+// //           };
+// //           console.log("Before overwrite - existing data:", existingEnquiry);
+// //           console.log("Overwriting with data:", updatedData);
+// //           await setDoc(enquiryRef, updatedData, { merge: false });
+
+// //           // Verify the update
+// //           const updatedDoc = await getDoc(enquiryRef);
+// //           console.log("After overwrite - new data:", updatedDoc.data());
+// //           console.log(`Successfully overwrote enquiry with ID: ${existingEnquiry.id}`);
+// //         }
+// //       } else {
+// //         // Create new enquiry
+// //         console.log("Creating new enquiry with data:", enquiryData);
+// //         const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+// //         console.log("Created new enquiry with ID:", newDocRef.id);
+// //       }
+
+// //       setSubmitted(true);
+// //       setFormValues(
+// //         formData.fields.reduce((acc, field) => {
+// //           acc[field.id] = field.defaultValue || "";
+// //           return acc;
+// //         }, {})
+// //       );
+// //       console.log("Form reset after successful submission");
 // //     } catch (err) {
-// //       setError("Failed to submit enquiry: " + err.message);
 // //       console.error("Error submitting enquiry:", err);
+// //       setSubmitError(`Error submitting enquiry: ${err.message}`);
 // //     } finally {
 // //       setLoading(false);
 // //     }
 // //   };
 
-// //   if (loading) return <div className="p-4">Loading...</div>;
-// //   if (error) return <div className="p-4 text-red-600">{error}</div>;
-// //   if (!formData) return null;
+// //   if (submitError) {
+// //     return (
+// //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// //           <h2 className="text-xl font-semibold text-red-600">{submitError}</h2>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   if (!formData) {
+// //     return (
+// //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// //           <h2 className="text-xl font-semibold">Loading...</h2>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   if (submitted) {
+// //     return (
+// //       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// //         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+// //           <h2 className="text-xl font-semibold text-green-600">Enquiry Submitted Successfully!</h2>
+// //           <p className="mt-2 text-gray-600">Thank you for your submission.</p>
+// //           <Button
+// //             color="blue"
+// //             className="mt-4"
+// //             onClick={() => {
+// //               setSubmitted(false);
+// //               setFormValues(
+// //                 formData.fields.reduce((acc, field) => {
+// //                   acc[field.id] = field.defaultValue || "";
+// //                   return acc;
+// //                 }, {})
+// //               );
+// //               console.log("Resetting form for another submission");
+// //             }}
+// //           >
+// //             Submit Another
+// //           </Button>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   const flatFields = allEnquiryFields.flatMap((category) => category.fields);
 
 // //   return (
-// //     <div className="p-6 max-w-2xl mx-auto">
-// //       <h1 className="text-2xl font-bold mb-4">{formData.name}</h1>
-// //       <div className="mb-6">
-// //         <h2 className="text-lg font-medium mb-2">Share this Form</h2>
-// //         <div className="qr-code-container">
-// //           <img src={qrCodeUrl} alt="QR Code" />
-// //         </div>
-// //         <p className="mt-2 text-sm text-gray-500">Scan to access the form</p>
-// //         <p className="mt-2 text-sm text-gray-500">
-// //           Form URL: <a href={formUrl} target="_blank" rel="noopener noreferrer">{formUrl}</a>
-// //         </p>
+// //     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+// //       <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl w-full">
+// //         <h2 className="text-2xl font-semibold text-gray-800 mb-6">{formData.name}</h2>
+// //         <form onSubmit={handleSubmit} className="space-y-4">
+// //           {formData.fields.map((field) => {
+// //             const fieldDef = flatFields.find((f) => f.id === field.id);
+// //             if (!fieldDef) {
+// //               console.warn(`Field definition not found for ID: ${field.id}`);
+// //               return null;
+// //             }
+
+// //             const isError = !!errors[field.id];
+// //             const hasDefaultValue = field.defaultValue && field.defaultValue.trim() !== "";
+
+// //             return (
+// //               <div key={field.id}>
+// //                 {fieldDef.type === "textarea" ? (
+// //   <div>
+// //     <label
+// //       htmlFor={field.id}
+// //       className="block text-gray-700 text-sm font-medium mb-2"
+// //     >
+// //       {fieldDef.label}
+// //       {fieldDef.required && <span className="text-red-500">*</span>}
+// //     </label>
+// //     <textarea
+// //       id={field.id}
+// //       value={formValues[field.id] || ""}
+// //       onChange={(e) => handleChange(field.id, e.target.value)}
+// //       className={`w-full px-3 py-2 border ${
+// //         isError ? "border-red-500" : "border-gray-300"
+// //       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+// //         hasDefaultValue ? "bg-gray-100 cursor-not-allowed" : ""
+// //       }`}
+// //       rows={4}
+// //       disabled={loading || hasDefaultValue}
+// //     />
+// //   </div>
+// // ) : fieldDef.type === "select" ? (
+// //   <FormControl fullWidth error={isError}>
+// //     <InputLabel>{fieldDef.label}</InputLabel>
+// //     <Select
+// //       id={field.id}
+// //       value={formValues[field.id] || ""}
+// //       onChange={(e) => handleChange(field.id, e.target.value)}
+// //       label={fieldDef.label}
+// //       disabled={loading || hasDefaultValue}
+// //       className={hasDefaultValue ? "bg-gray-100 cursor-not-allowed" : ""}
+// //     >
+// //       <MenuItem value="">
+// //         <em>Select {fieldDef.label}</em>
+// //       </MenuItem>
+// //       {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
+// //         <MenuItem key={option} value={option}>
+// //           {option}
+// //         </MenuItem>
+// //       ))}
+// //     </Select>
+// //   </FormControl>
+// // ) : (
+// //   <div>
+// //     <label
+// //       htmlFor={field.id}
+// //       className="block text-gray-700 text-sm font-medium mb-2"
+// //     >
+// //       {fieldDef.label}
+// //       {fieldDef.required && <span className="text-red-500">*</span>}
+// //     </label>
+// //     <input
+// //       type={fieldDef.type}
+// //       id={field.id}
+// //       value={formValues[field.id] || ""}
+// //       onChange={(e) => handleChange(field.id, e.target.value)}
+// //       className={`w-full px-3 py-2 border ${
+// //         isError ? "border-red-500" : "border-gray-300"
+// //       } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+// //         hasDefaultValue ? "bg-gray-100 cursor-not-allowed" : ""
+// //       }`}
+// //       disabled={loading || hasDefaultValue}
+// //     />
+// //   </div>
+// // )}
+// //                 {/* {fieldDef.type === "textarea" ? (
+// //                   <div>
+// //                     <label
+// //                       htmlFor={field.id}
+// //                       className="block text-gray-700 text-sm font-medium mb-2"
+// //                     >
+// //                       {fieldDef.label}
+// //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// //                     </label>
+// //                     {hasDefaultValue ? (
+// //                       <p className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+// //                         {field.defaultValue}
+// //                       </p>
+// //                     ) : (
+// //                       <textarea
+// //                         id={field.id}
+// //                         value={formValues[field.id] || ""}
+// //                         onChange={(e) => handleChange(field.id, e.target.value)}
+// //                         className={`w-full px-3 py-2 border ${
+// //                           isError ? "border-red-500" : "border-gray-300"
+// //                         } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// //                         rows={4}
+// //                         disabled={loading}
+// //                       />
+// //                     )}
+// //                   </div>
+// //                 ) : fieldDef.type === "select" ? (
+// //                   <FormControl fullWidth error={isError}>
+// //                     <InputLabel>{fieldDef.label}</InputLabel>
+// //                     {hasDefaultValue ? (
+// //                       <p className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+// //                         {field.defaultValue}
+// //                       </p>
+// //                     ) : (
+// //                       <Select
+// //                         id={field.id}
+// //                         value={formValues[field.id] || ""}
+// //                         onChange={(e) => handleChange(field.id, e.target.value)}
+// //                         label={fieldDef.label}
+// //                         disabled={loading}
+// //                       >
+// //                         <MenuItem value="">
+// //                           <em>Select {fieldDef.label}</em>
+// //                         </MenuItem>
+// //                         {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
+// //                           <MenuItem key={option} value={option}>
+// //                             {option}
+// //                           </MenuItem>
+// //                         ))}
+// //                       </Select>
+// //                     )}
+// //                   </FormControl>
+// //                 ) : (
+// //                   <div>
+// //                     <label
+// //                       htmlFor={field.id}
+// //                       className="block text-gray-700 text-sm font-medium mb-2"
+// //                     >
+// //                       {fieldDef.label}
+// //                       {fieldDef.required && <span className="text-red-500">*</span>}
+// //                     </label>
+// //                     {hasDefaultValue ? (
+// //                       <p className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+// //                         {field.defaultValue}
+// //                       </p>
+// //                     ) : (
+// //                       <input
+// //                         type={fieldDef.type}
+// //                         id={field.id}
+// //                         value={formValues[field.id] || ""}
+// //                         onChange={(e) => handleChange(field.id, e.target.value)}
+// //                         className={`w-full px-3 py-2 border ${
+// //                           isError ? "border-red-500" : "border-gray-300"
+// //                         } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+// //                         disabled={loading}
+// //                       />
+// //                     )}
+// //                   </div>
+// //                 )} */}
+// //                 {isError && (
+// //                   <p className="mt-1 text-sm text-red-500">{errors[field.id]}</p>
+// //                 )}
+// //               </div>
+// //             );
+// //           })}
+// //           {submitError && (
+// //             <p className="text-sm text-red-500">{submitError}</p>
+// //           )}
+// //           <div className="flex justify-end">
+// //             <Button
+// //               type="submit"
+// //               color="blue"
+// //               disabled={loading}
+// //               className={loading ? "opacity-50 cursor-not-allowed" : ""}
+// //             >
+// //               {loading ? "Submitting..." : "Submit"}
+// //             </Button>
+// //           </div>
+// //         </form>
 // //       </div>
-// //       {success && (
-// //         <div className="mb-4 p-2 bg-green-100 border border-green-400 text-green-700">
-// //           Enquiry submitted successfully!
-// //         </div>
-// //       )}
-// //       <form onSubmit={handleSubmit} className="space-y-4">
-// //         {formData.fields.map((field) => {
-// //           const fieldConfig = allEnquiryFields.find((f) => f.id === field.id);
-// //           if (!fieldConfig) return null;
-// //           const isDefaultEmpty = !field.defaultValue || field.defaultValue === "";
-// //           return (
-// //             <div key={field.id} className="mb-4">
-// //               <label className="block text-gray-700 text-sm font-medium mb-2">{fieldConfig.label}</label>
-// //               {fieldConfig.type === "textarea" ? (
-// //                 <textarea
-// //                   name={field.id}
-// //                   value={formValues[field.id] || ""}
-// //                   onChange={handleChange}
-// //                   className="w-full px-3 py-2 border rounded-md"
-// //                   placeholder={isDefaultEmpty ? fieldConfig.label : ""}
-// //                   disabled={!isDefaultEmpty}
-// //                 />
-// //               ) : fieldConfig.type === "select" ? (
-// //                 <select
-// //                   name={field.id}
-// //                   value={formValues[field.id] || ""}
-// //                   onChange={handleChange}
-// //                   className="w-full px-3 py-2 border rounded-md"
-// //                   disabled={!isDefaultEmpty}
-// //                 >
-// //                   <option value="">Select {fieldConfig.label}</option>
-// //                   {fieldConfig.options?.map((option) => (
-// //                     <option key={option} value={option}>{option}</option>
-// //                   ))}
-// //                 </select>
-// //               ) : (
-// //                 <input
-// //                   type={fieldConfig.type}
-// //                   name={field.id}
-// //                   value={formValues[field.id] || ""}
-// //                   onChange={handleChange}
-// //                   className="w-full px-3 py-2 border rounded-md"
-// //                   placeholder={isDefaultEmpty ? fieldConfig.label : ""}
-// //                   disabled={!isDefaultEmpty}
-// //                 />
-// //               )}
-// //               {!isDefaultEmpty && <p className="mt-1 text-sm text-gray-500">Default: {field.defaultValue}</p>}
-// //             </div>
-// //           );
-// //         })}
-// //         <button
-// //           type="submit"
-// //           className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-// //           disabled={loading}
-// //         >
-// //           {loading ? "Submitting..." : "Submit"}
-// //         </button>
-// //       </form>
 // //     </div>
 // //   );
 // // };
@@ -172,7 +2370,7 @@
 // import React, { useState, useEffect } from "react";
 // import { useParams } from "react-router-dom";
 // import { db } from "../../../config/firebase";
-// import { doc, getDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+// import { doc, getDoc, addDoc, setDoc, collection, query, where, getDocs, serverTimestamp, writeBatch } from "firebase/firestore";
 // import { allEnquiryFields } from "./enquiryFields.jsx";
 // import { Button, Input } from "@material-tailwind/react";
 // import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
@@ -186,7 +2384,6 @@
 //   const [submitError, setSubmitError] = useState(null);
 //   const [submitted, setSubmitted] = useState(false);
 
-//   // Sample options for select fields (adjust as needed)
 //   const selectOptions = {
 //     country: ["India", "USA", "UK", "Canada", "Australia"],
 //     gender: ["Male", "Female", "Prefer not to disclose"],
@@ -198,25 +2395,29 @@
 //     assignTo: ["Admissions Team", "Counselor A", "Counselor B"],
 //     degree: ["Bachelors", "Masters", "Diploma"],
 //     stage: ["prequalified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"],
+//     school: ["City High School", "Central Academy", "Other"],
 //   };
 
 //   useEffect(() => {
 //     const fetchForm = async () => {
 //       try {
+//         console.log("Fetching form with ID:", formId);
 //         const formRef = doc(db, "enquiryForms", formId);
 //         const formSnap = await getDoc(formRef);
 //         if (formSnap.exists()) {
+//           console.log("Form data:", formSnap.data());
 //           setFormData(formSnap.data());
-//           // Initialize form values with default values
 //           const initialValues = {};
 //           formSnap.data().fields.forEach((field) => {
 //             initialValues[field.id] = field.defaultValue || "";
 //           });
 //           setFormValues(initialValues);
 //         } else {
+//           console.error("Form not found for ID:", formId);
 //           setSubmitError("Form not found");
 //         }
 //       } catch (err) {
+//         console.error("Error fetching form:", err);
 //         setSubmitError(`Error fetching form: ${err.message}`);
 //       }
 //     };
@@ -224,14 +2425,15 @@
 //   }, [formId]);
 
 //   const handleChange = (fieldId, value) => {
+//     console.log(`Field ${fieldId} changed to:`, value);
 //     setFormValues((prev) => ({ ...prev, [fieldId]: value }));
-//     // Clear error for this field
 //     if (errors[fieldId]) {
 //       setErrors((prev) => ({ ...prev, [fieldId]: null }));
 //     }
 //   };
 
 //   const validateForm = () => {
+//     console.log("Validating form with values:", formValues);
 //     const newErrors = {};
 //     const flatFields = allEnquiryFields.flatMap((category) => category.fields);
 //     formData.fields.forEach((field) => {
@@ -250,27 +2452,122 @@
 //       }
 //     });
 //     setErrors(newErrors);
+//     console.log("Validation errors:", newErrors);
 //     return Object.keys(newErrors).length === 0;
 //   };
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
+//     console.log("Submitting form with values:", formValues);
 //     if (!validateForm()) {
+//       console.log("Validation failed, aborting submission");
 //       return;
 //     }
 //     try {
 //       setLoading(true);
 //       setSubmitError(null);
+
+//       // Prepare enquiry data
 //       const enquiryData = {
 //         formId,
 //         ...formValues,
-//         status: formValues.stage || "prequalified", // Default to prequalified if stage not included
+//         status: formValues.stage || "prequalified",
 //         createdAt: serverTimestamp(),
+//         updatedAt: serverTimestamp(),
 //       };
-//       await addDoc(collection(db, "enquiries"), enquiryData);
+//       console.log("Prepared enquiry data:", enquiryData);
+
+//       // Normalize email for matching
+//       const email = formValues.email?.trim().toLowerCase();
+//       console.log("Normalized email for query:", email);
+
+//       if (!email) {
+//         console.log("No email provided in form values");
+//         throw new Error("Email is required to submit the enquiry");
+//       }
+
+//       // Check for existing enquiry by email
+//       let existingEnquiries = [];
+//       console.log("Checking for existing enquiry with email:", email);
+//       const enquiriesRef = collection(db, "enquiries");
+//       const emailQuery = query(enquiriesRef, where("email", "==", email));
+//       const emailSnapshot = await getDocs(emailQuery);
+
+//       if (!emailSnapshot.empty) {
+//         emailSnapshot.forEach((doc) => {
+//           const enquiry = { id: doc.id, ...doc.data() };
+//           existingEnquiries.push(enquiry);
+//           console.log("Found matching enquiry:", enquiry);
+//         });
+//       } else {
+//         console.log("No existing enquiry found for email:", email);
+//       }
+
+//       if (existingEnquiries.length > 0) {
+//         // Handle multiple matches (shouldn't happen after cleanup, but just in case)
+//         if (existingEnquiries.length > 1) {
+//           console.warn("Multiple enquiries found for email:", email, existingEnquiries);
+//           // Keep the oldest enquiry and delete the rest
+//           const sortedEnquiries = existingEnquiries.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
+//           const keepEnquiry = sortedEnquiries[0];
+//           const deleteEnquiries = sortedEnquiries.slice(1);
+
+//           const batch = writeBatch(db);
+//           deleteEnquiries.forEach((enquiry) => {
+//             console.log("Deleting duplicate enquiry:", enquiry.id);
+//             batch.delete(doc(db, "enquiries", enquiry.id));
+//           });
+//           await batch.commit();
+//           console.log("Deleted duplicate enquiries, proceeding with overwrite");
+
+//           // Overwrite the kept enquiry
+//           const enquiryRef = doc(db, "enquiries", keepEnquiry.id);
+//           const updatedData = {
+//             ...enquiryData,
+//             createdAt: keepEnquiry.createdAt || serverTimestamp(),
+//           };
+//           console.log("Before overwrite - existing data:", keepEnquiry);
+//           console.log("Overwriting with data:", updatedData);
+//           await setDoc(enquiryRef, updatedData, { merge: false });
+
+//           // Verify the update
+//           const updatedDoc = await getDoc(enquiryRef);
+//           console.log("After overwrite - new data:", updatedDoc.data());
+//           console.log(`Successfully overwrote enquiry with ID: ${keepEnquiry.id}`);
+//         } else {
+//           // Single existing enquiry
+//           const existingEnquiry = existingEnquiries[0];
+//           const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
+//           const updatedData = {
+//             ...enquiryData,
+//             createdAt: existingEnquiry.createdAt || serverTimestamp(),
+//           };
+//           console.log("Before overwrite - existing data:", existingEnquiry);
+//           console.log("Overwriting with data:", updatedData);
+//           await setDoc(enquiryRef, updatedData, { merge: false });
+
+//           // Verify the update
+//           const updatedDoc = await getDoc(enquiryRef);
+//           console.log("After overwrite - new data:", updatedDoc.data());
+//           console.log(`Successfully overwrote enquiry with ID: ${existingEnquiry.id}`);
+//         }
+//       } else {
+//         // Create new enquiry
+//         console.log("Creating new enquiry with data:", enquiryData);
+//         const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+//         console.log("Created new enquiry with ID:", newDocRef.id);
+//       }
+
 //       setSubmitted(true);
-//       setFormValues({});
+//       setFormValues(
+//         formData.fields.reduce((acc, field) => {
+//           acc[field.id] = field.defaultValue || "";
+//           return acc;
+//         }, {})
+//       );
+//       console.log("Form reset after successful submission");
 //     } catch (err) {
+//       console.error("Error submitting enquiry:", err);
 //       setSubmitError(`Error submitting enquiry: ${err.message}`);
 //     } finally {
 //       setLoading(false);
@@ -314,6 +2611,7 @@
 //                   return acc;
 //                 }, {})
 //               );
+//               console.log("Resetting form for another submission");
 //             }}
 //           >
 //             Submit Another
@@ -330,11 +2628,108 @@
 //       <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl w-full">
 //         <h2 className="text-2xl font-semibold text-gray-800 mb-6">{formData.name}</h2>
 //         <form onSubmit={handleSubmit} className="space-y-4">
-//           {formData.fields.map((field) => {
+
+//         {formData.fields.map((field) => {
+//   const fieldDef = flatFields.find((f) => f.id === field.id);
+//   if (!fieldDef) {
+//     console.warn(`Field definition not found for ID: ${field.id}`);
+//     return null;
+//   }
+
+//   const isError = !!errors[field.id];
+//   const hasDefaultValue = field.defaultValue && field.defaultValue.trim() !== "";
+//   const isReadOnly = hasDefaultValue;
+
+//   return (
+//     <div key={field.id}>
+//       {fieldDef.type === "textarea" ? (
+//         <div>
+//           <label htmlFor={field.id} className="block text-gray-700 text-sm font-medium mb-2">
+//             {fieldDef.label}
+//             {fieldDef.required && <span className="text-red-500">*</span>}
+//           </label>
+//           {isReadOnly ? (
+//             <p className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+//               {field.defaultValue}
+//             </p>
+//           ) : (
+//             <textarea
+//               id={field.id}
+//               value={formValues[field.id] || ""}
+//               onChange={(e) => handleChange(field.id, e.target.value)}
+//               className={`w-full px-3 py-2 border ${
+//                 isError ? "border-red-500" : "border-gray-300"
+//               } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+//               rows={4}
+//               disabled={loading}
+//             />
+//           )}
+//         </div>
+//       ) : fieldDef.type === "select" ? (
+//         <FormControl fullWidth error={isError}>
+//           <InputLabel>{fieldDef.label}</InputLabel>
+//           {isReadOnly ? (
+//             <p className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+//               {field.defaultValue}
+//             </p>
+//           ) : (
+//             <Select
+//               id={field.id}
+//               value={formValues[field.id] || ""}
+//               onChange={(e) => handleChange(field.id, e.target.value)}
+//               label={fieldDef.label}
+//               disabled={loading}
+//             >
+//               <MenuItem value="">
+//                 <em>Select {fieldDef.label}</em>
+//               </MenuItem>
+//               {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
+//                 <MenuItem key={option} value={option}>
+//                   {option}
+//                 </MenuItem>
+//               ))}
+//             </Select>
+//           )}
+//         </FormControl>
+//       ) : (
+//         <div>
+//           <label htmlFor={field.id} className="block text-gray-700 text-sm font-medium mb-2">
+//             {fieldDef.label}
+//             {fieldDef.required && <span className="text-red-500">*</span>}
+//           </label>
+//           {isReadOnly ? (
+//             <p className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+//               {field.defaultValue}
+//             </p>
+//           ) : (
+//             <input
+//               type={fieldDef.type}
+//               id={field.id}
+//               value={formValues[field.id] || ""}
+//               onChange={(e) => handleChange(field.id, e.target.value)}
+//               className={`w-full px-3 py-2 border ${
+//                 isError ? "border-red-500" : "border-gray-300"
+//               } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+//               disabled={loading}
+//             />
+//           )}
+//         </div>
+//       )}
+//       {isError && <p className="mt-1 text-sm text-red-500">{errors[field.id]}</p>}
+//     </div>
+//   );
+// })}
+
+
+//           {/* {formData.fields.map((field) => {
 //             const fieldDef = flatFields.find((f) => f.id === field.id);
-//             if (!fieldDef) return null;
+//             if (!fieldDef) {
+//               console.warn(`Field definition not found for ID: ${field.id}`);
+//               return null;
+//             }
 
 //             const isError = !!errors[field.id];
+//             const hasDefaultValue = field.defaultValue && field.defaultValue.trim() !== "";
 
 //             return (
 //               <div key={field.id}>
@@ -342,64 +2737,87 @@
 //                   <div>
 //                     <label
 //                       htmlFor={field.id}
-//                       className="block text-base font-medium text-gray-700"
+//                       className="block text-gray-700 text-sm font-medium mb-2"
 //                     >
 //                       {fieldDef.label}
 //                       {fieldDef.required && <span className="text-red-500">*</span>}
 //                     </label>
-//                     <textarea
-//                       id={field.id}
-//                       value={formValues[field.id] || ""}
-//                       onChange={(e) => handleChange(field.id, e.target.value)}
-//                       className={`mt-1 block w-full px-3 py-2 border ${
-//                         isError ? "border-red-500" : "border-gray-300"
-//                       } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base`}
-//                       rows={4}
-//                       disabled={loading}
-//                     />
+//                     {hasDefaultValue ? (
+//                       <p className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+//                         {field.defaultValue}
+//                       </p>
+//                     ) : (
+//                       <textarea
+//                         id={field.id}
+//                         value={formValues[field.id] || ""}
+//                         onChange={(e) => handleChange(field.id, e.target.value)}
+//                         className={`w-full px-3 py-2 border ${
+//                           isError ? "border-red-500" : "border-gray-300"
+//                         } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+//                         rows={4}
+//                         disabled={loading}
+//                       />
+//                     )}
 //                   </div>
 //                 ) : fieldDef.type === "select" ? (
 //                   <FormControl fullWidth error={isError}>
 //                     <InputLabel>{fieldDef.label}</InputLabel>
-//                     <Select
-//                       id={field.id}
-//                       value={formValues[field.id] || ""}
-//                       onChange={(e) => handleChange(field.id, e.target.value)}
-//                       label={fieldDef.label}
-//                       disabled={loading}
-//                     >
-//                       <MenuItem value="">
-//                         <em>Select {fieldDef.label}</em>
-//                       </MenuItem>
-//                       {(selectOptions[field.id] || []).map((option) => (
-//                         <MenuItem key={option} value={option}>
-//                           {option}
+//                     {hasDefaultValue ? (
+//                       <p className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+//                         {field.defaultValue}
+//                       </p>
+//                     ) : (
+//                       <Select
+//                         id={field.id}
+//                         value={formValues[field.id] || ""}
+//                         onChange={(e) => handleChange(field.id, e.target.value)}
+//                         label={fieldDef.label}
+//                         disabled={loading}
+//                       >
+//                         <MenuItem value="">
+//                           <em>Select {fieldDef.label}</em>
 //                         </MenuItem>
-//                       ))}
-//                     </Select>
+//                         {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
+//                           <MenuItem key={option} value={option}>
+//                             {option}
+//                           </MenuItem>
+//                         ))}
+//                       </Select>
+//                     )}
 //                   </FormControl>
 //                 ) : (
-//                   <Input
-//                     type={fieldDef.type}
-//                     label={
-//                       <>
-//                         {fieldDef.label}
-//                         {fieldDef.required && <span className="text-red-500">*</span>}
-//                       </>
-//                     }
-//                     value={formValues[field.id] || ""}
-//                     onChange={(e) => handleChange(field.id, e.target.value)}
-//                     error={isError}
-//                     disabled={loading}
-//                     className="w-full"
-//                   />
+//                   <div>
+//                     <label
+//                       htmlFor={field.id}
+//                       className="block text-gray-700 text-sm font-medium mb-2"
+//                     >
+//                       {fieldDef.label}
+//                       {fieldDef.required && <span className="text-red-500">*</span>}
+//                     </label>
+//                     {hasDefaultValue ? (
+//                       <p className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+//                         {field.defaultValue}
+//                       </p>
+//                     ) : (
+//                       <input
+//                         type={fieldDef.type}
+//                         id={field.id}
+//                         value={formValues[field.id] || ""}
+//                         onChange={(e) => handleChange(field.id, e.target.value)}
+//                         className={`w-full px-3 py-2 border ${
+//                           isError ? "border-red-500" : "border-gray-300"
+//                         } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+//                         disabled={loading}
+//                       />
+//                     )}
+//                   </div>
 //                 )}
 //                 {isError && (
 //                   <p className="mt-1 text-sm text-red-500">{errors[field.id]}</p>
 //                 )}
 //               </div>
 //             );
-//           })}
+//           })} */}
 //           {submitError && (
 //             <p className="text-sm text-red-500">{submitError}</p>
 //           )}
@@ -422,10 +2840,12 @@
 // export default SubmitEnquiryForm;
 
 
+
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../../../config/firebase";
-import { doc, getDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, addDoc, updateDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
 import { allEnquiryFields } from "./enquiryFields.jsx";
 import { Button, Input } from "@material-tailwind/react";
 import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
@@ -437,7 +2857,7 @@ const SubmitEnquiryForm = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState({ success: false, isUpdate: false });
 
   // Sample options for select fields, matching FormViewer.js fallback
   const selectOptions = {
@@ -491,10 +2911,16 @@ const SubmitEnquiryForm = () => {
       if (fieldDef?.required && !formValues[field.id]?.trim()) {
         newErrors[field.id] = `${fieldDef.label} is required`;
       }
-      if (fieldDef?.type === "email" && formValues[field.id]) {
+      if (fieldDef?.id === "email" && formValues[field.id]) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formValues[field.id])) {
           newErrors[field.id] = "Invalid email format";
+        }
+      }
+      if (fieldDef?.id === "phone" && formValues[field.id]) {
+        const phoneRegex = /^\d{10}$/;
+        if (!phoneRegex.test(formValues[field.id])) {
+          newErrors[field.id] = "Phone number must be 10 digits";
         }
       }
       if (fieldDef?.type === "number" && formValues[field.id] && isNaN(formValues[field.id])) {
@@ -513,16 +2939,72 @@ const SubmitEnquiryForm = () => {
     try {
       setLoading(true);
       setSubmitError(null);
+
+      // Prepare enquiry data
       const enquiryData = {
         formId,
         ...formValues,
         status: formValues.stage || "prequalified",
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       };
-      await addDoc(collection(db, "enquiries"), enquiryData);
-      setSubmitted(true);
-      setFormValues({});
+
+      // Check for existing enquiry by email or phone
+      const email = formValues.email?.trim().toLowerCase();
+      const phone = formValues.phone?.trim();
+      let existingEnquiry = null;
+
+      if (email || phone) {
+        const enquiriesRef = collection(db, "enquiries");
+        const queries = [];
+        if (email) {
+          queries.push(query(enquiriesRef, where("email", "==", email), limit(1)));
+        }
+        if (phone) {
+          queries.push(query(enquiriesRef, where("phone", "==", phone), limit(1)));
+        }
+
+        // Execute queries
+        const querySnapshots = await Promise.all(queries.map((q) => getDocs(q)));
+        for (const snapshot of querySnapshots) {
+          if (!snapshot.empty) {
+            existingEnquiry = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+            break; // Take the first match
+          }
+        }
+        console.log("Existing Enquiry:", existingEnquiry);
+      } else {
+        console.log("No email or phone provided, creating new enquiry");
+      }
+
+      if (existingEnquiry) {
+        // Update existing enquiry
+        const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
+        const updatedData = {
+          ...existingEnquiry, // Preserve existing fields
+          ...enquiryData, // Overwrite with new form values
+          updatedAt: serverTimestamp(),
+          createdAt: existingEnquiry.createdAt || serverTimestamp(), // Preserve original createdAt
+        };
+        await updateDoc(enquiryRef, updatedData);
+        console.log(`Updated enquiry with ID: ${existingEnquiry.id}`);
+        setSubmitted({ success: true, isUpdate: true });
+      } else {
+        // Create new enquiry
+        const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+        console.log(`Created new enquiry with ID: ${newDocRef.id}`);
+        setSubmitted({ success: true, isUpdate: false });
+      }
+
+      // Reset form to default values
+      setFormValues(
+        formData.fields.reduce((acc, field) => {
+          acc[field.id] = field.defaultValue || "";
+          return acc;
+        }, {})
+      );
     } catch (err) {
+      console.error("Submission error:", err);
       setSubmitError(`Error submitting enquiry: ${err.message}`);
     } finally {
       setLoading(false);
@@ -549,17 +3031,19 @@ const SubmitEnquiryForm = () => {
     );
   }
 
-  if (submitted) {
+  if (submitted.success) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
-          <h2 className="text-xl font-semibold text-green-600">Enquiry Submitted Successfully!</h2>
+          <h2 className="text-xl font-semibold text-green-600">
+            {submitted.isUpdate ? "Enquiry Updated Successfully!" : "Enquiry Submitted Successfully!"}
+          </h2>
           <p className="mt-2 text-gray-600">Thank you for your submission.</p>
           <Button
             color="blue"
             className="mt-4"
             onClick={() => {
-              setSubmitted(false);
+              setSubmitted({ success: false, isUpdate: false });
               setFormValues(
                 formData.fields.reduce((acc, field) => {
                   acc[field.id] = field.defaultValue || "";
