@@ -25,7 +25,7 @@ const InstituteSetup = () => {
     state: "",
     pincode: "",
     email: "",
-    phoneNumber: "",
+    contactNumber: "",
     website: "",
     academicYearStart: "",
     academicYearEnd: "",
@@ -61,7 +61,7 @@ const InstituteSetup = () => {
           const data = querySnapshot.docs[0].data();
           setFormData({
             ...data,
-            phoneNumber: data.phoneNumber || "",
+            contactNumber: data.contactNumber || "",
             email: data.email || "",
             website: data.website || "",
             academicYearStart: data.academicYearStart || "",
