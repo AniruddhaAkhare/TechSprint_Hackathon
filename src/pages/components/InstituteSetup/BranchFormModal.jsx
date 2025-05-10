@@ -3,7 +3,7 @@ import { db } from "../../../config/firebase";
 import { collection, addDoc, updateDoc, doc, getDocs } from "firebase/firestore";
 
 const countryCodes = [
-  { code: "+1", label: "USA (+1)" },
+  // { code: "+1", label: "USA (+1)" },
   { code: "+1", label: "Canada (+1)" },
   { code: "+7", label: "Russia (+7)" },
   { code: "+20", label: "Egypt (+20)" },

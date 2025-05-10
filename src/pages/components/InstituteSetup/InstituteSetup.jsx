@@ -12,7 +12,6 @@ import BasicInformation from "./BasicInformation";
 import LogoUpload from "./LogoUpload";
 import BranchSetup from "./BranchSetup";
 import ContactInformation from "./ContactInformation";
-// import SystemConfiguration from "./SystemConfiguration";
 
 const InstituteSetup = () => {
   const navigate = useNavigate();
@@ -26,7 +25,7 @@ const InstituteSetup = () => {
     state: "",
     pincode: "",
     email: "",
-    phoneNumber: "",
+    contactNumber: "",
     website: "",
     academicYearStart: "",
     academicYearEnd: "",
@@ -62,7 +61,7 @@ const InstituteSetup = () => {
           const data = querySnapshot.docs[0].data();
           setFormData({
             ...data,
-            phoneNumber: data.phoneNumber || "",
+            contactNumber: data.contactNumber || "",
             email: data.email || "",
             website: data.website || "",
             academicYearStart: data.academicYearStart || "",
@@ -167,7 +166,7 @@ const InstituteSetup = () => {
   if (!canDisplay) return null;
 
   return (
-    <div className="institute-setup p-4 fixed inset-0 left-[300px]">
+    <div className="institute-setup p-4 fixed inset-0 left-[300px] overflow-auto">
       <div className="header">
         <FaBook className="header-icon" />
         <h1>Institute Setup</h1>
