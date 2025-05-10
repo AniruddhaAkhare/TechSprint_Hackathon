@@ -9,14 +9,13 @@ export default function EmployeeProfile() {
     const { employeeId } = useParams();
 
     const [employee, setEmployee] = useState({
-        first_name: "",
-        last_name: "",
+        Name: "",
         email: "",
         phone: "",
         // residential_address: [],
         // experience: [],
         // date_of_birth: "",
-        // date_of_joining: "",
+        joining_date: "",
     });
 
     const [selectedForm, setSelectedForm] = useState(1);
@@ -30,12 +29,11 @@ export default function EmployeeProfile() {
                 if (employeeSnap.exists()) {
                     const data = employeeSnap.data();
                     setEmployee({
-                        f_name: data.f_name || "",
-                        l_name: data.l_name || "",
+                        Name: data.Name || "",
                         email: data.email || "",
                         phone: data.phone || "",
                         // date_of_birth: data.date_of_birth ? data.date_of_birth.toDate().toISOString().split("T")[0] : "N/A",
-                        // date_of_joining: data.date_of_joining ? data.date_of_joining.toDate().toISOString().split("T")[0] : "N/A",
+                        joining_date: data.joining_date ? data.joining_date.toDate().toISOString().split("T")[0] : "N/A",
                     });
                 } else {
                     alert("Student not found.");
@@ -68,7 +66,7 @@ export default function EmployeeProfile() {
                         </button>
                         <div>
                             <h1 className="text-2xl font-semibold text-gray-800 mb-0 p-0 ml-0">
-                                {employee.f_name} {employee.l_name}
+                                {employee.Name}
                             </h1>
                             <p className="text-sm text-gray-600 mt-0 p-0 ml-0">{employee.email}</p>
                         </div>
@@ -84,7 +82,7 @@ export default function EmployeeProfile() {
                 <div className="bg-white p-6 rounded-lg shadow-md mb-6">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <p className="text-sm text-gray-600">
-                            <span className="font-medium">Registered on:</span> 
+                            <span className="font-medium">Joining Date:</span>  {employee.joining_date}
                         </p>
                         <p className="text-sm text-gray-600">
                             <span className="font-medium">Reg. ID:</span> {employeeId}

@@ -103,6 +103,21 @@ const Curriculum = () => {
     }
   };
 
+  const handleRowClick = (id) => {
+    if (canUpdate) {
+      navigate(`/edit-curriculum/${id}`);
+    } else {
+      alert("You do not have permission to update curriculums.");
+    }
+  };
+
+  const toggleDropdown = (id) => {
+    if (canUpdate || canDelete) {
+      setDropdownOpen(dropdownOpen === id ? null : id);
+    }
+  };
+
+
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
     setCurrentPage(1);
@@ -244,7 +259,7 @@ const Curriculum = () => {
                 <tr
                   key={curriculum.id}
                   className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => canUpdate && handleEditClick(curriculum.id)}
+                  onClick={() => canUpdate && handleRowClick(curriculum.id)}
                 >
                   <td className="p-3 text-gray-700">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                   <td className="p-3 text-gray-700">{curriculum.name}</td>

@@ -194,7 +194,7 @@ export default function EProfile() {
             {/* Edit Button */}
             <div className="flex justify-end">
                 <button
-                    onClick={() => navigate(`/studentdetails/updatestudent/${employeeId}`)}
+                    onClick={() => navigate(`/editstaff/:staffId/${employeeId}`)}
                     className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
                 >
                     Edit Profile
