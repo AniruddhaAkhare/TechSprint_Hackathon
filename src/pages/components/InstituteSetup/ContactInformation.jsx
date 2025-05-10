@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 const countryCodes = [
   { code: "+1", label: "USA (+1)" },
-  { code: "+1", label: "Canada (+1)" },
+  // { code: "+1", label: "Canada (+1)" },
   { code: "+7", label: "Russia (+7)" },
   { code: "+20", label: "Egypt (+20)" },
   { code: "+27", label: "South Africa (+27)" },

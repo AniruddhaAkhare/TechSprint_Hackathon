@@ -1,24 +1,42 @@
 import { useState, useEffect, useCallback } from "react";
-import { db } from '../../../../config/firebase';
-import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, serverTimestamp, onSnapshot, updateDoc, increment, arrayUnion } from 'firebase/firestore';
+import { db } from "../../../../config/firebase";
+import {
+  getDocs,
+  collection,
+  deleteDoc,
+  doc,
+  query,
+  orderBy,
+  addDoc,
+  serverTimestamp,
+  onSnapshot,
+  updateDoc,
+  increment,
+  arrayUnion,
+  where,
+  getDoc,
+  setDoc,
+} from "firebase/firestore";
 import CreateCourses from "./CreateCourses";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 import LearnerList from "./LearnerList";
-import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import { useAuth } from '../../../../context/AuthContext';
-import debounce from 'lodash/debounce';
+import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { useAuth } from "../../../../context/AuthContext";
+import debounce from "lodash/debounce";
 
 export default function Courses() {
   const { user, rolePermissions } = useAuth();
   const [currentCourse, setCurrentCourse] = useState(null);
   const [courses, setCourses] = useState([]);
   const [centers, setCenters] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [deleteMessage, setDeleteMessage] = useState("Are you sure you want to delete this course? This action cannot be undone.");
+  const [deleteMessage, setDeleteMessage] = useState(
+    "Are you sure you want to delete this course? This action cannot be undone."
+  );
   const [openLearnersDialog, setOpenLearnersDialog] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState(null);
   const [statusFilter, setStatusFilter] = useState("All");
@@ -31,16 +49,15 @@ export default function Courses() {
   const canUpdate = rolePermissions?.Course?.update || false;
   const canDelete = rolePermissions?.Course?.delete || false;
   const canDisplay = rolePermissions?.Course?.display || false;
-  const isAdmin = rolePermissions?.role === 'Admin';
+  const isAdmin = rolePermissions?.role === "Admin";
 
   const CourseCollectionRef = collection(db, "Course");
   const EnrollmentsCollectionRef = collection(db, "enrollments");
   const LogsCollectionRef = collection(db, "activityLogs");
   const instituteId = "9z6G6BLzfDScI0mzMOlB";
   const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
-  console.log("CollectionRef", CenterCollectionRef);
 
-  const toggleSidebar = () => setIsOpen(prev => !prev);
+  const toggleSidebar = () => setIsOpen((prev) => !prev);
 
   const handleLearnersClick = (courseId) => {
     setSelectedCourseId(courseId);
@@ -56,13 +73,13 @@ export default function Courses() {
         userId: user.uid,
         userEmail: user.email,
         action,
-        details
+        details,
       };
       await updateDoc(logDocRef, {
         logs: arrayUnion(logEntry),
-        count: increment(1)
+        count: increment(1),
       }).catch(async (err) => {
-        if (err.code === 'not-found') {
+        if (err.code === "not-found") {
           await setDoc(logDocRef, { logs: [logEntry], count: 1 });
         } else {
           throw err;
@@ -75,55 +92,86 @@ export default function Courses() {
 
   const fetchLogs = useCallback(() => {
     if (!isAdmin) return;
-    const q = query(LogsCollectionRef, orderBy('timestamp', 'desc'), limit(100));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const allLogs = [];
-      snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        (data.logs || []).forEach(log => {
-          allLogs.push({ id: doc.id, ...log });
+    const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const allLogs = [];
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          (data.logs || []).forEach((log) => {
+            allLogs.push({ id: doc.id, ...log });
+          });
         });
-      });
-      allLogs.sort((a, b) => (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0)));
-      setLogs(allLogs);
-    }, (err) => console.error("Error fetching logs:", err.message));
+        allLogs.sort(
+          (a, b) =>
+            (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+        );
+        setLogs(allLogs);
+      },
+      (err) => console.error("Error fetching logs:", err.message)
+    );
     return unsubscribe;
   }, [isAdmin]);
 
   const fetchCenters = useCallback(async () => {
     if (!canDisplay) return [];
-    const snapshot = await getDocs(CenterCollectionRef);
-    const centerData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setCenters(centerData);
-    return centerData;
-  }, [canDisplay]);
+    try {
+      const q = query(CenterCollectionRef, orderBy("createdAt", "desc")); // Sort by createdAt in descending order
+      const snapshot = await getDocs(q);
+      const centerData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      console.log("Fetched centers:", centerData); 
+      setCenters(centerData);
+      return centerData;
+    } catch (err) {
+      console.error("Error fetching centers:", err.message);
+      return [];
+    }
+  }, [canDisplay, CenterCollectionRef]);
 
   const fetchCourses = useCallback(() => {
     if (!canDisplay) return;
-    const q = query(CourseCollectionRef, orderBy('createdAt', 'asc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const courseData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        status: doc.data().status || "Active",
-        mode: doc.data().mode || "Online",
-        centerIds: doc.data().centerIds ? (Array.isArray(doc.data().centerIds) ? doc.data().centerIds : [doc.data().centerIds]) : [],
-      }));
+    const q = query(CourseCollectionRef, orderBy("createdAt", "asc"));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const courseData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          status: doc.data().status || "Active",
+          mode: doc.data().mode || "Online",
+          centerIds: doc.data().centerIds
+            ? Array.isArray(doc.data().centerIds)
+              ? doc.data().centerIds
+              : [doc.data().centerIds]
+            : [],
+        }));
 
-      let filteredCourses = courseData;
-      if (statusFilter !== "All") {
-        filteredCourses = filteredCourses.filter(course => course.status === statusFilter);
-      }
-      if (modeFilter !== "All") {
-        filteredCourses = filteredCourses.filter(course => course.mode === modeFilter);
-      }
-      if (centerFilter !== "All") {
-        filteredCourses = filteredCourses.filter(course => course.centerIds.includes(centerFilter));
-      }
+        let filteredCourses = courseData;
+        if (statusFilter !== "All") {
+          filteredCourses = filteredCourses.filter(
+            (course) => course.status === statusFilter
+          );
+        }
+        if (modeFilter !== "All") {
+          filteredCourses = filteredCourses.filter(
+            (course) => course.mode === modeFilter
+          );
+        }
+        if (centerFilter !== "All") {
+          filteredCourses = filteredCourses.filter((course) =>
+            course.centerIds.includes(centerFilter)
+          );
+        }
 
-      setCourses(filteredCourses);
-      setSearchResults(filteredCourses);
-    }, (err) => console.error("Error fetching courses:", err.message));
+        setCourses(filteredCourses);
+        setSearchResults(filteredCourses);
+      },
+      (err) => console.error("Error fetching courses:", err.message)
+    );
     return unsubscribe;
   }, [canDisplay, statusFilter, modeFilter, centerFilter]);
 
@@ -133,7 +181,7 @@ export default function Courses() {
         setSearchResults(courses);
         return;
       }
-      const results = courses.filter(course =>
+      const results = courses.filter((course) =>
         course.name?.toLowerCase().includes(term.toLowerCase())
       );
       setSearchResults(results);
@@ -149,7 +197,7 @@ export default function Courses() {
   useEffect(() => {
     if (!canDisplay) return;
     const unsubscribeCourses = fetchCourses();
-    Promise.all([fetchCenters()]).then(() => {
+    fetchCenters().then(() => {
       if (isAdmin) fetchLogs();
     });
     return () => unsubscribeCourses && unsubscribeCourses();
@@ -180,7 +228,10 @@ export default function Courses() {
 
   const checkStudentsInCourse = async (courseId) => {
     try {
-      const q = query(EnrollmentsCollectionRef, where('courses.selectedCourse.id', '==', courseId));
+      const q = query(
+        EnrollmentsCollectionRef,
+        where("courses.selectedCourse.id", "==", courseId)
+      );
       const snapshot = await getDocs(q);
       return !snapshot.empty;
     } catch (err) {
@@ -197,16 +248,20 @@ export default function Courses() {
     try {
       const hasStudents = await checkStudentsInCourse(deleteId);
       if (hasStudents) {
-        setDeleteMessage("This course cannot be deleted because students are enrolled in it.");
+        setDeleteMessage(
+          "This course cannot be deleted because students are enrolled in it."
+        );
         return;
       }
       const courseRef = doc(db, "Course", deleteId);
       const courseSnapshot = await getDoc(courseRef);
       const courseData = courseSnapshot.exists() ? courseSnapshot.data() : {};
       await deleteDoc(courseRef);
-      await logActivity("Deleted course", { name: courseData.name || 'Unknown' });
+      await logActivity("Deleted course", { name: courseData.name || "Unknown" });
       setOpenDelete(false);
-      setDeleteMessage("Are you sure you want to delete this course? This action cannot be undone.");
+      setDeleteMessage(
+        "Are you sure you want to delete this course? This action cannot be undone."
+      );
     } catch (err) {
       console.error("Error deleting course:", err.message);
       setDeleteMessage("An error occurred while trying to delete the course.");
@@ -292,9 +347,9 @@ export default function Courses() {
               onChange={(e) => setCenterFilter(e.target.value)}
             >
               <MenuItem value="All">All Centers</MenuItem>
-              {centers.map(center => (
+              {centers.map((center) => (
                 <MenuItem key={center.id} value={center.id}>
-                  {center.name || 'Unnamed Center'}
+                  {center.name || "Unnamed Center"}
                 </MenuItem>
               ))}
             </Select>
@@ -305,62 +360,88 @@ export default function Courses() {
           <table className="w-full table-auto">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Sr No</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Course Name</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Fee (₹)</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Duration</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Mode</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Center</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Status</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Action</th>
+                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
+                  Sr No
+                </th>
+                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
+                  Course Name
+                </th>
+                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
+                  Fee (₹)
+                </th>
+                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
+                  Duration
+                </th>
+                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
+                  Mode
+                </th>
+                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
+                  Center
+                </th>
+                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody>
-              {(searchResults.length > 0 || searchTerm.trim() ? searchResults : courses).map((course, index) => (
-                <tr key={course.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                  <td className="px-4 py-3 text-gray-800">{course.name || 'N/A'}</td>
-                  <td className="px-4 py-3 text-gray-600">{course.fee || 'N/A'}</td>
-                  <td className="px-4 py-3 text-gray-600">{course.duration || 'N/A'}</td>
-                  <td className="px-4 py-3 text-gray-600">{course.mode || 'N/A'}</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {course.centerIds.length > 0
-                      ? course.centerIds
-                          .map(centerId => centers.find(c => c.id === centerId)?.name || centerId)
-                          .join(', ')
-                      : 'N/A'}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{course.status || 'Active'}</td>
-                  <td className="px-4 py-3">
-                    <FormControl size="small">
-                      <Select
-                        value=""
-                        onChange={(e) => {
-                          const action = e.target.value;
-                          if (action === 'delete' && canDelete) {
-                            setDeleteId(course.id);
-                            setOpenDelete(true);
-                            setDeleteMessage("Are you sure you want to delete this course? This action cannot be undone.");
-                          } else if (action === 'update' && canUpdate) {
-                            handleEditClick(course);
-                          } else if (action === 'learners') {
-                            handleLearnersClick(course.id);
-                          }
-                        }}
-                        displayEmpty
-                        renderValue={() => "Actions"}
-                        disabled={!canUpdate && !canDelete}
-                      >
-                        <MenuItem value="" disabled>Actions</MenuItem>
-                        {canUpdate && <MenuItem value="update">Update</MenuItem>}
-                        {canDelete && <MenuItem value="delete">Delete</MenuItem>}
-                        <MenuItem value="learners">Learners</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </td>
-                </tr>
-              ))}
-              {!(searchResults.length > 0 || searchTerm.trim() ? searchResults : courses).length && (
+              {(searchResults.length > 0 || searchTerm.trim() ? searchResults : courses).map(
+                (course, index) => (
+                  <tr key={course.id} className="border-b hover:bg-gray-50">
+                    <td className="px-4 py-3 text-gray-600">{index + 1}</td>
+                    <td className="px-4 py-3 text-gray-800">{course.name || "N/A"}</td>
+                    <td className="px-4 py-3 text-gray-600">{course.fee || "N/A"}</td>
+                    <td className="px-4 py-3 text-gray-600">{course.duration || "N/A"}</td>
+                    <td className="px-4 py-3 text-gray-600">{course.mode || "N/A"}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {course.centerIds.length > 0
+                        ? course.centerIds
+                            .map(
+                              (centerId) =>
+                                centers.find((c) => c.id === centerId)?.name || centerId
+                            )
+                            .join(", ")
+                        : "N/A"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{course.status || "Active"}</td>
+                    <td className="px-4 py-3">
+                      <FormControl size="small">
+                        <Select
+                          value=""
+                          onChange={(e) => {
+                            const action = e.target.value;
+                            if (action === "delete" && canDelete) {
+                              setDeleteId(course.id);
+                              setOpenDelete(true);
+                              setDeleteMessage(
+                                "Are you sure you want to delete this course? This action cannot be undone."
+                              );
+                            } else if (action === "update" && canUpdate) {
+                              handleEditClick(course);
+                            } else if (action === "learners") {
+                              handleLearnersClick(course.id);
+                            }
+                          }}
+                          displayEmpty
+                          renderValue={() => "Actions"}
+                          disabled={!canUpdate && !canDelete}
+                        >
+                          <MenuItem value="" disabled>
+                            Actions
+                          </MenuItem>
+                          {canUpdate && <MenuItem value="update">Update</MenuItem>}
+                          {canDelete && <MenuItem value="delete">Delete</MenuItem>}
+                          <MenuItem value="learners">Learners</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </td>
+                  </tr>
+                )
+              )}
+              {!(searchResults.length > 0 || searchTerm.trim() ? searchResults : courses)
+                .length && (
                 <tr>
                   <td colSpan="8" className="px-4 py-3 text-center text-gray-600">
                     No courses found.
@@ -381,7 +462,9 @@ export default function Courses() {
 
       {isOpen && (
         <div
-          className={`fixed top-0 right-0 h-full w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} z-50 overflow-y-auto`}
+          className={`fixed top-0 right-0 h-full w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${
+            isOpen ? "translate-x-0" : "translate-x-full"
+          } z-50 overflow-y-auto`}
         >
           <CreateCourses
             isOpen={isOpen}
@@ -402,9 +485,7 @@ export default function Courses() {
           <DialogHeader className="text-gray-800 font-semibold text-lg p-4">
             Confirm Deletion
           </DialogHeader>
-          <DialogBody className="text-gray-600 text-base p-4">
-            {deleteMessage}
-          </DialogBody>
+          <DialogBody className="text-gray-600 text-base p-4">{deleteMessage}</DialogBody>
           <DialogFooter className="space-x-4 p-4">
             <Button
               variant="text"
@@ -414,7 +495,8 @@ export default function Courses() {
             >
               Cancel
             </Button>
-            {deleteMessage === "Are you sure you want to delete this course? This action cannot be undone." && (
+            {deleteMessage ===
+              "Are you sure you want to delete this course? This action cannot be undone." && (
               <Button
                 variant="filled"
                 color="red"
@@ -447,9 +529,16 @@ export default function Courses() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map(log => (
-                    <tr key={`${log.id}-${log.timestamp?.toMillis()}`} className="border-b">
-                      <td className="px-2 py-1">{log.timestamp ? new Date(log.timestamp.toDate()).toLocaleString() : 'N/A'}</td>
+                  {logs.map((log) => (
+                    <tr
+                      key={`${log.id}-${log.timestamp?.toMillis()}`}
+                      className="border-b"
+                    >
+                      <td className="px-2 py-1">
+                        {log.timestamp
+                          ? new Date(log.timestamp.toDate()).toLocaleString()
+                          : "N/A"}
+                      </td>
                       <td className="px-2 py-1">{log.userEmail}</td>
                       <td className="px-2 py-1">{log.action}</td>
                       <td className="px-2 py-1">{JSON.stringify(log.details)}</td>
@@ -487,6 +576,3 @@ export default function Courses() {
     </div>
   );
 }
-
-
-

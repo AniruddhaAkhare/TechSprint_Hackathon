@@ -3532,7 +3532,6 @@ const SubmitEnquiryForm = () => {
   const [existingEnquiry, setExistingEnquiry] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
 
-  // Sample options for select fields, matching FormViewer.js fallback
   const selectOptions = {
     country: ["India", "USA", "UK", "Canada", "Australia"],
     gender: ["Male", "Female", "Prefer not to disclose"],
@@ -3797,7 +3796,8 @@ const SubmitEnquiryForm = () => {
             return (
               <div key={field.id}>
                 {fieldDef.type === "textarea" ? (
-                  <div>
+                  fieldDef.defaultValue === "" ?
+                    (<div>
                     <label
                       htmlFor={field.id}
                       className="block text-gray-700 text-sm font-medium mb-2"
@@ -3817,8 +3817,29 @@ const SubmitEnquiryForm = () => {
                       rows={4}
                       disabled={loading || isDisabled}
                     />
-                  </div>
-                ) : fieldDef.type === "select" ? (
+                  </div>):
+                    (<div>
+                    <label
+                      htmlFor={field.id}
+                      className="block text-gray-700 text-sm font-medium mb-2"
+                    >
+                      {fieldDef.label}
+                      {fieldDef.required && <span className="text-red-500">*</span>}
+                    </label>
+                    <textarea
+                      id={field.id}
+                      value={formValues[field.id] || ""}
+                      readOnly
+                      // onChange={(e) => handleChange(field.id, e.target.value)}
+                      className={`w-full px-3 py-2 border ${
+                        isError ? "border-red-500" : "border-gray-300"
+                      } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                      rows={4}
+                      disabled={loading}
+                    />
+                  </div>)
+                  )
+                   : fieldDef.type === "select" ? (
                   <FormControl fullWidth error={isError}>
                     <InputLabel>{fieldDef.label}</InputLabel>
                     <Select

@@ -6,6 +6,7 @@ import { useAuth } from '../../../../context/AuthContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import debounce from 'lodash/debounce';
+import { useNavigate } from 'react-router-dom';
 
 const Curriculum = () => {
   const { user, rolePermissions } = useAuth();
@@ -19,6 +20,7 @@ const Curriculum = () => {
   const [selectedCurriculumId, setSelectedCurriculumId] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [curriculumToEdit, setCurriculumToEdit] = useState(null);
+  const navigate = useNavigate();
 
   const canCreate = rolePermissions.curriculums?.create || false;
   const canUpdate = rolePermissions.curriculums?.update || false;
@@ -102,6 +104,21 @@ const Curriculum = () => {
       setCurrentPage(page);
     }
   };
+
+  const handleRowClick = (id) => {
+    if (canUpdate) {
+      navigate(`/edit-curriculum/${id}`);
+    } else {
+      alert("You do not have permission to update curriculums.");
+    }
+  };
+
+  const toggleDropdown = (id) => {
+    if (canUpdate || canDelete) {
+      setDropdownOpen(dropdownOpen === id ? null : id);
+    }
+  };
+
 
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
@@ -244,11 +261,11 @@ const Curriculum = () => {
                 <tr
                   key={curriculum.id}
                   className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => canUpdate && handleEditClick(curriculum.id)}
+                  
                 >
-                  <td className="p-3 text-gray-700">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                  <td className="p-3 text-gray-700">{curriculum.name}</td>
-                  <td className="p-3 text-gray-700">
+                  <td className="p-3 text-gray-700" onClick={() => canUpdate && handleRowClick(curriculum.id)}>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                  <td className="p-3 text-gray-700" onClick={() => canUpdate && handleRowClick(curriculum.id)}>{curriculum.name}</td>
+                  <td className="p-3 text-gray-700" onClick={() => canUpdate && handleRowClick(curriculum.id)}>
                     <span className="inline-flex items-center">
                       ≡ {curriculum.sections || 0} Sections
                     </span>

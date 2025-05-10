@@ -1,15 +1,23 @@
-
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { db } from '../../../../config/firebase';
-import { doc, getDoc, collection, onSnapshot, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { s3Client } from '../../../../config/aws-config';
-import { DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import AddSectionModal from './AddSectionalModel';
-import AddMaterialModal from './AddMaterialModal';
-import { Document, Page, pdfjs } from 'react-pdf';
-import { useAuth } from '../../../../context/AuthContext';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { db } from "../../../../config/firebase";
+import {
+  doc,
+  getDoc,
+  collection,
+  onSnapshot,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { s3Client } from "../../../../config/aws-config";
+import { DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import AddSectionModal from "./AddSectionalModel";
+import AddMaterialModal from "./AddMaterialModal";
+import { Document, Page, pdfjs } from "react-pdf";
+import { useAuth } from "../../../../context/AuthContext";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -30,17 +38,18 @@ const EditCurriculum = () => {
   const [sectionDropdownOpen, setSectionDropdownOpen] = useState(null);
   const [materialDropdownOpen, setMaterialDropdownOpen] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true); // Added loading state
 
   const allowedMaterialTypes = [
-    'Video',
-    'PDF',
-    'Image',
-    'YouTube',
-    'Sheet',
-    'Slide',
-    'Assignment',
-    'Form',
-    'Zip',
+    "Video",
+    "PDF",
+    "Image",
+    "YouTube",
+    "Sheet",
+    "Slide",
+    "Assignment",
+    "Form",
+    "Zip",
   ];
 
   const logActivity = async (action, details) => {
@@ -56,9 +65,9 @@ const EditCurriculum = () => {
         action,
         details: {
           curriculumId: id,
-          curriculumName: curriculum?.name || 'Unknown',
-          ...details
-        }
+          curriculumName: curriculum?.name || "Unknown",
+          ...details,
+        },
       });
       console.log("Activity logged with ID:", logRef.id, { action, details });
     } catch (err) {
@@ -69,19 +78,32 @@ const EditCurriculum = () => {
 
   useEffect(() => {
     const fetchCurriculum = async () => {
+      if (!id) {
+        console.warn("No curriculum ID provided");
+        setError("Invalid curriculum ID");
+        navigate("/curriculum");
+        return;
+      }
+
       try {
-        const docRef = doc(db, 'curriculums', id);
+        console.log("Fetching curriculum with ID:", id);
+        const docRef = doc(db, "curriculums", id);
         const docSnap = await getDoc(docRef);
+
         if (docSnap.exists()) {
-          setCurriculum({ id: docSnap.id, ...docSnap.data() });
-          console.log("Fetched curriculum:", { id, name: docSnap.data().name });
+          const curriculumData = { id: docSnap.id, ...docSnap.data() };
+          console.log("Fetched curriculum data:", curriculumData); // Log full document
+          setCurriculum(curriculumData);
         } else {
-          console.warn('No such curriculum!');
-          navigate('/curriculum');
+          console.warn("No such curriculum found for ID:", id);
+          setError("Curriculum not found");
+          navigate("/curriculum");
         }
       } catch (err) {
-        console.error('Error fetching curriculum:', err);
-        setError('Failed to load curriculum. Please try again.');
+        console.error("Error fetching curriculum:", err.message);
+        setError("Failed to load curriculum. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
     fetchCurriculum();
@@ -97,7 +119,10 @@ const EditCurriculum = () => {
             ...doc.data(),
             materials: [],
           }));
-          console.log("Fetched sections:", sectionData.map(s => ({ id: s.id, name: s.name })));
+          console.log(
+            "Fetched sections:",
+            sectionData.map((s) => ({ id: s.id, name: s.name }))
+          );
 
           const sectionsWithMaterials = await Promise.all(
             sectionData.map(async (section) => {
@@ -111,7 +136,10 @@ const EditCurriculum = () => {
                 id: doc.id,
                 ...doc.data(),
               }));
-              console.log(`Materials for section ${section.id}:`, materialsData.map(m => ({ id: m.id, name: m.name })));
+              console.log(
+                `Materials for section ${section.id}:`,
+                materialsData.map((m) => ({ id: m.id, name: m.name }))
+              );
               return { ...section, materials: materialsData };
             })
           );
@@ -122,20 +150,23 @@ const EditCurriculum = () => {
             (sum, section) => sum + section.materials.length,
             0
           );
-          console.log("Updating curriculum with:", { sections: sectionsWithMaterials.length, materials: totalMaterials });
-          const curriculumRef = doc(db, 'curriculums', id);
+          console.log("Updating curriculum with:", {
+            sections: sectionsWithMaterials.length,
+            materials: totalMaterials,
+          });
+          const curriculumRef = doc(db, "curriculums", id);
           await updateDoc(curriculumRef, {
             sections: sectionsWithMaterials.length,
             materials: totalMaterials,
           });
         } catch (err) {
-          console.error('Error fetching sections/materials:', err);
-          setError('Failed to load sections or materials.');
+          console.error("Error fetching sections/materials:", err);
+          setError("Failed to load sections or materials.");
         }
       },
       (err) => {
-        console.error('Snapshot error:', err);
-        setError('Error syncing data. Check your connection.');
+        console.error("Snapshot error:", err);
+        setError("Error syncing data. Check your connection.");
       }
     );
 
@@ -171,7 +202,8 @@ const EditCurriculum = () => {
   };
 
   const handleDeleteSection = async (sectionId) => {
-    if (!window.confirm('Are you sure you want to delete this section and all its materials?')) return;
+    if (!window.confirm("Are you sure you want to delete this section and all its materials?"))
+      return;
 
     try {
       console.log(`Attempting to delete section: ${sectionId}`);
@@ -199,9 +231,11 @@ const EditCurriculum = () => {
 
       for (const material of materials) {
         console.log(`Processing material: ${material.id}, URL: ${material.url}`);
-        if (material.url && !material.url.includes('youtube.com')) {
+        if (material.url && !material.url.includes("youtube.com")) {
           try {
-            const urlParts = material.url.split(`https://${bucketName}.s3.${region}.amazonaws.com/`);
+            const urlParts = material.url.split(
+              `https://${bucketName}.s3.${region}.amazonaws.com/`
+            );
             if (urlParts.length <= 1) {
               console.warn(`Invalid S3 URL for material ${material.id}: ${material.url}`);
               continue;
@@ -216,7 +250,11 @@ const EditCurriculum = () => {
             throw new Error(`S3 deletion failed for material ${material.id}: ${s3Error.message}`);
           }
         }
-        const materialRef = doc(db, `curriculums/${id}/sections/${sectionId}/materials`, material.id);
+        const materialRef = doc(
+          db,
+          `curriculums/${id}/sections/${sectionId}/materials`,
+          material.id
+        );
         console.log(`Deleting material from Firestore: ${material.id}`);
         await deleteDoc(materialRef);
         console.log(`Material deleted from Firestore: ${material.id}`);
@@ -229,11 +267,11 @@ const EditCurriculum = () => {
 
       await logActivity("Deleted section", {
         sectionId,
-        sectionName: sections.find(s => s.id === sectionId)?.name || 'Unknown',
-        materialsDeleted: materials.length
+        sectionName: sections.find((s) => s.id === sectionId)?.name || "Unknown",
+        materialsDeleted: materials.length,
       });
     } catch (error) {
-      console.error('Error deleting section:', error);
+      console.error("Error deleting section:", error);
       alert(`Failed to delete section: ${error.message}`);
     }
   };
@@ -254,15 +292,17 @@ const EditCurriculum = () => {
   };
 
   const handlePreviewMaterial = async (material) => {
-    console.log('Previewing material:', material);
+    console.log("Previewing material:", material);
     setPreviewError(null);
     let updatedMaterial = { ...material };
 
-    if (material.url && !material.url.includes('youtube.com')) {
+    if (material.url && !material.url.includes("youtube.com")) {
       try {
         const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
         const region = import.meta.env.VITE_AWS_REGION;
-        const urlParts = material.url.split(`https://${bucketName}.s3.${region}.amazonaws.com/`);
+        const urlParts = material.url.split(
+          `https://${bucketName}.s3.${region}.amazonaws.com/`
+        );
         if (urlParts.length <= 1) {
           throw new Error(`Invalid S3 URL: ${material.url}`);
         }
@@ -272,11 +312,11 @@ const EditCurriculum = () => {
         const signedUrl = await getSignedUrl(s3Client, new GetObjectCommand(params), {
           expiresIn: 900,
         });
-        console.log('Generated signed URL:', signedUrl);
+        console.log("Generated signed URL:", signedUrl);
         updatedMaterial.signedUrl = signedUrl;
       } catch (error) {
-        console.error('Error generating signed URL:', error);
-        setPreviewError('Failed to generate preview URL.');
+        console.error("Error generating signed URL:", error);
+        setPreviewError("Failed to generate preview URL.");
       }
     }
 
@@ -285,7 +325,7 @@ const EditCurriculum = () => {
     await logActivity("Previewed material", {
       materialId: material.id,
       materialName: material.name,
-      materialType: material.type
+      materialType: material.type,
     });
   };
 
@@ -296,20 +336,26 @@ const EditCurriculum = () => {
   };
 
   const handleDeleteMaterial = async (sectionId, materialId, materialUrl) => {
-    if (!window.confirm('Are you sure you want to delete this material?')) return;
+    if (!window.confirm("Are you sure you want to delete this material?")) return;
 
     try {
       console.log(`Attempting to delete material: ${materialId}, Section: ${sectionId}`);
-      const materialRef = doc(db, `curriculums/${id}/sections/${sectionId}/materials`, materialId);
+      const materialRef = doc(
+        db,
+        `curriculums/${id}/sections/${sectionId}/materials`,
+        materialId
+      );
       console.log(`Deleting material from Firestore: ${materialId}`);
       await deleteDoc(materialRef);
       console.log(`Material deleted from Firestore: ${materialId}`);
 
-      if (materialUrl && !materialUrl.includes('youtube.com')) {
+      if (materialUrl && !materialUrl.includes("youtube.com")) {
         try {
           const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
           const region = import.meta.env.VITE_AWS_REGION;
-          const urlParts = materialUrl.split(`https://${bucketName}.s3.${region}.amazonaws.com/`);
+          const urlParts = materialUrl.split(
+            `https://${bucketName}.s3.${region}.amazonaws.com/`
+          );
           if (urlParts.length <= 1) {
             console.warn(`Invalid S3 URL for material ${materialId}: ${materialUrl}`);
           } else {
@@ -320,54 +366,61 @@ const EditCurriculum = () => {
             console.log(`S3 file deleted: ${fileKey}`);
           }
         } catch (s3Error) {
-          console.error('S3 deletion error:', s3Error);
+          console.error("S3 deletion error:", s3Error);
           throw new Error(`S3 deletion failed: ${s3Error.message}`);
         }
       }
 
       await logActivity("Deleted material", {
         materialId,
-        materialName: sections
-          .find(s => s.id === sectionId)?.materials
-          ?.find(m => m.id === materialId)?.name || 'Unknown',
-        materialType: sections
-          .find(s => s.id === sectionId)?.materials
-          ?.find(m => m.id === materialId)?.type || 'Unknown'
+        materialName:
+          sections
+            .find((s) => s.id === sectionId)
+            ?.materials?.find((m) => m.id === materialId)?.name || "Unknown",
+        materialType:
+          sections
+            .find((s) => s.id === sectionId)
+            ?.materials?.find((m) => m.id === materialId)?.type || "Unknown",
       });
 
       setMaterialDropdownOpen(null);
     } catch (error) {
-      console.error('Error deleting material:', error);
+      console.error("Error deleting material:", error);
       alert(`Failed to delete material: ${error.message}`);
     }
   };
 
   const handleCloneSection = () => {
-    alert('Clone Section functionality to be implemented!');
+    alert("Clone Section functionality to be implemented!");
   };
 
   const handleRearrangeSections = () => {
-    alert('Rearrange Sections functionality to be implemented!');
+    alert("Rearrange Sections functionality to be implemented!");
   };
 
   const handleBack = () => {
-    navigate('/curriculum');
+    navigate("/curriculum");
   };
+
+  // if (loading) {
+  //   return (
+  //     // <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+  //     //   <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 "></div>
+  //     // </div>
+  //     <p>Loading...</p>
+  //   );
+  // }
 
   if (error) {
     return <div className="p-6 text-center text-red-600">{error}</div>;
   }
 
   if (!curriculum) {
-    return (
-      <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
-      </div>
-    );
+    return <div className="p-6 text-center text-gray-600">No curriculum data available.</div>;
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 min-h-screen p-4 fixed inset-0 left-[300px] overflow-auto">
       <div className="flex items-center mb-4">
         <button
           onClick={handleBack}
@@ -378,7 +431,7 @@ const EditCurriculum = () => {
         </button>
         <h2 className="text-2xl font-bold text-gray-900">Create and Edit Your Curriculum</h2>
       </div>
-      <p className="text-sm text-gray-600 mb-6">{curriculum.name}</p>
+      <p className="text-sm text-gray-600 mb-6">{curriculum.name || "Unnamed Curriculum"}</p>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <span className="text-sm text-gray-700 mb-4 sm:mb-0">
@@ -410,9 +463,9 @@ const EditCurriculum = () => {
         <div className="space-y-4">
           {sections.map((section, index) => (
             <div
-            key={section.id}
-            className="bg-white rounded-lg shadow-md overflow-visible relative" // Removed z-[10], set overflow-visible
-          >
+              key={section.id}
+              className="bg-white rounded-lg shadow-md overflow-visible relative"
+            >
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <div className="flex items-center gap-4 flex-1">
                   <span
@@ -420,7 +473,7 @@ const EditCurriculum = () => {
                     className="text-gray-600 cursor-pointer"
                     aria-label={`Toggle section ${section.name}`}
                   >
-                    {expandedSections[section.id] ? '▼' : '▶'}
+                    {expandedSections[section.id] ? "▼" : "▶"}
                   </span>
                   <span className="text-gray-700 font-medium">{index + 1}</span>
                   <h4 className="text-gray-900 font-semibold">{section.name}</h4>
@@ -444,9 +497,7 @@ const EditCurriculum = () => {
                       ⋮
                     </button>
                     {sectionDropdownOpen === section.id && (
-                      <div
-                        className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-[999999]" // Even higher z-index
-                      >
+                      <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-[999999]">
                         <button
                           onClick={() => handleEditSection(section)}
                           className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -487,11 +538,11 @@ const EditCurriculum = () => {
                             ⋮
                           </button>
                           {materialDropdownOpen === material.id && (
-                            <div
-                              className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-[999999]" // Even higher z-index
-                            >
+                            <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-[999999]">
                               <button
-                                onClick={() => handleDeleteMaterial(section.id, material.id, material.url)}
+                                onClick={() =>
+                                  handleDeleteMaterial(section.id, material.id, material.url)
+                                }
                                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                               >
                                 Delete
@@ -551,7 +602,6 @@ const EditCurriculum = () => {
       {isPreviewModalOpen && selectedMaterial && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[50]">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto z-[100]">
-            {/* Lower z-index than dropdowns */}
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Preview Material</h3>
               <button
@@ -569,41 +619,44 @@ const EditCurriculum = () => {
               )}
               {selectedMaterial.url ? (
                 <>
-                  {selectedMaterial.type === 'Video' ? (
+                  {selectedMaterial.type === "Video" ? (
                     <video
                       controls
                       className="w-full max-h-64 rounded-md"
                       src={selectedMaterial.signedUrl || selectedMaterial.url}
-                      onError={() => setPreviewError('Failed to load video.')}
+                      onError={() => setPreviewError("Failed to load video.")}
                     >
                       Your browser does not support the video tag.
                     </video>
-                  ) : selectedMaterial.type === 'PDF' ? (
+                  ) : selectedMaterial.type === "PDF" ? (
                     <Document
                       file={selectedMaterial.signedUrl || selectedMaterial.url}
-                      onLoadError={() => setPreviewError('Failed to load PDF.')}
+                      onLoadError={() => setPreviewError("Failed to load PDF.")}
                     >
                       <Page pageNumber={1} width={500} />
                     </Document>
-                  ) : selectedMaterial.type === 'Image' ? (
+                  ) : selectedMaterial.type === "Image" ? (
                     <img
                       src={selectedMaterial.signedUrl || selectedMaterial.url}
                       alt={selectedMaterial.name}
                       className="w-full max-h-64 object-contain rounded-md"
-                      onError={() => setPreviewError('Failed to load image.')}
+                      onError={() => setPreviewError("Failed to load image.")}
                     />
-                  ) : selectedMaterial.type === 'YouTube' ? (
+                  ) : selectedMaterial.type === "YouTube" ? (
                     <iframe
                       className="w-full max-h-64 rounded-md"
-                      src={`https://www.youtube.com/embed/${new URL(selectedMaterial.url).searchParams.get('v') ||
-                        selectedMaterial.url.split('/').pop()
-                        }`}
+                      src={`https://www.youtube.com/embed/${
+                        new URL(selectedMaterial.url).searchParams.get("v") ||
+                        selectedMaterial.url.split("/").pop()
+                      }`}
                       title={selectedMaterial.name}
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     ></iframe>
-                  ) : ['Sheet', 'Slide', 'Assignment', 'Form', 'Zip'].includes(selectedMaterial.type) ? (
+                  ) : ["Sheet", "Slide", "Assignment", "Form", "Zip"].includes(
+                      selectedMaterial.type
+                    ) ? (
                     <p>
                       <a
                         href={selectedMaterial.signedUrl || selectedMaterial.url}
@@ -615,7 +668,9 @@ const EditCurriculum = () => {
                       </a>
                     </p>
                   ) : (
-                    <p className="text-red-600">Unsupported material type: {selectedMaterial.type}</p>
+                    <p className="text-red-600">
+                      Unsupported material type: {selectedMaterial.type}
+                    </p>
                   )}
                 </>
               ) : (
@@ -626,19 +681,19 @@ const EditCurriculum = () => {
                 <strong>Type:</strong> {selectedMaterial.type}
               </p>
               <p className="text-sm text-gray-700">
-                <strong>Max Views:</strong> {selectedMaterial.maxViews || 'Unlimited'}
+                <strong>Max Views:</strong> {selectedMaterial.maxViews || "Unlimited"}
               </p>
               <p className="text-sm text-gray-700">
-                <strong>Prerequisite:</strong> {selectedMaterial.isPrerequisite ? 'Yes' : 'No'}
+                <strong>Prerequisite:</strong> {selectedMaterial.isPrerequisite ? "Yes" : "No"}
               </p>
               <p className="text-sm text-gray-700">
-                <strong>Allow Download:</strong> {selectedMaterial.allowDownload ? 'Yes' : 'No'}
+                <strong>Allow Download:</strong> {selectedMaterial.allowDownload ? "Yes" : "No"}
               </p>
               <p className="text-sm text-gray-700">
-                <strong>Access On:</strong> {selectedMaterial.accessOn || 'N/A'}
+                <strong>Access On:</strong> {selectedMaterial.accessOn || "N/A"}
               </p>
               <p className="text-sm text-gray-700">
-                <strong>URL:</strong>{' '}
+                <strong>URL:</strong>{" "}
                 <a
                   href={selectedMaterial.url}
                   target="_blank"
@@ -650,7 +705,7 @@ const EditCurriculum = () => {
               </p>
               {selectedMaterial.signedUrl && (
                 <p className="text-sm text-gray-700">
-                  <strong>Signed URL:</strong>{' '}
+                  <strong>Signed URL:</strong>{" "}
                   <a
                     href={selectedMaterial.signedUrl}
                     target="_blank"

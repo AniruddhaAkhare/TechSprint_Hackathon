@@ -5,7 +5,6 @@ import { db } from '../../../../config/firebase';
 export default function EProfile() {
     const { employeeId } = useParams();
     const [employee, setEmployee] = useState(null);
-    // const [centers, setCenters] = useState([]); 
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -55,28 +54,19 @@ export default function EProfile() {
 
     return (
         <div className="space-y-8">
-            {/* Personal Details */}
             <div>
                 <h2 className="text-lg font-medium text-gray-700 mb-4">Personal Details</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-600">First Name</label>
+                        <label className="block text-sm font-medium text-gray-600">Name</label>
                         <input
                             type="text"
-                            value={employee.f_name || "N/A"}
+                            value={employee.Name || "N/A"}
                             readOnly
                             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:outline-none"
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-600">Last Name</label>
-                        <input
-                            type="text"
-                            value={employee.l_name || "N/A"}
-                            readOnly
-                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:outline-none"
-                        />
-                    </div>
+                    
                     <div>
                         <label className="block text-sm font-medium text-gray-600">Email</label>
                         <input
@@ -100,7 +90,6 @@ export default function EProfile() {
                 </div>
             </div>
 
-            {/* Address Details */}
             <div>
                 <h2 className="text-lg font-medium text-gray-700 mb-4">Address Details</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -108,8 +97,8 @@ export default function EProfile() {
                         <label className="block text-sm font-medium text-gray-600">Residential Address</label>
                         <input
                             type="text"
-                            value={employee.residential_address
-                                ? `${employee.residential_address.street}, ${employee.residential_address.area}, ${employee.residential_address.city}, ${employee.residential_address.state}, ${employee.residential_address.country} - ${employee.residential_address.zip}`
+                            value={employee.address
+                                ? `${employee.address.street}, ${employee.address.area}, ${employee.address.city}, ${employee.address.state}, ${employee.address.country} - ${employee.address.zip}`
                                 : "Address not available"}
                             readOnly
                             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:outline-none"
@@ -118,10 +107,6 @@ export default function EProfile() {
                 </div>
             </div>
 
-            {/* Preferred Learning Centers */}
-            {/*  */}
-
-            {/* Education Details */}
             <div>
                 <h2 className="text-lg font-medium text-gray-700 mb-4">Education Details</h2>
                 {employee.education_details && employee.education_details.length > 0 ? (
@@ -194,7 +179,7 @@ export default function EProfile() {
             {/* Edit Button */}
             <div className="flex justify-end">
                 <button
-                    onClick={() => navigate(`/studentdetails/updatestudent/${employeeId}`)}
+                    onClick={() => navigate(`/editstaff/:staffId/${employeeId}`)}
                     className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
                 >
                     Edit Profile

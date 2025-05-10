@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../../config/firebase";
-import { collection, getDocs, updateDoc, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import BranchFormModal from "./BranchFormModal";
 

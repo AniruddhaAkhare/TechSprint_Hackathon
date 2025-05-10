@@ -194,6 +194,26 @@ const BranchFormModal = ({
   canCreate,
   canUpdate,
 }) => {
+  // Initialize contact number and country code
+  const extractPhoneDetails = (contactNumber) => {
+    if (!contactNumber) {
+      return { countryCode: "+91", number: "" };
+    }
+    const match = contactNumber.match(/^\+(\d+)/);
+    const countryCode = match ? `+${match[1]}` : "+91";
+    const number = match ? contactNumber.replace(/^\+\d+/, "") : contactNumber;
+    return { countryCode, number };
+  };
+
+  const { countryCode: initialCountryCode, number: initialNumber } = extractPhoneDetails(
+    currentBranch?.contactNumber
+  );
+
+  // Debug to confirm initial values
+  console.log("currentBranch.contactNumber:", currentBranch?.contactNumber);
+  console.log("initialCountryCode:", initialCountryCode);
+  console.log("initialNumber:", initialNumber);
+
   const [branchForm, setBranchForm] = useState({
     name: currentBranch?.name || "",
     addressLine1: currentBranch?.addressLine1 || "",
@@ -203,14 +223,12 @@ const BranchFormModal = ({
     postalCode: currentBranch?.postalCode || "",
     country: currentBranch?.country || "India",
     isActive: currentBranch?.isActive !== undefined ? currentBranch.isActive : true,
-    contactNumber: currentBranch?.contactNumber?.replace(currentBranch?.contactNumber?.match(/^\+(\d+)/)?.[0] || "+91", "") || "",
+    contactNumber: currentBranch?.contactNumber || "",
     email: currentBranch?.email || "",
     latitude: currentBranch?.latitude?.toString() || "",
     longitude: currentBranch?.longitude?.toString() || "",
   });
-  const [branchCountryCode, setBranchCountryCode] = useState(
-    currentBranch?.contactNumber?.match(/^\+(\d+)/)?.[0] || "+91"
-  );
+  const [branchCountryCode, setBranchCountryCode] = useState(initialCountryCode);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [locationError, setLocationError] = useState("");
   const [useManualEntry, setUseManualEntry] = useState(false);
@@ -296,9 +314,9 @@ const BranchFormModal = ({
         setUseManualEntry(true);
       },
       {
-        enableHighAccuracy: false, // Fallback to less precise methods
-        timeout: 30000, // Increased to 30 seconds
-        maximumAge: 60000, // Allow cached location up to 1 minute old
+        enableHighAccuracy: false,
+        timeout: 30000,
+        maximumAge: 60000,
       }
     );
   };
@@ -324,7 +342,7 @@ const BranchFormModal = ({
     }
 
     try {
-      const fullContactNumber = `${branchCountryCode}${branchForm.contactNumber}`;
+      const fullContactNumber = branchForm.contactNumber ? `${branchForm.contactNumber}` : "";
       const updatedBranchForm = {
         ...branchForm,
         contactNumber: fullContactNumber,
@@ -335,9 +353,18 @@ const BranchFormModal = ({
       if (currentBranch && canUpdate) {
         const branchRef = doc(db, "instituteSetup", instituteId, "Center", currentBranch.id);
         await updateDoc(branchRef, updatedBranchForm);
+        setBranches((prev) =>
+          prev.map((branch) =>
+            branch.id === currentBranch.id ? { id: currentBranch.id, ...updatedBranchForm } : branch
+          )
+        );
         alert("Branch updated successfully!");
       } else if (canCreate) {
-        await addDoc(collection(db, "instituteSetup", instituteId, "Center"), updatedBranchForm);
+        const newBranch = await addDoc(collection(db, "instituteSetup", instituteId, "Center"), updatedBranchForm);
+        setBranches((prev) => [
+          ...prev,
+          { id: newBranch.id, ...updatedBranchForm },
+        ].sort((a, b) => a.name.localeCompare(b.name)));
         alert("Branch added successfully!");
       }
       setShowModal(false);
@@ -356,13 +383,6 @@ const BranchFormModal = ({
         longitude: "",
       });
       setBranchCountryCode("+91");
-      const branchesSnapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
-      const branchList = branchesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      branchList.sort((a, b) => a.name.localeCompare(b.name));
-      setBranches(branchList);
     } catch (error) {
       console.error("Error saving branch: ", error);
       alert("Error saving branch");
@@ -465,7 +485,7 @@ const BranchFormModal = ({
                 >
                   {countryCodes.map((country) => (
                     <option key={country.code} value={country.code}>
-                      {country.code}
+                      {country.label}
                     </option>
                   ))}
                 </select>
@@ -475,7 +495,8 @@ const BranchFormModal = ({
                   value={branchForm.contactNumber}
                   onChange={handleBranchChange}
                   placeholder="Enter 10-digit phone number"
-                  maxLength="10"
+                  maxLength="10" 
+                  minLength="10"
                   required
                   className="w-3/4 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -524,9 +545,8 @@ const BranchFormModal = ({
               type="button"
               onClick={getCurrentLocation}
               disabled={isFetchingLocation}
-              className={`mb-2 px-4 py-2 rounded ${
-                isFetchingLocation ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600 text-white"
-              }`}
+              className={`mb-2 px-4 py-2 rounded ${isFetchingLocation ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600 text-white"
+                }`}
             >
               {isFetchingLocation ? "Fetching Location..." : "Use Current Location"}
             </button>
