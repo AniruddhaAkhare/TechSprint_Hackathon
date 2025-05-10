@@ -2727,7 +2727,7 @@ export default function AddStaff() {
 
       await upload.done();
 
-      const url = `https://${params.Bucket}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${fileName}`;
+      const url = `https://${params.Bucket}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${params.Key}`;
       return url;
     } catch (err) {
       console.error(`Error uploading ${docType}:`, err);

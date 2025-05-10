@@ -358,8 +358,8 @@
 
 import { Upload } from "@aws-sdk/lib-storage";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
-import { s3Client } from "../config/aws-config"; // Updated path
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { s3Client } from './src/config/aws-config' // Updated path
+// import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
  * Uploads a file to S3 bucket with progress tracking

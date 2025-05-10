@@ -255,7 +255,7 @@ const ContactInformation = ({
                         : newCountryCode,
                     }));
                   }}
-                  className="w-1/3 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-40 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {countryCodes.map((country) => (
                     <option key={country.code} value={country.code}>
