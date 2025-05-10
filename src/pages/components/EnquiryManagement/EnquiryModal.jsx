@@ -38,6 +38,8 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
 
     fetchSalesRoleIds();
   }, []);
+  const [playbackSpeeds, setPlaybackSpeeds] = useState({});
+
 
   const [callDate, setCallDate] = useState(getTodayDate());
   const [callLogDate, setCallLogDate] = useState(getTodayDate());
@@ -2306,6 +2308,75 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                                   </div>
                                 )}
                                 {note.type === "office-visit" && note.audioUrl && (
+  <div className="mt-2">
+    {audioStatus[index] === "loading" ? (
+      <p className="text-xs sm:text-sm text-gray-500">Loading audio...</p>
+    ) : audioError[index] || audioStatus[index] === "invalid" ? (
+      <div>
+        <p className="text-xs sm:text-sm text-red-600">{audioError[index]}</p>
+        <a
+          href={note.audioUrl}
+          download={`recording-${editingEnquiryId || "new"}-${index}.webm`}
+          className="text-xs sm:text-sm text-blue-600 hover:underline"
+        >
+          Download Audio
+        </a>
+      </div>
+    ) : (
+      <div className="flex flex-col gap-2">
+        <audio
+          controls
+          src={note.audioUrl}
+          onError={(e) => handleAudioError(index, e)}
+          className="w-full max-w-md"
+          ref={(el) => {
+            if (el) {
+              el.playbackRate = playbackSpeeds[index] || 1;
+            }
+          }}
+        >
+          Your browser does not support the audio element.
+        </audio>
+        <div className="flex items-center gap-2">
+          <label className="text-xs sm:text-sm text-gray-700">Playback Speed:</label>
+          <select
+            value={playbackSpeeds[index] || 1}
+            onChange={(e) => {
+              const newSpeed = parseFloat(e.target.value);
+              setPlaybackSpeeds((prev) => ({ ...prev, [index]: newSpeed }));
+              const audioElement = document.querySelector(`audio[src="${note.audioUrl}"]`);
+              if (audioElement) {
+                audioElement.playbackRate = newSpeed;
+              }
+            }}
+            className="p-1 border border-gray-300 rounded-md text-xs sm:text-sm"
+          >
+            <option value="0.5">0.5x</option>
+            <option value="1">1x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+          <a
+            href={note.audioUrl}
+            download={`recording-${editingEnquiryId || "new"}-${index}.webm`}
+            className="text-xs sm:text-sm text-blue-600 hover:underline"
+          >
+            Download
+          </a>
+          {canUpdate && audioStatus[index] === "valid" && (
+            <button
+              onClick={() => deleteRecording(note, index)}
+              className="text-xs sm:text-sm text-red-600 hover:text-red-800"
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+)}
+                                {/* {note.type === "office-visit" && note.audioUrl && (
                                   <div className="mt-2">
                                     {audioStatus[index] === "loading" ? (
                                       <p className="text-xs sm:text-sm text-gray-500">Loading audio...</p>
@@ -2339,7 +2410,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                                       </button>
                                     )}
                                   </div>
-                                )}
+                                )} */}
                                 <p className="text-xs sm:text-sm text-gray-900 mt-1">{note.content}</p>
                               </div>
                             ))}

@@ -767,7 +767,7 @@ export default function Attendance() {
 
     const headers = ['Student Name', ...dateHeaders];
     const data = students.map((student) => [
-      `${student.first_name} ${student.last_name}`.trim(),
+      `${student.Name}`.trim(),
       ...dateHeaders.map(() => ''),
     ]);
 
