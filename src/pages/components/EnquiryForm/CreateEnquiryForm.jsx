@@ -5669,6 +5669,7 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
                                   placeholder="Default value"
                                   className="ml-2 p-1 border border-gray-300 rounded-md text-sm w-1/3"
                                   disabled={loading || isDragging}
+                                  
                                 />
                               </div>
                             )}

@@ -2842,6 +2842,7 @@
 
 
 
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../../../config/firebase";
@@ -2859,7 +2860,6 @@ const SubmitEnquiryForm = () => {
   const [submitError, setSubmitError] = useState(null);
   const [submitted, setSubmitted] = useState({ success: false, isUpdate: false });
 
-  // Sample options for select fields, matching FormViewer.js fallback
   const selectOptions = {
     country: ["India", "USA", "UK", "Canada", "Australia"],
     gender: ["Male", "Female", "Prefer not to disclose"],
@@ -2949,7 +2949,6 @@ const SubmitEnquiryForm = () => {
         updatedAt: serverTimestamp(),
       };
 
-      // Check for existing enquiry by email or phone
       const email = formValues.email?.trim().toLowerCase();
       const phone = formValues.phone?.trim();
       let existingEnquiry = null;
@@ -2978,10 +2977,9 @@ const SubmitEnquiryForm = () => {
       }
 
       if (existingEnquiry) {
-        // Update existing enquiry
         const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
         const updatedData = {
-          ...existingEnquiry, // Preserve existing fields
+          ...existingEnquiry,
           ...enquiryData, // Overwrite with new form values
           updatedAt: serverTimestamp(),
           createdAt: existingEnquiry.createdAt || serverTimestamp(), // Preserve original createdAt
@@ -3075,7 +3073,8 @@ const SubmitEnquiryForm = () => {
             return (
               <div key={field.id}>
                 {fieldDef.type === "textarea" ? (
-                  <div>
+                  fieldDef.defaultValue === "" ?
+                    (<div>
                     <label
                       htmlFor={field.id}
                       className="block text-gray-700 text-sm font-medium mb-2"
@@ -3093,8 +3092,29 @@ const SubmitEnquiryForm = () => {
                       rows={4}
                       disabled={loading}
                     />
-                  </div>
-                ) : fieldDef.type === "select" ? (
+                  </div>):
+                    (<div>
+                    <label
+                      htmlFor={field.id}
+                      className="block text-gray-700 text-sm font-medium mb-2"
+                    >
+                      {fieldDef.label}
+                      {fieldDef.required && <span className="text-red-500">*</span>}
+                    </label>
+                    <textarea
+                      id={field.id}
+                      value={formValues[field.id] || ""}
+                      readOnly
+                      // onChange={(e) => handleChange(field.id, e.target.value)}
+                      className={`w-full px-3 py-2 border ${
+                        isError ? "border-red-500" : "border-gray-300"
+                      } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                      rows={4}
+                      disabled={loading}
+                    />
+                  </div>)
+                  )
+                   : fieldDef.type === "select" ? (
                   <FormControl fullWidth error={isError}>
                     <InputLabel>{fieldDef.label}</InputLabel>
                     <Select

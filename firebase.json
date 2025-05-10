@@ -41,7 +41,7 @@
     },
     {
       "site": "form-shikshasaarathi-com",
-      "public": "build",
+      "public": "dist",
       "ignore": [
         "firebase.json",
         "**/.*",
