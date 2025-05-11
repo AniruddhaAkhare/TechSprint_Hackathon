@@ -429,7 +429,6 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user
           postFeedbackForm={postFeedbackForm}
           setPostFeedbackForm={setPostFeedbackForm}
           availableTemplates={availableTemplates}
-          handleSubmit={handleSubmit}
           toggleSidebar={toggleSidebar}
           isEdit={!!batch}
         />
@@ -469,6 +468,15 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user
           handleRemoveStudent={handleRemoveStudent}
           handleSelectAllStudents={handleSelectAllStudents}
         />
+        <div className="flex justify-end mt-6">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200 text-base font-medium"
+          >
+            {batch ? "Update Batch" : "Create Batch"}
+          </button>
+        </div>
       </div>
     </>
   );

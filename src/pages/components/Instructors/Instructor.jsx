@@ -167,9 +167,11 @@ export default function Instructor() {
                   <th className="p-3 text-sm font-medium text-gray-600 text-left">Name</th>
                   <th className="p-3 text-sm font-medium text-gray-600 text-left">Email</th>
                   <th className="p-3 text-sm font-medium text-gray-600 text-left">Phone</th>
-                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Specialization</th>
+                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Domain</th>
+
+                  {/* <th className="p-3 text-sm font-medium text-gray-600 text-left">Specialization</th>
                   <th className="p-3 text-sm font-medium text-gray-600 text-left">Center</th>
-                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Role</th>
+                  <th className="p-3 text-sm font-medium text-gray-600 text-left">Role</th> */}
                   {(canUpdate || canDelete) && (
                     <th className="p-3 text-sm font-medium text-gray-600 text-left">Actions</th>
                   )}
@@ -187,9 +189,9 @@ export default function Instructor() {
                       <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>
                         {instructor.phone ? ` ${instructor.phone}` : "N/A"}
                       </td>
-                      <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>{instructor.specialization || "N/A"}</td>
-                      <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>{instructor.center || "N/A"}</td>
-                      <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>{instructor.role || "N/A"}</td>
+                      <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>{instructor.domain || "N/A"}</td>
+                      {/* <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>{instructor.center || "N/A"}</td> */}
+                      {/* <td className="p-3 text-gray-700" onClick={()=>(navigate(`/employee-profile/${instructor.id}`))}>{instructor.role || "N/A"}</td> */}
                       {(canUpdate || canDelete) && (
                         <td className="p-3">
                           <div className="flex space-x-2">

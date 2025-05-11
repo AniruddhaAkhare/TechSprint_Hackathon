@@ -22,9 +22,11 @@ export default function EditStaff() {
     address: { street: "", area: "", city: "", state: "", zip: "", country: "" },
     date_of_birth: "",
     joining_date: "",
+    exit_date: "",
     educationDetails: [],
     experienceDetails: [],
     emergency_details: { name: "", phoneNumber: "", email: "", relation: "", occupation: "" },
+    domain: "",
     staff: {
       aadharCard: [],
       panCard: [],
@@ -181,8 +183,10 @@ export default function EditStaff() {
           address: data.address || { street: "", area: "", city: "", state: "", zip: "", country: "" },
           date_of_birth: data.date_of_birth,
           joining_date: data.joining_date ? data.joining_date.toDate().toISOString().split("T")[0] : "",
+          exit_date: data.exit_date ? data.exit_date.toDate().toISOString().split("T")[0] : "",
           educationDetails: data.education_details || [],
           experienceDetails: data.experience_details || [],
+          domain: data. domain || "",
           emergency_details: {
             name: data.emergency_details?.name || "",
             phoneNumber: emergencyPhone.startsWith("+") ? emergencyPhone.slice(emergencyPhone.indexOf("+") + 3) : emergencyPhone,
@@ -364,13 +368,13 @@ export default function EditStaff() {
       return;
     }
 
-    if (!staff.Name || !staff.email || !staff.phoneNumber || !staff.date_of_birth) {
+    if (!staff.Name || !staff.email || !staff.phoneNumber) {
       toast.error("Please fill necessary fields: Name, Email, Phone Number, Date of Birth");
       return;
     }
 
     const fullPhoneNumber = `${countryCode}${staff.phoneNumber}`;
-    const fullEmergencyPhoneNumber = `${EmergencyCountryCode}${staff.emergency_details.phoneNumber || ""}`;
+    const fullEmergencyPhoneNumber = `${emergencyCountryCode}${staff.emergency_details.phoneNumber || ""}`;
 
     try {
       const staffRef = doc(db, "Instructor", staffId);
@@ -379,8 +383,10 @@ export default function EditStaff() {
         email: staff.email,
         phone: fullPhoneNumber,
         residential_address: staff.address,
+        domain: staff.domain,
         date_of_birth: validateDate(staff.date_of_birth, "Date of Birth", true),
         joining_date: validateDate(staff.joining_date, "Joining Date", false),
+        exit_date: validateDate(staff.exit_date, "Exit Date", false),
         education_details: staff.educationDetails,
         experience_details: staff.experienceDetails,
         emergency_details: {
@@ -528,11 +534,35 @@ export default function EditStaff() {
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-600">Domain</label>
+                  <input
+                    type="domain"
+                    name="domain"
+                    value={staff.domain}
+                    onChange={handleChange}
+                    placeholder="Domain"
+                    required
+                    disabled={!canUpdate}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-600">Joining Date</label>
                   <input
                     type="date"
                     name="joining_date"
                     value={staff.joining_date}
+                    onChange={handleChange}
+                    disabled={!canUpdate}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Exit Date</label>
+                  <input
+                    type="date"
+                    name="exit_date"
+                    value={staff.exit_date}
                     onChange={handleChange}
                     disabled={!canUpdate}
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 focus:outline-none"

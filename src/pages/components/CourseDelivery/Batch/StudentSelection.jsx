@@ -50,7 +50,7 @@ const StudentSelection = ({
                     className="flex items-center justify-between bg-white p-2 mb-2 rounded-md shadow-sm"
                   >
                     <span className="text-sm text-gray-900">
-                      {student?.first_name} {student?.last_name}
+                      {student?.Name}
                     </span>
                     <button
                       type="button"

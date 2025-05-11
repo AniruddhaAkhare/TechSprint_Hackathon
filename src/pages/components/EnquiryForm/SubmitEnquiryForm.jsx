@@ -346,7 +346,7 @@
 // // // // // // // // //     try {
 // // // // // // // // //       setLoading(true);
 // // // // // // // // //       setSubmitError(null);
-  
+
 // // // // // // // // //       // Prepare enquiry data
 // // // // // // // // //       const enquiryData = {
 // // // // // // // // //         formId,
@@ -355,11 +355,11 @@
 // // // // // // // // //         createdAt: serverTimestamp(),
 // // // // // // // // //         updatedAt: serverTimestamp(),
 // // // // // // // // //       };
-  
+
 // // // // // // // // //       // Check for existing enquiry by email
 // // // // // // // // //       const email = formValues.email?.trim();
 // // // // // // // // //       let existingEnquiry = null;
-  
+
 // // // // // // // // //       if (email) {
 // // // // // // // // //         const enquiriesRef = collection(db, "enquiries");
 // // // // // // // // //         const emailQuery = query(enquiriesRef, where("email", "==", email));
@@ -368,7 +368,7 @@
 // // // // // // // // //           existingEnquiry = { id: emailSnapshot.docs[0].id, ...emailSnapshot.docs[0].data() };
 // // // // // // // // //         }
 // // // // // // // // //       }
-  
+
 // // // // // // // // //       if (existingEnquiry) {
 // // // // // // // // //         // Overwrite existing enquiry, preserving only createdAt
 // // // // // // // // //         const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
@@ -383,7 +383,7 @@
 // // // // // // // // //         await addDoc(collection(db, "enquiries"), enquiryData);
 // // // // // // // // //         console.log("Created new enquiry");
 // // // // // // // // //       }
-  
+
 // // // // // // // // //       setSubmitted(true);
 // // // // // // // // //       setFormValues(
 // // // // // // // // //         formData.fields.reduce((acc, field) => {
@@ -1351,7 +1351,7 @@
 // // // // // //         const enquiriesRef = collection(db, "enquiries");
 // // // // // //         const emailQuery = query(enquiriesRef, where("email", "==", email));
 // // // // // //         const emailSnapshot = await getDocs(emailQuery);
-        
+
 // // // // // //         if (!emailSnapshot.empty) {
 // // // // // //           existingEnquiry = { id: emailSnapshot.docs[0].id, ...emailSnapshot.docs[0].data() };
 // // // // // //           console.log("Found existing enquiry:", existingEnquiry);
@@ -1377,7 +1377,7 @@
 // // // // // //         console.log("Before overwrite - existing data:", existingEnquiry);
 // // // // // //         console.log("Overwriting with data:", updatedData);
 // // // // // //         await setDoc(enquiryRef, updatedData, { merge: false });
-        
+
 // // // // // //         // Verify the update
 // // // // // //         const updatedDoc = await getDoc(enquiryRef);
 // // // // // //         console.log("After overwrite - new data:", updatedDoc.data());
@@ -3683,7 +3683,6 @@ const SubmitEnquiryForm = () => {
       console.log(`Created new enquiry with ID: ${newDocRef.id}`);
       setSubmitted({ success: true, isUpdate: false });
 
-      // Reset form to default values
       setFormValues(
         formData.fields.reduce((acc, field) => {
           acc[field.id] = field.defaultValue || "";
@@ -3911,91 +3910,86 @@ const SubmitEnquiryForm = () => {
                 {fieldDef.type === "textarea" ? (
                   fieldDef.defaultValue === "" ?
                     (<div>
-                    <label
-                      htmlFor={field.id}
-                      className="block text-gray-700 text-sm font-medium mb-2"
-                    >
-                      {fieldDef.label}
-                      {fieldDef.required && <span className="text-red-500">*</span>}
-                    </label>
-                    <textarea
-                      id={field.id}
-                      value={formValues[field.id] || ""}
-                      onChange={(e) => handleChange(field.id, e.target.value)}
-                      className={`w-full px-3 py-2 border ${
-                        isError ? "border-red-500" : "border-gray-300"
-                      } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                        isDisabled ? "bg-gray-100 cursor-not-allowed" : ""
-                      }`}
-                      rows={4}
-                      disabled={loading || isDisabled}
-                    />
-                  </div>):
+                      <label
+                        htmlFor={field.id}
+                        className="block text-gray-700 text-sm font-medium mb-2"
+                      >
+                        {fieldDef.label}
+                        {fieldDef.required && <span className="text-red-500">*</span>}
+                      </label>
+                      <textarea
+                        id={field.id}
+                        value={formValues[field.id] || ""}
+                        onChange={(e) => handleChange(field.id, e.target.value)}
+                        className={`w-full px-3 py-2 border ${isError ? "border-red-500" : "border-gray-300"
+                          } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${isDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+                          }`}
+                        rows={4}
+                        disabled={loading || isDisabled}
+                      />
+                    </div>) :
                     (<div>
-                    <label
-                      htmlFor={field.id}
-                      className="block text-gray-700 text-sm font-medium mb-2"
-                    >
-                      {fieldDef.label}
-                      {fieldDef.required && <span className="text-red-500">*</span>}
-                    </label>
-                    <textarea
-                      id={field.id}
-                      value={formValues[field.id] || ""}
-                      readOnly
-                      // onChange={(e) => handleChange(field.id, e.target.value)}
-                      className={`w-full px-3 py-2 border ${
-                        isError ? "border-red-500" : "border-gray-300"
-                      } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-                      rows={4}
-                      disabled={loading}
-                    />
-                  </div>)
-                  )
-                   : fieldDef.type === "select" ? (
-                  <FormControl fullWidth error={isError}>
-                    <InputLabel>{fieldDef.label}</InputLabel>
-                    <Select
-                      id={field.id}
-                      value={formValues[field.id] || ""}
-                      onChange={(e) => handleChange(field.id, e.target.value)}
-                      label={fieldDef.label}
-                      disabled={loading || isDisabled}
-                      className={isDisabled ? "bg-gray-100" : ""}
-                    >
-                      <MenuItem value="">
-                        <em>Select {fieldDef.label}</em>
-                      </MenuItem>
-                      {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
+                      <label
+                        htmlFor={field.id}
+                        className="block text-gray-700 text-sm font-medium mb-2"
+                      >
+                        {fieldDef.label}
+                        {fieldDef.required && <span className="text-red-500">*</span>}
+                      </label>
+                      <textarea
+                        id={field.id}
+                        value={formValues[field.id] || ""}
+                        readOnly
+                        // onChange={(e) => handleChange(field.id, e.target.value)}
+                        className={`w-full px-3 py-2 border ${isError ? "border-red-500" : "border-gray-300"
+                          } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                        rows={4}
+                        disabled={loading}
+                      />
+                    </div>)
+                )
+                  : fieldDef.type === "select" ? (
+                    <FormControl fullWidth error={isError}>
+                      <InputLabel>{fieldDef.label}</InputLabel>
+                      <Select
+                        id={field.id}
+                        value={formValues[field.id] || ""}
+                        onChange={(e) => handleChange(field.id, e.target.value)}
+                        label={fieldDef.label}
+                        disabled={loading || isDisabled}
+                        className={isDisabled ? "bg-gray-100" : ""}
+                      >
+                        <MenuItem value="">
+                          <em>Select {fieldDef.label}</em>
                         </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                ) : (
-                  <div>
-                    <label
-                      htmlFor={field.id}
-                      className="block text-gray-700 text-sm font-medium mb-2"
-                    >
-                      {fieldDef.label}
-                      {fieldDef.required && <span className="text-red-500">*</span>}
-                    </label>
-                    <input
-                      type={fieldDef.type}
-                      id={field.id}
-                      value={formValues[field.id] || ""}
-                      onChange={(e) => handleChange(field.id, e.target.value)}
-                      className={`w-full px-3 py-2 border ${
-                        isError ? "border-red-500" : "border-gray-300"
-                      } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                        isDisabled ? "bg-gray-100 cursor-not-allowed" : ""
-                      }`}
-                      disabled={loading || isDisabled}
-                    />
-                  </div>
-                )}
+                        {(selectOptions[field.id] || ["Option 1", "Option 2"]).map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <div>
+                      <label
+                        htmlFor={field.id}
+                        className="block text-gray-700 text-sm font-medium mb-2"
+                      >
+                        {fieldDef.label}
+                        {fieldDef.required && <span className="text-red-500">*</span>}
+                      </label>
+                      <input
+                        type={fieldDef.type}
+                        id={field.id}
+                        value={formValues[field.id] || ""}
+                        onChange={(e) => handleChange(field.id, e.target.value)}
+                        className={`w-full px-3 py-2 border ${isError ? "border-red-500" : "border-gray-300"
+                          } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${isDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+                          }`}
+                        disabled={loading || isDisabled}
+                      />
+                    </div>
+                  )}
                 {isError && (
                   <p className="mt-1 text-sm text-red-500">{errors[field.id]}</p>
                 )}

@@ -20,6 +20,8 @@ export default function AddStaff() {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [emergencyDetails, setEmergencyDetails] = useState({ name: "", phone: "", email: "", relation: "", occupation: "" });
   const [joiningDate, setJoiningDate] = useState("");
+  const [exitDate, setExitDate] = useState("");
+  const [domain, setDomain] = useState("");
   const [educationDetails, setEducationDetails] = useState([]);
   const [experienceDetails, setExperienceDetails] = useState([]);
   const [emergencyContact, setEmergencyContact] = useState({ name: "", phone: "", countryCode: "+91" });
@@ -194,6 +196,8 @@ export default function AddStaff() {
         //   phone: cleanedEmergencyPhone ? `${emergencyContact.countryCode}${cleanedEmergencyPhone}` : "",
         // },
         joining_date: Timestamp.fromDate(new Date(joiningDate)),
+        exit_date: Timestamp.fromDate(new Date(joiningDate)),
+        domain: domain,
         created_at: Timestamp.now(),
         education_details: educationDetails,
         experience_details: experienceDetails,
@@ -370,6 +374,16 @@ export default function AddStaff() {
                     className="w-2/3 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600">Domain</label>
+                <input
+                  type="text"
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  disabled={isSubmitting}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600">Date of Birth</label>
@@ -784,7 +798,18 @@ export default function AddStaff() {
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600">Exit Date</label>
+                <input
+                  type="date"
+                  value={exitDate}
+                  onChange={(e) => setExitDate(e.target.value)}
+                  disabled={isSubmitting}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
+              
           </div>
 
           <div className="flex justify-end space-x-4">

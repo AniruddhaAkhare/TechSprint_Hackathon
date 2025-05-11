@@ -19,7 +19,7 @@ const BatchManagerSelection = ({
         <option value="">Select a Batch Manager</option>
         {availableBatchManager.map((manager) => (
           <option key={manager.id} value={manager.id}>
-            {manager.first_name || manager.f_name}
+            {manager.Name}
           </option>
         ))}
       </select>
@@ -49,7 +49,7 @@ const BatchManagerSelection = ({
                       {index + 1}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-base text-gray-900">
-                      {BM?.first_name || BM?.f_name}
+                      {BM?.Name}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       <button
