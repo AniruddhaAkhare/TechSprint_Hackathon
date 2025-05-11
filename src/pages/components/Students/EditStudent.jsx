@@ -294,7 +294,7 @@ export default function EditStudent() {
                     preferred_centers: data.preferred_centers || [],
                     guardian_details: {
                         name: data.guardian_details?.name || "",
-                        phone: FguardianPhone.startsWith("+") ? guardianPhone.slice(guardianPhone.indexOf("+") + 3) : guardianPhone,
+                        phone: guardianPhone.startsWith("+") ? guardianPhone.slice(guardianPhone.indexOf("+") + 3) : guardianPhone,
                         email: data.guardian_details?.email || "",
                         relation: data.guardian_details?.relation || "",
                         occupation: data.guardian_details?.occupation || "",
@@ -529,7 +529,7 @@ export default function EditStudent() {
         }
 
         if (!student.Name || !student.email || !student.phoneNumber || !student.date_of_birth) {
-            toast.error("Please fill necessary fields: First Name, Last Name, Email, Phone Number, Date of Birth");
+            toast.error("Please fill necessary fields: Name, Email, Phone Number, Date of Birth");
             return;
         }
 

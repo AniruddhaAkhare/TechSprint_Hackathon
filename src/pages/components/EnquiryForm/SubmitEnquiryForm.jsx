@@ -2968,7 +2968,7 @@ const SubmitEnquiryForm = () => {
         for (const snapshot of querySnapshots) {
           if (!snapshot.empty) {
             existingEnquiry = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-            break; // Take the first match
+            break; 
           }
         }
         console.log("Existing Enquiry:", existingEnquiry);
@@ -2980,21 +2980,19 @@ const SubmitEnquiryForm = () => {
         const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
         const updatedData = {
           ...existingEnquiry,
-          ...enquiryData, // Overwrite with new form values
+          ...enquiryData, 
           updatedAt: serverTimestamp(),
-          createdAt: existingEnquiry.createdAt || serverTimestamp(), // Preserve original createdAt
+          createdAt: existingEnquiry.createdAt || serverTimestamp(), 
         };
         await updateDoc(enquiryRef, updatedData);
         console.log(`Updated enquiry with ID: ${existingEnquiry.id}`);
         setSubmitted({ success: true, isUpdate: true });
       } else {
-        // Create new enquiry
         const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
         console.log(`Created new enquiry with ID: ${newDocRef.id}`);
         setSubmitted({ success: true, isUpdate: false });
       }
 
-      // Reset form to default values
       setFormValues(
         formData.fields.reduce((acc, field) => {
           acc[field.id] = field.defaultValue || "";

@@ -14,12 +14,11 @@ const BatchForm = ({
   postFeedbackForm,
   setPostFeedbackForm,
   availableTemplates,
-  handleSubmit,
   toggleSidebar,
   isEdit,
 }) => {
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
           {isEdit ? "Edit Batch" : "Create Batch"}
@@ -124,16 +123,7 @@ const BatchForm = ({
           ))}
         </select>
       </div>
-
-      <div className="flex justify-end mt-6">
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200 text-base font-medium"
-        >
-          {isEdit ? "Update Batch" : "Create Batch"}
-        </button>
-      </div>
-    </form>
+    </div>
   );
 };
 

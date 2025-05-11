@@ -884,7 +884,6 @@ import ActiveStatus from './pages/ActiveStatus.jsx';
 import EmployeeRegistrationForm from './pages/home/EmployeeRegistrationForm.jsx';
 import AfterEmployeeRegistration from './pages/home/AfterEmployeeRegistration.jsx';
 import BulkAddStudents from './pages/components/Students/BulkAddStudents.jsx';
-import AddEmployee from './pages/components/HRManagement/EmployeeDirectory/AddEmployee.jsx';
 import { CheckInReminderProvider } from './context/CheckInRemainderContext.jsx';
 import { ToastContainer } from 'react-toastify';
 import AddStaff from './pages/components/Instructors/AddStaff.jsx';
@@ -1056,7 +1055,7 @@ export default function App() {
                 <Route path="/leave-management" element={<HRLeaveApproval />} />
                 <Route path="/leave-application" element={<LeaveApplication />} />
                 <Route path="/employee-profile/:employeeId" element={<EmployeeProfile />} />
-                <Route path="/add-employee" element={<AddEmployee/>}/>
+                {/* <Route path="/add-employee" element={<AddEmployee/>}/> */}
 
                 {/* Placement */}
                 <Route path="/companies" element={<Companies />} />

@@ -439,7 +439,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
                           onChange={() => handleStudentChange(student.id)}
                           className="form-checkbox h-4 w-4 text-blue-600 rounded"
                         />
-                        <span className="text-gray-700">{`${student.first_name} ${student.last_name}`}</span>
+                        <span className="text-gray-700">{`${student.Name}`}</span>
                       </label>
                     ))
                   )}
