@@ -202,7 +202,15 @@ export const allEnquiryFields = [
       { id: "fee", label: "Fee", type: "number" },
       { id: "degree", label: "Degree", type: "select" },
       { id: "courseMotivation", label: "Course Motivation", type: "textarea" },
-      { id: "stage", label: "Stage", type: "select" },
+      {
+        id: "stage",
+        label: "Stage",
+        type: "select",
+        required: false,
+        options: ["prequalified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"],
+      },
+      // { id: "stage", label: "Stage", type: "select" },
+      // { id: "stage", label: "Stage", options: ["prequalified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"], },
     ],
   },
 ];

@@ -3532,6 +3532,19 @@ const SubmitEnquiryForm = () => {
   const [existingEnquiry, setExistingEnquiry] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
 
+  // const selectOptions = {
+  //   country: ["India", "USA", "UK", "Canada", "Australia"],
+  //   gender: ["Male", "Female", "Prefer not to disclose"],
+  //   studentType: ["School", "College", "Professional"],
+  //   graduationStream: ["Science", "Commerce", "Arts", "Engineering"],
+  //   branch: ["Main Branch", "City Branch", "Online"],
+  //   course: ["Computer Science", "Business Studies", "Mathematics"],
+  //   source: ["Website", "Referral", "Advertisement"],
+  //   assignTo: ["Admissions Team", "Counselor A", "Counselor B"],
+  //   degree: ["Bachelors", "Masters", "Diploma"],
+  //   stage: ["pre-qualified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"],
+  // };
+
   const selectOptions = {
     country: ["India", "USA", "UK", "Canada", "Australia"],
     gender: ["Male", "Female", "Prefer not to disclose"],
@@ -3542,8 +3555,9 @@ const SubmitEnquiryForm = () => {
     source: ["Website", "Referral", "Advertisement"],
     assignTo: ["Admissions Team", "Counselor A", "Counselor B"],
     degree: ["Bachelors", "Masters", "Diploma"],
-    stage: ["prequalified", "qualified", "negotiation", "closed won", "closed lost", "contact in future"],
+    stage: ["pre-qualified", "qualified", "negotiation", "closed-won", "closed-lost", "contact-in-future"], // Updated to match Kanban column IDs
   };
+
 
   useEffect(() => {
     const fetchForm = async () => {
@@ -3651,6 +3665,7 @@ const SubmitEnquiryForm = () => {
     }
   };
 
+
   const createNewEnquiry = async () => {
     try {
       setLoading(true);
@@ -3659,7 +3674,7 @@ const SubmitEnquiryForm = () => {
       const enquiryData = {
         formId,
         ...formValues,
-        status: formValues.stage || "prequalified",
+        stage: "pre-qualified", // Always set stage to "pre-qualified" for new enquiries
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -3682,6 +3697,104 @@ const SubmitEnquiryForm = () => {
       setLoading(false);
     }
   };
+
+  // const createNewEnquiry = async () => {
+  //   try {
+  //     setLoading(true);
+  //     setSubmitError(null);
+  
+  //     const enquiryData = {
+  //       formId,
+  //       ...formValues,
+  //       stage: "prequalified", // Always set stage to "prequalified" for new enquiries
+  //       createdAt: serverTimestamp(),
+  //       updatedAt: serverTimestamp(),
+  //     };
+  
+  //     const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+  //     console.log(`Created new enquiry with ID: ${newDocRef.id}`);
+  //     setSubmitted({ success: true, isUpdate: false });
+  
+  //     // Reset form to default values
+  //     setFormValues(
+  //       formData.fields.reduce((acc, field) => {
+  //         acc[field.id] = field.defaultValue || "";
+  //         return acc;
+  //       }, {})
+  //     );
+  //   } catch (err) {
+  //     console.error("Submission error:", err);
+  //     setSubmitError(`Error submitting enquiry: ${err.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+  // const createNewEnquiry = async () => {
+  //   try {
+  //     setLoading(true);
+  //     setSubmitError(null);
+  
+  //     const enquiryData = {
+  //       formId,
+  //       ...formValues,
+  //       status: formValues.stage || "prequalified",
+  //       createdAt: serverTimestamp(),
+  //       updatedAt: serverTimestamp(),
+  //     };
+  
+  //     const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+  //     console.log(`Created new enquiry with ID: ${newDocRef.id}`);
+  //     setSubmitted({ success: true, isUpdate: false });
+  
+  //     // Reset form to default values
+  //     setFormValues(
+  //       formData.fields.reduce((acc, field) => {
+  //         acc[field.id] = field.defaultValue || "";
+  //         return acc;
+  //       }, {})
+  //     );
+  //   } catch (err) {
+  //     console.error("Submission error:", err);
+  //     setSubmitError(`Error submitting enquiry: ${err.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+  // const createNewEnquiry = async () => {
+  //   try {
+  //     setLoading(true);
+  //     setSubmitError(null);
+
+  //     const enquiryData = {
+  //       formId,
+  //       ...formValues,
+  //       status: formValues.stage || "prequalified",
+  //       createdAt: serverTimestamp(),
+  //       updatedAt: serverTimestamp(),
+  //     };
+
+  //     const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+  //     console.log(`Created new enquiry with ID: ${newDocRef.id}`);
+  //     setSubmitted({ success: true, isUpdate: false });
+
+  //     // Reset form to default values
+  //     setFormValues(
+  //       formData.fields.reduce((acc, field) => {
+  //         acc[field.id] = field.defaultValue || "";
+  //         return acc;
+  //       }, {})
+  //     );
+  //   } catch (err) {
+  //     console.error("Submission error:", err);
+  //     setSubmitError(`Error submitting enquiry: ${err.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handlePromptResponse = async (keepPrevious) => {
     setShowPrompt(false);
