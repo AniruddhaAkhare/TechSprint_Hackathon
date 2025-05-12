@@ -18,11 +18,11 @@ export default function User() {
   const [roles, setRoles] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRoleId, setSelectedRoleId] = useState('');
-  const [newUser, setNewUser] = useState({ 
-    name: '', 
-    email: '', 
-    password: '', 
-    role: '' 
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: ''
   });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -88,12 +88,12 @@ export default function User() {
       const oldRoleName = roles.find(r => r.id === oldRoleId)?.name || 'Unknown';
 
       await setDoc(
-        doc(db, 'Users', selectedUser.id), 
-        { role: selectedRoleId }, 
+        doc(db, 'Users', selectedUser.id),
+        { role: selectedRoleId },
         { merge: true }
       );
       setUsers(users.map(u => u.id === selectedUser.id ? { ...u, role: selectedRoleId } : u));
-      
+
       // Log the role change
       await logActivity("Updated user role", {
         userId: selectedUser.id,
@@ -132,7 +132,7 @@ export default function User() {
         newUser.password,
       );
       const authUser = userCredential.user;
-      
+
       const userData = {
         displayName: newUser.name,
         email: newUser.email,
@@ -141,7 +141,7 @@ export default function User() {
       };
 
       await setDoc(doc(db, 'Users', authUser.uid), userData);
-      
+
       // Log the creation
       await logActivity("Created user", {
         userId: authUser.uid,
@@ -166,12 +166,12 @@ export default function User() {
       if (!canDelete) alert('You do not have permission to delete users.');
       return;
     }
-    
+
     try {
       setLoading(true);
 
       await deleteDoc(doc(db, 'Users', userToDelete.id));
-      
+
       // Log the deletion
       await logActivity("Deleted user", {
         userId: userToDelete.id,
@@ -229,9 +229,9 @@ export default function User() {
       {error && <div className="text-red-600 text-center py-4">{error}</div>}
 
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="overflow-x-auto">
+        <div className="w-full h-[50vh] overflow-y-auto">
           <table className="w-full table-auto">
-            <thead className="bg-gray-100">
+            <thead className="bg-gray-100 sticky top-0 z-10">
               <tr>
                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Name</th>
                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Email</th>
@@ -384,7 +384,7 @@ export default function User() {
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Confirm Deletion</h2>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to permanently delete {userToDelete?.displayName}? 
+              Are you sure you want to permanently delete {userToDelete?.displayName}?
               This will remove the user from the database (authentication deletion requires Admin SDK).
             </p>
             <div className="flex justify-end space-x-4">
