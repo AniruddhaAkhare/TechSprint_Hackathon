@@ -4881,50 +4881,148 @@ const SubmitEnquiryForm = () => {
     }
   };
 
+
   const validateForm = () => {
     const newErrors = {};
     const flatFields = allEnquiryFields.flatMap((category) => category.fields);
     formData.fields.forEach((field) => {
       const fieldDef = flatFields.find((f) => f.id === field.id);
       if (!fieldDef) return;
-
-      // Skip validation for disabled fields (non-empty defaultValue)
       const isDisabled = field.defaultValue && field.defaultValue.trim() !== "";
       if (isDisabled) return;
-
-      // Validate required fields
+  
       if (fieldDef.required && !formValues[field.id]?.trim()) {
         newErrors[field.id] = `${fieldDef.label} is required`;
       }
-      // Validate email format
       if (fieldDef.id === "email" && formValues[field.id]) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formValues[field.id])) {
           newErrors[field.id] = "Invalid email format";
         }
       }
-      // Validate phone format
       if (fieldDef.id === "phone" && formValues[field.id]) {
         const phoneRegex = /^\d{10}$/;
         if (!phoneRegex.test(formValues[field.id])) {
           newErrors[field.id] = "Phone number must be 10 digits";
         }
       }
-      // Validate number fields
       if (fieldDef.type === "number" && formValues[field.id]) {
         if (isNaN(formValues[field.id])) {
           newErrors[field.id] = `${fieldDef.label} must be a number`;
-        } else if (fieldDef.min !== undefined && Number(formValues[field.id]) < fieldDef.min) {
-          newErrors[field.id] = `${fieldDef.label} must be at least ${fieldDef.min}`;
-        } else if (fieldDef.max !== undefined && Number(formValues[field.id]) > fieldDef.max) {
-          newErrors[field.id] = `${fieldDef.label} cannot exceed ${fieldDef.max}`;
+        } else {
+          const value = Number(formValues[field.id]);
+          if (fieldDef.min !== undefined && value < fieldDef.min) {
+            newErrors[field.id] = `${fieldDef.label} must be at least ${fieldDef.min}`;
+          } else if (fieldDef.max !== undefined && value > fieldDef.max) {
+            newErrors[field.id] = `${fieldDef.label} cannot exceed ${fieldDef.max}`;
+          } else if (["sscPercentage", "hscPercentage", "graduationPercentage", "postGraduationPercentage"].includes(fieldDef.id) && !/^\d{1,2}$/.test(formValues[field.id])) {
+            newErrors[field.id] = `${fieldDef.label} must be a whole number between 0 and 100`;
+          }
         }
       }
     });
     setErrors(newErrors);
-    console.log("Validation errors:", newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  // const validateForm = () => {
+  //   const newErrors = {};
+  //   const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+  //   formData.fields.forEach((field) => {
+  //     const fieldDef = flatFields.find((f) => f.id === field.id);
+  //     if (!fieldDef) return;
+  //     const isDisabled = field.defaultValue && field.defaultValue.trim() !== "";
+  //     if (isDisabled) return;
+  
+  //     if (fieldDef.required && !formValues[field.id]?.trim()) {
+  //       newErrors[field.id] = `${fieldDef.label} is required`;
+  //     }
+  //     if (fieldDef.id === "email" && formValues[field.id]) {
+  //       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //       if (!emailRegex.test(formValues[field.id])) {
+  //         newErrors[field.id] = "Invalid email format";
+  //       }
+  //     }
+  //     if (fieldDef.id === "phone" && formValues[field.id]) {
+  //       const phoneRegex = /^\d{10}$/;
+  //       if (!phoneRegex.test(formValues[field.id])) {
+  //         newErrors[field.id] = "Phone number must be 10 digits";
+  //       }
+  //     }
+  //     if (fieldDef.type === "number" && formValues[field.id]) {
+  //       if (isNaN(formValues[field.id])) {
+  //         newErrors[field.id] = `${fieldDef.label} must be a number`;
+  //       } else {
+  //         const value = Number(formValues[field.id]);
+  //         if (fieldDef.min !== undefined && value < fieldDef.min) {
+  //           newErrors[field.id] = `${fieldDef.label} must be at least ${fieldDef.min}`;
+  //         } else if (fieldDef.max !== undefined && value > fieldDef.max) {
+  //           newErrors[field.id] = `${fieldDef.label} cannot exceed ${fieldDef.max}`;
+  //         } else if (["sscPassOutYear", "hscPassOutYear", "graduationPassOutYear", "postGraduationPassOutYear"].includes(fieldDef.id) && !/^\d{4}$/.test(formValues[field.id])) {
+  //           newErrors[field.id] = `${fieldDef.label} must be a 4-digit year`;
+  //         }
+  //       }
+  //     }
+  //   });
+  //   setErrors(newErrors);
+  //   return Object.keys(newErrors).length === 0;
+  // };
+
+  // const validateForm = () => {
+  //   const newErrors = {};
+  //   const flatFields = allEnquiryFields.flatMap((category) => category.fields);
+  //   formData.fields.forEach((field) => {
+  //     const fieldDef = flatFields.find((f) => f.id === field.id);
+  //     if (!fieldDef) return;
+
+  //     // Skip validation for disabled fields (non-empty defaultValue)
+  //     const isDisabled = field.defaultValue && field.defaultValue.trim() !== "";
+  //     if (isDisabled) return;
+
+  //     // Validate required fields
+  //     if (fieldDef.required && !formValues[field.id]?.trim()) {
+  //       newErrors[field.id] = `${fieldDef.label} is required`;
+  //     }
+  //     // Validate email format
+  //     if (fieldDef.id === "email" && formValues[field.id]) {
+  //       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //       if (!emailRegex.test(formValues[field.id])) {
+  //         newErrors[field.id] = "Invalid email format";
+  //       }
+  //     }
+  //     // Validate phone format
+  //     if (fieldDef.id === "phone" && formValues[field.id]) {
+  //       const phoneRegex = /^\d{10}$/;
+  //       if (!phoneRegex.test(formValues[field.id])) {
+  //         newErrors[field.id] = "Phone number must be 10 digits";
+  //       }
+  //     }
+  //     // Validate number fields
+  //     if (fieldDef.type === "number" && formValues[field.id]) {
+  //       if (isNaN(formValues[field.id])) {
+  //         newErrors[field.id] = `${fieldDef.label} must be a number`;
+  //       } else if (fieldDef.min !== undefined && Number(formValues[field.id]) < fieldDef.min) {
+  //         newErrors[field.id] = `${fieldDef.label} must be at least ${fieldDef.min}`;
+  //       } else if (fieldDef.max !== undefined && Number(formValues[field.id]) > fieldDef.max) {
+  //         newErrors[field.id] = `${fieldDef.label} cannot exceed ${fieldDef.max}`;
+  //       }
+  //     }
+  //     // if (fieldDef.type === "number" && formValues[field.id]) {
+  //     //   if (isNaN(formValues[field.id])) {
+  //     //     newErrors[field.id] = `${fieldDef.label} must be a number`;
+  //     //   } else if (fieldDef.min !== undefined && Number(formValues[field.id]) < fieldDef.min) {
+  //     //     newErrors[field.id] = `${fieldDef.label} must be at least ${fieldDef.min}`;
+  //     //   } else if (fieldDef.max !== undefined && Number(formValues[field.id]) > fieldDef.max) {
+  //     //     newErrors[field.id] = `${fieldDef.label} cannot exceed ${fieldDef.max}`;
+  //     //   }
+  //     // }
+  //   });
+  //   setErrors(newErrors);
+  //   console.log("Validation errors:", newErrors);
+  //   return Object.keys(newErrors).length === 0;
+  // };
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -4939,6 +5037,7 @@ const SubmitEnquiryForm = () => {
       const email = formValues.email?.trim().toLowerCase();
       const phone = formValues.phone?.trim();
       let existing = null;
+      
 
       const enquiriesRef = collection(db, "enquiries");
       const queries = [];
@@ -4962,6 +5061,24 @@ const SubmitEnquiryForm = () => {
         }
       }
 
+      if (!keepPrevious) {
+        await deleteDoc(doc(db, "enquiries", existingEnquiry.id));
+        await createNewEnquiry();
+      }
+
+      // if (queries.length > 0) {
+      //   const snapshots = await Promise.all(queries.map((q) => getDocs(q)));
+      //   for (const snapshot of snapshots) {
+      //     if (!snapshot.empty) {
+      //       existing = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+      //       setExistingEnquiry(existing);
+      //       setShowPrompt(true);
+      //       setLoading(false);
+      //       return;
+      //     }
+      //   }
+      // }
+
       // If no existing enquiry, proceed to create a new one
       await createNewEnquiry();
     } catch (err) {
@@ -4975,74 +5092,251 @@ const SubmitEnquiryForm = () => {
     try {
       setLoading(true);
       setSubmitError(null);
-
+      const assignedUser = formData.users?.[0] || formData.roles?.[0] || "Form Submission";
+  
       const enquiryData = {
         formId,
         ...formValues,
         stage: "pre-qualified",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        lastModifiedTime: serverTimestamp(),
+        lastTouched: serverTimestamp(),
+        createdBy: assignedUser,
+        owner: assignedUser,
+        assignedTo: assignedUser,
         tags: formData.tags || [],
+        history: [
+          {
+            action: `Enquiry created via form "${formData.name}" (ID: ${formId})`,
+            performedBy: assignedUser,
+            timestamp: serverTimestamp(),
+            formName: formData.name,
+          },
+        ],
       };
-
+  
       const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
-      console.log(`Created new enquiry with ID: ${newDocRef.id}`);
-      
-      // Update enquiry count
-      const formRef = doc(db, "enquiryForms", formId);
-      await updateDoc(formRef, {
+      await updateDoc(doc(db, "enquiryForms", formId), {
         enquiryCount: increment(1),
       });
-
       setSubmitted({ success: true, isUpdate: false });
-
-      setFormValues(
-        formData.fields.reduce((acc, field) => {
-          acc[field.id] = field.defaultValue || "";
-          return acc;
-        }, {})
-      );
+      resetForm();
     } catch (err) {
-      console.error("Submission error:", err);
       setSubmitError(`Error submitting enquiry: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
+  // const createNewEnquiry = async () => {
+  //   try {
+  //     setLoading(true);
+  //     setSubmitError(null);
+  
+  //     // Determine assigned user/role
+  //     const assignedUser = formData.users?.[0] || formData.roles?.[0] || "Form Submission";
+  
+  //     const enquiryData = {
+  //       formId,
+  //       ...formValues,
+  //       stage: "pre-qualified",
+  //       createdAt: serverTimestamp(),
+  //       updatedAt: serverTimestamp(),
+  //       lastModifiedTime: serverTimestamp(),
+  //       lastTouched: serverTimestamp(),
+  //       createdBy: assignedUser,
+  //       owner: assignedUser,
+  //       assignedTo: assignedUser,
+  //       tags: formData.tags || [],
+  //       history: [
+  //         {
+  //           action: `Enquiry created via form ${formId}`,
+  //           performedBy: "Form Submission",
+  //           timestamp: serverTimestamp(),
+  //         },
+  //       ]
+  //       // history: [
+  //       //   {
+  //       //     action: `Enquiry created via form ${formId}`,
+  //       //     performedBy: assignedUser,
+  //       //     timestamp: serverTimestamp(),
+  //       //   },
+  //       // ],
+  //     };
+  
+  //     const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+  //     console.log(`Created new enquiry with ID: ${newDocRef.id}`);
+      
+  //     await updateDoc(doc(db, "enquiryForms", formId), {
+  //       enquiryCount: increment(1),
+  //     });
+  
+  //     setSubmitted({ success: true, isUpdate: false });
+  //     resetForm();
+  //   } catch (err) {
+  //     setSubmitError(`Error submitting enquiry: ${err.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const enrichedFields = fields.map((field) => {
+    const fieldConfig = allEnquiryFields
+      .flatMap((category) => category.fields)
+      .find((f) => f.id === field.id);
+    return {
+      ...field,
+      name: field.id,
+      type: fieldConfig?.type || "text",
+      label: fieldConfig?.label || field.id,
+      options: field.options || fieldConfig?.options || [], // Prioritize stored options
+      required: fieldConfig?.required || false,
+    };
+  });
+
+  // const enrichedFields = fields.map((field) => {
+  //   const fieldConfig = allEnquiryFields
+  //     .flatMap((category) => category.fields)
+  //     .find((f) => f.id === field.id);
+  //   return {
+  //     ...field,
+  //     name: field.id,
+  //     type: fieldConfig?.type || "text",
+  //     label: fieldConfig?.label || field.id,
+  //     options: fieldConfig?.options || [],
+  //     required: fieldConfig?.required || false,
+  //   };
+  // });
+  
   const handlePromptResponse = async (keepPrevious) => {
     setShowPrompt(false);
     try {
       setLoading(true);
       setSubmitError(null);
-
+      const assignedUser = formData.users?.[0] || formData.roles?.[0] || "Form Submission";
+  
       if (keepPrevious) {
-        // Keep the previous enquiry, do not create a new one
         setSubmitted({ success: true, isUpdate: true });
-        console.log(`Kept existing enquiry with ID: ${existingEnquiry.id}`);
-        setFormValues(
-          formData.fields.reduce((acc, field) => {
-            acc[field.id] = field.defaultValue || "";
-            return acc;
-          }, {})
-        );
+        resetForm();
       } else {
-        // Delete the existing enquiry
-        const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
-        await deleteDoc(enquiryRef);
-        console.log(`Deleted existing enquiry with ID: ${existingEnquiry.id}`);
-
-        // Create a new enquiry
-        await createNewEnquiry();
+        await deleteDoc(doc(db, "enquiries", existingEnquiry.id));
+        const enquiryData = {
+          formId,
+          ...formValues,
+          stage: "pre-qualified",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          lastModifiedTime: serverTimestamp(),
+          lastTouched: serverTimestamp(),
+          createdBy: assignedUser,
+          owner: assignedUser,
+          assignedTo: assignedUser,
+          tags: formData.tags || [],
+          history: [
+            {
+              action: `Enquiry created via form ${formId} after deleting duplicate`,
+              performedBy: assignedUser,
+              timestamp: serverTimestamp(),
+            },
+          ],
+        };
+        const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+        await updateDoc(doc(db, "enquiryForms", formId), {
+          enquiryCount: increment(1),
+        });
+        setSubmitted({ success: true, isUpdate: false });
+        resetForm();
       }
     } catch (err) {
-      console.error("Error handling prompt response:", err);
       setSubmitError(`Error processing enquiry: ${err.message}`);
     } finally {
       setLoading(false);
       setExistingEnquiry(null);
     }
   };
+  
+  const resetForm = () => {
+    setFormValues(
+      formData.fields.reduce((acc, field) => {
+        acc[field.id] = field.defaultValue || "";
+        return acc;
+      }, {})
+    );
+  };
+
+  // const createNewEnquiry = async () => {
+  //   try {
+  //     setLoading(true);
+  //     setSubmitError(null);
+
+  //     const enquiryData = {
+  //       formId,
+  //       ...formValues,
+  //       stage: "pre-qualified",
+  //       createdAt: serverTimestamp(),
+  //       updatedAt: serverTimestamp(),
+  //       tags: formData.tags || [],
+  //     };
+
+  //     const newDocRef = await addDoc(collection(db, "enquiries"), enquiryData);
+  //     console.log(`Created new enquiry with ID: ${newDocRef.id}`);
+      
+  //     // Update enquiry count
+  //     const formRef = doc(db, "enquiryForms", formId);
+  //     await updateDoc(formRef, {
+  //       enquiryCount: increment(1),
+  //     });
+
+  //     setSubmitted({ success: true, isUpdate: false });
+
+  //     setFormValues(
+  //       formData.fields.reduce((acc, field) => {
+  //         acc[field.id] = field.defaultValue || "";
+  //         return acc;
+  //       }, {})
+  //     );
+  //   } catch (err) {
+  //     console.error("Submission error:", err);
+  //     setSubmitError(`Error submitting enquiry: ${err.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const handlePromptResponse = async (keepPrevious) => {
+  //   setShowPrompt(false);
+  //   try {
+  //     setLoading(true);
+  //     setSubmitError(null);
+
+  //     if (keepPrevious) {
+  //       // Keep the previous enquiry, do not create a new one
+  //       setSubmitted({ success: true, isUpdate: true });
+  //       console.log(`Kept existing enquiry with ID: ${existingEnquiry.id}`);
+  //       setFormValues(
+  //         formData.fields.reduce((acc, field) => {
+  //           acc[field.id] = field.defaultValue || "";
+  //           return acc;
+  //         }, {})
+  //       );
+  //     } else {
+  //       // Delete the existing enquiry
+  //       const enquiryRef = doc(db, "enquiries", existingEnquiry.id);
+  //       await deleteDoc(enquiryRef);
+  //       console.log(`Deleted existing enquiry with ID: ${existingEnquiry.id}`);
+
+  //       // Create a new enquiry
+  //       await createNewEnquiry();
+  //     }
+  //   } catch (err) {
+  //     console.error("Error handling prompt response:", err);
+  //     setSubmitError(`Error processing enquiry: ${err.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //     setExistingEnquiry(null);
+  //   }
+  // };
 
   if (submitError) {
     return (
@@ -5173,6 +5467,14 @@ const SubmitEnquiryForm = () => {
                       {fieldDef.required && <span className="text-red-500">*</span>}
                     </label>
                     <input
+  type={fieldDef.type}
+  id={field.id}
+  value={formValues[field.id] || ""}
+  onChange={(e) => handleChange(field.id, e.target.value)}
+  className={`w-full px-3 py-2 border ${isError ? "border-red-500" : "border-gray-300"} rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${isDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+  disabled={loading || isDisabled}
+/>
+                    {/* <input
                       type={fieldDef.type}
                       id={field.id}
                       value={formValues[field.id] || ""}
@@ -5181,7 +5483,7 @@ const SubmitEnquiryForm = () => {
                         } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${isDisabled ? "bg-gray-100 cursor-not-allowed" : ""
                         }`}
                       disabled={loading || isDisabled}
-                    />
+                    /> */}
                   </div>
                 )}
                 {isError && (
@@ -5207,6 +5509,42 @@ const SubmitEnquiryForm = () => {
 
         {/* Prompt for existing email */}
         {showPrompt && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full">
+      <h3 className="text-lg font-semibold mb-4">Duplicate Enquiry Detected</h3>
+      <p className="text-gray-600 mb-4">
+        An enquiry with the {formValues.email ? "email" : "phone"} "{formValues.email || formValues.phone}" already exists:
+      </p>
+      <div className="mb-4 p-4 bg-gray-100 rounded-md">
+        <p><strong>Name:</strong> {existingEnquiry?.name || "N/A"}</p>
+        <p><strong>Email:</strong> {existingEnquiry?.email || "N/A"}</p>
+        <p><strong>Phone:</strong> {existingEnquiry?.phone || "N/A"}</p>
+        <p><strong>Stage:</strong> {existingEnquiry?.stage || "N/A"}</p>
+        <p><strong>Created At:</strong> {existingEnquiry?.createdAt || "N/A"}</p>
+      </div>
+      <p className="text-gray-600 mb-4">
+        Do you want to keep the previous enquiry or replace it with this new one?
+      </p>
+      <div className="flex justify-end space-x-2">
+        <Button
+          color="gray"
+          onClick={() => handlePromptResponse(true)}
+          disabled={loading}
+        >
+          Keep Previous
+        </Button>
+        <Button
+          color="blue"
+          onClick={() => handlePromptResponse(false)}
+          disabled={loading}
+        >
+          Use Latest
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+        {/* {showPrompt && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
             <div className="bg-white p-6 rounded-lg shadow-md max-w-sm w-full">
               <h3 className="text-lg font-semibold mb-4">
@@ -5233,7 +5571,7 @@ const SubmitEnquiryForm = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

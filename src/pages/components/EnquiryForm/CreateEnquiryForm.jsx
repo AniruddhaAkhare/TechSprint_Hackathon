@@ -6037,24 +6037,33 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
       setError("At least one role must be selected.");
       return;
     }
-
+  
     let formId;
     const formData = {
       name: formName,
       users: assignmentType === "Users" ? selectedUsers : [],
       roles: assignmentType === "Roles" ? selectedRoles : [],
-      fields: selectedFields,
+      fields: selectedFields.map((field) => {
+        const fieldConfig = allEnquiryFields
+          .flatMap((category) => category.fields)
+          .find((f) => f.id === field.id);
+        return {
+          id: field.id,
+          defaultValue: field.defaultValue,
+          options: fieldConfig?.type === "select" ? fieldConfig.options : undefined,
+        };
+      }),
       tags,
       enquiryCount: form?.enquiryCount || 0,
       updatedAt: serverTimestamp(),
       ...(form ? {} : { createdAt: serverTimestamp() }),
     };
-
+  
     try {
       setLoading(true);
       setError(null);
       const sanitizedFormData = sanitizeData(formData);
-
+  
       if (form) {
         const formRef = doc(db, "enquiryForms", form.id);
         await updateDoc(formRef, sanitizedFormData);
@@ -6072,7 +6081,7 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
         setFormLink(newFormLink);
         await logActivity("Created enquiry form", { name: formName });
       }
-
+  
       resetForm();
       toggleSidebar();
     } catch (error) {
@@ -6081,6 +6090,142 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
       setLoading(false);
     }
   };
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!formName.trim()) {
+  //     setError("Form name is required.");
+  //     return;
+  //   }
+  //   if (selectedFields.length === 0) {
+  //     setError("At least one enquiry field must be selected.");
+  //     return;
+  //   }
+  //   if (assignmentType === "Users" && selectedUsers.length === 0) {
+  //     setError("At least one user must be selected.");
+  //     return;
+  //   }
+  //   if (assignmentType === "Roles" && selectedRoles.length === 0) {
+  //     setError("At least one role must be selected.");
+  //     return;
+  //   }
+  
+  //   let formId;
+  //   const formData = {
+  //     name: formName,
+  //     users: assignmentType === "Users" ? selectedUsers : [],
+  //     roles: assignmentType === "Roles" ? selectedRoles : [],
+  //     fields: selectedFields.map((field) => {
+  //       const fieldConfig = allEnquiryFields
+  //         .flatMap((category) => category.fields)
+  //         .find((f) => f.id === field.id);
+  //       return {
+  //         id: field.id,
+  //         defaultValue: field.defaultValue,
+  //         options: fieldConfig?.type === "select" ? fieldConfig.options : undefined,
+  //       };
+  //     }),
+  //     tags,
+  //     enquiryCount: form?.enquiryCount || 0,
+  //     updatedAt: serverTimestamp(),
+  //     ...(form ? {} : { createdAt: serverTimestamp() }),
+  //   };
+  
+  //   try {
+  //     setLoading(true);
+  //     setError(null);
+  //     const sanitizedFormData = sanitizeData(formData);
+  
+  //     if (form) {
+  //       const formRef = doc(db, "enquiryForms", form.id);
+  //       await updateDoc(formRef, sanitizedFormData);
+  //       await logActivity("Updated enquiry form", { name: formName });
+  //       formId = form.id;
+  //     } else {
+  //       const docRef = await addDoc(collection(db, "enquiryForms"), sanitizedFormData);
+  //       formId = docRef.id;
+  //       const newFormLink = `https://form.shikshasaarathi.com/${formId}`;
+  //       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(newFormLink)}`;
+  //       await updateDoc(doc(db, "enquiryForms", formId), {
+  //         formLink: newFormLink,
+  //         qrCodeUrl,
+  //       });
+  //       setFormLink(newFormLink);
+  //       await logActivity("Created enquiry form", { name: formName });
+  //     }
+  
+  //     resetForm();
+  //     toggleSidebar();
+  //   } catch (error) {
+  //     setError(`Failed to save enquiry form: ${error.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!formName.trim()) {
+  //     setError("Form name is required.");
+  //     return;
+  //   }
+  //   if (selectedFields.length === 0) {
+  //     setError("At least one enquiry field must be selected.");
+  //     return;
+  //   }
+  //   if (assignmentType === "Users" && selectedUsers.length === 0) {
+  //     setError("At least one user must be selected.");
+  //     return;
+  //   }
+  //   if (assignmentType === "Roles" && selectedRoles.length === 0) {
+  //     setError("At least one role must be selected.");
+  //     return;
+  //   }
+
+  //   let formId;
+  //   const formData = {
+  //     name: formName,
+  //     users: assignmentType === "Users" ? selectedUsers : [],
+  //     roles: assignmentType === "Roles" ? selectedRoles : [],
+  //     fields: selectedFields,
+  //     tags,
+  //     enquiryCount: form?.enquiryCount || 0,
+  //     updatedAt: serverTimestamp(),
+  //     ...(form ? {} : { createdAt: serverTimestamp() }),
+  //   };
+
+  //   try {
+  //     setLoading(true);
+  //     setError(null);
+  //     const sanitizedFormData = sanitizeData(formData);
+
+  //     if (form) {
+  //       const formRef = doc(db, "enquiryForms", form.id);
+  //       await updateDoc(formRef, sanitizedFormData);
+  //       await logActivity("Updated enquiry form", { name: formName });
+  //       formId = form.id;
+  //     } else {
+  //       const docRef = await addDoc(collection(db, "enquiryForms"), sanitizedFormData);
+  //       formId = docRef.id;
+  //       const newFormLink = `https://form.shikshasaarathi.com/${formId}`;
+  //       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(newFormLink)}`;
+  //       await updateDoc(doc(db, "enquiryForms", formId), {
+  //         formLink: newFormLink,
+  //         qrCodeUrl,
+  //       });
+  //       setFormLink(newFormLink);
+  //       await logActivity("Created enquiry form", { name: formName });
+  //     }
+
+  //     resetForm();
+  //     toggleSidebar();
+  //   } catch (error) {
+  //     setError(`Failed to save enquiry form: ${error.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const resetForm = () => {
     setFormName("");
@@ -6269,6 +6414,30 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
           </div>
 
           <div>
+  <label htmlFor="tags" className="block text-base font-medium text-gray-700">
+    Tags
+  </label>
+  <div className="flex mt-1">
+    <input
+      type="text"
+      value={tagInput}
+      onChange={(e) => setTagInput(e.target.value)}
+      placeholder="Enter tag and press Enter"
+      className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+      disabled={loading}
+    />
+    <button
+      type="button"
+      onClick={handleAddTag}
+      className="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600"
+      disabled={loading}
+    >
+      Add
+    </button>
+  </div>
+</div>
+
+          {/* <div>
             <label
               htmlFor="tags"
               className="block text-base font-medium text-gray-700"
@@ -6312,7 +6481,7 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
                 ))}
               </div>
             )}
-          </div>
+          </div> */}
 
           <div>
             <label
@@ -6588,23 +6757,20 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
                                   )}
                                 </span>
                                 {enquiryField.type === "select" ? (
-                                  <select
-                                    value={field.defaultValue || ""}
-                                    onChange={(e) => {
-                                      e.stopPropagation();
-                                      handleDefaultValueChange(field.id, e.target.value);
-                                    }}
-                                    className="ml-2 p-1 border border-gray-300 rounded-md text-sm w-1/3"
-                                    disabled={loading || isDragging}
-                                  >
-                                    <option value="">Select default</option>
-                                    {enquiryField.options?.map((option) => (
-                                      <option key={option} value={option}>
-                                        {option}
-                                      </option>
-                                    ))}
-                                  </select>
-                                ) : (
+  <select
+    value={field.defaultValue || ""}
+    onChange={(e) => handleDefaultValueChange(field.id, e.target.value)}
+    className="ml-2 p-1 border border-gray-300 rounded-md text-sm w-1/3"
+    disabled={loading || isDragging}
+  >
+    <option value="">Select default</option>
+    {enquiryField.options?.map((option) => (
+      <option key={option} value={option}>
+        {option}
+      </option>
+    ))}
+  </select>
+) : (
                                   <input
                                     type="text"
                                     value={field.defaultValue}
