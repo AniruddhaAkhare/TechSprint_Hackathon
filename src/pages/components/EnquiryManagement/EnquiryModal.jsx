@@ -111,8 +111,9 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
 
     }
   );
+  const [isLoadingCounselors, setIsLoadingCounselors] = useState(true);
 
-  const sourceOptions = [" Instagram Ads,", "Google Ads", "Referrals", "Google Search", "Emails", "Cold Calls", "Email Campaigns", "Blogs", "Webinar", "LinkedIn", "Events" ];
+  const sourceOptions = [" Instagram Ads", "Google Ads", "Referrals", "Google Search", "Emails", "Cold Calls", "Email Campaigns", "Blogs", "Webinar", "LinkedIn", "Events" ];
   const canCreate = rolePermissions.enquiries?.create || false;
   const canUpdate = rolePermissions.enquiries?.update || false;
   const canDisplay = rolePermissions.enquiries?.display || false;
@@ -141,30 +142,30 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       const inferredHistory = [
         {
           action: `Created enquiry`,
-          performedBy: selectedEnquiry.createdBy || "Unknown User",
+          performedBy: getUserDisplayName(selectedEnquiry.createdBy || "Unknown User"),
           timestamp: selectedEnquiry.createdAt || defaultCreatedAt,
         },
         ...(selectedEnquiry.notes || []).map((note) => ({
           action: `Added ${formatNoteType(note.type).toLowerCase()} note: "${note.content.slice(0, 50)}${note.content.length > 50 ? "..." : ""}"`,
-          performedBy: note.addedBy || "Unknown User",
+          performedBy: getUserDisplayName(note.addedBy || "Unknown User"),
           timestamp: note.createdAt,
         })),
         ...(selectedEnquiry.updatedAt && selectedEnquiry.updatedAt !== selectedEnquiry.createdAt
           ? [{
             action: `Updated enquiry`,
-            performedBy: selectedEnquiry.createdBy || "Unknown User",
+            performedBy: getUserDisplayName(selectedEnquiry.createdBy || "Unknown User"),
             timestamp: selectedEnquiry.updatedAt,
           }]
           : []),
         ...(selectedEnquiry.stage
           ? [{
             action: `Changed stage to ${stageDisplay[selectedEnquiry.stage]?.name || selectedEnquiry.stage}`,
-            performedBy: selectedEnquiry.createdBy || "Unknown User",
+            performedBy: getUserDisplayName(selectedEnquiry.createdBy || "Unknown User"),
             timestamp: selectedEnquiry.updatedAt || selectedEnquiry.createdAt,
           }]
           : []),
       ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
+  
       setNewEnquiry({
         ...selectedEnquiry,
         notes: Array.isArray(selectedEnquiry.notes) ? selectedEnquiry.notes : [],
@@ -174,8 +175,8 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         closingDate: selectedEnquiry.closingDate || "",
         lostReason: selectedEnquiry.lostReason || "",
         createdAt: selectedEnquiry.createdAt || defaultCreatedAt,
-        createdBy: selectedEnquiry.createdBy || currentUser?.displayName || "Unknown User",
-        owner: selectedEnquiry.owner || selectedEnquiry.assignTo || selectedEnquiry.createdBy || currentUser?.displayName || "Unknown User",
+        createdBy: getUserDisplayName(selectedEnquiry.createdBy || currentUser?.uid || "Unknown User"),
+        owner: getUserDisplayName(selectedEnquiry.owner || selectedEnquiry.assignTo || selectedEnquiry.createdBy || currentUser?.uid || "Unknown User"),
         history: selectedEnquiry.history || inferredHistory,
       });
       setIsEditing(false);
@@ -183,7 +184,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       const newCreatedAt = new Date();
       const defaultClosingDate = new Date(newCreatedAt);
       defaultClosingDate.setDate(newCreatedAt.getDate() + 7);
-      const userIdentity = currentUser?.displayName || "Unknown User";
+      const userIdentity = getUserDisplayName(currentUser?.uid);
       setEditingEnquiryId(null);
       setIsEditing(true);
       setCurrentSection(1);
@@ -229,8 +230,8 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         guardianName: "",
         guardianContact: "",
         courseMotivation: "",
-        stage: "",
-        closingDate: defaultClosingDate.toISOString().split("T")[0], // Set default closing date (YYYY-MM-DD)
+        stage: "pre-qualified",
+        closingDate: defaultClosingDate.toISOString().split("T")[0],
         lostReason: "",
         createdAt: newCreatedAt.toISOString(),
         createdBy: userIdentity,
@@ -240,7 +241,131 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         lastTouched: "",
       });
     }
-  }, [selectedEnquiry, currentUser]);
+  }, [selectedEnquiry, currentUser, Users]); // Add Users to dependencies
+
+  // useEffect(() => {
+  //   if (selectedEnquiry) {
+  //     const defaultCreatedAt = new Date().toISOString();
+  //     setEditingEnquiryId(selectedEnquiry.id);
+  //     const inferredHistory = [
+  //       {
+  //         action: `Created enquiry`,
+  //         performedBy: selectedEnquiry.createdBy || "Unknown User",
+  //         timestamp: selectedEnquiry.createdAt || defaultCreatedAt,
+  //       },
+  //       ...(selectedEnquiry.notes || []).map((note) => ({
+  //         action: `Added ${formatNoteType(note.type).toLowerCase()} note: "${note.content.slice(0, 50)}${note.content.length > 50 ? "..." : ""}"`,
+  //         performedBy: note.addedBy || "Unknown User",
+  //         timestamp: note.createdAt,
+  //       })),
+  //       ...(selectedEnquiry.updatedAt && selectedEnquiry.updatedAt !== selectedEnquiry.createdAt
+  //         ? [{
+  //           action: `Updated enquiry`,
+  //           performedBy: selectedEnquiry.createdBy || "Unknown User",
+  //           timestamp: selectedEnquiry.updatedAt,
+  //         }]
+  //         : []),
+  //       ...(selectedEnquiry.stage
+  //         ? [{
+  //           action: `Changed stage to ${stageDisplay[selectedEnquiry.stage]?.name || selectedEnquiry.stage}`,
+  //           performedBy: selectedEnquiry.createdBy || "Unknown User",
+  //           timestamp: selectedEnquiry.updatedAt || selectedEnquiry.createdAt,
+  //         }]
+  //         : []),
+  //     ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  //     setNewEnquiry({
+  //       ...selectedEnquiry,
+  //       notes: Array.isArray(selectedEnquiry.notes) ? selectedEnquiry.notes : [],
+  //       tags: Array.isArray(selectedEnquiry.tags) ? selectedEnquiry.tags : [],
+  //       stage: selectedEnquiry.stage || "",
+  //       fee: selectedEnquiry.fee || "",
+  //       closingDate: selectedEnquiry.closingDate || "",
+  //       lostReason: selectedEnquiry.lostReason || "",
+  //       createdAt: selectedEnquiry.createdAt || defaultCreatedAt,
+  //       createdBy: selectedEnquiry.createdBy || currentUser?.displayName || "Unknown User",
+  //       owner: selectedEnquiry.owner || selectedEnquiry.assignTo || selectedEnquiry.createdBy || currentUser?.displayName || "Unknown User",
+  //       history: selectedEnquiry.history || inferredHistory,
+  //     });
+  //     setIsEditing(false);
+  //   } else {
+  //     const newCreatedAt = new Date();
+  //     const defaultClosingDate = new Date(newCreatedAt);
+  //     defaultClosingDate.setDate(newCreatedAt.getDate() + 7);
+  //     const userIdentity = currentUser?.displayName || "Unknown User";
+  //     setEditingEnquiryId(null);
+  //     setIsEditing(true);
+  //     setCurrentSection(1);
+  //     setNewEnquiry({
+  //       name: "",
+  //       email: "",
+  //       phone: "",
+  //       streetAddress: "",
+  //       city: "",
+  //       stateRegionProvince: "",
+  //       postalZipCode: "",
+  //       country: "",
+  //       gender: "",
+  //       dateOfBirth: "",
+  //       studentType: "",
+  //       sscPercentage: "",
+  //       schoolName: "",
+  //       sscPassOutYear: "",
+  //       hscPercentage: "",
+  //       juniorCollegeName: "",
+  //       hscPassOutYear: "",
+  //       graduationStream: "",
+  //       graduationPercentage: "",
+  //       collegeName: "",
+  //       graduationPassOutYear: "",
+  //       postGraduationStream: "",
+  //       postGraduationPercentage: "",
+  //       postGraduationCollegeName: "",
+  //       postGraduationPassOutYear: "",
+  //       educationBreak: "",
+  //       branch: "",
+  //       course: "",
+  //       source: "",
+  //       assignTo: "",
+  //       notes: [],
+  //       tags: [],
+  //       fee: "",
+  //       degree: "",
+  //       currentProfession: "",
+  //       workingCompanyName: "",
+  //       workingDomain: "",
+  //       experienceInYears: "",
+  //       guardianName: "",
+  //       guardianContact: "",
+  //       courseMotivation: "",
+  //       stage: "",
+  //       closingDate: defaultClosingDate.toISOString().split("T")[0], // Set default closing date (YYYY-MM-DD)
+  //       lostReason: "",
+  //       createdAt: newCreatedAt.toISOString(),
+  //       createdBy: userIdentity,
+  //       owner: userIdentity,
+  //       history: [],
+  //       lastModifiedTime: "",
+  //       lastTouched: "",
+  //     });
+  //   }
+  // }, [selectedEnquiry, currentUser]);
+
+
+  const getUserDisplayName = (identifier) => {
+    if (!Users || !Array.isArray(Users)) {
+      console.warn("Users prop is invalid or empty");
+      return identifier || "Unknown User";
+    }
+    const user = Users.find(
+      (u) => u.id === identifier || u.email === identifier
+    );
+    if (!user) {
+      console.warn(`User not found for identifier: ${identifier}`);
+      return identifier || "Unknown User";
+    }
+    return user.displayName || user.email || "Unknown User";
+  };
 
 
   const uploadToS3 = async (audioBlob) => {
@@ -340,7 +465,8 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
             type: "office-visit",
             audioUrl: audioUrl,
             createdAt: new Date().toISOString(),
-            addedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+            addedBy: getUserDisplayName(currentUser?.uid),
+            //addedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
           };
           const updatedNotes = [...newEnquiry.notes, noteObject];
           setNewEnquiry((prev) => ({
@@ -500,7 +626,8 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       const enquiryRef = doc(db, "enquiries", editingEnquiryId);
       const historyEntry = {
         action: `Deleted office visit note: "${note.content.slice(0, 50)}${note.content.length > 50 ? "..." : ""}"`,
-        performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+        // performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+        performedBy: getUserDisplayName(currentUser?.uid),
         timestamp: new Date().toISOString(),
       };
       const updatedHistory = [...(newEnquiry.history || []), historyEntry];
@@ -527,6 +654,65 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
   };
 
 
+  // const handleAddNoteToFirebase = async (updatedNotes, noteObject) => {
+  //   if (!editingEnquiryId) {
+  //     alert("No enquiry selected to add note.");
+  //     return;
+  //   }
+  //   if (!canUpdate) {
+  //     alert("You don't have permission to update enquiries");
+  //     return;
+  //   }
+
+  //   try {
+  //     const enquiryRef = doc(db, "enquiries", editingEnquiryId);
+  //     const historyEntry = {
+  //       action: `Added ${formatNoteType(noteObject.type).toLowerCase()} note: "${noteObject.content.slice(0, 50)}${noteObject.content.length > 50 ? "..." : ""}"`,
+  //       // performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+  //       performedBy: getUserDisplayName(currentUser?.uid),
+  //       timestamp: new Date().toISOString(),
+  //     };
+  //     const updatedHistory = [...(newEnquiry.history || []), historyEntry];
+  //     await updateDoc(enquiryRef, {
+  //       notes: updatedNotes,
+  //       history: updatedHistory,
+  //       lastTouched: new Date().toISOString(),
+  //       updatedAt: new Date().toISOString(),
+  //     });
+  //     setNewEnquiry((prev) => ({
+  //       ...prev,
+  //       history: updatedHistory,
+  //       lastTouched: new Date().toISOString(),
+  //     }));
+  //     if (noteObject.type === "call-schedule" && noteObject.callDate && noteObject.callScheduledTime) {
+  //       const callDateTime = new Date(`${noteObject.callDate}T${noteObject.callScheduledTime}`);
+  //       const now = new Date();
+  //       const timeUntilReminder = callDateTime.getTime() - now.getTime() - 5 * 60 * 1000; // 5 minutes before
+  //       if (timeUntilReminder > 0) {
+  //         setTimeout(() => {
+  //           setReminderDetails({
+  //             name: newEnquiry.name || "this lead",
+  //             date: noteObject.callDate,
+  //             time: noteObject.callScheduledTime,
+  //           });
+  //           setShowReminder(true);
+  //           // Play buzzer sound
+  //           const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3"); // Replace with your preferred buzzer sound URL
+  //           audio.play().catch((error) => console.error("Error playing buzzer:", error));
+  //         }, timeUntilReminder);
+  //       } else {
+  //         console.warn("Scheduled call is too soon or in the past; reminder not set.");
+  //       }
+  //     }
+  //     onRequestClose();
+  //     alert("Note added successfully!");
+  //   } catch (error) {
+  //     alert(`Failed to add note: ${error.message}`);
+  //   }
+  // };
+
+
+
   const handleAddNoteToFirebase = async (updatedNotes, noteObject) => {
     if (!editingEnquiryId) {
       alert("No enquiry selected to add note.");
@@ -536,12 +722,12 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       alert("You don't have permission to update enquiries");
       return;
     }
-
+  
     try {
       const enquiryRef = doc(db, "enquiries", editingEnquiryId);
       const historyEntry = {
         action: `Added ${formatNoteType(noteObject.type).toLowerCase()} note: "${noteObject.content.slice(0, 50)}${noteObject.content.length > 50 ? "..." : ""}"`,
-        performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+        performedBy: getUserDisplayName(currentUser?.uid),
         timestamp: new Date().toISOString(),
       };
       const updatedHistory = [...(newEnquiry.history || []), historyEntry];
@@ -556,10 +742,11 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         history: updatedHistory,
         lastTouched: new Date().toISOString(),
       }));
+
       if (noteObject.type === "call-schedule" && noteObject.callDate && noteObject.callScheduledTime) {
         const callDateTime = new Date(`${noteObject.callDate}T${noteObject.callScheduledTime}`);
         const now = new Date();
-        const timeUntilReminder = callDateTime.getTime() - now.getTime() - 5 * 60 * 1000; // 5 minutes before
+        const timeUntilReminder = callDateTime.getTime() - now.getTime();
         if (timeUntilReminder > 0) {
           setTimeout(() => {
             setReminderDetails({
@@ -568,53 +755,56 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
               time: noteObject.callScheduledTime,
             });
             setShowReminder(true);
-            // Play buzzer sound
-            const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3"); // Replace with your preferred buzzer sound URL
+            const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
             audio.play().catch((error) => console.error("Error playing buzzer:", error));
           }, timeUntilReminder);
         } else {
           console.warn("Scheduled call is too soon or in the past; reminder not set.");
         }
       }
-      onRequestClose();
+  
+      setNewNote("");
+      setNoteType("general-enquiry");
+      setCurrentSection(4);
       alert("Note added successfully!");
+      // setNewNote(""); // Clear the note input
+      // setNoteType("general-enquiry"); // Reset note type
+      // setCurrentSection(4); // Stay in notes section
+      // alert("Note added successfully!");
     } catch (error) {
       alert(`Failed to add note: ${error.message}`);
     }
   };
-
-
-
-
+  
   const handleAddNote = async () => {
     if (!newNote.trim()) {
       alert("Please add a note before submitting.");
       return;
     }
-
+  
     if (noteType === "call-schedule") {
       const selectedDate = new Date(callDate);
       const today = new Date();
-      today.setHours(0, 0, 0, 0); // Normalize to start of day
+      today.setHours(0, 0, 0, 0);
       if (selectedDate < today) {
         alert("Cannot schedule a call in the past.");
         return;
       }
     }
-
+  
     const noteObject = {
       content: newNote,
       type: noteType,
       callDuration: noteType === "call-log" ? callDuration : null,
       callType: noteType === "call-log" ? callType : null,
       callTime: noteType === "call-log" ? callTime : null,
-      callLogDate: noteType === "call-log" ? callLogDate : null, // Include callLogDate
+      callLogDate: noteType === "call-log" ? callLogDate : null,
       callDate: noteType === "call-schedule" ? callDate : null,
       callScheduledTime: noteType === "call-schedule" ? callScheduledTime : null,
       createdAt: new Date().toISOString(),
-      addedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+      addedBy: getUserDisplayName(currentUser?.uid),
     };
-
+  
     const updatedNotes = [...newEnquiry.notes, noteObject];
     setNewEnquiry((prev) => ({
       ...prev,
@@ -622,6 +812,44 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
     }));
     await handleAddNoteToFirebase(updatedNotes, noteObject);
   };
+
+  // const handleAddNote = async () => {
+  //   if (!newNote.trim()) {
+  //     alert("Please add a note before submitting.");
+  //     return;
+  //   }
+
+  //   if (noteType === "call-schedule") {
+  //     const selectedDate = new Date(callDate);
+  //     const today = new Date();
+  //     today.setHours(0, 0, 0, 0); // Normalize to start of day
+  //     if (selectedDate < today) {
+  //       alert("Cannot schedule a call in the past.");
+  //       return;
+  //     }
+  //   }
+
+  //   const noteObject = {
+  //     content: newNote,
+  //     type: noteType,
+  //     callDuration: noteType === "call-log" ? callDuration : null,
+  //     callType: noteType === "call-log" ? callType : null,
+  //     callTime: noteType === "call-log" ? callTime : null,
+  //     callLogDate: noteType === "call-log" ? callLogDate : null, // Include callLogDate
+  //     callDate: noteType === "call-schedule" ? callDate : null,
+  //     callScheduledTime: noteType === "call-schedule" ? callScheduledTime : null,
+  //     createdAt: new Date().toISOString(),
+  //     addedBy: getUserDisplayName(currentUser?.uid),
+  //     // addedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+  //   };
+
+  //   const updatedNotes = [...newEnquiry.notes, noteObject];
+  //   setNewEnquiry((prev) => ({
+  //     ...prev,
+  //     notes: updatedNotes,
+  //   }));
+  //   await handleAddNoteToFirebase(updatedNotes, noteObject);
+  // };
 
 
   const handleAddEnquiry = async () => {
@@ -662,14 +890,20 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       if (emailQuery) queries.push(getDocs(emailQuery));
       if (phoneQuery) queries.push(getDocs(phoneQuery));
       const snapshots = await Promise.all(queries);
-
+  
       let emailConflict = false;
       let phoneConflict = false;
+      let conflictDetails = "";
+  
       if (emailQuery) {
         const emailSnapshot = snapshots[0];
         emailConflict = !emailSnapshot.empty;
         if (editingEnquiryId) {
           emailConflict = emailSnapshot.docs.some((doc) => doc.id !== editingEnquiryId);
+        }
+        if (emailConflict) {
+          const conflictingDoc = emailSnapshot.docs[0];
+          conflictDetails = `Enquiry with email ${newEnquiry.email} exists: ${conflictingDoc.data().name} (name: ${conflictingDoc.data().name})`;
         }
       }
       if (phoneQuery) {
@@ -678,19 +912,54 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         if (editingEnquiryId) {
           phoneConflict = phoneSnapshot.docs.some((doc) => doc.id !== editingEnquiryId);
         }
+        if (phoneConflict) {
+          const conflictingDoc = phoneSnapshot.docs[0];
+          conflictDetails = `Enquiry with phone ${newEnquiry.phone} exists: ${conflictingDoc.data().name} (name: ${conflictingDoc.data().name})`;
+        }
       }
-
-      if (emailConflict) {
-        alert("An enquiry with this email already exists.");
+  
+      if (emailConflict || phoneConflict) {
+        alert(conflictDetails);
         return;
       }
 
-      if (phoneConflict) {
-        alert("An enquiry with this phone number already exists.");
-        return;
-      }
+    // try {
+    //   const emailQuery = newEnquiry.email ? query(collection(db, "enquiries"), where("email", "==", newEnquiry.email)) : null;
+    //   const phoneQuery = newEnquiry.phone ? query(collection(db, "enquiries"), where("phone", "==", newEnquiry.phone)) : null;
+    //   const queries = [];
+    //   if (emailQuery) queries.push(getDocs(emailQuery));
+    //   if (phoneQuery) queries.push(getDocs(phoneQuery));
+    //   const snapshots = await Promise.all(queries);
+
+    //   let emailConflict = false;
+    //   let phoneConflict = false;
+    //   if (emailQuery) {
+    //     const emailSnapshot = snapshots[0];
+    //     emailConflict = !emailSnapshot.empty;
+    //     if (editingEnquiryId) {
+    //       emailConflict = emailSnapshot.docs.some((doc) => doc.id !== editingEnquiryId);
+    //     }
+    //   }
+    //   if (phoneQuery) {
+    //     const phoneSnapshot = snapshots[phoneQuery ? snapshots.length - 1 : 0];
+    //     phoneConflict = !phoneSnapshot.empty;
+    //     if (editingEnquiryId) {
+    //       phoneConflict = phoneSnapshot.docs.some((doc) => doc.id !== editingEnquiryId);
+    //     }
+      // }
+
+      // if (emailConflict) {
+      //   alert("An enquiry with this email already exists.");
+      //   return;
+      // }
+
+      // if (phoneConflict) {
+      //   alert("An enquiry with this phone number already exists.");
+      //   return;
+      // }
 
       const selectedCourse = courses.find((course) => course.name === newEnquiry.course);
+
 
       const enquiryData = {
         ...newEnquiry,
@@ -702,14 +971,31 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         updatedAt: new Date().toISOString(),
         lastModifiedTime: new Date().toISOString(),
         tags: Array.isArray(newEnquiry.tags) ? newEnquiry.tags : [],
-        createdBy: newEnquiry.createdBy || currentUser?.displayName || currentUser?.email || "Unknown User",
-        owner: newEnquiry.assignTo || newEnquiry.owner,
+        createdBy: getUserDisplayName(currentUser?.uid),
+        owner: getUserDisplayName(newEnquiry.assignTo || newEnquiry.owner || currentUser?.uid),
         history: newEnquiry.history || [],
       };
+      
+      // const enquiryData = {
+      //   ...newEnquiry,
+      //   stage: editingEnquiryId ? newEnquiry.stage : "pre-qualified",
+      //   amount: Number(newEnquiry.fee) || 0,
+      //   closingDate: newEnquiry.closingDate || "",
+      //   lostReason: newEnquiry.lostReason || "",
+      //   createdAt: newEnquiry.createdAt || new Date().toISOString(),
+      //   updatedAt: new Date().toISOString(),
+      //   lastModifiedTime: new Date().toISOString(),
+      //   tags: Array.isArray(newEnquiry.tags) ? newEnquiry.tags : [],
+      //   createdBy: newEnquiry.createdBy || currentUser?.displayName || currentUser?.email || "Unknown User",
+      //   // owner: newEnquiry.assignTo || newEnquiry.owner,
+
+      //   history: newEnquiry.history || [],
+      // };
 
       const historyEntry = {
         action: editingEnquiryId ? `Updated enquiry` : `Created enquiry`,
-        performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+        // performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+        performedBy: getUserDisplayName(currentUser?.uid),
         timestamp: new Date().toISOString(),
       };
 
@@ -813,7 +1099,8 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         onRequestClose();
         alert("Enquiry saved successfully!");
       }
-    } catch (error) {
+    } 
+    catch (error) {
       alert(`Failed to save enquiry: ${error.message}`);
     }
   };
@@ -833,7 +1120,8 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
 
       const historyEntry = {
         action: `${isTagAdded ? "Added" : "Removed"} tag: "${tag}"`,
-        performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+        // performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+        performedBy: getUserDisplayName(currentUser?.uid),
         timestamp: new Date().toISOString(),
       };
       const updatedHistory = [...(newEnquiry.history || []), historyEntry];
@@ -916,6 +1204,27 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
     setAudioStatus((prev) => ({ ...prev, [index]: "invalid" }));
   };
 
+
+  useEffect(() => {
+    const fetchSalesRoleIds = async () => {
+      try {
+        const rolesQuery = query(collection(db, 'roles'), where('name', '==', 'Sales'));
+        const rolesSnapshot = await getDocs(rolesQuery);
+        const roleIds = rolesSnapshot.docs.map(doc => doc.id);
+        console.log("Sales role IDs:", roleIds);
+        setSalesRoleIds(roleIds);
+      } catch (error) {
+        console.error('Error fetching Sales role IDs:', error);
+        setSalesRoleIds([]);
+      } finally {
+        setIsLoadingCounselors(false); // Set loading to false after fetching
+      }
+    };
+  
+    fetchSalesRoleIds();
+  }, []);
+
+
   useEffect(() => {
     newEnquiry.notes.forEach((note, index) => {
       if (note.type === "office-visit" && note.audioUrl && !audioStatus[index]) {
@@ -923,6 +1232,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       }
     });
   }, [newEnquiry.notes]);
+  const currentYear = new Date().getFullYear();
 
   return (
     <div>
@@ -1217,7 +1527,29 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {/* SSC Fields (Left Side) */}
                 <div className="space-y-4">
-                  <div>
+                <div>
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">SSC Percentage</label>
+  {isEditing ? (
+    <input
+      type="number"
+      value={newEnquiry.sscPercentage}
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value >= 0 && value <= 100) {
+          setNewEnquiry({ ...newEnquiry, sscPercentage: value });
+        }
+      }}
+      placeholder="Enter SSC percentage (0-100)"
+      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      min="0"
+      max="100"
+      step="0.01"
+    />
+  ) : (
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.sscPercentage)}</p>
+  )}
+</div>
+                  {/* <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700">SSC Percentage</label>
                     {isEditing ? (
                       <input
@@ -1233,7 +1565,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                     ) : (
                       <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.sscPercentage)}</p>
                     )}
-                  </div>
+                  </div> */}
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700">School Name</label>
                     {isEditing ? (
@@ -1248,7 +1580,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                       <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.schoolName)}</p>
                     )}
                   </div>
-                  <div>
+                  {/* <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700">SSC Pass Out Year</label>
                     {isEditing ? (
                       <input
@@ -1263,12 +1595,61 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                     ) : (
                       <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.sscPassOutYear)}</p>
                     )}
-                  </div>
+                  </div> */}
+
+<div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700">
+              SSC Pass Out Year
+            </label>
+            {isEditing ? (
+              <input
+                type="number"
+                value={newEnquiry.sscPassOutYear}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.length <= 4 && (value === "" || (value >= 1900 && value <= currentYear))) {
+                    setNewEnquiry({ ...newEnquiry, sscPassOutYear: value });
+                  }
+                }}
+                placeholder="Enter SSC pass out year (YYYY)"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                min="1900"
+                max={currentYear}
+              />
+            ) : (
+              <p className="mt-1 text-xs sm:text-sm text-gray-900">
+                {renderField(newEnquiry.sscPassOutYear)}
+              </p>
+            )}
+          </div>
+
                 </div>
 
                 {/* HSC Fields (Right Side) */}
                 <div className="space-y-4">
-                  <div>
+                <div>
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">HSC Percentage</label>
+  {isEditing ? (
+    <input
+      type="number"
+      value={newEnquiry.hscPercentage}
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value >= 0 && value <= 100) {
+          setNewEnquiry({ ...newEnquiry, hscPercentage: value });
+        }
+      }}
+      placeholder="Enter HSC percentage (0-100)"
+      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      min="0"
+      max="100"
+      step="0.01"
+    />
+  ) : (
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.hscPercentage)}</p>
+  )}
+</div>
+                  {/* <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700">HSC Percentage</label>
                     {isEditing ? (
                       <input
@@ -1284,7 +1665,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                     ) : (
                       <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.hscPercentage)}</p>
                     )}
-                  </div>
+                  </div> */}
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700">Junior College Name</label>
                     {isEditing ? (
@@ -1300,6 +1681,31 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                     )}
                   </div>
                   <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700">
+              HSC Pass Out Year
+            </label>
+            {isEditing ? (
+              <input
+                type="number"
+                value={newEnquiry.hscPassOutYear}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.length <= 4 && (value === "" || (value >= 1900 && value <= currentYear))) {
+                    setNewEnquiry({ ...newEnquiry, hscPassOutYear: value });
+                  }
+                }}
+                placeholder="Enter HSC pass out year (YYYY)"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                min="1900"
+                max={currentYear}
+              />
+            ) : (
+              <p className="mt-1 text-xs sm:text-sm text-gray-900">
+                {renderField(newEnquiry.hscPassOutYear)}
+              </p>
+            )}
+          </div>
+                  {/* <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700">HSC Pass Out Year</label>
                     {isEditing ? (
                       <input
@@ -1314,7 +1720,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                     ) : (
                       <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.hscPassOutYear)}</p>
                     )}
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -1394,6 +1800,28 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                   )}
                 </div>
                 <div>
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">UG Percentage</label>
+  {isEditing ? (
+    <input
+      type="number"
+      value={newEnquiry.graduationPercentage}
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value >= 0 && value <= 100) {
+          setNewEnquiry({ ...newEnquiry, graduationPercentage: value });
+        }
+      }}
+      placeholder="Enter UG percentage (0-100)"
+      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      min="0"
+      max="100"
+      step="0.01"
+    />
+  ) : (
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationPercentage)}</p>
+  )}
+</div>
+                {/* <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">UG Percentage</label>
                   {isEditing ? (
                     <input
@@ -1409,8 +1837,29 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                   ) : (
                     <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationPercentage)}</p>
                   )}
-                </div>
+                </div> */}
                 <div>
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">UG Pass Out Year</label>
+  {isEditing ? (
+    <input
+      type="number"
+      value={newEnquiry.graduationPassOutYear}
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value.length <= 4 && value >= 1900 && value <= new Date().getFullYear()) {
+          setNewEnquiry({ ...newEnquiry, graduationPassOutYear: value });
+        }
+      }}
+      placeholder="Enter UG pass out year (YYYY)"
+      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      min="1900"
+      max={new Date().getFullYear()}
+    />
+  ) : (
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationPassOutYear)}</p>
+  )}
+</div>
+                {/* <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">UG Pass Out Year</label>
                   {isEditing ? (
                     <input
@@ -1425,7 +1874,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                   ) : (
                     <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.graduationPassOutYear)}</p>
                   )}
-                </div>
+                </div> */}
               </div>
                 {/* <div className="space-y-4">
                   <div>
@@ -1591,6 +2040,28 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                   )}
                 </div>
                 <div>
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">PG Percentage</label>
+  {isEditing ? (
+    <input
+      type="number"
+      value={newEnquiry.postGraduationPercentage}
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value >= 0 && value <= 100) {
+          setNewEnquiry({ ...newEnquiry, postGraduationPercentage: value });
+        }
+      }}
+      placeholder="Enter PG percentage (0-100)"
+      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      min="0"
+      max="100"
+      step="0.01"
+    />
+  ) : (
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationPercentage)}</p>
+  )}
+</div>
+                {/* <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">PG Percentage</label>
                   {isEditing ? (
                     <input
@@ -1606,8 +2077,29 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                   ) : (
                     <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationPercentage)}</p>
                   )}
-                </div>
+                </div> */}
                 <div>
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">PG Pass Out Year</label>
+  {isEditing ? (
+    <input
+      type="number"
+      value={newEnquiry.postGraduationPassOutYear}
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value.length <= 4 && value >= 1900 && value <= new Date().getFullYear()) {
+          setNewEnquiry({ ...newEnquiry, postGraduationPassOutYear: value });
+        }
+      }}
+      placeholder="Enter PG pass out year (YYYY)"
+      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      min="1900"
+      max={new Date().getFullYear()}
+    />
+  ) : (
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationPassOutYear)}</p>
+  )}
+</div>
+                {/* <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700">PG Pass Out Year</label>
                   {isEditing ? (
                     <input
@@ -1622,7 +2114,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                   ) : (
                     <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.postGraduationPassOutYear)}</p>
                   )}
-                </div>
+                </div> */}
               </div>
             {/* </div> */}
                 {/* <div className="space-y-4">
@@ -1954,6 +2446,33 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                   </div>
 
                   <div className="mb-3 sm:mb-4">
+  <label className="block text-xs sm:text-sm font-medium text-gray-700">Assign To</label>
+  {isEditing ? (
+    <select
+      value={newEnquiry.assignTo}
+      onChange={(e) => setNewEnquiry({ ...newEnquiry, assignTo: e.target.value, owner: e.target.value || newEnquiry.owner })}
+      className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+    >
+      <option value="">Select counselor</option>
+      {isLoadingCounselors ? (
+        <option value="" disabled>Loading counselors...</option>
+      ) : salesRoleIds.length > 0 && Users && Array.isArray(Users) && Users.length > 0 ? (
+        Users
+          .filter((user) => salesRoleIds.includes(user.role))
+          .map((user) => (
+            <option key={user.id} value={user.displayName}>
+              {user.displayName || 'Unknown User'}
+            </option>
+          ))
+      ) : (
+        <option value="" disabled>No counselors available</option>
+      )}
+    </select>
+  ) : (
+    <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.assignTo)}</p>
+  )}
+</div>
+                  {/* <div className="mb-3 sm:mb-4">
                 <label className="block text-xs sm:text-sm font-medium text-gray-700">Assign To</label>
                 {isEditing ? (
                   <select
@@ -1979,7 +2498,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                 ) : (
                   <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.assignTo)}</p>
                 )}
-              </div>
+              </div> */}
                 </div>
                 <div className="space-y-3 sm:space-y-4">
                   <div className="mb-3 sm:mb-4">
@@ -2290,8 +2809,11 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                                     </span>
                                   </p>
                                   <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0">
+  by {getUserDisplayName(note.addedBy)}
+</p>
+                                  {/* <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0">
                                     by {note.addedBy}
-                                  </p>
+                                  </p> */}
                                 </div>
                                 {note.type === "call-log" && (
                                   <div className="text-xs sm:text-sm text-gray-600 mb-2">
@@ -2431,8 +2953,11 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                   {newEnquiry.history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map((entry, index) => (
                     <div key={index} className=" rounded-md">
                       <p className="text-sm text-gray-900">
+  {entry.action} by {getUserDisplayName(entry.performedBy)} on {formatDateSafely(entry.timestamp, "MMM d, yyyy h:mm a")}
+</p>
+                      {/* <p className="text-sm text-gray-900">
                         {entry.action} by {entry.performedBy} on {formatDateSafely(entry.timestamp, "MMM d, yyyy h:mm a")}
-                      </p>
+                      </p> */}
                     </div>
                   ))}
                 </div>
@@ -2496,7 +3021,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Call Reminder</h3>
-            <p className="mb-4">You have a scheduled call with <strong>{reminderDetails.name}</strong> in 5 minutes:</p>
+            <p className="mb-4">You have a scheduled call with <strong>{reminderDetails.name}</strong>:</p>
             <p className="mb-4">Date: {reminderDetails.date ? format(new Date(reminderDetails.date), "MMM d, yyyy") : "Not specified"}</p>
             <p className="mb-4">Time: {reminderDetails.time || "Not specified"}</p>
             <div className="flex justify-end gap-2">

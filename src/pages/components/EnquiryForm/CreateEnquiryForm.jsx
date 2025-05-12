@@ -5092,6 +5092,8 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
   const [availableRoles, setAvailableRoles] = useState([]);
   const [selectedFields, setSelectedFields] = useState([]);
   const [assignmentType, setAssignmentType] = useState("Users");
+  const [tags, setTags] = useState([]); // New state for tags
+  const [tagInput, setTagInput] = useState(""); // Input for adding tags
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -5118,16 +5120,59 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
             }))
           : []
       );
-      setFormLink(form.formLink || `https://form-shikshasaarathi-com.web.app/${form.id}`);
+      setTags(Array.isArray(form.tags) ? form.tags : []); // Initialize tags
+      setFormLink(form.formLink || `https://form.shikshasaarathi.com/${form.id}`);
     } else {
       setFormName("");
       setSelectedUsers([]);
       setSelectedRoles([]);
       setAssignmentType("Users");
       setSelectedFields([]);
+      setTags([]); // Reset tags
       setFormLink(null);
     }
   }, [form]);
+
+  // Add tag handler
+  const handleAddTag = (e) => {
+    e.preventDefault();
+    const newTag = tagInput.trim();
+    if (newTag && !tags.includes(newTag)) {
+      setTags([...tags, newTag]);
+      setTagInput("");
+    }
+  };
+
+  // Remove tag handler
+  const handleRemoveTag = (tagToRemove) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
+
+
+  // useEffect(() => {
+  //   if (form) {
+  //     setFormName(form.name || "");
+  //     setSelectedUsers(Array.isArray(form.users) ? form.users : []);
+  //     setSelectedRoles(Array.isArray(form.roles) ? form.roles : []);
+  //     setAssignmentType(form.users?.length > 0 ? "Users" : "Roles");
+  //     setSelectedFields(
+  //       Array.isArray(form.fields)
+  //         ? form.fields.map((field) => ({
+  //             id: field.id || "",
+  //             defaultValue: field.defaultValue ?? "",
+  //           }))
+  //         : []
+  //     );
+  //     setFormLink(form.formLink || `https://form-shikshasaarathi-com.web.app/${form.id}`);
+  //   } else {
+  //     setFormName("");
+  //     setSelectedUsers([]);
+  //     setSelectedRoles([]);
+  //     setAssignmentType("Users");
+  //     setSelectedFields([]);
+  //     setFormLink(null);
+  //   }
+  // }, [form]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -5207,6 +5252,7 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
       users: assignmentType === "Users" ? selectedUsers : [],
       roles: assignmentType === "Roles" ? selectedRoles : [],
       fields: selectedFields,
+      tags,
       enquiryCount: form?.enquiryCount || 0,
       updatedAt: serverTimestamp(),
       ...(form ? {} : { createdAt: serverTimestamp() }),
@@ -5252,6 +5298,7 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
     setAvailableUsers(users);
     setAvailableRoles(roles);
     setAssignmentType("Users");
+    setTags([]); // Reset tags
     setError(null);
     setFormLink(null);
   };
@@ -5374,7 +5421,27 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* <form onSubmit={handleSubmit} className="space-y-6">
+        <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div>
+            <label
+              htmlFor="formName"
+              className="block text-base font-medium text-gray-700"
+            >
+              Form Name
+            </label>
+            <input
+              type="text"
+              id="formName"
+              value={formName}
+              placeholder="Enter form name"
+              onChange={(e) => setFormName(e.target.value)}
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-separate focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+              disabled={loading}
+            />
+          </div> */}
+<form onSubmit={handleSubmit} className="space-y-6">
         <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div>
             <label
@@ -5395,6 +5462,51 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
             />
           </div>
 
+          <div>
+            <label
+              htmlFor="tags"
+              className="block text-base font-medium text-gray-700"
+            >
+              Tags
+            </label>
+            <div className="flex mt-1">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                placeholder="Enter tag and press Enter"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                className="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600"
+                disabled={loading}
+              >
+                Add
+              </button>
+            </div>
+            {tags.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="ml-1 text-red-600 hover:text-red-800"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
           <div>
             <label
               htmlFor="assignmentType"
@@ -5603,6 +5715,97 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
                 Selected Fields (Drag to Reorder)
               </h3>
               <Droppable droppableId={droppableId}>
+  {(provided, snapshot) => (
+    <div
+      {...provided.droppableProps}
+      ref={(el) => {
+        provided.innerRef(el);
+        droppableRef.current = el;
+      }}
+      className={`mt-2 space-y-2 p-4 border rounded-md min-h-[100px] ${
+        snapshot.isDraggingOver ? "bg-blue-50 border-blue-500" : "bg-white border-gray-300"
+      }`}
+    >
+      {selectedFields.length > 0 ? (
+        selectedFields.map((field, index) => {
+          const enquiryField = allEnquiryFields
+            .flatMap((category) => category.fields)
+            .find((f) => f.id === field.id);
+          if (!enquiryField) return null;
+          return (
+            <Draggable
+              key={field.id}
+              draggableId={field.id.toString()}
+              index={index}
+              isDragDisabled={loading}
+            >
+              {(provided, snapshot) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.draggableProps}
+                  {...provided.dragHandleProps}
+                  className={`flex items-center p-2 rounded hover:bg-gray-100 ${
+                    snapshot.isDragging ? "bg-blue-100 shadow-lg" : "bg-gray-50"
+                  }`}
+                >
+                  <span className="mr-2 cursor-move text-gray-500 text-lg">☰</span>
+                  <input
+                    type="checkbox"
+                    checked={true}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleFieldToggle(field.id);
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    disabled={loading || isDragging}
+                  />
+                  <span className="ml-2 text-base text-gray-700 flex-1">
+                    {enquiryField.label} ({enquiryField.type})
+                    {enquiryField.required && <span className="text-red-500">*</span>}
+                  </span>
+                  {enquiryField.type === "select" ? (
+                    <select
+                      value={field.defaultValue || ""}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleDefaultValueChange(field.id, e.target.value);
+                      }}
+                      className="ml-2 p-1 border border-gray-300 rounded-md text-sm w-1/3"
+                      disabled={loading || isDragging}
+                    >
+                      <option value="">Select default</option>
+                      {enquiryField.options?.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={field.defaultValue}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleDefaultValueChange(field.id, e.target.value);
+                      }}
+                      placeholder="Default value"
+                      className="ml-2 p-1 border border-gray-300 rounded-md text-sm w-1/3"
+                      disabled={loading || isDragging}
+                    />
+                  )}
+                </div>
+              )}
+            </Draggable>
+          );
+        })
+      ) : (
+        <p className="text-gray-500 text-center">No fields selected</p>
+      )}
+      {provided.placeholder}
+    </div>
+  )}
+</Droppable>
+              {/* <Droppable droppableId={droppableId}>
                 {(provided, snapshot) => (
                   <div
                     {...provided.droppableProps}
@@ -5682,7 +5885,7 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
                     {provided.placeholder}
                   </div>
                 )}
-              </Droppable>
+              </Droppable> */}
             </div>
           </div>
 
