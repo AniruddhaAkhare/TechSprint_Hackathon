@@ -6,7 +6,7 @@ import { useAuth } from "../../../../context/AuthContext.jsx";
 import AddCompanies from "./AddCompanies.jsx";
 import AddBulkCompanies from "./AddBulkCompanies.jsx";
 import { useNavigate } from "react-router-dom";
-import CompanyModal from "./CompanyModal";
+import CompanyModal from "./CompanyModal/CompanyModal.jsx";
 
 export default function Companies() {
     const navigate = useNavigate();

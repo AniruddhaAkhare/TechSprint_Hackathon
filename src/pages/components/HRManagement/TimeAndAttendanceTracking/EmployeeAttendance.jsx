@@ -358,7 +358,7 @@ const EmployeeAttendance = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto h-[70vh] overflow-y-auto">
               <table className="w-full text-left border-separate border-spacing-0">
                 <thead className="bg-gray-50 text-black-800">
                   <tr>
