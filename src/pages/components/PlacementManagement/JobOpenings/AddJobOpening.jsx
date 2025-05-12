@@ -640,6 +640,25 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
     }
   };
 
+  const fetchJobOpenings = async () => {
+    try {
+      const jobQuery = query(
+        collection(db, "JobOpenings"),
+        where("companyId", "==", company.id),
+        orderBy("postedDate", "desc")
+      );
+      const jobSnapshot = await getDocs(jobQuery);
+      const jobs = jobSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setJobOpenings(jobs);
+    } catch (error) {
+      console.error("Error fetching job openings:", error);
+      toast.error("Failed to fetch job openings.");
+    }
+  };
+
   // Helper function to safely convert Timestamp to date string
   const timestampToDateString = (timestamp) => {
     if (timestamp instanceof Timestamp) {
