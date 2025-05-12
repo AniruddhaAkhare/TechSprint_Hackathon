@@ -159,7 +159,7 @@ const ApplicationManagement = ({ jobId }) => {
   
         const appData = {
           studentId,
-          studentName: `${student.first_name} ${student.last_name}`,
+          studentName: `${student.Name}`,
           studentEmail: student.email || "",
           status: "Pending",
           remarks: "",
@@ -356,7 +356,7 @@ const ApplicationManagement = ({ jobId }) => {
                       );
                     }}
                   />
-                  <span>{`${student.first_name} ${student.last_name} (${student.email})`}</span>
+                  <span>{`${student.Name} (${student.email})`}</span>
                 </div>
               ))}
               {filteredStudents.length === 0 && (
