@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
-import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc } from "firebase/firestore";
+import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, updateDoc, getDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 import { useAuth } from "../../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +24,7 @@ export default function JobOpenings() {
   const [openDelete, setOpenDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [deleteMessage, setDeleteMessage] = useState("Are you sure you want to delete this job opening? This action cannot be undone.");
+  const [userDisplayName, setUserDisplayName] = useState("");
 
   const JobCollectionRef = collection(db, "JobOpenings");
 
@@ -31,6 +32,31 @@ export default function JobOpenings() {
   const canUpdate = rolePermissions?.JobOpenings?.update || false;
   const canDelete = rolePermissions?.JobOpenings?.delete || false;
   const canDisplay = rolePermissions?.JobOpenings?.display || false;
+
+  // Fetch user displayName from Users collection
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const fetchUserDisplayName = async () => {
+      try {
+        const userDocRef = doc(db, "Users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserDisplayName(userData.displayName || user.email || "Unknown User");
+        } else {
+          console.warn("User document not found in Users collection");
+          setUserDisplayName(user.email || "Unknown User");
+        }
+      } catch (error) {
+        console.error("Error fetching user displayName:", error);
+        toast.error(`Failed to fetch user data: ${error.message}`);
+        setUserDisplayName(user.email || "Unknown User");
+      }
+    };
+
+    fetchUserDisplayName();
+  }, [user?.uid, user?.email]);
 
   const logActivity = async (action, details) => {
     try {
@@ -84,6 +110,7 @@ export default function JobOpenings() {
       }
     } catch (err) {
       console.error("Error fetching job openings:", err);
+      toast.error("Failed to fetch job openings.");
     } finally {
       setLoading(false);
     }
@@ -126,15 +153,54 @@ export default function JobOpenings() {
   const deleteJob = async () => {
     if (!canDelete || !deleteId) return;
     try {
-      await deleteDoc(doc(db, "JobOpenings", deleteId));
+      // Fetch job data to get title and companyId
+      const jobRef = doc(db, "JobOpenings", deleteId);
+      const jobDoc = await getDoc(jobRef);
+      if (!jobDoc.exists()) {
+        throw new Error("Job not found");
+      }
+      const jobData = jobDoc.data();
+      const jobTitle = jobData.title;
+      const companyId = jobData.companyId;
+
+      // Add history entry to job document
+      const jobHistoryEntry = {
+        action: "Deleted",
+        performedBy: userDisplayName,
+        timestamp: new Date().toISOString(),
+        details: `Deleted job "${jobTitle}"`,
+      };
+      await updateDoc(jobRef, {
+        history: arrayUnion(jobHistoryEntry),
+        updatedAt: serverTimestamp(),
+      });
+
+      // Add history entry to company document
+      const companyHistoryEntry = {
+        action: `Deleted job opening: "${jobTitle}"`,
+        performedBy: userDisplayName,
+        timestamp: new Date().toISOString(),
+      };
+      const companyRef = doc(db, "Companies", companyId);
+      const companyDoc = await getDoc(companyRef);
+      const currentCompanyHistory = companyDoc.exists() && Array.isArray(companyDoc.data().history) ? companyDoc.data().history : [];
+      await updateDoc(companyRef, {
+        history: [...currentCompanyHistory, companyHistoryEntry],
+        updatedAt: serverTimestamp(),
+      });
+
+      // Delete the job
+      await deleteDoc(jobRef);
       fetchJobOpenings();
       setSelectedJob(null);
       setOpenDelete(false);
       setDeleteMessage("Are you sure you want to delete this job opening? This action cannot be undone.");
-      logActivity("DELETE_JOB", { jobId: deleteId });
+      toast.success("Job opening deleted successfully!");
+      logActivity("DELETE_JOB", { jobId: deleteId, title: jobTitle });
     } catch (err) {
       console.error("Error deleting job:", err);
       setDeleteMessage("An error occurred while trying to delete the job opening.");
+      toast.error(`Failed to delete job opening: ${err.message}`);
     }
   };
 
@@ -207,7 +273,10 @@ export default function JobOpenings() {
       <ToastContainer position="top-right" autoClose={3000} />
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Job Openings</h1>
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-800">Job Openings</h1>
+          <p className="text-gray-600 mt-1">Total Job Openings: {jobOpenings.length}</p>
+        </div>
         {canCreate && (
           <button
             type="button"
@@ -243,6 +312,8 @@ export default function JobOpenings() {
                 <h3 className="text-lg font-semibold text-gray-800">{job.title}</h3>
                 <p className="text-gray-600">{job.companyName}</p>
                 <p className="text-gray-500">{job.locationType} | {job.jobType}</p>
+                <p className="text-gray-500">{job.status}</p>
+
                 {(canUpdate || canDelete) && (
                   <div className="mt-2">
                     {canUpdate && (
@@ -279,6 +350,7 @@ export default function JobOpenings() {
               <div className="mb-6">
                 <p><strong>Company:</strong> {selectedJob.companyName}</p>
                 <p><strong>Job Type:</strong> {selectedJob.jobType}</p>
+                <p><strong>Status:</strong> {selectedJob.status}</p>
                 <p><strong>Experience:</strong> {selectedJob.experience}</p>
                 <p><strong>Salary/Stipend:</strong> {selectedJob.salary} {selectedJob.currency}</p>
                 {selectedJob.duration && <p><strong>Duration:</strong> {selectedJob.duration}</p>}

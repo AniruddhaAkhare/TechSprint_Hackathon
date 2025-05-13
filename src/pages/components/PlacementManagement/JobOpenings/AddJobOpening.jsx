@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
-import { collection, getDocs, addDoc, updateDoc, doc, serverTimestamp, Timestamp } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  serverTimestamp,
+  Timestamp,
+  getDoc,
+  arrayUnion,
+} from "firebase/firestore";
 import { useAuth } from "../../../../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -36,10 +46,36 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
   const [status, setStatus] = useState("Open");
   const [companies, setCompanies] = useState([]);
   const [pocs, setPocs] = useState([]);
+  const [userDisplayName, setUserDisplayName] = useState(""); // New state for displayName
 
-  const canCreate = rolePermissions?.JobOpenings?.create || false;
-  const canUpdate = rolePermissions?.JobOpenings?.update || false;
-  const canDisplay = rolePermissions?.JobOpenings?.display || false;
+  const canDisplay = rolePermissions.JobOpenings?.display || false;
+  const canCreate = rolePermissions.JobOpenings?.create || false;
+  const canUpdate = rolePermissions.JobOpenings?.update || false;
+  const canDelete = rolePermissions.JobOpenings?.delete || false;
+  // Fetch user displayName from Users collection
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const fetchUserDisplayName = async () => {
+      try {
+        const userDocRef = doc(db, "Users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserDisplayName(userData.displayName || user.email || "Unknown User");
+        } else {
+          console.warn("User document not found in Users collection");
+          setUserDisplayName(user.email || "Unknown User");
+        }
+      } catch (error) {
+        console.error("Error fetching user displayName:", error);
+        toast.error(`Failed to fetch user data: ${error.message}`);
+        setUserDisplayName(user.email || "Unknown User");
+      }
+    };
+
+    fetchUserDisplayName();
+  }, [user?.uid, user?.email]);
 
   const logActivity = async (action, details) => {
     try {
@@ -197,6 +233,13 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
       return;
     }
 
+    const jobHistoryEntry = {
+      action: job ? "Updated" : "Created",
+      performedBy: userDisplayName,
+      timestamp: new Date().toISOString(),
+      details: job ? `Updated job "${title}"` : `Created job "${title}"`,
+    };
+
     const jobData = {
       title,
       companyId,
@@ -216,20 +259,43 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
       status: closingDateObj && closingDateObj < new Date() ? "Inactive" : (status || "Open"),
       postingDate: Timestamp.fromDate(postingDateObj),
       closingDate: closingDateObj ? Timestamp.fromDate(closingDateObj) : null,
-      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      history: job ? arrayUnion(jobHistoryEntry) : [jobHistoryEntry], // Append or initialize history
     };
 
+    if (!job) {
+      jobData.createdAt = serverTimestamp();
+    }
+
     try {
+      let jobId;
       if (job) {
-        await updateDoc(doc(db, "JobOpenings", job.id), jobData);
+        const jobRef = doc(db, "JobOpenings", job.id);
+        await updateDoc(jobRef, jobData);
+        jobId = job.id;
         toast.success("Job opening updated successfully!");
-        logActivity("UPDATE_JOB", { title, closingDate, postingDate });
+        logActivity("UPDATE_JOB", { title, jobId, closingDate, postingDate });
       } else {
         const docRef = await addDoc(collection(db, "JobOpenings"), jobData);
+        jobId = docRef.id;
         toast.success("Job opening added successfully!");
-        logActivity("CREATE_JOB", { title, jobId: docRef.id, closingDate, postingDate });
+        logActivity("CREATE_JOB", { title, jobId, closingDate, postingDate });
       }
+
+      // Update company history
+      const companyHistoryEntry = {
+        action: job ? `Updated job opening: "${title}"` : `Added job opening: "${title}"`,
+        performedBy: userDisplayName,
+        timestamp: new Date().toISOString(),
+      };
+      const companyRef = doc(db, "Companies", companyId);
+      const companyDoc = await getDoc(companyRef);
+      const currentCompanyHistory = companyDoc.exists() && Array.isArray(companyDoc.data().history) ? companyDoc.data().history : [];
+      await updateDoc(companyRef, {
+        history: [...currentCompanyHistory, companyHistoryEntry],
+        updatedAt: serverTimestamp(),
+      });
+
       resetForm();
       toggleSidebar();
     } catch (error) {

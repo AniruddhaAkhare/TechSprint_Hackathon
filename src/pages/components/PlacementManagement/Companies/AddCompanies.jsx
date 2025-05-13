@@ -7,6 +7,7 @@ import {
   updateDoc,
   doc,
   serverTimestamp,
+  getDoc,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
@@ -220,11 +221,37 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [companyType, setCompanyType] = useState("");
+  const [userDisplayName, setUserDisplayName] = useState(""); // New state for displayName
 
   // Permission checks
   const canDisplay = rolePermissions?.Companies?.display || false;
   const canCreate = rolePermissions?.Companies?.create || false;
   const canUpdate = rolePermissions?.Companies?.update || false;
+
+  // Fetch user displayName from Users collection
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const fetchUserDisplayName = async () => {
+      try {
+        const userDocRef = doc(db, "Users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserDisplayName(userData.displayName || user.email || "Unknown User");
+        } else {
+          console.warn("User document not found in Users collection");
+          setUserDisplayName(user.email || "Unknown User");
+        }
+      } catch (error) {
+        console.error("Error fetching user displayName:", error);
+        toast.error(`Failed to fetch user data: ${error.message}`);
+        setUserDisplayName(user.email || "Unknown User");
+      }
+    };
+
+    fetchUserDisplayName();
+  }, [user?.uid, user?.email]);
 
   // Activity logging function
   const logActivity = async (action, details) => {
@@ -296,10 +323,10 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
     setStatus("Active");
     setTransactionCount(0);
     setNewPOC({ name: "", countryCode: "+91", mobile: "", email: "", designation: "", linkedInProfile: "" });
-    logActivity("RESET_FORM", {});
     setFromDate("");
     setToDate("");
     setCompanyType("");
+    logActivity("RESET_FORM", {});
   };
 
   const validateEmail = (email) => {
@@ -354,6 +381,13 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
       return;
     }
 
+    const companyHistoryEntry = {
+      action: company ? "Updated" : "Created",
+      performedBy: userDisplayName,
+      timestamp: new Date().toISOString(),
+      details: company ? `Updated company "${companyName}"` : `Created company "${companyName}"`,
+    };
+
     const companyData = {
       name: companyName,
       domain,
@@ -363,19 +397,25 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
       city,
       pointsOfContact,
       status,
-      createdAt: serverTimestamp(),
       toDate,
       fromDate,
       companyType,
+      history: company ? [...(company.history || []), companyHistoryEntry] : [companyHistoryEntry], // Append or initialize history
     };
 
     try {
       if (company) {
-        await updateDoc(doc(db, "Companies", company.id), companyData);
+        await updateDoc(doc(db, "Companies", company.id), {
+          ...companyData,
+          updatedAt: serverTimestamp(),
+        });
         toast.success("Company updated successfully!");
         logActivity("UPDATE_COMPANY", { name: companyName });
       } else {
-        const docRef = await addDoc(collection(db, "Companies"), companyData);
+        const docRef = await addDoc(collection(db, "Companies"), {
+          ...companyData,
+          createdAt: serverTimestamp(),
+        });
         toast.success("Company added successfully!");
         logActivity("CREATE_COMPANY", { name: companyName, newCompanyId: docRef.id });
       }
