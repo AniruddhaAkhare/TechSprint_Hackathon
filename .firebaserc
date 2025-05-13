@@ -11,7 +11,13 @@
         "shikshasaarathi-com": [
           "shikshasaarathi"
         ],
-        "form": [
+        "form.shikshasaarathi": [
+          "form.shikshasaarathi"
+        ],
+        "form-shikshasaarathi": [
+          "form-shikshasaarathi"
+        ],
+        "form-shikshasaarathi-com": [
           "form-shikshasaarathi-com"
         ]
       }
