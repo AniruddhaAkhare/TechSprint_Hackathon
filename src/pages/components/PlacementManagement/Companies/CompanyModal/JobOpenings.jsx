@@ -261,6 +261,8 @@ const JobOpenings = ({
                                     <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[120px]">Company</th>
                                     <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[120px]">Department</th>
                                     <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[100px]">Job Type</th>
+                                    <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[100px]">Status</th>
+
                                     <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[100px]">Location Type</th>
                                     <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[100px]">City</th>
                                     <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[120px]">Location</th>
@@ -269,10 +271,9 @@ const JobOpenings = ({
                                     <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[100px]">Duration</th>
                                     <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[100px]">Posted</th>
                                     <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[100px]">Closing</th>
-                                    <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[100px]">Status</th>
                                     <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[150px]">Skills</th>
                                     <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[150px]">POC</th>
-                                    <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[200px]">Description</th>
+                                    {/* <th className="px-3 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[200px]">Description</th> */}
                                 </tr>
                             </thead>
                             <tbody>
@@ -282,6 +283,8 @@ const JobOpenings = ({
                                         <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">{renderField(job.companyName)}</td>
                                         <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">{renderField(job.department)}</td>
                                         <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">{renderField(job.jobType)}</td>
+                                        <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">{renderField(job.status)}</td>
+
                                         <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">{renderField(job.locationType)}</td>
                                         <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">{renderField(job.city)}</td>
                                         <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">{renderField(job.location)}</td>
@@ -296,14 +299,13 @@ const JobOpenings = ({
                                         <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">
                                             {job.closingDate?.toDate?.()?.toLocaleDateString() || "Not provided"}
                                         </td>
-                                        <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">{renderField(job.status)}</td>
                                         <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">
                                             {job.skills?.join(", ") || "Not provided"}
                                         </td>
                                         <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">
                                             {job.poc ? `${job.poc.name} (${job.poc.email})` : "Not provided"}
                                         </td>
-                                        <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">{renderField(job.description)}</td>
+                                        {/* <td className="px-3 py-2 text-xs sm:text-sm text-gray-600 truncate">{renderField(job.description)}</td> */}
                                     </tr>
                                 ))}
                             </tbody>

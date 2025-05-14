@@ -237,7 +237,7 @@ const AddBulkCompanies = ({ isOpen, toggleSidebar }) => {
         "Phone": "",
         "Email": "",
         "City": "",
-        "POC": "Name1|CountryCode1|Mobile1|Email1;Name2|CountryCode2|Mobile2|Email2",
+        "POC": "Name1|CountryCode1|Mobile1|Email1|LinkedIn1|Designation1;Name2|CountryCode2|Mobile2|Email2|LinkedIn2|Designation2",
       },
     ];
     const ws = XLSX.utils.json_to_sheet(templateData);
@@ -326,7 +326,7 @@ const AddBulkCompanies = ({ isOpen, toggleSidebar }) => {
                 toast.error(`Invalid POC Country Code in row: ${companyName}. POC: ${name}`);
                 continue;
               }
-              pointsOfContact.push({ name, countryCode, mobile, email });
+              pointsOfContact.push({ name, countryCode, mobile, email, linkedIn, designation });
             }
           }
 
@@ -396,7 +396,7 @@ const AddBulkCompanies = ({ isOpen, toggleSidebar }) => {
             <h2 className="text-sm font-medium text-gray-700">Step 1: Download Template</h2>
             <p className="text-gray-600 text-sm mb-2">
               Download the XLSX template, fill in the company details, and upload the file. The POC column should be formatted as: 
-              <code>Name|CountryCode|Mobile|Email;Name2|CountryCode2|Mobile2|Email2</code>
+              <code>Name|CountryCode|Mobile|Email|LinkedIn1|Designation1;Name2|CountryCode2|Mobile2|Email2|LinkedIn2|Designation2</code>
             </p>
             <button
               onClick={downloadTemplate}
