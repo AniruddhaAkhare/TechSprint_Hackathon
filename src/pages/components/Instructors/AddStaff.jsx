@@ -156,7 +156,7 @@ export default function AddStaff() {
       console.warn("Submission already in progress, ignoring duplicate.");
       return;
     }
-    if (!Name.trim() || !email.trim() || !phone.trim()) {
+    if (!Name.trim() || !email.trim()) {
       toast.error("Please fill all required fields: Name, Email, Phone Number.");
       return;
     }
@@ -165,10 +165,10 @@ export default function AddStaff() {
     // const cleanedGuardianPhone = cleanPhoneNumber(guardianDetails.phone);
     const cleanedEmergencyPhone = cleanPhoneNumber(emergencyContact.phone);
   
-    if (!/^\d{10,15}$/.test(cleanedPhone)) {
-      toast.error("Staff phone number must be 10-15 digits.");
-      return;
-    }
+    // if (!/^\d{10,15}$/.test(cleanedPhone)) {
+    //   toast.error("Staff phone number must be 10-15 digits.");
+    //   return;
+    // }
     if (emergencyDetails.phone && !/^\d{10,15}$/.test(cleanedEmergencyPhone)) {
       toast.error("Emergency phone number must be 10-15 digits.");
       return;
@@ -369,7 +369,7 @@ export default function AddStaff() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Phone Number"
-                    required
+                    // required
                     disabled={isSubmitting}
                     className="w-2/3 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />

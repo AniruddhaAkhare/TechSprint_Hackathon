@@ -29,7 +29,7 @@ export default function EmployeeRegistrationForm() {
             };
 
             try {
-                await setDoc(doc(db, 'Users', user.uid), userData);
+                await setDoc(doc(db, 'Instructor', user.uid), userData);
                 navigate("/registration-welcome")
                 console.log('User data written to Firestore:', userData); 
             } catch (firestoreError) {

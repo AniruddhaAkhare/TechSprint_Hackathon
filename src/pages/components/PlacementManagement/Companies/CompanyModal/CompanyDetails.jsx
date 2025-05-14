@@ -60,6 +60,20 @@ const CompanyDetails = ({ companyData, setCompanyData, isEditing, renderField })
             )}
           </div>
           <div className="mb-3 sm:mb-4">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700">Company Address</label>
+            {isEditing ? (
+              <input
+                type="text"
+                value={companyData.address}
+                onChange={(e) => setCompanyData({ ...companyData, address: e.target.value })}
+                placeholder="Enter Address"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            ) : (
+              <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(companyData.address)}</p>
+            )}
+          </div>
+          <div className="mb-3 sm:mb-4">
             <label className="block text-xs sm:text-sm font-medium text-gray-700">City</label>
             {isEditing ? (
               <input
@@ -71,6 +85,57 @@ const CompanyDetails = ({ companyData, setCompanyData, isEditing, renderField })
               />
             ) : (
               <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(companyData.city)}</p>
+            )}
+          </div>
+          <div className="mb-3 sm:mb-4">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700">Company's Career Page</label>
+            {isEditing ? (
+              <input
+                type="text"
+                value={companyData.url}
+                onChange={(e) => setCompanyData({ ...companyData, url: e.target.value })}
+                placeholder="Enter city"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            ) : (
+              <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(companyData.url)}</p>
+            )}
+          </div>
+          <div className="mb-3 sm:mb-4">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700">Company Type</label>
+            {isEditing ? (
+              <input
+                type="text"
+                value={companyData.companyType}
+                onChange={(e) => setCompanyData({ ...companyData, companyType: e.target.value })}
+                placeholder="Enter city"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            ) : (
+              <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(companyData.companyType)}</p>
+            )}
+          </div>
+          <div className="mb-3 sm:mb-4">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700">Hiring Period</label>
+            {isEditing ? (
+              <div>
+              <input
+                type="date"
+                value={companyData.fromdate}
+                onChange={(e) => setCompanyData({ ...companyData, fromDate: e.target.value })}
+                placeholder="From"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              /> <p>to</p>
+              <input
+                type="date"
+                value={companyData.toDate}
+                onChange={(e) => setCompanyData({ ...companyData, toDate: e.target.value })}
+                placeholder="To"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+              </div>
+            ) : (
+              <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(companyData.toDate - companyData.fromDate)}</p>
             )}
           </div>
         </div>
