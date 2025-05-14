@@ -2899,6 +2899,19 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
             <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.referredBy)}</p>
           )}
         </div>
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Closing Date</label>
+          {isEditing ? (
+            <input
+              type="date"
+              value={newEnquiry.closingDate}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, closingDate: e.target.value })}
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.closingDate)}</p>
+          )}
+        </div>
       </div>
       <div className="space-y-3 sm:space-y-4">
         <div className="mb-3 sm:mb-4">
@@ -2971,19 +2984,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
             <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.fee)}</p>
           )}
         </div>
-        <div className="mb-3 sm:mb-4">
-          <label className="block text-xs sm:text-sm font-medium text-gray-700">Closing Date</label>
-          {isEditing ? (
-            <input
-              type="date"
-              value={newEnquiry.closingDate}
-              onChange={(e) => setNewEnquiry({ ...newEnquiry, closingDate: e.target.value })}
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-          ) : (
-            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.closingDate)}</p>
-          )}
-        </div>
+        
       </div>
     </div>
     {newEnquiry.stage === "closed-lost" && (
