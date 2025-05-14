@@ -77,11 +77,9 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       hscPassOutYear: "",
       graduationStream: "",
       graduationPercentage: "",
-      postGraduationStream: "",
-
       collegeName: "",
       graduationPassOutYear: "",
-      // postGraduationStream: "",
+      postGraduationStream: "",
       postGraduationPercentage: "",
       postGraduationCollegeName: "",
       postGraduationPassOutYear: "",
@@ -105,13 +103,68 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       lostReason: "",
       createdAt: "",
       createdBy: "",
-      owner: "", // New field for Lead Owner
       history: [],
       lastModifiedTime: "",
       lastTouched: "",
-
     }
   );
+
+  // const [newEnquiry, setNewEnquiry] = useState(
+  //   selectedEnquiry || {
+  //     name: "",
+  //     email: "",
+  //     phone: "",
+  //     streetAddress: "",
+  //     city: "",
+  //     stateRegionProvince: "",
+  //     postalZipCode: "",
+  //     country: "",
+  //     gender: "",
+  //     dateOfBirth: "",
+  //     studentType: "",
+  //     sscPercentage: "",
+  //     schoolName: "",
+  //     sscPassOutYear: "",
+  //     hscPercentage: "",
+  //     juniorCollegeName: "",
+  //     hscPassOutYear: "",
+  //     graduationStream: "",
+  //     graduationPercentage: "",
+  //     postGraduationStream: "",
+
+  //     collegeName: "",
+  //     graduationPassOutYear: "",
+  //     // postGraduationStream: "",
+  //     postGraduationPercentage: "",
+  //     postGraduationCollegeName: "",
+  //     postGraduationPassOutYear: "",
+  //     branch: "",
+  //     course: "",
+  //     source: "",
+  //     assignTo: "",
+  //     notes: [],
+  //     tags: [],
+  //     fee: "",
+  //     degree: "",
+  //     currentProfession: "",
+  //     workingCompanyName: "",
+  //     workingDomain: "",
+  //     experienceInYears: "",
+  //     guardianName: "",
+  //     guardianContact: "",
+  //     courseMotivation: "",
+  //     stage: "",
+  //     closingDate: "",
+  //     lostReason: "",
+  //     createdAt: "",
+  //     createdBy: "",
+  //     owner: "", // New field for Lead Owner
+  //     history: [],
+  //     lastModifiedTime: "",
+  //     lastTouched: "",
+
+  //   }
+  // );
   const [isLoadingCounselors, setIsLoadingCounselors] = useState(true);
 
   const sourceOptions = [" Instagram Ads", "Google Ads", "Referrals", "Google Search", "Emails", "Cold Calls", "Email Campaigns", "Blogs", "Webinar", "LinkedIn", "Events" ];
@@ -177,7 +230,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         lostReason: selectedEnquiry.lostReason || "",
         createdAt: selectedEnquiry.createdAt || defaultCreatedAt,
         createdBy: getUserDisplayName(selectedEnquiry.createdBy || currentUser?.uid || "Unknown User"),
-        owner: getUserDisplayName(selectedEnquiry.owner || selectedEnquiry.assignTo || selectedEnquiry.createdBy || currentUser?.uid || "Unknown User"),
+        assignTo: getUserDisplayName(selectedEnquiry.assignTo || selectedEnquiry.createdBy || currentUser?.uid || "Unknown User"),
         history: selectedEnquiry.history || inferredHistory,
       });
       setIsEditing(false);
@@ -236,13 +289,120 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         lostReason: "",
         createdAt: newCreatedAt.toISOString(),
         createdBy: userIdentity,
-        owner: userIdentity,
         history: [],
         lastModifiedTime: "",
         lastTouched: "",
       });
     }
-  }, [selectedEnquiry, currentUser, Users]); // Add Users to dependencies
+  }, [selectedEnquiry, currentUser, Users]);
+
+  // useEffect(() => {
+  //   if (selectedEnquiry) {
+  //     const defaultCreatedAt = new Date().toISOString();
+  //     setEditingEnquiryId(selectedEnquiry.id);
+  //     const inferredHistory = [
+  //       {
+  //         action: `Created enquiry`,
+  //         performedBy: getUserDisplayName(selectedEnquiry.createdBy || "Unknown User"),
+  //         timestamp: selectedEnquiry.createdAt || defaultCreatedAt,
+  //       },
+  //       ...(selectedEnquiry.notes || []).map((note) => ({
+  //         action: `Added ${formatNoteType(note.type).toLowerCase()} note: "${note.content.slice(0, 50)}${note.content.length > 50 ? "..." : ""}"`,
+  //         performedBy: getUserDisplayName(note.addedBy || "Unknown User"),
+  //         timestamp: note.createdAt,
+  //       })),
+  //       ...(selectedEnquiry.updatedAt && selectedEnquiry.updatedAt !== selectedEnquiry.createdAt
+  //         ? [{
+  //           action: `Updated enquiry`,
+  //           performedBy: getUserDisplayName(selectedEnquiry.createdBy || "Unknown User"),
+  //           timestamp: selectedEnquiry.updatedAt,
+  //         }]
+  //         : []),
+  //       ...(selectedEnquiry.stage
+  //         ? [{
+  //           action: `Changed stage to ${stageDisplay[selectedEnquiry.stage]?.name || selectedEnquiry.stage}`,
+  //           performedBy: getUserDisplayName(selectedEnquiry.createdBy || "Unknown User"),
+  //           timestamp: selectedEnquiry.updatedAt || selectedEnquiry.createdAt,
+  //         }]
+  //         : []),
+  //     ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
+  //     setNewEnquiry({
+  //       ...selectedEnquiry,
+  //       notes: Array.isArray(selectedEnquiry.notes) ? selectedEnquiry.notes : [],
+  //       tags: Array.isArray(selectedEnquiry.tags) ? selectedEnquiry.tags : [],
+  //       stage: selectedEnquiry.stage || "",
+  //       fee: selectedEnquiry.fee || "",
+  //       closingDate: selectedEnquiry.closingDate || "",
+  //       lostReason: selectedEnquiry.lostReason || "",
+  //       createdAt: selectedEnquiry.createdAt || defaultCreatedAt,
+  //       createdBy: getUserDisplayName(selectedEnquiry.createdBy || currentUser?.uid || "Unknown User"),
+  //       owner: getUserDisplayName(selectedEnquiry.owner || selectedEnquiry.assignTo || selectedEnquiry.createdBy || currentUser?.uid || "Unknown User"),
+  //       history: selectedEnquiry.history || inferredHistory,
+  //     });
+  //     setIsEditing(false);
+  //   } else {
+  //     const newCreatedAt = new Date();
+  //     const defaultClosingDate = new Date(newCreatedAt);
+  //     defaultClosingDate.setDate(newCreatedAt.getDate() + 7);
+  //     const userIdentity = getUserDisplayName(currentUser?.uid);
+  //     setEditingEnquiryId(null);
+  //     setIsEditing(true);
+  //     setCurrentSection(1);
+  //     setNewEnquiry({
+  //       name: "",
+  //       email: "",
+  //       phone: "",
+  //       streetAddress: "",
+  //       city: "",
+  //       stateRegionProvince: "",
+  //       postalZipCode: "",
+  //       country: "",
+  //       gender: "",
+  //       dateOfBirth: "",
+  //       studentType: "",
+  //       sscPercentage: "",
+  //       schoolName: "",
+  //       sscPassOutYear: "",
+  //       hscPercentage: "",
+  //       juniorCollegeName: "",
+  //       hscPassOutYear: "",
+  //       graduationStream: "",
+  //       graduationPercentage: "",
+  //       collegeName: "",
+  //       graduationPassOutYear: "",
+  //       postGraduationStream: "",
+  //       postGraduationPercentage: "",
+  //       postGraduationCollegeName: "",
+  //       postGraduationPassOutYear: "",
+  //       educationBreak: "",
+  //       branch: "",
+  //       course: "",
+  //       source: "",
+  //       assignTo: "",
+  //       notes: [],
+  //       tags: [],
+  //       fee: "",
+  //       degree: "",
+  //       currentProfession: "",
+  //       workingCompanyName: "",
+  //       workingDomain: "",
+  //       experienceInYears: "",
+  //       guardianName: "",
+  //       guardianContact: "",
+  //       courseMotivation: "",
+  //       stage: "pre-qualified",
+  //       closingDate: defaultClosingDate.toISOString().split("T")[0],
+  //       lostReason: "",
+  //       createdAt: newCreatedAt.toISOString(),
+  //       createdBy: userIdentity,
+  //       owner: userIdentity,
+  //       history: [],
+  //       lastModifiedTime: "",
+  //       lastTouched: "",
+  //     });
+  //   }
+  // }, [selectedEnquiry, currentUser, Users]); // Add Users to dependencies
 
 
 
@@ -425,6 +585,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
     }
   };
   
+
   const handleAddEnquiry = async () => {
     if (!newEnquiry.name) {
       alert("Please fill in the required field: Name");
@@ -491,86 +652,30 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
           conflictDetails = `Enquiry with phone ${newEnquiry.phone} exists: <a href="#" data-id="${conflictingDoc.id}" class="text-blue-600 underline">${conflictingDoc.data().name}</a>`;
         }
       }
-
+  
       if (emailConflict || phoneConflict) {
-        // Create a pop-up for the conflict
         const alertContainer = document.createElement("div");
         alertContainer.innerHTML = conflictDetails;
         alertContainer.className = "p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full";
         document.body.appendChild(alertContainer);
-      
-        // Define link by selecting the <a> element with data-id attribute
+  
         const link = alertContainer.querySelector("a[data-id]");
         if (link && conflictingDoc) {
           link.onclick = async (e) => {
             e.preventDefault();
             const docId = link.getAttribute("data-id");
-            try {
-              const enquiryRef = doc(db, "enquiries", docId);
-              const enquirySnap = await getDoc(enquiryRef); // Use getDoc for single document
-              if (enquirySnap.exists()) {
-                const enquiryData = { id: docId, ...enquirySnap.data() };
-                onRequestClose(); // Close current modal
-                onNavigateToEnquiry(enquiryData); // Navigate to conflicting enquiry
-              } else {
-                alert("Failed to load enquiry: Enquiry not found.");
-              }
-            } catch (error) {
-              console.error("Error navigating to enquiry:", error);
-              alert(`Failed to load enquiry: ${error.message}`);
-            }
-            alertContainer.remove(); // Remove pop-up immediately after click
+            await handleOpenConflictingEnquiry(docId);
+            alertContainer.remove();
           };
         }
-      
+  
         setTimeout(() => {
           if (alertContainer.parentNode) {
             alertContainer.remove();
           }
-        }, 5000); // Remove after 5 seconds if not clicked
+        }, 5000);
         return;
       }
-
-      // if (emailConflict || phoneConflict) {
-      //   // Create a pop-up for the conflict
-      //   const alertContainer = document.createElement("div");
-        
-      //   alertContainer.innerHTML = conflictDetails;
-      //   alertContainer.className = "p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full";
-      //   document.body.appendChild(alertContainer);
-      
-      //   // Define link by selecting the <a> element with data-id attribute
-      //   const link = alertContainer.querySelector("a[data-id]");
-      //   if (link && conflictingDoc) {
-      //     link.onclick = async (e) => {
-      //       e.preventDefault();
-      //       const docId = link.getAttribute("data-id");
-      //       try {
-      //         const enquiryRef = doc(db, "enquiries", docId);
-      //         const enquirySnap = await getDoc(enquiryRef); // Use getDoc for single document
-      //         if (enquirySnap.exists()) {
-      //           const enquiryData = { id: docId, ...enquirySnap.data() };
-      //           onRequestClose(); // Close current modal
-      //           onNavigateToEnquiry(enquiryData); // Navigate to conflicting enquiry
-      //         } else {
-      //           alert("Failed to load enquiry: Enquiry not found.");
-      //         }
-      //       } catch (error) {
-      //         console.error("Error navigating to enquiry:", error);
-      //         alert(`Failed to load enquiry: ${error.message}`);
-      //       }
-      //       alertContainer.remove(); // Remove pop-up immediately after click
-      //     };
-      //   }
-      
-      //   setTimeout(() => {
-      //     if (alertContainer.parentNode) {
-      //       alertContainer.remove();
-      //     }
-      //   }, 5000); // Remove after 5 seconds if not clicked
-      //   return;
-      // }
-  
   
       const selectedCourse = courses.find((course) => course.name === newEnquiry.course);
   
@@ -585,7 +690,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         lastModifiedTime: new Date().toISOString(),
         tags: Array.isArray(newEnquiry.tags) ? newEnquiry.tags : [],
         createdBy: getUserDisplayName(currentUser?.uid),
-        owner: getUserDisplayName(newEnquiry.assignTo || newEnquiry.owner || currentUser?.uid),
+        assignTo: getUserDisplayName(newEnquiry.assignTo || currentUser?.uid),
         history: newEnquiry.history || [],
       };
   
@@ -610,7 +715,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         enquiryData.history = [
           ...enquiryData.history,
           {
-            action: `Changed owner to ${newEnquiry.assignTo}`,
+            action: `Assigned to ${newEnquiry.assignTo}`,
             performedBy: getUserDisplayName(currentUser?.uid),
             timestamp: new Date().toISOString(),
           },
@@ -685,7 +790,6 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
           lostReason: "",
           createdAt: "",
           createdBy: "",
-          owner: "",
           history: [],
           lastModifiedTime: "",
           lastTouched: "",
@@ -700,6 +804,283 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       alert(`Failed to save enquiry: ${error.message}`);
     }
   };
+
+
+  // const handleAddEnquiry = async () => {
+  //   if (!newEnquiry.name) {
+  //     alert("Please fill in the required field: Name");
+  //     return;
+  //   }
+  
+  //   if (!newEnquiry.email && !newEnquiry.phone) {
+  //     alert("Please provide either an email or a phone number.");
+  //     return;
+  //   }
+  
+  //   if (newEnquiry.email && !validateEmail(newEnquiry.email)) {
+  //     alert("Please enter a valid email address (e.g., example@domain.com)");
+  //     return;
+  //   }
+  
+  //   if (newEnquiry.phone && !validatePhone(newEnquiry.phone)) {
+  //     alert("Please enter a valid 10-digit phone number (e.g., 1234567890)");
+  //     return;
+  //   }
+  
+  //   if (newEnquiry.stage === "closed-lost" && !newEnquiry.lostReason) {
+  //     alert("Please select a Lost Reason for Closed Lost status.");
+  //     return;
+  //   }
+  
+  //   if (!canCreate && !editingEnquiryId) {
+  //     alert("You don't have permission to create enquiries");
+  //     return;
+  //   }
+  
+  //   try {
+  //     const emailQuery = newEnquiry.email ? query(collection(db, "enquiries"), where("email", "==", newEnquiry.email)) : null;
+  //     const phoneQuery = newEnquiry.phone ? query(collection(db, "enquiries"), where("phone", "==", newEnquiry.phone)) : null;
+  //     const queries = [];
+  //     if (emailQuery) queries.push(getDocs(emailQuery));
+  //     if (phoneQuery) queries.push(getDocs(phoneQuery));
+  //     const snapshots = await Promise.all(queries);
+  
+  //     let emailConflict = false;
+  //     let phoneConflict = false;
+  //     let conflictDetails = "";
+  //     let conflictingDoc = null;
+  
+  //     if (emailQuery) {
+  //       const emailSnapshot = snapshots[0];
+  //       emailConflict = !emailSnapshot.empty;
+  //       if (editingEnquiryId) {
+  //         emailConflict = emailSnapshot.docs.some((doc) => doc.id !== editingEnquiryId);
+  //       }
+  //       if (emailConflict) {
+  //         conflictingDoc = emailSnapshot.docs[0];
+  //         conflictDetails = `Enquiry with email ${newEnquiry.email} exists: <a href="#" data-id="${conflictingDoc.id}" class="text-blue-600 underline">${conflictingDoc.data().name}</a>`;
+  //       }
+  //     }
+  //     if (phoneQuery) {
+  //       const phoneSnapshot = snapshots[phoneQuery ? snapshots.length - 1 : 0];
+  //       phoneConflict = !phoneSnapshot.empty;
+  //       if (editingEnquiryId) {
+  //         phoneConflict = phoneSnapshot.docs.some((doc) => doc.id !== editingEnquiryId);
+  //       }
+  //       if (phoneConflict && !emailConflict) {
+  //         conflictingDoc = phoneSnapshot.docs[0];
+  //         conflictDetails = `Enquiry with phone ${newEnquiry.phone} exists: <a href="#" data-id="${conflictingDoc.id}" class="text-blue-600 underline">${conflictingDoc.data().name}</a>`;
+  //       }
+  //     }
+
+  //     if (emailConflict || phoneConflict) {
+  //       // Create a pop-up for the conflict
+  //       const alertContainer = document.createElement("div");
+  //       alertContainer.innerHTML = conflictDetails;
+  //       alertContainer.className = "p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full";
+  //       document.body.appendChild(alertContainer);
+      
+  //       // Define link by selecting the <a> element with data-id attribute
+  //       const link = alertContainer.querySelector("a[data-id]");
+  //       if (link && conflictingDoc) {
+  //         link.onclick = async (e) => {
+  //           e.preventDefault();
+  //           const docId = link.getAttribute("data-id");
+  //           try {
+  //             const enquiryRef = doc(db, "enquiries", docId);
+  //             const enquirySnap = await getDoc(enquiryRef); // Use getDoc for single document
+  //             if (enquirySnap.exists()) {
+  //               const enquiryData = { id: docId, ...enquirySnap.data() };
+  //               onRequestClose(); // Close current modal
+  //               onNavigateToEnquiry(enquiryData); // Navigate to conflicting enquiry
+  //             } else {
+  //               alert("Failed to load enquiry: Enquiry not found.");
+  //             }
+  //           } catch (error) {
+  //             console.error("Error navigating to enquiry:", error);
+  //             alert(`Failed to load enquiry: ${error.message}`);
+  //           }
+  //           alertContainer.remove(); // Remove pop-up immediately after click
+  //         };
+  //       }
+      
+  //       setTimeout(() => {
+  //         if (alertContainer.parentNode) {
+  //           alertContainer.remove();
+  //         }
+  //       }, 5000); // Remove after 5 seconds if not clicked
+  //       return;
+  //     }
+
+  //     // if (emailConflict || phoneConflict) {
+  //     //   // Create a pop-up for the conflict
+  //     //   const alertContainer = document.createElement("div");
+        
+  //     //   alertContainer.innerHTML = conflictDetails;
+  //     //   alertContainer.className = "p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full";
+  //     //   document.body.appendChild(alertContainer);
+      
+  //     //   // Define link by selecting the <a> element with data-id attribute
+  //     //   const link = alertContainer.querySelector("a[data-id]");
+  //     //   if (link && conflictingDoc) {
+  //     //     link.onclick = async (e) => {
+  //     //       e.preventDefault();
+  //     //       const docId = link.getAttribute("data-id");
+  //     //       try {
+  //     //         const enquiryRef = doc(db, "enquiries", docId);
+  //     //         const enquirySnap = await getDoc(enquiryRef); // Use getDoc for single document
+  //     //         if (enquirySnap.exists()) {
+  //     //           const enquiryData = { id: docId, ...enquirySnap.data() };
+  //     //           onRequestClose(); // Close current modal
+  //     //           onNavigateToEnquiry(enquiryData); // Navigate to conflicting enquiry
+  //     //         } else {
+  //     //           alert("Failed to load enquiry: Enquiry not found.");
+  //     //         }
+  //     //       } catch (error) {
+  //     //         console.error("Error navigating to enquiry:", error);
+  //     //         alert(`Failed to load enquiry: ${error.message}`);
+  //     //       }
+  //     //       alertContainer.remove(); // Remove pop-up immediately after click
+  //     //     };
+  //     //   }
+      
+  //     //   setTimeout(() => {
+  //     //     if (alertContainer.parentNode) {
+  //     //       alertContainer.remove();
+  //     //     }
+  //     //   }, 5000); // Remove after 5 seconds if not clicked
+  //     //   return;
+  //     // }
+  
+  
+  //     const selectedCourse = courses.find((course) => course.name === newEnquiry.course);
+  
+  //     const enquiryData = {
+  //       ...newEnquiry,
+  //       stage: editingEnquiryId ? newEnquiry.stage : "pre-qualified",
+  //       amount: Number(newEnquiry.fee) || 0,
+  //       closingDate: newEnquiry.closingDate || "",
+  //       lostReason: newEnquiry.lostReason || "",
+  //       createdAt: newEnquiry.createdAt || new Date().toISOString(),
+  //       updatedAt: new Date().toISOString(),
+  //       lastModifiedTime: new Date().toISOString(),
+  //       tags: Array.isArray(newEnquiry.tags) ? newEnquiry.tags : [],
+  //       createdBy: getUserDisplayName(currentUser?.uid),
+  //       owner: getUserDisplayName(newEnquiry.assignTo || newEnquiry.owner || currentUser?.uid),
+  //       history: newEnquiry.history || [],
+  //     };
+  
+  //     const historyEntry = {
+  //       action: editingEnquiryId ? `Updated enquiry` : `Created enquiry`,
+  //       performedBy: getUserDisplayName(currentUser?.uid),
+  //       timestamp: new Date().toISOString(),
+  //     };
+  
+  //     if (editingEnquiryId && newEnquiry.stage !== selectedEnquiry?.stage) {
+  //       enquiryData.history = [
+  //         ...enquiryData.history,
+  //         {
+  //           action: `Changed stage to ${stageDisplay[newEnquiry.stage]?.name || newEnquiry.stage}`,
+  //           performedBy: getUserDisplayName(currentUser?.uid),
+  //           timestamp: new Date().toISOString(),
+  //         },
+  //       ];
+  //     }
+  
+  //     if (newEnquiry.assignTo && newEnquiry.assignTo !== selectedEnquiry?.assignTo) {
+  //       enquiryData.history = [
+  //         ...enquiryData.history,
+  //         {
+  //           action: `Changed owner to ${newEnquiry.assignTo}`,
+  //           performedBy: getUserDisplayName(currentUser?.uid),
+  //           timestamp: new Date().toISOString(),
+  //         },
+  //       ];
+  //     }
+  
+  //     enquiryData.history = [...enquiryData.history, historyEntry];
+  
+  //     if (editingEnquiryId) {
+  //       if (!canUpdate) {
+  //         alert("You don't have permission to update enquiries");
+  //         return;
+  //       }
+  //       const enquiryRef = doc(db, "enquiries", editingEnquiryId);
+  //       await updateDoc(enquiryRef, enquiryData);
+  //     } else {
+  //       const docRef = await addDoc(collection(db, "enquiries"), enquiryData);
+  //       setEditingEnquiryId(docRef.id);
+  //     }
+  
+  //     setNewEnquiry((prev) => ({
+  //       ...prev,
+  //       history: enquiryData.history,
+  //     }));
+  
+  //     if (currentSection < 4 && !isNotesMode) {
+  //       setCurrentSection(currentSection + 1);
+  //     } else {
+  //       setNewEnquiry({
+  //         name: "",
+  //         email: "",
+  //         phone: "",
+  //         streetAddress: "",
+  //         city: "",
+  //         stateRegionProvince: "",
+  //         postalZipCode: "",
+  //         country: "",
+  //         gender: "",
+  //         dateOfBirth: "",
+  //         studentType: "",
+  //         sscPercentage: "",
+  //         schoolName: "",
+  //         sscPassOutYear: "",
+  //         hscPercentage: "",
+  //         juniorCollegeName: "",
+  //         hscPassOutYear: "",
+  //         graduationStream: "",
+  //         graduationPercentage: "",
+  //         collegeName: "",
+  //         graduationPassOutYear: "",
+  //         postGraduationStream: "",
+  //         postGraduationPercentage: "",
+  //         postGraduationCollegeName: "",
+  //         postGraduationPassOutYear: "",
+  //         branch: "",
+  //         course: "",
+  //         source: "",
+  //         assignTo: "",
+  //         notes: [],
+  //         tags: [],
+  //         fee: "",
+  //         degree: "",
+  //         currentProfession: "",
+  //         workingCompanyName: "",
+  //         workingDomain: "",
+  //         experienceInYears: "",
+  //         guardianName: "",
+  //         guardianContact: "",
+  //         courseMotivation: "",
+  //         stage: "",
+  //         closingDate: "",
+  //         lostReason: "",
+  //         createdAt: "",
+  //         createdBy: "",
+  //         owner: "",
+  //         history: [],
+  //         lastModifiedTime: "",
+  //         lastTouched: "",
+  //       });
+  //       setEditingEnquiryId(null);
+  //       setIsEditing(false);
+  //       onRequestClose();
+  //       alert("Enquiry saved successfully!");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error saving enquiry:", error);
+  //     alert(`Failed to save enquiry: ${error.message}`);
+  //   }
+  // };
 
   
   // Then in your conflict handling code:
@@ -1182,36 +1563,33 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
   //   }
   // };
 
-  
-
   const handleTagToggle = async (tag) => {
     if (!canUpdate) {
       alert("You don't have permission to update enquiries");
       return;
     }
-
+  
     try {
       const enquiryRef = doc(db, "enquiries", editingEnquiryId);
       const isTagAdded = !newEnquiry.tags.includes(tag);
       const updatedTags = isTagAdded
         ? [...newEnquiry.tags, tag]
         : newEnquiry.tags.filter((t) => t !== tag);
-
+  
       const historyEntry = {
         action: `${isTagAdded ? "Added" : "Removed"} tag: "${tag}"`,
-        // performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
         performedBy: getUserDisplayName(currentUser?.uid),
         timestamp: new Date().toISOString(),
       };
       const updatedHistory = [...(newEnquiry.history || []), historyEntry];
-
+  
       await updateDoc(enquiryRef, {
         tags: updatedTags,
         history: updatedHistory,
         lastTouched: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
-
+  
       setNewEnquiry((prev) => ({
         ...prev,
         tags: updatedTags,
@@ -1222,6 +1600,45 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       alert(`Failed to update tags: ${error.message}`);
     }
   };
+
+  // const handleTagToggle = async (tag) => {
+  //   if (!canUpdate) {
+  //     alert("You don't have permission to update enquiries");
+  //     return;
+  //   }
+
+  //   try {
+  //     const enquiryRef = doc(db, "enquiries", editingEnquiryId);
+  //     const isTagAdded = !newEnquiry.tags.includes(tag);
+  //     const updatedTags = isTagAdded
+  //       ? [...newEnquiry.tags, tag]
+  //       : newEnquiry.tags.filter((t) => t !== tag);
+
+  //     const historyEntry = {
+  //       action: `${isTagAdded ? "Added" : "Removed"} tag: "${tag}"`,
+  //       // performedBy: currentUser?.displayName || currentUser?.email || "Unknown User",
+  //       performedBy: getUserDisplayName(currentUser?.uid),
+  //       timestamp: new Date().toISOString(),
+  //     };
+  //     const updatedHistory = [...(newEnquiry.history || []), historyEntry];
+
+  //     await updateDoc(enquiryRef, {
+  //       tags: updatedTags,
+  //       history: updatedHistory,
+  //       lastTouched: new Date().toISOString(),
+  //       updatedAt: new Date().toISOString(),
+  //     });
+
+  //     setNewEnquiry((prev) => ({
+  //       ...prev,
+  //       tags: updatedTags,
+  //       history: updatedHistory,
+  //       lastTouched: new Date().toISOString(),
+  //     }));
+  //   } catch (error) {
+  //     alert(`Failed to update tags: ${error.message}`);
+  //   }
+  // };
 
 
 
@@ -1328,6 +1745,33 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         }}
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+  <div className="flex items-center gap-2">
+    <h2 className="text-base sm:text-lg font-semibold">
+      {newEnquiry.name || (editingEnquiryId ? (isEditing ? "Edit Enquiry" : "View Enquiry") : "Add New Enquiry")}
+    </h2>
+    {newEnquiry.stage && newEnquiry.stage !== "" && (
+      <span
+        className={`px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${stageDisplay[newEnquiry.stage]?.color || "bg-gray-100 text-gray-700"}`}
+      >
+        {stageDisplay[newEnquiry.stage]?.name || newEnquiry.stage}
+      </span>
+    )}
+  </div>
+  <div className="flex flex-col items-end gap-2 mt-2 sm:mt-0">
+    {newEnquiry.assignTo && (
+      <p className="text-xs sm:text-sm text-gray-600">Assigned to: {newEnquiry.assignTo}</p>
+    )}
+    <button
+      onClick={isRecording ? stopRecording : startRecording}
+      disabled={isUploading}
+      className={`px-3 py-1 sm:px-4 sm:py-2 rounded-md text-white text-sm ${isUploading ? "bg-gray-400 cursor-not-allowed" : isRecording ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+        } transition-colors`}
+    >
+      {isUploading ? "Uploading..." : isRecording ? "Stop Visit" : "Start Visit"}
+    </button>
+  </div>
+</div>
+        {/* <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-base sm:text-lg font-semibold">
               {newEnquiry.name || (editingEnquiryId ? (isEditing ? "Edit Enquiry" : "View Enquiry") : "Add New Enquiry")}
@@ -1353,7 +1797,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
               {isUploading ? "Uploading..." : isRecording ? "Stop Visit" : "Start Visit"}
             </button>
           </div>
-        </div>
+        </div> */}
         <div className="flex flex-col sm:flex-row justify-between mb-4 flex-wrap gap-2">
           <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4">
             <button
@@ -1391,7 +1835,234 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
 
         <div className="space-y-4 sm:space-y-6">
 
-          {currentSection === 1 && (
+        {currentSection === 1 && (
+  <div>
+    <h3 className="text-base sm:text-lg font-medium mb-2">Personal Details</h3>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div className="mb-3 sm:mb-4">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700">Full Name</label>
+        {isEditing ? (
+          <input
+            type="text"
+            value={newEnquiry.name}
+            onChange={(e) => setNewEnquiry({ ...newEnquiry, name: e.target.value })}
+            placeholder="Enter name"
+            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          />
+        ) : (
+          <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.name)}</p>
+        )}
+      </div>
+      <div className="mb-3 sm:mb-4">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700">Email</label>
+        {isEditing ? (
+          <input
+            type="email"
+            value={newEnquiry.email}
+            onChange={(e) => setNewEnquiry({ ...newEnquiry, email: e.target.value })}
+            placeholder="Enter email"
+            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          />
+        ) : (
+          <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.email)}</p>
+        )}
+      </div>
+      <div className="mb-3 sm:mb-4">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700">Mobile</label>
+        {isEditing ? (
+          <input
+            type="text"
+            value={newEnquiry.phone}
+            onChange={(e) => setNewEnquiry({ ...newEnquiry, phone: e.target.value })}
+            placeholder="Enter phone number"
+            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          />
+        ) : (
+          <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.phone)}</p>
+        )}
+      </div>
+      <div className="mb-3 sm:mb-4">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700">Gender</label>
+        {isEditing ? (
+          <div className="mt-1 flex flex-wrap gap-3 sm:gap-4">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="gender"
+                value="Female"
+                checked={newEnquiry.gender === "Female"}
+                onChange={(e) => setNewEnquiry({ ...newEnquiry, gender: e.target.value })}
+                className="mr-1 sm:mr-2"
+              />
+              <span className="text-xs sm:text-sm">Female</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="gender"
+                value="Male"
+                checked={newEnquiry.gender === "Male"}
+                onChange={(e) => setNewEnquiry({ ...newEnquiry, gender: e.target.value })}
+                className="mr-1 sm:mr-2"
+              />
+              <span className="text-xs sm:text-sm">Male</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="gender"
+                value="notToDisclose"
+                checked={newEnquiry.gender === "notToDisclose"}
+                onChange={(e) => setNewEnquiry({ ...newEnquiry, gender: e.target.value })}
+                className="mr-1 sm:mr-2"
+              />
+              <span className="text-xs sm:text-sm">Not to disclose</span>
+            </label>
+          </div>
+        ) : (
+          <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.gender)}</p>
+        )}
+      </div>
+      <div className="mb-3 sm:mb-4">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700">Date of Birth</label>
+        {isEditing ? (
+          <input
+            type="date"
+            value={newEnquiry.dateOfBirth}
+            onChange={(e) => setNewEnquiry({ ...newEnquiry, dateOfBirth: e.target.value })}
+            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          />
+        ) : (
+          <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.dateOfBirth)}</p>
+        )}
+      </div>
+      <div className="mb-3 sm:mb-4">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700">Student Type</label>
+        {isEditing ? (
+          <select
+            value={newEnquiry.studentType}
+            onChange={(e) => setNewEnquiry({ ...newEnquiry, studentType: e.target.value })}
+            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          >
+            <option value="">Select student type</option>
+            <option value="School Student">School Student</option>
+            <option value="College Student">College Student</option>
+            <option value="Fresher">Fresher</option>
+            <option value="Working Professional">Working Professional</option>
+          </select>
+        ) : (
+          <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.studentType)}</p>
+        )}
+      </div>
+      <div className="mb-3 sm:mb-4 sm:col-span-2">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700">Address</label>
+        {isEditing ? (
+          <div className="space-y-2">
+            <input
+              type="text"
+              value={newEnquiry.streetAddress}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, streetAddress: e.target.value })}
+              placeholder="Street Address"
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              required
+            />
+            <input
+              type="text"
+              value={newEnquiry.city}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, city: e.target.value })}
+              placeholder="City"
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              required
+            />
+            <input
+              type="text"
+              value={newEnquiry.stateRegionProvince}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, stateRegionProvince: e.target.value })}
+              placeholder="State/Region/Province"
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              required
+            />
+            <input
+              type="text"
+              value={newEnquiry.postalZipCode}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, postalZipCode: e.target.value })}
+              placeholder="Postal/Zip Code"
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              required
+            />
+            <select
+              value={newEnquiry.country}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, country: e.target.value })}
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              required
+            >
+              <option value="">Select country</option>
+              <option value="India">India</option>
+              <option value="USA">USA</option>
+              <option value="UK">UK</option>
+              <option value="Canada">Canada</option>
+              <option value="Australia">Australia</option>
+            </select>
+          </div>
+        ) : (
+          <div className="mt-1 text-xs sm:text-sm text-gray-900">
+            <p>{renderField(newEnquiry.streetAddress)}</p>
+            <p>{renderField(newEnquiry.city)}</p>
+            <p>{renderField(newEnquiry.stateRegionProvince)}</p>
+            <p>{renderField(newEnquiry.postalZipCode)}</p>
+            <p>{renderField(newEnquiry.country)}</p>
+          </div>
+        )}
+      </div>
+      <div className="mb-3 sm:mb-4 sm:col-span-1">
+        <div className="mb-4 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Creator Name</label>
+          <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.createdBy)}</p>
+        </div>
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Assign To</label>
+          {isEditing ? (
+            <select
+              value={newEnquiry.assignTo}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, assignTo: e.target.value })}
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            >
+              <option value="">Select counselor</option>
+              {isLoadingCounselors ? (
+                <option value="" disabled>Loading counselors...</option>
+              ) : salesRoleIds.length > 0 && Users && Array.isArray(Users) && Users.length > 0 ? (
+                Users
+                  .filter((user) => salesRoleIds.includes(user.role))
+                  .map((user) => (
+                    <option key={user.id} value={user.displayName}>
+                      {user.displayName || 'Unknown User'}
+                    </option>
+                  ))
+              ) : (
+                <option value="" disabled>No counselors available</option>
+              )}
+            </select>
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.assignTo)}</p>
+          )}
+        </div>
+      </div>
+      <div className="mb-3 sm:mb-4">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700">Last Modified Time</label>
+        <p className="mt-1 text-xs sm:text-sm text-gray-900">
+          {formatDateSafely(newEnquiry.lastModifiedTime, "MMM d, yyyy h:mm a")}
+        </p>
+      </div>
+      <div className="mb-3 sm:mb-4">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700">Last Touched</label>
+        <p className="mt-1 text-xs sm:text-sm text-gray-900">
+          {formatDateSafely(newEnquiry.lastTouched, "MMM d, yyyy h:mm a")}
+        </p>
+      </div>
+    </div>
+  </div>
+)}
+          {/* {currentSection === 1 && (
             <div>
               <h3 className="text-base sm:text-lg font-medium mb-2">Personal Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -1598,7 +2269,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
           {currentSection === 2 && (
             <div>
@@ -2176,6 +2847,211 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
             </div>
           )}
           {currentSection === 3 && (
+  <div>
+    <h3 className="text-base sm:text-lg font-medium mb-2">Enquiry Details</h3>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Branch</label>
+          {isEditing ? (
+            <select
+              value={newEnquiry.branch}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, branch: e.target.value })}
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            >
+              <option value="">Select branch</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.name}>{branch.name}</option>
+              ))}
+            </select>
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.branch)}</p>
+          )}
+        </div>
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Source</label>
+          {isEditing ? (
+            <select
+              value={newEnquiry.source}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, source: e.target.value })}
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            >
+              <option value="">Select source</option>
+              {sourceOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.source)}</p>
+          )}
+        </div>
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Referred By</label>
+          {isEditing ? (
+            <input
+              type="text"
+              value={newEnquiry.referredBy}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, referredBy: e.target.value })}
+              placeholder="Enter referrer name"
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.referredBy)}</p>
+          )}
+        </div>
+      </div>
+      <div className="space-y-3 sm:space-y-4">
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Stage</label>
+          {isEditing ? (
+            <select
+              value={newEnquiry.stage}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, stage: e.target.value })}
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            >
+              <option value="">Select stage</option>
+              {Object.keys(stageDisplay).map((stage) => (
+                <option key={stage} value={stage}>{stageDisplay[stage].name}</option>
+              ))}
+            </select>
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(stageDisplay[newEnquiry.stage]?.name)}</p>
+          )}
+        </div>
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Learning Objective</label>
+          {isEditing ? (
+            <select
+              value={newEnquiry.learningObjective}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, learningObjective: e.target.value })}
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            >
+              <option value="">Select objective</option>
+              <option value="none">None</option>
+              <option value="job transition">Job Transition</option>
+              <option value="career start">Career Start</option>
+              <option value="ongoing job-upskill">Ongoing Job - Upskill</option>
+              <option value="further education-upskill">Further Education - Upskill</option>
+              <option value="pursuing degree-upskill">Pursuing Degree - Upskill</option>
+            </select>
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.learningObjective)}</p>
+          )}
+        </div>
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Course</label>
+          {isEditing ? (
+            <select
+              value={newEnquiry.course}
+              onChange={handleCourseChange}
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            >
+              <option value="">Select course</option>
+              {courses.map((course) => (
+                <option key={course.id} value={course.name}>{course.name}</option>
+              ))}
+            </select>
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.course)}</p>
+          )}
+        </div>
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Fee</label>
+          {isEditing ? (
+            <input
+              type="number"
+              value={newEnquiry.fee}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, fee: e.target.value })}
+              placeholder="Enter fee"
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              min="0"
+              step="0.01"
+            />
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.fee)}</p>
+          )}
+        </div>
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Closing Date</label>
+          {isEditing ? (
+            <input
+              type="date"
+              value={newEnquiry.closingDate}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, closingDate: e.target.value })}
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.closingDate)}</p>
+          )}
+        </div>
+      </div>
+    </div>
+    {newEnquiry.stage === "closed-lost" && (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-4">
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700">Lost Reason *</label>
+          {isEditing ? (
+            <select
+              value={newEnquiry.lostReason}
+              onChange={(e) => setNewEnquiry({ ...newEnquiry, lostReason: e.target.value })}
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              required
+            >
+              <option value="">Select reason</option>
+              {lostReasonOptions.map((reason) => (
+                <option key={reason} value={reason}>{reason}</option>
+              ))}
+            </select>
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm text-gray-900">{renderField(newEnquiry.lostReason)}</p>
+          )}
+        </div>
+      </div>
+    )}
+    {isEditing ? (
+      <div>
+        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Tags</label>
+        <div className="flex flex-wrap gap-2">
+          {availableTags && availableTags.length > 0 ? (
+            availableTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => handleTagToggle(tag)}
+                className={`px-2 py-1 sm:px-3 sm:py-1 border rounded-full text-xs sm:text-sm ${newEnquiry.tags.includes(tag)
+                  ? "bg-blue-100 border-blue-500 text-blue-700"
+                  : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                  }`}
+              >
+                {tag}
+              </button>
+            ))
+          ) : (
+            <p className="text-xs sm:text-sm text-gray-500">No tags available</p>
+          )}
+        </div>
+      </div>
+    ) : (
+      <div>
+        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Tags</label>
+        <div className="flex flex-wrap gap-2">
+          {newEnquiry.tags.length > 0 ? (
+            newEnquiry.tags.map((tag) => (
+              <span
+                key={tag}
+                className="px-2 py-1 sm:px-3 sm:py-1 border rounded-full text-xs sm:text-sm bg-blue-100 border-blue-500 text-blue-700"
+              >
+                {tag}
+              </span>
+            ))
+          ) : (
+            <p className="text-xs sm:text-sm text-gray-900">No tags assigned</p>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+)}
+          {/* {currentSection === 3 && (
             <div>
               <h3 className="text-base sm:text-lg font-medium mb-2">Enquiry Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -2408,7 +3284,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                 </div>
               )}
             </div>
-          )}
+          )} */}
           {currentSection === 4 && (
             <div>
               <h3 className="text-base sm:text-lg font-medium mb-2">Notes</h3>
