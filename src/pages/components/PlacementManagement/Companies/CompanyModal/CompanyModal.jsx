@@ -113,17 +113,17 @@
 //       });
 //       setPointsOfContact(Array.isArray(company.pointsOfContact) ? company.pointsOfContact : []);
 //       setIsEditing(false);
-  
+
 //       if (!company?.id) {
 //         setJobOpenings([]);
 //         return;
 //       }
-  
+
 //       const jobQuery = query(
 //         collection(db, "JobOpenings"),
 //         where("companyId", "==", company.id)
 //       );
-  
+
 //       const unsubscribe = onSnapshot(
 //         jobQuery,
 //         (snapshot) => {
@@ -141,7 +141,7 @@
 //           toast.error(`Failed to fetch job openings: ${error.message}`);
 //         }
 //       );
-  
+
 //       return () => unsubscribe();
 //     } else {
 //       setCompanyData({
@@ -170,15 +170,15 @@
 //       toast.error("You don't have permission to update companies");
 //       return;
 //     }
-  
+
 //     const closingDateObj = newJob.closingDate ? new Date(newJob.closingDate) : null;
 //     const postingDateObj = newJob.postingDate ? new Date(newJob.postingDate) : new Date();
-    
+
 //     if ((closingDateObj && isNaN(closingDateObj.getTime())) || isNaN(postingDateObj.getTime())) {
 //       toast.error("Invalid date format for posting or closing date");
 //       return;
 //     }
-  
+
 //     const jobData = {
 //         title: newJob.title,
 //         companyId: newJob.companyId,
@@ -202,8 +202,8 @@
 //         createdAt: serverTimestamp(),
 //         updatedAt: serverTimestamp(),
 //       };
-      
-  
+
+
 //     try {
 //       const jobRef = await addDoc(collection(db, "JobOpenings"), jobData);
 //       const historyEntry = {
@@ -389,19 +389,19 @@
 //         toast.error("Please add a note before submitting.");
 //         return;
 //       }
-  
+
 //       if (!canUpdate) {
 //         toast.error("You don't have permission to update companies");
 //         return;
 //       }
-  
+
 //       const noteObject = {
 //         content: newNote,
 //         type: noteType,
 //         createdAt: new Date().toISOString(),
 //         addedBy: user?.displayName || user?.email || "Unknown User",
 //       };
-  
+
 //       const updatedNotes = [...companyData.notes, noteObject];
 //       const historyEntry = {
 //         action: `Added ${formatNoteType(noteType).toLowerCase()}: "${noteObject.content.slice(0, 50)}${noteObject.content.length > 50 ? "..." : ""}"`,
@@ -409,7 +409,7 @@
 //         timestamp: new Date().toISOString(),
 //       };
 //       const updatedHistory = [...companyData.history, historyEntry];
-  
+
 //       try {
 //         const companyRef = doc(db, "Companies", company.id);
 //         await updateDoc(companyRef, {
@@ -641,10 +641,10 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
     status: "Open",
     skills: [],
     poc: "",
-    companyId: company?.id || "",
-    companyName: company?.name || "",
+    companyId: company.id || "",
+    companyName: company.name || "",
   });
-  const [newPOC, setNewPOC] = useState({ name: "", countryCode: "+91", mobile: "", email: "", linkedinProfile:"", designation:"" });
+  const [newPOC, setNewPOC] = useState({ name: "", countryCode: "+91", mobile: "", email: "", linkedinProfile: "", designation: "" });
   const [pointsOfContact, setPointsOfContact] = useState([]);
   const { user } = useAuth();
   const [companyData, setCompanyData] = useState("");
@@ -846,8 +846,8 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
         status: "Open",
         skills: [],
         poc: "",
-        companyId: company?.id,
-        companyName: company?.name,
+        companyId: company.id,
+        companyName: company.name,
       });
       toast.success("Job opening added successfully!");
     } catch (error) {
@@ -884,7 +884,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
       toast.error("Invalid LinkedIn profile URL");
       return;
     }
-  
+
     const updatedPOCs = [...pointsOfContact, { ...newPOC }];
     const historyEntry = {
       action: `Added point of contact: "${newPOC.name}"`,
@@ -892,7 +892,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
       timestamp: new Date().toISOString(),
     };
     const updatedHistory = [...(company?.history || []), historyEntry];
-  
+
     try {
       if (company) {
         // Update existing company
@@ -917,6 +917,44 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
     } catch (error) {
       console.error("Error adding POC:", error);
       toast.error(`Failed to add point of contact: ${error.message}`);
+    }
+  };
+  const handleUpdatePOC = async (updatedPOCs) => {
+    if (!canUpdate && company) {
+      toast.error("You don't have permission to update points of contact");
+      return;
+    }
+    if (!canCreate && !company) {
+      toast.error("You don't have permission to create points of contact");
+      return;
+    }
+
+    try {
+      const companyRef = doc(db, "Companies", company.id);
+      const historyEntry = {
+        action: `Updated point of contact`,
+        performedBy: user?.displayName || user?.email || "Unknown User",
+        timestamp: new Date().toISOString(),
+      };
+      const updatedHistory = [...companyData.history, historyEntry];
+
+      await updateDoc(companyRef, {
+        pointsOfContact: updatedPOCs,
+        history: updatedHistory,
+        updatedAt: new Date().toISOString(),
+      });
+
+      setPointsOfContact(updatedPOCs);
+      setCompanyData((prev) => ({
+        ...prev,
+        pointsOfContact: updatedPOCs,
+        history: updatedHistory,
+      }));
+      logActivity("UPDATE_POC", { updatedPOCs });
+      toast.success("Point of contact updated successfully!");
+    } catch (error) {
+      toast.error(`Failed to update point of contact: ${error.message}`);
+      throw error; // Re-throw to be handled by PointsOfContact
     }
   };
 
@@ -974,6 +1012,124 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
       logActivity("CHANGE_NEW_POC", { field, value });
       return updated;
     });
+  };
+
+  const handleUpdateJob = async (updatedJob) => {
+    if (!canUpdate) {
+      toast.error("You don't have permission to update job openings");
+      return;
+    }
+  
+    // Validate required fields
+    // if (!updatedJob.title || !updatedJob.department || !updatedJob.jobType || !updatedJob.location) {
+    //   toast.error("Please fill in all required fields: Job Title, Department, Job Type, and Location.");
+    //   return;
+    // }
+  
+    try {
+      const jobRef = doc(db, "JobOpenings", updatedJob.id);
+      
+      // Prepare dates for Firestore
+      const postingDate = updatedJob.postingDate 
+        ? Timestamp.fromDate(new Date(updatedJob.postingDate))
+        : Timestamp.fromDate(new Date());
+      
+      const closingDate = updatedJob.closingDate 
+        ? Timestamp.fromDate(new Date(updatedJob.closingDate))
+        : null;
+  
+      const jobData = {
+        title: updatedJob.title,
+        department: updatedJob.department,
+        jobType: updatedJob.jobType,
+        locationType: updatedJob.locationType,
+        city: updatedJob.city || "",
+        location: updatedJob.location,
+        experienceMin: updatedJob.experienceMin ? Number(updatedJob.experienceMin) : "",
+        experienceMax: updatedJob.experienceMax ? Number(updatedJob.experienceMax) : "",
+        salary: updatedJob.salary || "",
+        currency: updatedJob.currency || "USD",
+        duration: (updatedJob.jobType === "Internship" || updatedJob.jobType === "Contract") 
+          ? updatedJob.duration 
+          : "",
+        description: updatedJob.description || "",
+        skills: updatedJob.skills || [],
+        poc: updatedJob.poc || "",
+        status: updatedJob.status || "Open",
+        postingDate,
+        closingDate,
+        companyId: company.id,
+        companyName: company.name,
+        updatedAt: serverTimestamp()
+      };
+  
+      await updateDoc(jobRef, jobData);
+  
+      // Update local state
+      const updatedJobOpenings = jobOpenings.map(job => 
+        job.id === updatedJob.id ? { ...job, ...jobData } : job
+      );
+      setJobOpenings(updatedJobOpenings);
+  
+      // Add to history
+      const historyEntry = {
+        action: `Updated job opening: "${updatedJob.title}"`,
+        performedBy: userDisplayName,
+        timestamp: new Date().toISOString(),
+      };
+      const updatedHistory = [...companyData.history, historyEntry];
+      const companyRef = doc(db, "Companies", company.id);
+      await updateDoc(companyRef, {
+        history: updatedHistory,
+        updatedAt: serverTimestamp(),
+      });
+  
+      setCompanyData(prev => ({
+        ...prev,
+        history: updatedHistory,
+      }));
+  
+      toast.success("Job opening updated successfully!");
+      return true; // Indicate success
+    } catch (error) {
+      console.error("Error updating job:", error);
+      toast.error(`Failed to update job opening: ${error.message}`);
+      throw error;
+    }
+  };
+
+  const handleDeleteJob = async (jobId, jobTitle) => {
+    if (!canUpdate) {
+      toast.error("You don't have permission to delete job openings");
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "JobOpenings", jobId));
+      setJobOpenings(jobOpenings.filter((job) => job.id !== jobId));
+
+      const historyEntry = {
+        action: `Deleted job opening: "${jobTitle}"`,
+        performedBy: user?.displayName || user?.email || "Unknown User",
+        timestamp: new Date().toISOString(),
+      };
+      const updatedHistory = [...companyData.history, historyEntry];
+      const companyRef = doc(db, "Companies", company.id);
+      await updateDoc(companyRef, {
+        history: updatedHistory,
+        updatedAt: new Date().toISOString(),
+      });
+
+      setCompanyData((prev) => ({
+        ...prev,
+        history: updatedHistory,
+      }));
+      logActivity("DELETE_JOB", { jobTitle });
+      toast.success("Job opening deleted successfully!");
+    } catch (error) {
+      toast.error(`Failed to delete job opening: ${error.message}`);
+      throw error;
+    }
   };
 
   const handleUpdateCompany = async () => {
@@ -1110,6 +1266,8 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
               renderField={renderField}
               canUpdate={canUpdate}
               company={company}
+              onUpdateJob={handleUpdateJob}
+              onDeleteJob={handleDeleteJob}
             />
           )}
           {currentSection === 3 && (
@@ -1138,6 +1296,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
               canUpdate={canUpdate}
               canCreate={canCreate}
               company={company}
+              onUpdatePOC={handleUpdatePOC} // Pass the new function
             />
           )}
           {currentSection === 5 && (

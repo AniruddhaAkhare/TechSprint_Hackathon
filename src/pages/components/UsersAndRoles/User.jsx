@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { db, auth } from '../../../config/firebase';
 import { collection, getDocs, doc, setDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { useAuth } from '../../../context/AuthContext';
 
 export default function User() {
   const { user: currentUser, rolePermissions } = useAuth();
 
-  // Permission checks
   const canDisplay = rolePermissions.Users?.display || false;
   const canCreate = rolePermissions.Users?.create || false;
   const canUpdate = rolePermissions.Users?.update || false;

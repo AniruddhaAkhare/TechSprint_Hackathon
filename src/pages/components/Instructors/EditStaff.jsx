@@ -368,8 +368,8 @@ export default function EditStaff() {
       return;
     }
 
-    if (!staff.Name || !staff.email || !staff.phoneNumber) {
-      toast.error("Please fill necessary fields: Name, Email, Phone Number, Date of Birth");
+    if (!staff.Name || !staff.email) {
+      toast.error("Please fill necessary fields: Name, Email");
       return;
     }
 
@@ -515,7 +515,7 @@ export default function EditStaff() {
                       value={staff.phoneNumber}
                       onChange={handleChange}
                       placeholder="Phone Number"
-                      required
+                      // required
                       disabled={!canUpdate}
                       className="w-2/3 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -528,7 +528,7 @@ export default function EditStaff() {
                     name="date_of_birth"
                     value={staff.date_of_birth}
                     onChange={handleChange}
-                    required
+                    // required
                     disabled={!canUpdate}
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -541,7 +541,7 @@ export default function EditStaff() {
                     value={staff.domain}
                     onChange={handleChange}
                     placeholder="Domain"
-                    required
+                    // required
                     disabled={!canUpdate}
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
