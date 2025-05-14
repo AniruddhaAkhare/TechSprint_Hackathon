@@ -5938,6 +5938,11 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
   });
   const droppableId = `selectedFields-${form?.id || "new"}`;
   const droppableRef = useRef(null);
+  const [dynamicOptions, setDynamicOptions] = useState({
+    course: [],
+    branch: [],
+    assignTo: [],
+  });
 
   useEffect(() => {
     if (form) {
@@ -5965,6 +5970,50 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
       setFormLink(null);
     }
   }, [form]);
+
+  useEffect(() => {
+    const fetchDynamicOptions = async () => {
+      try {
+        const [courseSnapshot, centerSnapshot, roleSnapshot, userSnapshot] = await Promise.all([
+          getDocs(collection(db, "Course")),
+          getDocs(collection(db, "instituteSetup", "Center")),
+          getDocs(query(collection(db, "roles"), where("name", "==", "Sales"))),
+          getDocs(collection(db, "Users")),
+        ]);
+  
+        setDynamicOptions({
+          course: courseSnapshot.docs.map((doc) => ({
+            value: doc.data().name,
+            label: doc.data().name,
+          })),
+          branch: centerSnapshot.docs.map((doc) => ({
+            value: doc.data().name,
+            label: doc.data().name,
+          })),
+          assignTo: userSnapshot.docs
+            .filter((doc) => doc.data().roleId === roleSnapshot.docs[0]?.id)
+            .map((doc) => ({
+              value: doc.data().displayName || doc.data().email,
+              label: doc.data().displayName || doc.data().email,
+            })),
+        });
+      } catch (err) {
+        console.error("Error fetching dynamic options:", err);
+        setError(`Error fetching options: ${err.message}`);
+      }
+    };
+    fetchDynamicOptions();
+  }, []);
+  
+  // Update handleDefaultValueChange to handle object values
+  const handleDefaultValueChange = (fieldId, value) => {
+    if (isDragging) return;
+    setSelectedFields(
+      selectedFields.map((field) =>
+        field.id === fieldId ? { ...field, defaultValue: value } : field
+      )
+    );
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -6091,142 +6140,8 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
     }
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!formName.trim()) {
-  //     setError("Form name is required.");
-  //     return;
-  //   }
-  //   if (selectedFields.length === 0) {
-  //     setError("At least one enquiry field must be selected.");
-  //     return;
-  //   }
-  //   if (assignmentType === "Users" && selectedUsers.length === 0) {
-  //     setError("At least one user must be selected.");
-  //     return;
-  //   }
-  //   if (assignmentType === "Roles" && selectedRoles.length === 0) {
-  //     setError("At least one role must be selected.");
-  //     return;
-  //   }
-  
-  //   let formId;
-  //   const formData = {
-  //     name: formName,
-  //     users: assignmentType === "Users" ? selectedUsers : [],
-  //     roles: assignmentType === "Roles" ? selectedRoles : [],
-  //     fields: selectedFields.map((field) => {
-  //       const fieldConfig = allEnquiryFields
-  //         .flatMap((category) => category.fields)
-  //         .find((f) => f.id === field.id);
-  //       return {
-  //         id: field.id,
-  //         defaultValue: field.defaultValue,
-  //         options: fieldConfig?.type === "select" ? fieldConfig.options : undefined,
-  //       };
-  //     }),
-  //     tags,
-  //     enquiryCount: form?.enquiryCount || 0,
-  //     updatedAt: serverTimestamp(),
-  //     ...(form ? {} : { createdAt: serverTimestamp() }),
-  //   };
-  
-  //   try {
-  //     setLoading(true);
-  //     setError(null);
-  //     const sanitizedFormData = sanitizeData(formData);
-  
-  //     if (form) {
-  //       const formRef = doc(db, "enquiryForms", form.id);
-  //       await updateDoc(formRef, sanitizedFormData);
-  //       await logActivity("Updated enquiry form", { name: formName });
-  //       formId = form.id;
-  //     } else {
-  //       const docRef = await addDoc(collection(db, "enquiryForms"), sanitizedFormData);
-  //       formId = docRef.id;
-  //       const newFormLink = `https://form.shikshasaarathi.com/${formId}`;
-  //       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(newFormLink)}`;
-  //       await updateDoc(doc(db, "enquiryForms", formId), {
-  //         formLink: newFormLink,
-  //         qrCodeUrl,
-  //       });
-  //       setFormLink(newFormLink);
-  //       await logActivity("Created enquiry form", { name: formName });
-  //     }
-  
-  //     resetForm();
-  //     toggleSidebar();
-  //   } catch (error) {
-  //     setError(`Failed to save enquiry form: ${error.message}`);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!formName.trim()) {
-  //     setError("Form name is required.");
-  //     return;
-  //   }
-  //   if (selectedFields.length === 0) {
-  //     setError("At least one enquiry field must be selected.");
-  //     return;
-  //   }
-  //   if (assignmentType === "Users" && selectedUsers.length === 0) {
-  //     setError("At least one user must be selected.");
-  //     return;
-  //   }
-  //   if (assignmentType === "Roles" && selectedRoles.length === 0) {
-  //     setError("At least one role must be selected.");
-  //     return;
-  //   }
-
-  //   let formId;
-  //   const formData = {
-  //     name: formName,
-  //     users: assignmentType === "Users" ? selectedUsers : [],
-  //     roles: assignmentType === "Roles" ? selectedRoles : [],
-  //     fields: selectedFields,
-  //     tags,
-  //     enquiryCount: form?.enquiryCount || 0,
-  //     updatedAt: serverTimestamp(),
-  //     ...(form ? {} : { createdAt: serverTimestamp() }),
-  //   };
-
-  //   try {
-  //     setLoading(true);
-  //     setError(null);
-  //     const sanitizedFormData = sanitizeData(formData);
-
-  //     if (form) {
-  //       const formRef = doc(db, "enquiryForms", form.id);
-  //       await updateDoc(formRef, sanitizedFormData);
-  //       await logActivity("Updated enquiry form", { name: formName });
-  //       formId = form.id;
-  //     } else {
-  //       const docRef = await addDoc(collection(db, "enquiryForms"), sanitizedFormData);
-  //       formId = docRef.id;
-  //       const newFormLink = `https://form.shikshasaarathi.com/${formId}`;
-  //       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(newFormLink)}`;
-  //       await updateDoc(doc(db, "enquiryForms", formId), {
-  //         formLink: newFormLink,
-  //         qrCodeUrl,
-  //       });
-  //       setFormLink(newFormLink);
-  //       await logActivity("Created enquiry form", { name: formName });
-  //     }
-
-  //     resetForm();
-  //     toggleSidebar();
-  //   } catch (error) {
-  //     setError(`Failed to save enquiry form: ${error.message}`);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
+ 
   const resetForm = () => {
     setFormName("");
     setSelectedUsers([]);
@@ -6316,14 +6231,14 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
     }));
   };
 
-  const handleDefaultValueChange = (fieldId, value) => {
-    if (isDragging) return;
-    setSelectedFields(
-      selectedFields.map((field) =>
-        field.id === fieldId ? { ...field, defaultValue: value } : field
-      )
-    );
-  };
+  // const handleDefaultValueChange = (fieldId, value) => {
+  //   if (isDragging) return;
+  //   setSelectedFields(
+  //     selectedFields.map((field) =>
+  //       field.id === fieldId ? { ...field, defaultValue: value } : field
+  //     )
+  //   );
+  // };
 
   const handleDragStart = () => setIsDragging(true);
   const handleDragEnd = (result) => {
@@ -6695,7 +6610,129 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
               )}
             </div>
 
+
             <div className="mt-4">
+  <h3 className="text-base font-medium text-gray-700">
+    Selected Fields (Drag to Reorder)
+  </h3>
+  <Droppable droppableId={droppableId}>
+    {(provided, snapshot) => (
+      <div
+        {...provided.droppableProps}
+        ref={(el) => {
+          provided.innerRef(el);
+          droppableRef.current = el;
+        }}
+        className={`mt-2 space-y-2 p-4 border rounded-md min-h-[100px] ${
+          snapshot.isDraggingOver
+            ? "bg-blue-50 border-blue-500"
+            : "bg-white border-gray-300"
+        }`}
+      >
+        {selectedFields.length > 0 ? (
+          selectedFields.map((field, index) => {
+            const enquiryField = allEnquiryFields
+              .flatMap((category) => category.fields)
+              .find((f) => f.id === field.id);
+            if (!enquiryField) return null;
+            const fieldOptions =
+              field.id === "course"
+                ? dynamicOptions.course
+                : field.id === "branch"
+                ? dynamicOptions.branch
+                : field.id === "assignTo"
+                ? dynamicOptions.assignTo
+                : enquiryField.options || [];
+            return (
+              <Draggable
+                key={field.id}
+                draggableId={field.id.toString()}
+                index={index}
+                isDragDisabled={loading}
+              >
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    className={`flex items-center p-2 rounded hover:bg-gray-100 ${
+                      snapshot.isDragging
+                        ? "bg-blue-100 shadow-lg"
+                        : "bg-gray-50"
+                    }`}
+                  >
+                    <span className="mr-2 cursor-move text-gray-500 text-lg">
+                      ☰
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={true}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleFieldToggle(field.id);
+                      }}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      disabled={loading || isDragging}
+                    />
+                    <span className="ml-2 text-base text-gray-700 flex-1">
+                      {enquiryField.label} ({enquiryField.type})
+                      {enquiryField.required && (
+                        <span className="text-red-500">*</span>
+                      )}
+                    </span>
+                    {enquiryField.type === "select" ? (
+                      <select
+                        value={field.defaultValue || ""}
+                        onChange={(e) =>
+                          handleDefaultValueChange(field.id, e.target.value)
+                        }
+                        className="ml-2 p-1 border border-gray-300 rounded-md text-sm w-1/3"
+                        disabled={loading || isDragging}
+                      >
+                        <option value="">Select default</option>
+                        {fieldOptions.length > 0 ? (
+                          fieldOptions.map((option) => (
+                            <option
+                              key={option.value || option}
+                              value={option.value || option}
+                            >
+                              {option.label || option}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>
+                            No options available
+                          </option>
+                        )}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={field.defaultValue}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleDefaultValueChange(field.id, e.target.value);
+                        }}
+                        placeholder="Default value"
+                        className="ml-2 p-1 border border-gray-300 rounded-md text-sm w-1/3"
+                        disabled={loading || isDragging}
+                      />
+                    )}
+                  </div>
+                )}
+              </Draggable>
+            );
+          })
+        ) : (
+          <p className="text-gray-500 text-center">No fields selected</p>
+        )}
+        {provided.placeholder}
+      </div>
+    )}
+  </Droppable>
+</div>
+
+            {/* <div className="mt-4">
               <h3 className="text-base font-medium text-gray-700">
                 Selected Fields (Drag to Reorder)
               </h3>
@@ -6795,7 +6832,7 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
                   </div>
                 )}
               </Droppable>
-            </div>
+            </div> */}
           </div>
 
           <div className="flex justify-end">
