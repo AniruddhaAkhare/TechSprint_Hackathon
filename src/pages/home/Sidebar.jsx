@@ -37,6 +37,9 @@ const Sidebar = () => {
     users: false,
     settings: false,
     hr: false,
+    home:false,
+    analytics:false, 
+    learners:false,
   });
 
   // Permission checks
@@ -64,6 +67,7 @@ const Sidebar = () => {
   const canViewJobOpenings = rolePermissions?.JobOpenings?.display || false;
   const canViewEnquiryForms = rolePermissions?.enquiryForms?.display || false;
   const canViewHolidays = rolePermissions?.Holidays?.display || false;
+  const canViewLearners = rolePermissions?.student?.display || false;
 
 
 
@@ -209,12 +213,21 @@ const Sidebar = () => {
       )}
 
       <ul className="nav-list">
-        <Link to="/dashboard">
+        {/* <Link to="/dashboard">
           <li className="nav-item mt-3 mb-3">
             <FaTachometerAlt className="nav-icon" />
             <span>Dashboard</span>
           </li>
-        </Link>
+        </Link> */}
+        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("home")}>
+          Home
+          {accordionState.home ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
+        </li>
+        {accordionState.home &&
+        <>
+          
+        </>
+        }
 
         <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("enquiry")}>
           Sales And Marketing
@@ -242,7 +255,7 @@ const Sidebar = () => {
         </>
         }
         <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("academic")}>
-          Academic
+          Academics
           {accordionState.academic ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
         </li>
         {accordionState.academic &&(
@@ -319,6 +332,24 @@ const Sidebar = () => {
                 </li>
               </Link>
             )}
+          </>
+        )}
+
+        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("learners")}>
+          Learners
+          {accordionState.learners ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
+        </li>
+        {accordionState.learners && (
+          <>
+            {canViewLearners && (
+              <Link to="/studentdetails" className="nav-link">
+                <li className="nav-item">
+                  <FaMoneyBillAlt className="nav-icon" />
+                  <span>Learners</span>
+                </li>
+              </Link>
+            )}
+            
           </>
         )}
 
@@ -421,37 +452,18 @@ const Sidebar = () => {
           </>
         )}
 
-        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("users")}>
-          Users
-          {accordionState.users ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
+        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("analytics")}>
+            Analytics          
+          {accordionState.analytics ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
         </li>
-        {accordionState.users && (
+        {accordionState.analytics && (
           <>
-            {canViewUsers && (
-              <Link to="/users" className="nav-link">
-                <li className="nav-item">
-                  <FaUsers className="nav-icon" />
-                  <span>User Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewStudents && (
-              <Link to="/studentdetails" className="nav-link">
-                <li className="nav-item">
-                  <FaUserGraduate className="nav-icon" />
-                  <span>Learner Management</span>
-                </li>
-              </Link>
-            )}
-            
-            {canViewRoles && (
-              <Link to="/roles" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-user nav-icon"></i>
-                  <span>Roles Management</span>
-                </li>
-              </Link>
-            )}
+            <Link to="/dashboard" className="nav-link" >
+          <li className="nav-item">
+            <FaQuestionCircle className="nav-icon" />
+            <span>Organisational Dashboard</span>
+          </li>
+        </Link>
           </>
         )}
 
@@ -466,6 +478,22 @@ const Sidebar = () => {
                 <li className="nav-item">
                   <i className="fa-solid fa-building-columns nav-icon"></i>
                   <span>Institute Setup</span>
+                </li>
+              </Link>
+            )}
+            {canViewUsers && (
+              <Link to="/users" className="nav-link">
+                <li className="nav-item">
+                  <FaUsers className="nav-icon" />
+                  <span>User Management</span>
+                </li>
+              </Link>
+            )}
+            {canViewRoles && (
+              <Link to="/roles" className="nav-link">
+                <li className="nav-item">
+                  <i className="fa-solid fa-user nav-icon"></i>
+                  <span>Roles Management</span>
                 </li>
               </Link>
             )}
