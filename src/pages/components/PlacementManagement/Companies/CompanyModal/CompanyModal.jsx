@@ -641,8 +641,8 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
     status: "Open",
     skills: [],
     poc: "",
-    companyId: company.id || "",
-    companyName: company.name || "",
+    companyId: company?.id,
+    companyName: company?.name,
   });
   const [newPOC, setNewPOC] = useState({ name: "", countryCode: "+91", mobile: "", email: "", linkedinProfile: "", designation: "" });
   const [pointsOfContact, setPointsOfContact] = useState([]);
@@ -692,7 +692,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
       setPointsOfContact(Array.isArray(company.pointsOfContact) ? company.pointsOfContact : []);
       setIsEditing(false);
 
-      if (!company?.id) {
+      if (!company.id) {
         setJobOpenings([]);
         return;
       }
@@ -749,7 +749,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
     try {
       const activityLog = {
         action,
-        details: { companyId: company?.id || null, ...details },
+        details: { companyId: company.id || null, ...details },
         timestamp: new Date().toISOString(),
         userEmail: user?.email || "anonymous",
         userId: user.uid,
