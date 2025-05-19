@@ -117,7 +117,7 @@ export default function Courses() {
   const fetchCenters = useCallback(async () => {
     if (!canDisplay) return [];
     try {
-      const q = query(CenterCollectionRef, orderBy("createdAt", "desc")); // Sort by createdAt in descending order
+      const q = query(CenterCollectionRef, orderBy("createdAt", "desc"));
       const snapshot = await getDocs(q);
       const centerData = snapshot.docs.map((doc) => ({
         id: doc.id,
