@@ -213,21 +213,21 @@ const Sidebar = () => {
       )}
 
       <ul className="nav-list">
-        {/* <Link to="/dashboard">
+        <Link to="/my-profile">
           <li className="nav-item mt-3 mb-3">
             <FaTachometerAlt className="nav-icon" />
-            <span>Dashboard</span>
+            <span>Home</span>
           </li>
-        </Link> */}
-        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("home")}>
+        </Link>
+        {/* <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("home")}>
           Home
           {accordionState.home ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
-        </li>
-        {accordionState.home &&
+        </li> */}
+        {/* {accordionState.home &&
         <>
           
         </>
-        }
+        } */}
 
         <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("enquiry")}>
           Sales And Marketing

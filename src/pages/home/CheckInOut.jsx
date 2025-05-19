@@ -12,7 +12,7 @@ const CheckInOut = () => {
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [currentDuration, setCurrentDuration] = useState(null);
   const [liveDuration, setLiveDuration] = useState(null);
-  const CHECK_IN_RADIUS = 100; // 100 meters
+  const CHECK_IN_RADIUS = 200; // 100 meters
   const AUTO_CHECKOUT_INTERVAL = 300000; // 5 minutes
   const GRACE_PERIOD = 2;
 
@@ -161,7 +161,7 @@ const CheckInOut = () => {
             setError("Failed to check in. Please try again.");
           }
         } else {
-          setError("You are not within 100 meters of any branch.");
+          setError("You are not within 200 meters of any branch.");
         }
         setIsFetchingLocation(false);
       },
