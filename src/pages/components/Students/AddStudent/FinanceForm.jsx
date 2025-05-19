@@ -3796,6 +3796,30 @@ const FinanceForm = ({
             <MenuItem value="Completed">Completed</MenuItem>
           </Select>
         </FormControl>
+        <TextField
+          label="Applicant Number"
+          type="number"
+          value={financeDetails.applicant_number || 0}
+          onChange={(e) =>
+            handleFinanceChange(courseIndex, "applicant_number", "", e.target.value)
+          }
+          variant="outlined"
+          size="small"
+          fullWidth
+          disabled={!canUpdate}
+        />
+        <TextField
+          label="Invoice Number"
+          type="number"
+          value={financeDetails.invoice_number || 0}
+          onChange={(e) =>
+            handleFinanceChange(courseIndex, "invoice_number", "", e.target.value)
+          }
+          variant="outlined"
+          size="small"
+          fullWidth
+          disabled={!canUpdate}
+        />
       </div>
       <Typography variant="subtitle1" className="text-gray-800 font-medium mt-4">
         Documents
@@ -3825,6 +3849,10 @@ const FinanceForm = ({
               { type: "paymentSlip", label: "Payment Slip" },
               { type: "aadharCard", label: "Aadhar Card" },
               { type: "panCard", label: "PAN Card" },
+              { type: "invoice", label: "Invoice" },
+              { type: "loan_agreement", label: "Loan Agreement" },
+              { type: "loan_delivery", label: "Loan Delivery Order" },
+
             ].map((doc) => (
               <TableRow key={doc.type}>
                 <TableCell>{doc.label}</TableCell>
