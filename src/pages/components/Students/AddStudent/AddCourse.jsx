@@ -3304,21 +3304,21 @@
 // //   const uploadFileToS3 = async (file, docType, studentId, courseIndex) => {
 // //     const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
 // //     const region = import.meta.env.VITE_AWS_REGION;
-  
+
 // //     if (!bucketName || !region) {
 // //       const errorMsg = "Missing S3 configuration: VITE_S3_BUCKET_NAME or VITE_AWS_REGION";
 // //       console.error(errorMsg);
 // //       toast.error(errorMsg);
 // //       throw new Error(errorMsg);
 // //     }
-  
+
 // //     if (!file || !(file instanceof File)) {
 // //       const errorMsg = `Invalid file for ${docType}: File object is null or not a File instance`;
 // //       console.error(errorMsg);
 // //       toast.error(errorMsg);
 // //       throw new Error(errorMsg);
 // //     }
-  
+
 // //     const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
 // //     if (!allowedTypes.includes(file.type)) {
 // //       const errorMsg = `Invalid file type for ${file.name}. Allowed types: PDF, JPEG, PNG`;
@@ -3332,7 +3332,7 @@
 // //       toast.error(errorMsg);
 // //       throw new Error(errorMsg);
 // //     }
-  
+
 // //     const fileName = `students/${studentId}/courses/${courseIndex}/${docType}_${Date.now()}_${file.name}`;
 // //     const params = {
 // //       Bucket: bucketName,
@@ -3340,7 +3340,7 @@
 // //       Body: file,
 // //       ContentType: file.type,
 // //     };
-  
+
 // //     try {
 // //       console.log(`Uploading ${docType} to S3: ${fileName}`, {
 // //         bucket: bucketName,
@@ -3354,15 +3354,15 @@
 // //         queueSize: 4,
 // //         partSize: 5 * 1024 * 1024,
 // //       });
-  
+
 // //       upload.on("httpUploadProgress", (progress) => {
 // //         const percent = Math.round((progress.loaded / progress.total) * 100);
 // //         console.log(`Upload progress for ${docType}: ${percent}%`);
 // //         setUploadProgress((prev) => ({ ...prev, [`${courseIndex}_${docType}`]: percent }));
 // //       });
-  
+
 // //       await upload.done();
-  
+
 // //       const url = `https://${bucketName}.s3.${region}.amazonaws.com/${fileName}`;
 // //       console.log(`Successfully uploaded ${docType} to S3: ${url}`);
 // //       logActivity("UPLOAD_FILE_SUCCESS", { docType, url, studentId, courseIndex }, user);
@@ -3376,7 +3376,7 @@
 // //       throw new Error(errorMsg);
 // //     }
 // //   };
-  
+
 // //   const saveEnrollmentData = async () => {
 // //     if (!canCreate) {
 // //       toast.error("You don't have permission to save enrollment data");
@@ -3389,7 +3389,7 @@
 // //     }
 // //     try {
 // //       setLoading(true);
-  
+
 // //       // Validate S3 configuration
 // //       if (!import.meta.env.VITE_S3_BUCKET_NAME || !import.meta.env.VITE_AWS_REGION) {
 // //         throw new Error("S3 configuration missing: VITE_S3_BUCKET_NAME or VITE_AWS_REGION");
@@ -3397,14 +3397,14 @@
 // //       if (!s3Client.config.credentials) {
 // //         throw new Error("S3 client credentials not configured");
 // //       }
-  
+
 // //       // Prepare updated entries with file uploads
 // //       const documentFields = ["photo", "bankStatement", "paymentSlip", "aadharCard", "panCard"];
 // //       const uploadErrors = [];
 // //       const updatedEntries = await Promise.all(
 // //         courseEntries.map(async (entry, index) => {
 // //           const uploadedDocuments = {};
-  
+
 // //           // Upload each document
 // //           for (const field of documentFields) {
 // //             if (entry.financeDetails[field] instanceof File) {
@@ -3432,7 +3432,7 @@
 // //               uploadedDocuments[`${field}Name`] = entry.financeDetails[`${field}Name`] || "";
 // //             }
 // //           }
-  
+
 // //           // Clean financeDetails to remove File objects and undefined values
 // //           const cleanedFinanceDetails = {};
 // //           Object.keys(entry.financeDetails).forEach((key) => {
@@ -3440,20 +3440,20 @@
 // //               cleanedFinanceDetails[key] = uploadedDocuments[key] ?? entry.financeDetails[key] ?? "";
 // //             }
 // //           });
-  
+
 // //           return {
 // //             ...entry,
 // //             financeDetails: cleanedFinanceDetails,
 // //           };
 // //         })
 // //       );
-  
+
 // //       // Log upload errors but continue saving
 // //       if (uploadErrors.length > 0) {
 // //         console.warn("Some documents failed to upload:", uploadErrors);
 // //         toast.warn(`Some documents failed to upload:\n${uploadErrors.join("\n")}`);
 // //       }
-  
+
 // //       // Save enrollment data
 // //       console.log("Saving enrollment data to Firestore:", updatedEntries);
 // //       await setDoc(
@@ -3464,7 +3464,7 @@
 // //         },
 // //         { merge: true }
 // //       );
-  
+
 // //       // Fetch student data for email
 // //       const studentDoc = await getDoc(doc(db, "student", studentId));
 // //       if (!studentDoc.exists()) {
@@ -3473,7 +3473,7 @@
 // //       const studentData = studentDoc.data();
 // //       const studentEmail = studentData.email || "";
 // //       const studentName = `${studentData.Name}`.trim() || "";
-  
+
 // //       // Check for new courses or updated fee details
 // //       const newCourses = updatedEntries.filter(
 // //         (entry) =>
@@ -3493,14 +3493,14 @@
 // //           JSON.stringify(entry.registration) !== JSON.stringify(existing.registration)
 // //         );
 // //       });
-  
+
 // //       toast.success("Enrollment data saved successfully!");
 // //       logActivity(
 // //         "SAVE_ENROLLMENT_SUCCESS",
 // //         { courseCount: updatedEntries.length, studentId },
 // //         user
 // //       );
-  
+
 // //       // Send emails for new courses
 // //       for (const course of newCourses) {
 // //         if (studentEmail && course.selectedCourse?.name) {
@@ -3537,7 +3537,7 @@
 // //           }
 // //         }
 // //       }
-  
+
 // //       handleClose();
 // //     } catch (error) {
 // //       console.error("Error saving enrollment data:", error);
@@ -4460,7 +4460,7 @@
 //     }
 //     try {
 //       setLoading(true);
-  
+
 //       // Validate S3 configuration
 //       if (!import.meta.env.VITE_S3_BUCKET_NAME || !import.meta.env.VITE_AWS_REGION) {
 //         throw new Error("S3 configuration missing: VITE_S3_BUCKET_NAME or VITE_AWS_REGION");
@@ -4468,14 +4468,14 @@
 //       if (!s3Client.config.credentials) {
 //         throw new Error("S3 client credentials not configured");
 //       }
-  
+
 //       // Prepare updated entries with file uploads
 //       const documentFields = ["photo", "bankStatement", "paymentSlip", "aadharCard", "panCard"];
 //       const uploadErrors = [];
 //       const updatedEntries = await Promise.all(
 //         courseEntries.map(async (entry, index) => {
 //           const uploadedDocuments = {};
-  
+
 //           // Upload each document
 //           for (const field of documentFields) {
 //             if (entry.financeDetails[field] instanceof File) {
@@ -4504,7 +4504,7 @@
 //               uploadedDocuments[`${field}Name`] = entry.financeDetails[`${field}Name`] || "";
 //             }
 //           }
-  
+
 //           // Clean financeDetails to remove File objects and temporary fields
 //           const cleanedFinanceDetails = {};
 //           Object.keys(entry.financeDetails).forEach((key) => {
@@ -4513,20 +4513,20 @@
 //               cleanedFinanceDetails[key] = uploadedDocuments[key] ?? entry.financeDetails[key] ?? "";
 //             }
 //           });
-  
+
 //           return {
 //             ...entry,
 //             financeDetails: cleanedFinanceDetails,
 //           };
 //         })
 //       );
-  
+
 //       // Log upload errors but continue saving
 //       if (uploadErrors.length > 0) {
 //         console.warn("Some documents failed to upload:", uploadErrors);
 //         toast.warn(`Some documents failed to upload:\n${uploadErrors.join("\n")}`);
 //       }
-  
+
 //       // Save enrollment data
 //       console.log("Saving enrollment data to Firestore:", updatedEntries);
 //       await setDoc(
@@ -4537,7 +4537,7 @@
 //         },
 //         { merge: true }
 //       );
-  
+
 //       // Fetch student data for email
 //       const studentDoc = await getDoc(doc(db, "student", studentId));
 //       if (!studentDoc.exists()) {
@@ -4546,7 +4546,7 @@
 //       const studentData = studentDoc.data();
 //       const studentEmail = studentData.email || "";
 //       const studentName = `${studentData.Name}`.trim() || "";
-  
+
 //       // Check for new courses or updated fee details
 //       const newCourses = updatedEntries.filter(
 //         (entry) =>
@@ -4566,14 +4566,14 @@
 //           JSON.stringify(entry.registration) !== JSON.stringify(existing.registration)
 //         );
 //       });
-  
+
 //       toast.success("Enrollment data saved successfully!");
 //       logActivity(
 //         "SAVE_ENROLLMENT_SUCCESS",
 //         { courseCount: updatedEntries.length, studentId },
 //         user
 //       );
-  
+
 //       // Send emails for new courses
 //       for (const course of newCourses) {
 //         if (studentEmail && course.selectedCourse?.name) {
@@ -4610,7 +4610,7 @@
 //           }
 //         }
 //       }
-  
+
 //       handleClose();
 //     } catch (error) {
 //       console.error("Error saving enrollment data:", error);
@@ -4962,9 +4962,9 @@
 //               </svg>
 //             </Button>
 //           </div>
-  
+
 //           <PreferredCenters centers={centers} preferredCenters={preferredCenters} />
-  
+
 //           {courseEntries.map((entry, courseIndex) => (
 //             <CourseEntryForm
 //               key={courseIndex}
@@ -4989,7 +4989,7 @@
 //               uploadProgress={uploadProgress}
 //             />
 //           ))}
-  
+
 //           <div className="flex space-x-4">
 //             {canCreate && (
 //               <>
@@ -5016,7 +5016,7 @@
 //       </div>
 //     </>
 //   );
-  
+
 // };
 
 // export default AddCourse;
@@ -5236,6 +5236,7 @@ const AddCourse = () => {
           user
         );
 
+
         // Fetch finance partners
         const financePartnersSnapshot = await getDocs(
           collection(db, "FinancePartner")
@@ -5341,14 +5342,8 @@ const AddCourse = () => {
   const handleFileChange = (index, field, event) => {
     if (!canUpdate) {
       toast.error("You don't have permission to update course details");
-      logActivity(
-        "UNAUTHORIZED_UPDATE_ATTEMPT",
-        { action: "uploadFile", field, studentId },
-        user
-      );
       return;
     }
-
     const file = event.target.files[0];
     if (file) {
       const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
@@ -5360,14 +5355,9 @@ const AddCourse = () => {
         toast.error(`File ${file.name} is too large. Maximum size is 5MB.`);
         return;
       }
-
       const updatedEntries = courseEntries.map((entry, i) => {
         if (i === index) {
-          logActivity(
-            "UPLOAD_FILE_INIT",
-            { field, fileName: file.name, studentId },
-            user
-          );
+          logActivity("UPLOAD_FILE_INIT", { field, fileName: file.name, studentId }, user);
           return {
             ...entry,
             financeDetails: {
@@ -5386,6 +5376,55 @@ const AddCourse = () => {
       setUploadProgress((prev) => ({ ...prev, [`${index}_${field}`]: 0 }));
     }
   };
+
+  // const handleFileChange = (index, field, event) => {
+  //   if (!canUpdate) {
+  //     toast.error("You don't have permission to update course details");
+  //     logActivity(
+  //       "UNAUTHORIZED_UPDATE_ATTEMPT",
+  //       { action: "uploadFile", field, studentId },
+  //       user
+  //     );
+  //     return;
+  //   }
+
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+  //     if (!allowedTypes.includes(file.type)) {
+  //       toast.error(`Invalid file type for ${file.name}. Allowed types: PDF, JPEG, PNG.`);
+  //       return;
+  //     }
+  //     if (file.size > 5 * 1024 * 1024) {
+  //       toast.error(`File ${file.name} is too large. Maximum size is 5MB.`);
+  //       return;
+  //     }
+
+  //     const updatedEntries = courseEntries.map((entry, i) => {
+  //       if (i === index) {
+  //         logActivity(
+  //           "UPLOAD_FILE_INIT",
+  //           { field, fileName: file.name, studentId },
+  //           user
+  //         );
+  //         return {
+  //           ...entry,
+  //           financeDetails: {
+  //             ...entry.financeDetails,
+  //             [field]: file,
+  //             [`${field}Name`]: file.name,
+  //             [`${field}PreviousUrl`]: entry.financeDetails[field] && typeof entry.financeDetails[field] === 'string'
+  //               ? entry.financeDetails[field]
+  //               : null,
+  //           },
+  //         };
+  //       }
+  //       return entry;
+  //     });
+  //     setCourseEntries(updatedEntries);
+  //     setUploadProgress((prev) => ({ ...prev, [`${index}_${field}`]: 0 }));
+  //   }
+  // };
 
   const deleteFileFromS3 = async (s3Url, docType, studentId, courseIndex) => {
     const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
@@ -5453,44 +5492,7 @@ const AddCourse = () => {
   const uploadFileToS3 = async (file, docType, studentId, courseIndex, previousUrl) => {
     const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
     const region = import.meta.env.VITE_AWS_REGION;
-
-    if (!bucketName || !region) {
-      const errorMsg = "Missing S3 configuration: VITE_S3_BUCKET_NAME or VITE_AWS_REGION";
-      console.error(errorMsg);
-      toast.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-
-    if (!file || !(file instanceof File)) {
-      const errorMsg = `Invalid file for ${docType}: File object is null or not a File instance`;
-      console.error(errorMsg);
-      toast.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-
-    const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
-    if (!allowedTypes.includes(file.type)) {
-      const errorMsg = `Invalid file type for ${file.name}. Allowed types: PDF, JPEG, PNG`;
-      console.error(errorMsg);
-      toast.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      const errorMsg = `File ${file.name} is too large. Maximum size is 5MB`;
-      console.error(errorMsg);
-      toast.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-
-    // Delete previous file if it exists
-    if (previousUrl && typeof previousUrl === "string") {
-      try {
-        await deleteFileFromS3(previousUrl, docType, studentId, courseIndex);
-      } catch (err) {
-        console.warn(`Failed to delete previous ${docType}, proceeding with upload:`, err);
-      }
-    }
-
+    // Validation and configuration checks
     const fileName = `students/${studentId}/courses/${courseIndex}/${docType}_${Date.now()}_${file.name}`;
     const params = {
       Bucket: bucketName,
@@ -5498,620 +5500,727 @@ const AddCourse = () => {
       Body: file,
       ContentType: file.type,
     };
-
     try {
-      console.log(`Uploading ${docType} to S3:`, {
-        bucket: bucketName,
-        key: fileName,
-        region,
-        fileSize: file.size,
-        fileType: file.type,
-      });
+      console.log(`Uploading ${docType} to S3:`, { bucket: bucketName, key: fileName, region, fileSize: file.size, fileType: file.type });
       const upload = new Upload({
         client: s3Client,
         params,
         queueSize: 4,
         partSize: 5 * 1024 * 1024,
       });
-
       upload.on("httpUploadProgress", (progress) => {
         const percent = Math.round((progress.loaded / progress.total) * 100);
-        console.log(`Upload progress for ${docType}: ${percent}%`);
         setUploadProgress((prev) => ({
           ...prev,
           [`${courseIndex}_${docType}`]: percent,
         }));
       });
-
       await upload.done();
-
       const url = `https://${bucketName}.s3.${region}.amazonaws.com/${fileName}`;
-      console.log(`Successfully uploaded ${docType} to S3: ${url}`);
       logActivity("UPLOAD_FILE_SUCCESS", { docType, url, studentId, courseIndex }, user);
       return url;
     } catch (err) {
-      console.error(`Error uploading ${docType} to S3:`, {
-        error: err.message,
-        code: err.code,
-        requestId: err.$metadata?.requestId,
-      });
-      const errorMsg = `Failed to upload ${docType}: ${err.message}`;
-      toast.error(errorMsg);
-      setUploadProgress((prev) => ({
-        ...prev,
-        [`${courseIndex}_${docType}`]: -1,
-      }));
-      logActivity("UPLOAD_FILE_ERROR", { docType, error: err.message, studentId, courseIndex }, user);
-      throw new Error(errorMsg);
+      // Error handling
+      setUploadProgress((prev) => ({ ...prev, [`${courseIndex}_${docType}`]: -1 }));
+      throw new Error(`Failed to upload ${docType}: ${err.message}`);
     }
   };
 
+  // const uploadFileToS3 = async (file, docType, studentId, courseIndex, previousUrl) => {
+  //   const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
+  //   const region = import.meta.env.VITE_AWS_REGION;
+
+  //   if (!bucketName || !region) {
+  //     const errorMsg = "Missing S3 configuration: VITE_S3_BUCKET_NAME or VITE_AWS_REGION";
+  //     console.error(errorMsg);
+  //     toast.error(errorMsg);
+  //     throw new Error(errorMsg);
+  //   }
+
+  //   if (!file || !(file instanceof File)) {
+  //     const errorMsg = `Invalid file for ${docType}: File object is null or not a File instance`;
+  //     console.error(errorMsg);
+  //     toast.error(errorMsg);
+  //     throw new Error(errorMsg);
+  //   }
+
+  //   const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
+  //   if (!allowedTypes.includes(file.type)) {
+  //     const errorMsg = `Invalid file type for ${file.name}. Allowed types: PDF, JPEG, PNG`;
+  //     console.error(errorMsg);
+  //     toast.error(errorMsg);
+  //     throw new Error(errorMsg);
+  //   }
+  //   if (file.size > 5 * 1024 * 1024) {
+  //     const errorMsg = `File ${file.name} is too large. Maximum size is 5MB`;
+  //     console.error(errorMsg);
+  //     toast.error(errorMsg);
+  //     throw new Error(errorMsg);
+  //   }
+
+  //   // Delete previous file if it exists
+  //   if (previousUrl && typeof previousUrl === "string") {
+  //     try {
+  //       await deleteFileFromS3(previousUrl, docType, studentId, courseIndex);
+  //     } catch (err) {
+  //       console.warn(`Failed to delete previous ${docType}, proceeding with upload:`, err);
+  //     }
+  //   }
+
+  //   const fileName = `students/${studentId}/courses/${courseIndex}/${docType}_${Date.now()}_${file.name}`;
+  //   const params = {
+  //     Bucket: bucketName,
+  //     Key: fileName,
+  //     Body: file,
+  //     ContentType: file.type,
+  //   };
+
+  //   try {
+  //     console.log(`Uploading ${docType} to S3:`, {
+  //       bucket: bucketName,
+  //       key: fileName,
+  //       region,
+  //       fileSize: file.size,
+  //       fileType: file.type,
+  //     });
+  //     const upload = new Upload({
+  //       client: s3Client,
+  //       params,
+  //       queueSize: 4,
+  //       partSize: 5 * 1024 * 1024,
+  //     });
+
+  //     upload.on("httpUploadProgress", (progress) => {
+  //       const percent = Math.round((progress.loaded / progress.total) * 100);
+  //       console.log(`Upload progress for ${docType}: ${percent}%`);
+  //       setUploadProgress((prev) => ({
+  //         ...prev,
+  //         [`${courseIndex}_${docType}`]: percent,
+  //       }));
+  //     });
+
+  //     await upload.done();
+
+  //     const url = `https://${bucketName}.s3.${region}.amazonaws.com/${fileName}`;
+  //     console.log(`Successfully uploaded ${docType} to S3: ${url}`);
+  //     logActivity("UPLOAD_FILE_SUCCESS", { docType, url, studentId, courseIndex }, user);
+  //     return url;
+  //   } catch (err) {
+  //     console.error(`Error uploading ${docType} to S3:`, {
+  //       error: err.message,
+  //       code: err.code,
+  //       requestId: err.$metadata?.requestId,
+  //     });
+  //     const errorMsg = `Failed to upload ${docType}: ${err.message}`;
+  //     toast.error(errorMsg);
+  //     setUploadProgress((prev) => ({
+  //       ...prev,
+  //       [`${courseIndex}_${docType}`]: -1,
+  //     }));
+  //     logActivity("UPLOAD_FILE_ERROR", { docType, error: err.message, studentId, courseIndex }, user);
+  //     throw new Error(errorMsg);
+  //   }
+  // };
+
+  // const saveEnrollmentData = async () => {
+  //   if (!canCreate) {
+  //     toast.error("You don't have permission to save enrollment data");
+  //     logActivity(
+  //       "UNAUTHORIZED_CREATE_ATTEMPT",
+  //       { action: "saveEnrollment", studentId },
+  //       user
+  //     );
+  //     return;
+  //   }
+  //   try {
+  //     setLoading(true);
+
+  //     // Validate S3 configuration
+  //     if (!import.meta.env.VITE_S3_BUCKET_NAME || !import.meta.env.VITE_AWS_REGION) {
+  //       throw new Error("S3 configuration missing: VITE_S3_BUCKET_NAME or VITE_AWS_REGION");
+  //     }
+  //     if (!s3Client.config.credentials) {
+  //       throw new Error("S3 client credentials not configured");
+  //     }
+
+  //     // Prepare updated entries with file uploads
+  //     const documentFields = ["photo", "bankStatement", "paymentSlip", "aadharCard", "panCard"];
+  //     const uploadErrors = [];
+  //     const updatedEntries = await Promise.all(
+  //       courseEntries.map(async (entry, index) => {
+  //         const uploadedDocuments = {};
+
+  //         // Upload each document
+  //         for (const field of documentFields) {
+  //           if (entry.financeDetails[field] instanceof File) {
+  //             try {
+  //               console.log(`Uploading ${field} for course ${index}`);
+  //               const url = await uploadFileToS3(
+  //                 entry.financeDetails[field],
+  //                 field,
+  //                 studentId,
+  //                 index,
+  //                 entry.financeDetails[`${field}PreviousUrl`]
+  //               );
+  //               uploadedDocuments[field] = url;
+  //               uploadedDocuments[`${field}Name`] = entry.financeDetails[`${field}Name`] || "";
+  //             } catch (uploadErr) {
+  //               console.error(`Failed to upload ${field}:`, uploadErr);
+  //               uploadErrors.push(`Failed to upload ${field} for course ${index}: ${uploadErr.message}`);
+  //             }
+  //           } else if (typeof entry.financeDetails[field] === "string") {
+  //             uploadedDocuments[field] = entry.financeDetails[field];
+  //             uploadedDocuments[`${field}Name`] = entry.financeDetails[`${field}Name`] || "";
+  //           } else {
+  //             uploadedDocuments[field] = null;
+  //             uploadedDocuments[`${field}Name`] = entry.financeDetails[`${field}Name`] || "";
+  //           }
+  //         }
+
+  //         // Clean financeDetails to remove File objects and temporary fields
+  //         const cleanedFinanceDetails = {};
+  //         Object.keys(entry.financeDetails).forEach((key) => {
+  //           if (!(entry.financeDetails[key] instanceof File) && !key.endsWith("PreviousUrl")) {
+  //             cleanedFinanceDetails[key] = uploadedDocuments[key] ?? entry.financeDetails[key] ?? "";
+  //           }
+  //         });
+
+  //         return {
+  //           ...entry,
+  //           financeDetails: cleanedFinanceDetails,
+  //         };
+  //       })
+  //     );
+
+  //     // Log upload errors but continue saving
+  //     if (uploadErrors.length > 0) {
+  //       console.warn("Some documents failed to upload:", uploadErrors);
+  //       toast.warn(`Some documents failed to upload:\n${uploadErrors.join("\n")}`);
+  //     }
+
+  //     // Save enrollment data
+  //     console.log("Saving enrollment data to Firestore:", updatedEntries);
   const saveEnrollmentData = async () => {
-    if (!canCreate) {
-      toast.error("You don't have permission to save enrollment data");
-      logActivity(
-        "UNAUTHORIZED_CREATE_ATTEMPT",
-        { action: "saveEnrollment", studentId },
-        user
-      );
-      return;
-    }
-    try {
-      setLoading(true);
-
-      // Validate S3 configuration
-      if (!import.meta.env.VITE_S3_BUCKET_NAME || !import.meta.env.VITE_AWS_REGION) {
-        throw new Error("S3 configuration missing: VITE_S3_BUCKET_NAME or VITE_AWS_REGION");
-      }
-      if (!s3Client.config.credentials) {
-        throw new Error("S3 client credentials not configured");
-      }
-
-      // Prepare updated entries with file uploads
-      const documentFields = ["photo", "bankStatement", "paymentSlip", "aadharCard", "panCard"];
-      const uploadErrors = [];
-      const updatedEntries = await Promise.all(
-        courseEntries.map(async (entry, index) => {
-          const uploadedDocuments = {};
-
-          // Upload each document
-          for (const field of documentFields) {
-            if (entry.financeDetails[field] instanceof File) {
-              try {
-                console.log(`Uploading ${field} for course ${index}`);
-                const url = await uploadFileToS3(
-                  entry.financeDetails[field],
-                  field,
-                  studentId,
-                  index,
-                  entry.financeDetails[`${field}PreviousUrl`]
-                );
-                uploadedDocuments[field] = url;
-                uploadedDocuments[`${field}Name`] = entry.financeDetails[`${field}Name`] || "";
-              } catch (uploadErr) {
-                console.error(`Failed to upload ${field}:`, uploadErr);
-                uploadErrors.push(`Failed to upload ${field} for course ${index}: ${uploadErr.message}`);
-              }
-            } else if (typeof entry.financeDetails[field] === "string") {
-              uploadedDocuments[field] = entry.financeDetails[field];
-              uploadedDocuments[`${field}Name`] = entry.financeDetails[`${field}Name`] || "";
-            } else {
-              uploadedDocuments[field] = null;
-              uploadedDocuments[`${field}Name`] = entry.financeDetails[`${field}Name`] || "";
-            }
-          }
-
-          // Clean financeDetails to remove File objects and temporary fields
-          const cleanedFinanceDetails = {};
-          Object.keys(entry.financeDetails).forEach((key) => {
-            if (!(entry.financeDetails[key] instanceof File) && !key.endsWith("PreviousUrl")) {
-              cleanedFinanceDetails[key] = uploadedDocuments[key] ?? entry.financeDetails[key] ?? "";
-            }
-          });
-
-          return {
-            ...entry,
-            financeDetails: cleanedFinanceDetails,
-          };
-        })
-      );
-
-      // Log upload errors but continue saving
-      if (uploadErrors.length > 0) {
-        console.warn("Some documents failed to upload:", uploadErrors);
-        toast.warn(`Some documents failed to upload:\n${uploadErrors.join("\n")}`);
-      }
-
-      // Save enrollment data
-      console.log("Saving enrollment data to Firestore:", updatedEntries);
-      await setDoc(
-        doc(db, "enrollments", studentId),
-        {
-          courses: updatedEntries,
-          updatedAt: Timestamp.now(),
-        },
-        { merge: true }
-      );
-
-      // Fetch student data for email
-      const studentDoc = await getDoc(doc(db, "student", studentId));
-      if (!studentDoc.exists()) {
-        throw new Error("Student not found");
-      }
-      const studentData = studentDoc.data();
-      const studentEmail = studentData.email || "";
-      const studentName = `${studentData.Name}`.trim() || "";
-
-      // Check for new courses or updated fee details
-      const newCourses = updatedEntries.filter(
-        (entry) =>
-          !existingCourses.some(
-            (existing) => existing.selectedCourse?.id === entry.selectedCourse?.id
-          ) && entry.selectedCourse
-      );
-      const updatedFees = updatedEntries.filter((entry) => {
-        const existing = existingCourses.find(
-          (e) => e.selectedCourse?.id === entry.selectedCourse?.id
-        );
-        if (!existing) return false;
-        return (
-          JSON.stringify(entry.fullFeesDetails) !== JSON.stringify(existing.fullFeesDetails) ||
-          JSON.stringify(entry.financeDetails) !== JSON.stringify(existing.financeDetails) ||
-          JSON.stringify(entry.installmentDetails) !== JSON.stringify(existing.installmentDetails) ||
-          JSON.stringify(entry.registration) !== JSON.stringify(existing.registration)
-        );
-      });
-
-      toast.success("Enrollment data saved successfully!");
-      logActivity(
-        "SAVE_ENROLLMENT_SUCCESS",
-        { courseCount: updatedEntries.length, studentId },
-        user
-      );
-
-      // Send emails for new courses
-      for (const course of newCourses) {
-        if (studentEmail && course.selectedCourse?.name) {
-          try {
-            await sendWelcomeEmail(
-              studentEmail,
-              studentName,
-              course.selectedCourse.name
+    const documentFields = ["photo", "bankStatement", "paymentSlip", "aadharCard", "panCard"];
+    const updatedEntries = await Promise.all(
+      courseEntries.map(async (entry, index) => {
+        const uploadedDocuments = {};
+        for (const field of documentFields) {
+          if (entry.financeDetails[field] instanceof File) {
+            const url = await uploadFileToS3(
+              entry.financeDetails[field],
+              field,
+              studentId,
+              index,
+              entry.financeDetails[`${field}PreviousUrl`]
             );
-            logActivity(
-              "SEND_WELCOME_EMAIL_SUCCESS",
-              {
-                studentId,
-                email: studentEmail,
-                courseName: course.selectedCourse.name,
-              },
-              user
-            );
-          } catch (emailError) {
-            console.error("Failed to send welcome email:", emailError);
-            toast.warn(
-              `Enrollment saved, but failed to send welcome email for ${course.selectedCourse.name}`
-            );
-            logActivity(
-              "SEND_WELCOME_EMAIL_ERROR",
-              {
-                studentId,
-                email: studentEmail,
-                courseName: course.selectedCourse.name,
-                error: emailError.message,
-              },
-              user
-            );
+            uploadedDocuments[field] = url;
+            uploadedDocuments[`${field}Name`] = entry.financeDetails[`${field}Name`] || "";
+          } else if (typeof entry.financeDetails[field] === "string") {
+            uploadedDocuments[field] = entry.financeDetails[field];
+            uploadedDocuments[`${field}Name`] = entry.financeDetails[`${field}Name`] || "";
+          } else {
+            uploadedDocuments[field] = null;
+            uploadedDocuments[`${field}Name`] = entry.financeDetails[`${field}Name`] || "";
           }
         }
-      }
+        const cleanedFinanceDetails = {};
+        Object.keys(entry.financeDetails).forEach((key) => {
+          if (!(entry.financeDetails[key] instanceof File) && !key.endsWith("PreviousUrl")) {
+            cleanedFinanceDetails[key] = uploadedDocuments[key] ?? entry.financeDetails[key] ?? "";
+          }
+        });
+        return { ...entry, financeDetails: cleanedFinanceDetails };
+      })
+    );
+    await setDoc(doc(db, "enrollments", studentId), { courses: updatedEntries, updatedAt: Timestamp.now() }, { merge: true });
+    // await setDoc(
+    //       doc(db, "enrollments", studentId),
+    //       {
+    //         courses: updatedEntries,
+    //         updatedAt: Timestamp.now(),
+    //       },
+    //       { merge: true }
+    //     );
 
-      handleClose();
-    } catch (error) {
-      console.error("Error saving enrollment data:", {
-        error: error.message,
-        code: error.code,
-        requestId: error.$metadata?.requestId,
-      });
-      toast.error(`Failed to save enrollment data: ${error.message}`);
-      logActivity(
-        "SAVE_ENROLLMENT_ERROR",
-        { error: error.message, studentId },
-        user
-      );
-    } finally {
-      setLoading(false);
+    // Fetch student data for email
+    const studentDoc = await getDoc(doc(db, "student", studentId));
+    if (!studentDoc.exists()) {
+      throw new Error("Student not found");
     }
-  };
+    const studentData = studentDoc.data();
+    const studentEmail = studentData.email || "";
+    const studentName = `${studentData.Name}`.trim() || "";
 
-  const handleClose = () => {
-    setIsOpen(false);
-    setTimeout(() => {
-      navigate(-1);
-      logActivity("NAVIGATE_BACK", { from: "AddCourse", studentId }, user);
-    }, 300);
-  };
-
-  const addCourseEntry = () => {
-    if (!canCreate) {
-      toast.error("You don't have permission to add courses");
-      logActivity(
-        "UNAUTHORIZED_CREATE_ATTEMPT",
-        { action: "addCourseEntry", studentId },
-        user
+    // Check for new courses or updated fee details
+    const newCourses = updatedEntries.filter(
+      (entry) =>
+        !existingCourses.some(
+          (existing) => existing.selectedCourse?.id === entry.selectedCourse?.id
+        ) && entry.selectedCourse
+    );
+    const updatedFees = updatedEntries.filter((entry) => {
+      const existing = existingCourses.find(
+        (e) => e.selectedCourse?.id === entry.selectedCourse?.id
       );
-      return;
-    }
-    setCourseEntries([...courseEntries, defaultEntry]);
-    logActivity("ADD_COURSE_ENTRY", { studentId }, user);
-  };
-
-  const removeCourseEntry = (index) => {
-    if (!canDelete) {
-      toast.error("You don't have permission to remove courses");
-      logActivity(
-        "UNAUTHORIZED_DELETE_ATTEMPT",
-        { action: "removeCourseEntry", index, studentId },
-        user
+      if (!existing) return false;
+      return (
+        JSON.stringify(entry.fullFeesDetails) !== JSON.stringify(existing.fullFeesDetails) ||
+        JSON.stringify(entry.financeDetails) !== JSON.stringify(existing.financeDetails) ||
+        JSON.stringify(entry.installmentDetails) !== JSON.stringify(existing.installmentDetails) ||
+        JSON.stringify(entry.registration) !== JSON.stringify(existing.registration)
       );
-      return;
-    }
-    setCourseEntries(courseEntries.filter((_, i) => i !== index));
-    logActivity("REMOVE_COURSE_ENTRY", { index, studentId }, user);
-  };
+    });
 
-  const handleChange = async (index, field, value) => {
-    if (!canUpdate) {
-      toast.error("You don't have permission to update course details");
-      logActivity(
-        "UNAUTHORIZED_UPDATE_ATTEMPT",
-        { action: "updateCourseEntry", field, studentId },
-        user
-      );
-      return;
-    }
-    const updatedEntries = courseEntries.map((entry, i) => {
-      if (i === index) {
-        if (field === "selectedCourse") {
+    toast.success("Enrollment data saved successfully!");
+    logActivity(
+      "SAVE_ENROLLMENT_SUCCESS",
+      { courseCount: updatedEntries.length, studentId },
+      user
+    );
+
+    // Send emails for new courses
+    for (const course of newCourses) {
+      if (studentEmail && course.selectedCourse?.name) {
+        try {
+          await sendWelcomeEmail(
+            studentEmail,
+            studentName,
+            course.selectedCourse.name
+          );
           logActivity(
-            "CHANGE_COURSE",
-            { courseId: value?.id, field, studentId },
+            "SEND_WELCOME_EMAIL_SUCCESS",
+            {
+              studentId,
+              email: studentEmail,
+              courseName: course.selectedCourse.name,
+            },
             user
           );
-          return {
-            ...entry,
-            [field]: value,
-            fullFeesDetails: {
-              ...entry.fullFeesDetails,
-              totalFees: value.fee || 0,
-            },
-            financeDetails: {
-              ...entry.financeDetails,
-              feeAfterDiscount: value.fee || 0,
-            },
-          };
-        } else if (field === "freeReason") {
-          logActivity("CHANGE_FIELD", { field, value, studentId }, user);
-          return { ...entry, freeReason: value };
-        }
-        return { ...entry, [field]: value };
-      }
-      return entry;
-    });
-    setCourseEntries(updatedEntries);
-  };
-
-  const handleFullFeesChange = (index, field, subField, value) => {
-    if (!canUpdate) {
-      toast.error("You don't have permission to update course details");
-      logActivity(
-        "UNAUTHORIZED_UPDATE_ATTEMPT",
-        { action: "updateFullFees", field, subField, studentId },
-        user
-      );
-      return;
-    }
-    const updatedEntries = courseEntries.map((entry, i) => {
-      if (i === index) {
-        const fullFeesDetails = { ...entry.fullFeesDetails };
-        if (field === "discountType") {
-          fullFeesDetails.discountType = value;
-        } else if (field === "discountValue") {
-          fullFeesDetails.discountValue = value;
-          const totalFees = fullFeesDetails.totalFees || 0;
-          fullFeesDetails.feeAfterDiscount =
-            fullFeesDetails.discountType === "percentage"
-              ? totalFees - totalFees * (Number(value) / 100)
-              : totalFees - Number(value);
-        } else if (field === "discountReason") {
-          fullFeesDetails.discountReason = value;
-        } else {
-          fullFeesDetails[field] = {
-            ...fullFeesDetails[field],
-            [subField]: value,
-          };
-        }
-        return { ...entry, fullFeesDetails };
-      }
-      return entry;
-    });
-    logActivity(
-      "CHANGE_FULL_FEES",
-      { field, subField, value, studentId },
-      user
-    );
-    setCourseEntries(updatedEntries);
-  };
-
-  const handleRegistrationChange = (index, field, value) => {
-    if (!canUpdate) {
-      toast.error("You don't have permission to update course details");
-      logActivity(
-        "UNAUTHORIZED_UPDATE_ATTEMPT",
-        { action: "updateRegistration", field, studentId },
-        user
-      );
-      return;
-    }
-    const updatedEntries = courseEntries.map((entry, i) => {
-      if (i === index) {
-        logActivity(
-          "CHANGE_REGISTRATION",
-          { field, value, studentId },
-          user
-        );
-        return {
-          ...entry,
-          registration: { ...entry.registration, [field]: value },
-        };
-      }
-      return entry;
-    });
-    setCourseEntries(updatedEntries);
-  };
-
-  const handleInstallmentChange = (courseIndex, installmentIndex, field, value) => {
-    if (!canUpdate) {
-      toast.error("You don't have permission to update course details");
-      logActivity(
-        "UNAUTHORIZED_UPDATE_ATTEMPT",
-        { action: "updateInstallment", field, studentId },
-        user
-      );
-      return;
-    }
-    const updatedEntries = courseEntries.map((entry, i) => {
-      if (i === courseIndex) {
-        const updatedDetails = entry.installmentDetails.map(
-          (installment, j) => {
-            if (j === installmentIndex) {
-              return { ...installment, [field]: value };
-            }
-            return installment;
-          }
-        );
-        return { ...entry, installmentDetails: updatedDetails };
-      }
-      return entry;
-    });
-    logActivity(
-      "CHANGE_INSTALLMENT",
-      { installmentIndex, field, value, studentId },
-      user
-    );
-    setCourseEntries(updatedEntries);
-  };
-
-  const addInstallment = (index) => {
-    if (!canUpdate) {
-      toast.error("You don't have permission to update course details");
-      logActivity(
-        "UNAUTHORIZED_UPDATE_ATTEMPT",
-        { action: "addInstallment", studentId },
-        user
-      );
-      return;
-    }
-    const updatedEntries = courseEntries.map((entry, i) => {
-      if (i === index) {
-        logActivity("ADD_INSTALLMENT", { courseIndex: index, studentId }, user);
-        return {
-          ...entry,
-          installmentDetails: [
-            ...entry.installmentDetails,
+        } catch (emailError) {
+          console.error("Failed to send welcome email:", emailError);
+          toast.warn(
+            `Enrollment saved, but failed to send welcome email for ${course.selectedCourse.name}`
+          );
+          logActivity(
+            "SEND_WELCOME_EMAIL_ERROR",
             {
-              number: "",
-              dueDate: "",
-              dueAmount: "",
-              paidDate: "",
-              paidAmount: "",
-              paymentMode: "",
-              pdcStatus: "",
-              receivedBy: "",
-              remark: "",
-              status: "Pending",
+              studentId,
+              email: studentEmail,
+              courseName: course.selectedCourse.name,
+              error: emailError.message,
             },
-          ],
-        };
+            user
+          );
+        }
       }
-      return entry;
-    });
-    setCourseEntries(updatedEntries);
-  };
-
-  const removeInstallment = (courseIndex, installmentIndex) => {
-    if (!canUpdate) {
-      toast.error("You don't have permission to update course details");
-      logActivity(
-        "UNAUTHORIZED_UPDATE_ATTEMPT",
-        { action: "removeInstallment", installmentIndex, studentId },
-        user
-      );
-      return;
     }
-    const updatedEntries = courseEntries.map((entry, i) => {
-      if (i === courseIndex) {
+
+    handleClose();
+  //  catch (error) {
+  //   console.error("Error saving enrollment data:", {
+  //     error: error.message,
+  //     code: error.code,
+  //     requestId: error.$metadata?.requestId,
+  //   });
+  //   toast.error(`Failed to save enrollment data: ${error.message}`);
+  //   logActivity(
+  //     "SAVE_ENROLLMENT_ERROR",
+  //     { error: error.message, studentId },
+  //     user
+  //   );
+  // } finally {
+  //   setLoading(false);
+  // }
+};
+
+const handleClose = () => {
+  setIsOpen(false);
+  setTimeout(() => {
+    navigate(-1);
+    logActivity("NAVIGATE_BACK", { from: "AddCourse", studentId }, user);
+  }, 300);
+};
+
+const addCourseEntry = () => {
+  if (!canCreate) {
+    toast.error("You don't have permission to add courses");
+    logActivity(
+      "UNAUTHORIZED_CREATE_ATTEMPT",
+      { action: "addCourseEntry", studentId },
+      user
+    );
+    return;
+  }
+  setCourseEntries([...courseEntries, defaultEntry]);
+  logActivity("ADD_COURSE_ENTRY", { studentId }, user);
+};
+
+const removeCourseEntry = (index) => {
+  if (!canDelete) {
+    toast.error("You don't have permission to remove courses");
+    logActivity(
+      "UNAUTHORIZED_DELETE_ATTEMPT",
+      { action: "removeCourseEntry", index, studentId },
+      user
+    );
+    return;
+  }
+  setCourseEntries(courseEntries.filter((_, i) => i !== index));
+  logActivity("REMOVE_COURSE_ENTRY", { index, studentId }, user);
+};
+
+const handleChange = async (index, field, value) => {
+  if (!canUpdate) {
+    toast.error("You don't have permission to update course details");
+    logActivity(
+      "UNAUTHORIZED_UPDATE_ATTEMPT",
+      { action: "updateCourseEntry", field, studentId },
+      user
+    );
+    return;
+  }
+  const updatedEntries = courseEntries.map((entry, i) => {
+    if (i === index) {
+      if (field === "selectedCourse") {
         logActivity(
-          "REMOVE_INSTALLMENT",
-          { courseIndex, installmentIndex, studentId },
+          "CHANGE_COURSE",
+          { courseId: value?.id, field, studentId },
           user
         );
         return {
           ...entry,
-          installmentDetails: entry.installmentDetails.filter(
-            (_, j) => j !== installmentIndex
-          ),
+          [field]: value,
+          fullFeesDetails: {
+            ...entry.fullFeesDetails,
+            totalFees: value.fee || 0,
+          },
+          financeDetails: {
+            ...entry.financeDetails,
+            feeAfterDiscount: value.fee || 0,
+          },
         };
+      } else if (field === "freeReason") {
+        logActivity("CHANGE_FIELD", { field, value, studentId }, user);
+        return { ...entry, freeReason: value };
       }
-      return entry;
-    });
-    setCourseEntries(updatedEntries);
-  };
-
-  const handleFinanceChange = (index, field, subField, value) => {
-    if (!canUpdate) {
-      toast.error("You don't have permission to update course details");
-      logActivity(
-        "UNAUTHORIZED_UPDATE_ATTEMPT",
-        { action: "updateFinance", field, subField, studentId },
-        user
-      );
-      return;
+      return { ...entry, [field]: value };
     }
-    const updatedEntries = courseEntries.map((entry, i) => {
-      if (i === index) {
-        const financeDetails = { ...entry.financeDetails };
-        if (field === "discountType") {
-          financeDetails.discountType = value;
-        } else if (field === "discountValue") {
-          financeDetails.discountValue = value;
-          const totalFees = entry.fullFeesDetails.totalFees || 0;
-          financeDetails.feeAfterDiscount =
-            financeDetails.discountType === "percentage"
-              ? totalFees - totalFees * (Number(value) / 100)
-              : totalFees - Number(value);
-        } else if (field === "discountReason") {
-          financeDetails.discountReason = value;
-        } else if (subField) {
-          financeDetails[field] = { ...financeDetails[field], [subField]: value };
-        } else {
-          financeDetails[field] = value;
-        }
-        if (field === "financePartner") {
-          financeDetails.contactPerson = "";
-          financeDetails.scheme = "";
-        }
-        return { ...entry, financeDetails };
-      }
-      return entry;
-    });
+    return entry;
+  });
+  setCourseEntries(updatedEntries);
+};
+
+const handleFullFeesChange = (index, field, subField, value) => {
+  if (!canUpdate) {
+    toast.error("You don't have permission to update course details");
     logActivity(
-      "CHANGE_FINANCE",
-      { field, subField, value, studentId },
+      "UNAUTHORIZED_UPDATE_ATTEMPT",
+      { action: "updateFullFees", field, subField, studentId },
       user
     );
-    setCourseEntries(updatedEntries);
-  };
+    return;
+  }
+  const updatedEntries = courseEntries.map((entry, i) => {
+    if (i === index) {
+      const fullFeesDetails = { ...entry.fullFeesDetails };
+      if (field === "discountType") {
+        fullFeesDetails.discountType = value;
+      } else if (field === "discountValue") {
+        fullFeesDetails.discountValue = value;
+        const totalFees = fullFeesDetails.totalFees || 0;
+        fullFeesDetails.feeAfterDiscount =
+          fullFeesDetails.discountType === "percentage"
+            ? totalFees - totalFees * (Number(value) / 100)
+            : totalFees - Number(value);
+      } else if (field === "discountReason") {
+        fullFeesDetails.discountReason = value;
+      } else {
+        fullFeesDetails[field] = {
+          ...fullFeesDetails[field],
+          [subField]: value,
+        };
+      }
+      return { ...entry, fullFeesDetails };
+    }
+    return entry;
+  });
+  logActivity(
+    "CHANGE_FULL_FEES",
+    { field, subField, value, studentId },
+    user
+  );
+  setCourseEntries(updatedEntries);
+};
 
-  const getFilteredCourses = (mode) => {
-    if (!mode || preferredCenters.length === 0) return [];
-    return courses.filter((course) => {
-      const isAvailableAtCenter = course.centers?.some(
-        (center) =>
-          center.status === "Active" && preferredCenters.includes(center.centerId)
+const handleRegistrationChange = (index, field, value) => {
+  if (!canUpdate) {
+    toast.error("You don't have permission to update course details");
+    logActivity(
+      "UNAUTHORIZED_UPDATE_ATTEMPT",
+      { action: "updateRegistration", field, studentId },
+      user
+    );
+    return;
+  }
+  const updatedEntries = courseEntries.map((entry, i) => {
+    if (i === index) {
+      logActivity(
+        "CHANGE_REGISTRATION",
+        { field, value, studentId },
+        user
       );
-      const isAvailableInMode = course.mode === mode;
-      return isAvailableAtCenter && isAvailableInMode;
-    });
-  };
+      return {
+        ...entry,
+        registration: { ...entry.registration, [field]: value },
+      };
+    }
+    return entry;
+  });
+  setCourseEntries(updatedEntries);
+};
 
-  if (!canDisplay) return null;
+const handleInstallmentChange = (courseIndex, installmentIndex, field, value) => {
+  if (!canUpdate) {
+    toast.error("You don't have permission to update course details");
+    logActivity(
+      "UNAUTHORIZED_UPDATE_ATTEMPT",
+      { action: "updateInstallment", field, studentId },
+      user
+    );
+    return;
+  }
+  const updatedEntries = courseEntries.map((entry, i) => {
+    if (i === courseIndex) {
+      const updatedDetails = entry.installmentDetails.map(
+        (installment, j) => {
+          if (j === installmentIndex) {
+            return { ...installment, [field]: value };
+          }
+          return installment;
+        }
+      );
+      return { ...entry, installmentDetails: updatedDetails };
+    }
+    return entry;
+  });
+  logActivity(
+    "CHANGE_INSTALLMENT",
+    { installmentIndex, field, value, studentId },
+    user
+  );
+  setCourseEntries(updatedEntries);
+};
 
-  if (loading) return <Typography className="text-center text-gray-500">Loading...</Typography>;
+const addInstallment = (index) => {
+  if (!canUpdate) {
+    toast.error("You don't have permission to update course details");
+    logActivity(
+      "UNAUTHORIZED_UPDATE_ATTEMPT",
+      { action: "addInstallment", studentId },
+      user
+    );
+    return;
+  }
+  const updatedEntries = courseEntries.map((entry, i) => {
+    if (i === index) {
+      logActivity("ADD_INSTALLMENT", { courseIndex: index, studentId }, user);
+      return {
+        ...entry,
+        installmentDetails: [
+          ...entry.installmentDetails,
+          {
+            number: "",
+            dueDate: "",
+            dueAmount: "",
+            paidDate: "",
+            paidAmount: "",
+            paymentMode: "",
+            pdcStatus: "",
+            receivedBy: "",
+            remark: "",
+            status: "Pending",
+          },
+        ],
+      };
+    }
+    return entry;
+  });
+  setCourseEntries(updatedEntries);
+};
 
-  return (
-    <>
-      <ToastContainer position="top-right" autoClose={3000} />
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={handleClose} />
-      <div
-        className={`fixed top-0 right-0 h-full bg-gray-50 w-3/4 shadow-lg transform transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+const removeInstallment = (courseIndex, installmentIndex) => {
+  if (!canUpdate) {
+    toast.error("You don't have permission to update course details");
+    logActivity(
+      "UNAUTHORIZED_UPDATE_ATTEMPT",
+      { action: "removeInstallment", installmentIndex, studentId },
+      user
+    );
+    return;
+  }
+  const updatedEntries = courseEntries.map((entry, i) => {
+    if (i === courseIndex) {
+      logActivity(
+        "REMOVE_INSTALLMENT",
+        { courseIndex, installmentIndex, studentId },
+        user
+      );
+      return {
+        ...entry,
+        installmentDetails: entry.installmentDetails.filter(
+          (_, j) => j !== installmentIndex
+        ),
+      };
+    }
+    return entry;
+  });
+  setCourseEntries(updatedEntries);
+};
+
+const handleFinanceChange = (index, field, subField, value) => {
+  if (!canUpdate) {
+    toast.error("You don't have permission to update course details");
+    logActivity(
+      "UNAUTHORIZED_UPDATE_ATTEMPT",
+      { action: "updateFinance", field, subField, studentId },
+      user
+    );
+    return;
+  }
+  const updatedEntries = courseEntries.map((entry, i) => {
+    if (i === index) {
+      const financeDetails = { ...entry.financeDetails };
+      if (field === "discountType") {
+        financeDetails.discountType = value;
+      } else if (field === "discountValue") {
+        financeDetails.discountValue = value;
+        const totalFees = entry.fullFeesDetails.totalFees || 0;
+        financeDetails.feeAfterDiscount =
+          financeDetails.discountType === "percentage"
+            ? totalFees - totalFees * (Number(value) / 100)
+            : totalFees - Number(value);
+      } else if (field === "discountReason") {
+        financeDetails.discountReason = value;
+      } else if (subField) {
+        financeDetails[field] = { ...financeDetails[field], [subField]: value };
+      } else {
+        financeDetails[field] = value;
+      }
+      if (field === "financePartner") {
+        financeDetails.contactPerson = "";
+        financeDetails.scheme = "";
+      }
+      return { ...entry, financeDetails };
+    }
+    return entry;
+  });
+  logActivity(
+    "CHANGE_FINANCE",
+    { field, subField, value, studentId },
+    user
+  );
+  setCourseEntries(updatedEntries);
+};
+
+const getFilteredCourses = (mode) => {
+  if (!mode || preferredCenters.length === 0) return [];
+  return courses.filter((course) => {
+    const isAvailableAtCenter = course.centers?.some(
+      (center) =>
+        center.status === "Active" && preferredCenters.includes(center.centerId)
+    );
+    const isAvailableInMode = course.mode === mode;
+    return isAvailableAtCenter && isAvailableInMode;
+  });
+};
+
+if (!canDisplay) return null;
+
+if (loading) return <Typography className="text-center text-gray-500">Loading...</Typography>;
+
+return (
+  <>
+    <ToastContainer position="top-right" autoClose={3000} />
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={handleClose} />
+    <div
+      className={`fixed top-0 right-0 h-full bg-gray-50 w-3/4 shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
         } z-50 overflow-y-auto`}
-      >
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <Typography variant="h5" className="text-gray-800 font-semibold">
-              Add Courses
-            </Typography>
-            <Button
-              onClick={handleClose}
-              className="text-gray-500 hover:text-gray-700"
-              sx={{ minWidth: 0, padding: 1 }}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </Button>
-          </div>
+    >
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <Typography variant="h5" className="text-gray-800 font-semibold">
+            Add Courses
+          </Typography>
+          <Button
+            onClick={handleClose}
+            className="text-gray-500 hover:text-gray-700"
+            sx={{ minWidth: 0, padding: 1 }}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </Button>
+        </div>
 
-          <PreferredCenters centers={centers} preferredCenters={preferredCenters} />
+        <PreferredCenters centers={centers} preferredCenters={preferredCenters} />
 
-          {courseEntries.map((entry, courseIndex) => (
-            <CourseEntryForm
-              key={courseIndex}
-              courseIndex={courseIndex}
-              entry={entry}
-              courses={courses}
-              financePartners={financePartners}
-              handleChange={handleChange}
-              handleFullFeesChange={handleFullFeesChange}
-              handleRegistrationChange={handleRegistrationChange}
-              handleInstallmentChange={handleInstallmentChange}
-              handleFinanceChange={handleFinanceChange}
-              handleFileChange={handleFileChange}
-              addInstallment={addInstallment}
-              removeInstallment={removeInstallment}
-              removeCourseEntry={removeCourseEntry}
-              canUpdate={canUpdate}
-              canDelete={canDelete}
-              user={user}
-              studentId={studentId}
-              getFilteredCourses={getFilteredCourses}
-              uploadProgress={uploadProgress}
-            />
-          ))}
+        {courseEntries.map((entry, courseIndex) => (
+          <CourseEntryForm
+            key={courseIndex}
+            courseIndex={courseIndex}
+            entry={entry}
+            courses={courses}
+            financePartners={financePartners}
+            handleChange={handleChange}
+            handleFullFeesChange={handleFullFeesChange}
+            handleRegistrationChange={handleRegistrationChange}
+            handleInstallmentChange={handleInstallmentChange}
+            handleFinanceChange={handleFinanceChange}
+            handleFileChange={handleFileChange}
+            addInstallment={addInstallment}
+            removeInstallment={removeInstallment}
+            removeCourseEntry={removeCourseEntry}
+            canUpdate={canUpdate}
+            canDelete={canDelete}
+            user={user}
+            studentId={studentId}
+            getFilteredCourses={getFilteredCourses}
+            uploadProgress={uploadProgress}
+          />
+        ))}
 
-          <div className="flex space-x-4">
-            {canCreate && (
-              <>
-                <Button
-                  variant="contained"
-                  onClick={addCourseEntry}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={!canCreate}
-                >
-                  Add Course
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={saveEnrollmentData}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                  disabled={!canCreate || loading}
-                >
-                  {loading ? "Saving..." : "Save Enrollment"}
-                </Button>
-              </>
-            )}
-          </div>
+        <div className="flex space-x-4">
+          {canCreate && (
+            <>
+              <Button
+                variant="contained"
+                onClick={addCourseEntry}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={!canCreate}
+              >
+                Add Course
+              </Button>
+              <Button
+                variant="contained"
+                onClick={saveEnrollmentData}
+                className="bg-green-600 hover:bg-green-700 text-white"
+                disabled={!canCreate || loading}
+              >
+                {loading ? "Saving..." : "Save Enrollment"}
+              </Button>
+            </>
+          )}
         </div>
       </div>
-    </>
-  );
+    </div>
+  </>
+);
 };
 
 export default AddCourse;
