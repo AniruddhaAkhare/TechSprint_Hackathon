@@ -602,7 +602,7 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const querySnapshot = await getDocs(collection(db, "Instructor"));
+      const querySnapshot = await getDocs(collection(db, "Users"));
       const usersList = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -676,7 +676,7 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
           type: "CUSTOM",
         });
 
-        const instructorCollection = collection(db, "Instructor");
+        const instructorCollection = collection(db, "Users");
         const allUsersWithRole = await getDocs(query(instructorCollection, where("roleId", "==", roleToEdit.id)));
         allUsersWithRole.forEach(async (doc) => {
           if (!selectedUsers.includes(doc.id)) {
@@ -701,7 +701,7 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
         });
 
         const roleId = roleRef.id;
-        const instructorCollection = collection(db, "Instructor");
+        const instructorCollection = collection(db, "Users");
 
         selectedUsers.forEach(async (userId) => {
           const instructorDocRef = doc(instructorCollection, userId);
@@ -737,7 +737,7 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
     "performance",
     "student",
     "enquiries",
-    "Instructor",
+    "Users",
     "roles",
     "questions",
     "fee",
