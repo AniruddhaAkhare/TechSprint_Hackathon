@@ -44,7 +44,7 @@ import AttendanceRemarks from './pages/components/Performance/Attendance/Attenda
 import CreateAttendenceRemarks from './pages/components/Performance/Attendance/CreateAttendenceRemarks.jsx';
 import CreateFeesRemarks from './pages/components/Performance/Fees/CreateFeesRemarks.jsx';
 import FeesRemarks from './pages/components/Performance/Fees/FeesRemarks.jsx';
-import Profile from './pages/components/Profile.jsx';
+// import Profile from './pages/components/Profile.jsx';
 import InstallmentReport from './reports/InstallmentReport.jsx';
 import Invoices from './pages/components/Invoices/Invoices.jsx';
 import CreateInvoice from './pages/components/Invoices/CreateInvoice.jsx';

@@ -123,9 +123,21 @@ const InstituteSetup = () => {
 
   const handleSubmit = async (e, nextStep) => {
     e.preventDefault();
-    if (!canCreate && !instituteId) return;
-    if (!canUpdate && instituteId) return;
-
+    if (!canCreate && !instituteId) {
+      alert("You don't have permission to create an institute.");
+      return;
+    }
+    if (!canUpdate && instituteId) {
+      alert("You don't have permission to update this institute.");
+      return;
+    }
+  
+    // Validate form data before creating
+    if (!instituteId && (!formData.instituteName || !formData.instituteType)) {
+      alert("Please fill in required fields (Institute Name and Type) before creating an institute.");
+      return;
+    }
+  
     try {
       let updatedFormData = { ...formData };
       if (activeStep === "Logo Upload" && logoFile) {
@@ -133,27 +145,63 @@ const InstituteSetup = () => {
         if (!logoUrl) return;
         updatedFormData = { ...updatedFormData, logoUrl };
       }
-
+  
       const querySnapshot = await getDocs(collection(db, "instituteSetup"));
       if (querySnapshot.empty && canCreate) {
         const docRef = await addDoc(collection(db, "instituteSetup"), updatedFormData);
         setInstituteId(docRef.id);
+        console.log("Created new institute with ID:", docRef.id);
       } else if (canUpdate) {
         const docRef = doc(db, "instituteSetup", querySnapshot.docs[0].id);
         await updateDoc(docRef, updatedFormData);
         setInstituteId(querySnapshot.docs[0].id);
+        console.log("Updated institute with ID:", querySnapshot.docs[0].id);
       }
-
+  
       alert("Data saved successfully!");
       setEditModes((prev) => ({ ...prev, [activeStep]: false }));
-
+  
       if (nextStep) setActiveStep(nextStep);
       else navigate("/dashboard");
     } catch (error) {
       console.error("Error saving data:", error);
-      alert("Error saving data");
+      alert("Error saving data: " + error.message);
     }
   };
+  
+  // const handleSubmit = async (e, nextStep) => {
+  //   e.preventDefault();
+  //   if (!canCreate && !instituteId) return;
+  //   if (!canUpdate && instituteId) return;
+
+  //   try {
+  //     let updatedFormData = { ...formData };
+  //     if (activeStep === "Logo Upload" && logoFile) {
+  //       const logoUrl = await handleLogoUpload();
+  //       if (!logoUrl) return;
+  //       updatedFormData = { ...updatedFormData, logoUrl };
+  //     }
+
+  //     const querySnapshot = await getDocs(collection(db, "instituteSetup"));
+  //     if (querySnapshot.empty && canCreate) {
+  //       const docRef = await addDoc(collection(db, "instituteSetup"), updatedFormData);
+  //       setInstituteId(docRef.id);
+  //     } else if (canUpdate) {
+  //       const docRef = doc(db, "instituteSetup", querySnapshot.docs[0].id);
+  //       await updateDoc(docRef, updatedFormData);
+  //       setInstituteId(querySnapshot.docs[0].id);
+  //     }
+
+  //     alert("Data saved successfully!");
+  //     setEditModes((prev) => ({ ...prev, [activeStep]: false }));
+
+  //     if (nextStep) setActiveStep(nextStep);
+  //     else navigate("/dashboard");
+  //   } catch (error) {
+  //     console.error("Error saving data:", error);
+  //     alert("Error saving data");
+  //   }
+  // };
 
   const toggleEditMode = (section) => {
     if (!canUpdate) {

@@ -203,11 +203,10 @@
 
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { auth, db } from '../config/firebase'; // Adjust path
+import { auth, db } from '../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-// Create authentication context
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -221,10 +220,9 @@ export function AuthProvider({ children }) {
 
       try {
         if (currentUser) {
-          const userDocRef = doc(db, 'Users', currentUser.uid);
+          const userDocRef = doc(db, 'Instructor', currentUser.uid);
           const userDoc = await getDoc(userDocRef);
 
-          // If user doesn't exist in Firestore, create their document
           if (!userDoc.exists()) {
             const defaultRole = '7Tl5zWnEZgkJR9rcVp5r';
             const userData = {

@@ -318,7 +318,6 @@ export default function EmployeeRegistrationForm() {
               placeholder="Enter your name"
             />
           </div>
-
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
@@ -334,7 +333,6 @@ export default function EmployeeRegistrationForm() {
               placeholder="Enter your email"
             />
           </div>
-
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password

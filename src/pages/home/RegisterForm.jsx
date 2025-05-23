@@ -123,3 +123,8 @@ export default function RegisterForm() {
         </div>
     );
 }
+
+
+// landing page pr jo onclick hero.jsx (start 7 days) onclick comment
+
+// login onclick comment 
