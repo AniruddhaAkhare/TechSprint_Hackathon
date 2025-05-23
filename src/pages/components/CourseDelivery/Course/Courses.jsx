@@ -34,6 +34,7 @@ export default function Courses() {
   const [isOpen, setIsOpen] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [loadingCenters, setLoadingCenters] = useState(true);
   const [deleteMessage, setDeleteMessage] = useState(
     "Are you sure you want to delete this course? This action cannot be undone."
   );
@@ -115,41 +116,593 @@ export default function Courses() {
   }, [isAdmin]);
 
   const fetchCenters = useCallback(async () => {
-    if (!canDisplay) return [];
+    if (!canDisplay) {
+      setLoadingCenters(false);
+      return [];
+    }
     try {
-      const q = query(CenterCollectionRef, orderBy("createdAt", "desc"));
+      setLoadingCenters(true);
+      console.log("Starting to fetch centers...");
+      const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+      if (instituteSnapshot.empty) {
+        console.warn("No institute found in instituteSetup collection");
+        setCenters([]);
+        return [];
+      }
+      const instituteId = instituteSnapshot.docs[0].id;
+      console.log("Using institute ID:", instituteId);
+      const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+      const q = query(CenterCollectionRef, where("isActive", "==", true));
       const snapshot = await getDocs(q);
-      const centerData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      console.log("Fetched centers:", centerData); 
+      console.log("Raw centers data from Firestore:", snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const centerData = snapshot.docs
+        .map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id, // Use document ID as id
+            centerId: data.centerId || doc.id, // Fallback to doc.id if centerId is missing
+            name: data.name || `Center ${doc.id}`, // Fallback name
+            isActive: data.isActive || false,
+            createdAt: data.createdAt || null,
+          };
+        })
+        .filter((center) => center.isActive)
+        .sort((a, b) => {
+          const dateA = a.createdAt ? a.createdAt.toDate() : new Date(0);
+          const dateB = b.createdAt ? b.createdAt.toDate() : new Date(0);
+          return dateB - dateA;
+        });
+      console.log("Filtered and sorted active centers:", centerData);
+      if (centerData.length === 0) {
+        console.warn("No active centers found.");
+      }
       setCenters(centerData);
       return centerData;
     } catch (err) {
       console.error("Error fetching centers:", err.message);
+      setCenters([]);
       return [];
+    } finally {
+      setLoadingCenters(false);
     }
-  }, [canDisplay, CenterCollectionRef]);
+  }, [canDisplay]);
+
+
+
+  // const fetchCenters = useCallback(async () => {
+  //   if (!canDisplay) {
+  //     setLoadingCenters(false);
+  //     return [];
+  //   }
+  //   try {
+  //     setLoadingCenters(true);
+  //     console.log("Starting to fetch centers...");
+  //     const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+  //     if (instituteSnapshot.empty) {
+  //       console.warn("No institute found in instituteSetup collection");
+  //       setCenters([]);
+  //       return [];
+  //     }
+  //     const instituteId = instituteSnapshot.docs[0].id;
+  //     console.log("Using institute ID:", instituteId);
+  //     const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+  //     const q = query(CenterCollectionRef, where("isActive", "==", true));
+  //     const snapshot = await getDocs(q);
+  //     console.log("Raw centers data from Firestore:", snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  //     const centerData = snapshot.docs
+  //       .map((doc) => ({
+  //         id: doc.id,
+  //         name: doc.data().name || `Center ${doc.id}`,
+  //         isActive: doc.data().isActive || false,
+  //         createdAt: doc.data().createdAt || null,
+  //       }))
+  //       .filter((center) => center.isActive)
+  //       .sort((a, b) => {
+  //         const dateA = a.createdAt ? a.createdAt.toDate() : new Date(0);
+  //         const dateB = b.createdAt ? b.createdAt.toDate() : new Date(0);
+  //         return dateB - dateA;
+  //       });
+  //     console.log("Filtered and sorted active centers:", centerData);
+  //     if (centerData.length === 0) {
+  //       console.warn("No active centers found.");
+  //     }
+  //     setCenters(centerData);
+  //     return centerData;
+  //   } catch (err) {
+  //     console.error("Error fetching centers:", err.message);
+  //     setCenters([]);
+  //     return [];
+  //   } finally {
+  //     setLoadingCenters(false);
+  //   }
+  // }, [canDisplay]);
+
+
+  // const fetchCenters = useCallback(async () => {
+  //   if (!canDisplay) {
+  //     setLoadingCenters(false);
+  //     return [];
+  //   }
+  //   try {
+  //     setLoadingCenters(true);
+  //     console.log("Starting to fetch centers...");
+  
+  //     // Get institute ID dynamically
+  //     const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+  //     if (instituteSnapshot.empty) {
+  //       console.warn("No institute found in instituteSetup collection");
+  //       setCenters([]);
+  //       return [];
+  //     }
+  
+  //     const instituteId = instituteSnapshot.docs[0].id;
+  //     console.log("Using institute ID:", instituteId);
+  
+  //     const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+  //     const q = query(CenterCollectionRef, where("isActive", "==", true));
+  //     const snapshot = await getDocs(q);
+  
+  //     console.log("Raw centers data from Firestore:", snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  
+  //     const centerData = snapshot.docs
+  //       .map((doc) => ({
+  //         id: doc.id,
+  //         name: doc.data().name || `Center ${doc.id}`,
+  //         isActive: doc.data().isActive || false,
+  //         createdAt: doc.data().createdAt || null,
+  //       }))
+  //       .filter((center) => center.isActive) // Additional client-side filtering for safety
+  //       .sort((a, b) => {
+  //         // Client-side sorting by createdAt (descending)
+  //         const dateA = a.createdAt ? a.createdAt.toDate() : new Date(0);
+  //         const dateB = b.createdAt ? b.createdAt.toDate() : new Date(0);
+  //         return dateB - dateA;
+  //       });
+  
+  //     console.log("Filtered and sorted active centers:", centerData);
+  
+  //     if (centerData.length === 0) {
+  //       console.warn("No active centers found.");
+  //     }
+  
+  //     setCenters(centerData);
+  //     return centerData;
+  //   } catch (err) {
+  //     console.error("Error fetching centers:", err.message);
+  //     setCenters([]);
+  //     return [];
+  //   } finally {
+  //     setLoadingCenters(false);
+  //   }
+  // }, [canDisplay]);
+
+
+  // const fetchCenters = useCallback(async () => {
+  //   if (!canDisplay) {
+  //     setLoadingCenters(false);
+  //     return [];
+  //   }
+  //   try {
+  //     setLoadingCenters(true);
+  //     console.log("Starting to fetch centers...");
+  
+  //     // Get institute ID dynamically
+  //     const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+  //     if (instituteSnapshot.empty) {
+  //       console.warn("No institute found in instituteSetup collection");
+  //       setCenters([]);
+  //       return [];
+  //     }
+  
+  //     const instituteId = instituteSnapshot.docs[0].id;
+  //     console.log("Using institute ID:", instituteId);
+  
+  //     const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+  //     const q = query(CenterCollectionRef, where("isActive", "==", true), orderBy("createdAt", "desc"));
+  //     const snapshot = await getDocs(q);
+  
+  //     console.log("Raw centers data from Firestore:", snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  
+  //     const centerData = snapshot.docs
+  //       .map((doc) => ({
+  //         id: doc.id,
+  //         name: doc.data().name || `Center ${doc.id}`,
+  //         isActive: doc.data().isActive || false,
+  //         createdAt: doc.data().createdAt || null,
+  //       }))
+  //       .filter((center) => center.isActive);
+  
+  //     console.log("Filtered active centers:", centerData);
+  
+  //     if (centerData.length === 0) {
+  //       console.warn("No active centers found.");
+  //     }
+  
+  //     setCenters(centerData);
+  //     return centerData;
+  //   } catch (err) {
+  //     console.error("Error fetching centers:", err.message);
+  //     setCenters([]);
+  //     return [];
+  //   } finally {
+  //     setLoadingCenters(false);
+  //   }
+  // }, [canDisplay]);
+
+
+  // const fetchCenters = useCallback(async () => {
+  //   if (!canDisplay) return [];
+  //   try {
+  //     console.log("Starting to fetch centers...");
+      
+  //     // Get institute ID dynamically
+  //     const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+  //     console.log(instituteSnapshot);
+
+  //     if (instituteSnapshot.empty) {
+  //       console.warn("No institute found");
+  //       return [];
+  //     }
+      
+  //     const instituteId = instituteSnapshot.docs[0].id;
+  //     console.log("Using institute ID:", instituteId);
+      
+  //     const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+  //     const q = query(CenterCollectionRef, orderBy("createdAt", "desc"));
+  //     const snapshot = await getDocs(q);
+      
+  //     console.log("Raw centers data from Firestore:", snapshot.docs.map(doc => doc.data()));
+      
+  //     const centerData = snapshot.docs
+  //       .map((doc) => ({
+  //         id: doc.id,
+  //         ...doc.data(),
+  //       }))
+  //       .filter((center) => center.isActive);
+      
+  //     console.log("Filtered active centers:", centerData);
+      
+  //     const formattedCenters = centerData.map((center) => ({
+  //       id: center.id,
+  //       name: center.name || `Center ${center.id}`,
+  //       ...center,
+  //     }));
+      
+  //     console.log("Formatted centers for state:", formattedCenters);
+  //     setCenters(formattedCenters);
+  //     return formattedCenters;
+  //   } catch (err) {
+  //     console.error("Error fetching centers:", err);
+  //     setCenters([]);
+  //     return [];
+  //   }
+  // }, [canDisplay]);
+
+
+  // const fetchCenters = useCallback(async () => {
+  //   if (!canDisplay) return [];
+  //   try {
+  //     // Get the institute ID first (like in CreateCourses.jsx)
+  //     const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+  //     if (instituteSnapshot.empty) {
+  //       console.warn("No institute found");
+  //       return [];
+  //     }
+      
+  //     const instituteId = instituteSnapshot.docs[0].id;
+  //     const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+      
+  //     const q = query(CenterCollectionRef, orderBy("createdAt", "desc"));
+  //     const snapshot = await getDocs(q);
+      
+  //     const centerData = snapshot.docs
+  //       .map((doc) => ({
+  //         id: doc.id,
+  //         ...doc.data(),
+  //       }))
+  //       .filter((center) => center.isActive); // Filter only active centers
+      
+  //     console.log("Fetched centers:", centerData);
+      
+  //     // Format centers with fallback names
+  //     const formattedCenters = centerData.map((center) => ({
+  //       id: center.id,
+  //       name: center.name || `Center ${center.id}`,
+  //       ...center,
+  //     }));
+      
+  //     setCenters(formattedCenters);
+  //     return formattedCenters;
+  //   } catch (err) {
+  //     console.error("Error fetching centers:", err.message);
+  //     setCenters([]);
+  //     return [];
+  //   }
+  // }, [canDisplay]);
+
+  // const fetchCenters = useCallback(async () => {
+  //   if (!canDisplay) return [];
+  //   try {
+  //     const q = query(CenterCollectionRef, orderBy("createdAt", "desc"));
+  //     const snapshot = await getDocs(q);
+  //     const centerData = snapshot.docs
+  //       .map((doc) => ({
+  //         id: doc.id,
+  //         ...doc.data(),
+  //       }))
+  //       .filter((center) => center.isActive); // Filter only active centers
+  //     console.log("Fetched centers:", centerData); // Debug log
+  //     if (centerData.length === 0) {
+  //       console.warn("No active centers found.");
+  //     }
+  //     // Ensure centers have a name; provide a fallback if missing
+  //     const formattedCenters = centerData.map((center) => ({
+  //       id: center.id,
+  //       name: center.name || `Center ${center.id}`, // Fallback for missing name
+  //       ...center,
+  //     }));
+  //     setCenters(formattedCenters);
+  //     return formattedCenters;
+  //   } catch (err) {
+  //     console.error("Error fetching centers:", err.message);
+  //     setCenters([]); // Reset to empty array on error
+  //     return [];
+  //   }
+  // }, [canDisplay, CenterCollectionRef]);
+
+  // const fetchCenters = useCallback(async () => {
+  //   if (!canDisplay) return [];
+  //   try {
+  //     const q = query(CenterCollectionRef, orderBy("createdAt", "desc"));
+  //     const snapshot = await getDocs(q);
+  //     const centerData = snapshot.docs.map((doc) => ({
+  //       id: doc.id,
+  //       ...doc.data(),
+  //     }));
+  //     console.log("Fetched centers:", centerData); 
+  //     setCenters(centerData);
+  //     return centerData;
+  //   } catch (err) {
+  //     console.error("Error fetching centers:", err.message);
+  //     return [];
+  //   }
+  // }, [canDisplay, CenterCollectionRef]);
+
+  // const fetchCourses = useCallback(() => {
+  //   if (!canDisplay) return;
+  //   const q = query(CourseCollectionRef, orderBy("createdAt", "asc"));
+  //   const unsubscribe = onSnapshot(
+  //     q,
+  //     (snapshot) => {
+  //       const courseData = snapshot.docs.map((doc) => ({
+  //         id: doc.id,
+  //         ...doc.data(),
+  //         status: doc.data().status || "Active",
+  //         mode: doc.data().mode || "Online",
+  //         centerIds: doc.data().centerIds
+  //           ? Array.isArray(doc.data().centerIds)
+  //             ? doc.data().centerIds
+  //             : [doc.data().centerIds]
+  //           : [],
+  //       }));
+
+  //       let filteredCourses = courseData;
+  //       if (statusFilter !== "All") {
+  //         filteredCourses = filteredCourses.filter(
+  //           (course) => course.status === statusFilter
+  //         );
+  //       }
+  //       if (modeFilter !== "All") {
+  //         filteredCourses = filteredCourses.filter(
+  //           (course) => course.mode === modeFilter
+  //         );
+  //       }
+  //       if (centerFilter !== "All") {
+  //         filteredCourses = filteredCourses.filter((course) =>
+  //           course.centerIds.includes(centerFilter)
+  //         );
+  //       }
+
+  //       setCourses(filteredCourses);
+  //       setSearchResults(filteredCourses);
+  //     },
+  //     (err) => console.error("Error fetching courses:", err.message)
+  //   );
+  //   return unsubscribe;
+  // }, [canDisplay, statusFilter, modeFilter, centerFilter]);
+  // const fetchCourses = useCallback(() => {
+  //   if (!canDisplay) return;
+  //   const q = query(CourseCollectionRef, orderBy("createdAt", "asc"));
+  //   const unsubscribe = onSnapshot(
+  //     q,
+  //     (snapshot) => {
+  //       const courseData = snapshot.docs.map((doc) => {
+  //         const data = doc.data();
+  //         // Ensure centerIds is an array
+  //         const centerIds = data.centerIds
+  //           ? Array.isArray(data.centerIds)
+  //             ? data.centerIds
+  //             : typeof data.centerIds === "string"
+  //             ? [data.centerIds]
+  //             : []
+  //           : [];
+  //         console.log(`Course ${doc.id} centerIds:`, centerIds); // Debug log
+  //         return {
+  //           id: doc.id,
+  //           ...data,
+  //           status: data.status || "Active",
+  //           mode: data.mode || "Online",
+  //           centerIds,
+  //         };
+  //       });
+  
+  //       let filteredCourses = courseData;
+  //       if (statusFilter !== "All") {
+  //         filteredCourses = filteredCourses.filter(
+  //           (course) => course.status === statusFilter
+  //         );
+  //       }
+  //       if (modeFilter !== "All") {
+  //         filteredCourses = filteredCourses.filter(
+  //           (course) => course.mode === modeFilter
+  //         );
+  //       }
+  //       if (centerFilter !== "All") {
+  //         console.log("Applying center filter:", centerFilter); // Debug log
+  //         filteredCourses = filteredCourses.filter((course) => {
+  //           const includes = course.centerIds.includes(centerFilter);
+  //           console.log(`Course ${course.id} includes ${centerFilter}:`, includes, course.centerIds);
+  //           return includes;
+  //         });
+  //       }
+  
+  //       console.log("Filtered courses:", filteredCourses); // Debug log
+  //       setCourses(filteredCourses);
+  //       setSearchResults(filteredCourses);
+  //     },
+  //     (err) => console.error("Error fetching courses:", err.message)
+  //   );
+  //   return unsubscribe;
+  // }, [canDisplay, statusFilter, modeFilter, centerFilter]);
+
+  // const fetchCourses = useCallback(() => {
+  //   console.log("fetchCourses called"); // Debug log
+  //   if (!canDisplay) return;
+  //   const q = query(CourseCollectionRef, orderBy("createdAt", "asc"));
+  //   const unsubscribe = onSnapshot(
+  //     q,
+  //     (snapshot) => {
+  //       const courseData = snapshot.docs.map((doc) => {
+  //         const data = doc.data();
+  //         const centerIds = data.centerIds
+  //           ? Array.isArray(data.centerIds)
+  //             ? data.centerIds
+  //             : typeof data.centerIds === "string"
+  //             ? [data.centerIds]
+  //             : []
+  //           : [];
+  //         console.log(`Course ${doc.id} centerIds:`, centerIds);
+  //         return {
+  //           id: doc.id,
+  //           ...data,
+  //           status: data.status || "Active",
+  //           mode: data.mode || "Online",
+  //           centerIds,
+  //         };
+  //       });
+  //       let filteredCourses = courseData;
+  //       if (statusFilter !== "All") {
+  //         filteredCourses = filteredCourses.filter(
+  //           (course) => course.status === statusFilter
+  //         );
+  //       }
+  //       if (modeFilter !== "All") {
+  //         filteredCourses = filteredCourses.filter(
+  //           (course) => course.mode === modeFilter
+  //         );
+  //       }
+  //       if (centerFilter !== "All") {
+  //         console.log("Applying center filter:", centerFilter);
+  //         filteredCourses = filteredCourses.filter((course) => {
+  //           const includes = course.centerIds.includes(centerFilter);
+  //           console.log(`Course ${course.id} includes ${centerFilter}:`, includes, course.centerIds);
+  //           return includes;
+  //         });
+  //       }
+  //       console.log("Filtered courses:", filteredCourses);
+  //       setCourses(filteredCourses);
+  //       setSearchResults(filteredCourses);
+  //     },
+  //     (err) => console.error("Error fetching courses:", err.message)
+  //   );
+  //   return unsubscribe;
+  // }, [canDisplay, statusFilter, modeFilter, centerFilter]);
+  
+
+  // const fetchCourses = useCallback(() => {
+  //   console.log("fetchCourses called");
+  //   if (!canDisplay) return;
+  //   const q = query(CourseCollectionRef, orderBy("createdAt", "asc"));
+  //   const unsubscribe = onSnapshot(
+  //     q,
+  //     (snapshot) => {
+  //       const courseData = snapshot.docs.map((doc) => {
+  //         const data = doc.data();
+  //         const centerIds = data.centerIds
+  //           ? Array.isArray(data.centerIds)
+  //             ? data.centerIds
+  //             : typeof data.centerIds === "string"
+  //             ? [data.centerIds]
+  //             : []
+  //           : [];
+  //         console.log(`Course ${doc.id} centerIds:`, centerIds);
+  //         return {
+  //           id: doc.id,
+  //           ...data,
+  //           status: data.status || "Active",
+  //           mode: data.mode || "Online",
+  //           centerIds,
+  //         };
+  //       });
+  //       let filteredCourses = courseData;
+  //       if (statusFilter !== "All") {
+  //         filteredCourses = filteredCourses.filter(
+  //           (course) => course.status === statusFilter
+  //         );
+  //       }
+  //       if (modeFilter !== "All") {
+  //         filteredCourses = filteredCourses.filter(
+  //           (course) => course.mode === modeFilter
+  //         );
+  //       }
+  //       if (centerFilter !== "All") {
+  //         console.log("Applying center filter:", centerFilter);
+  //         filteredCourses = filteredCourses.filter((course) => {
+  //           const includes = course.centerIds.includes(centerFilter);
+  //           console.log(`Course ${course.id} includes ${centerFilter}:`, includes, course.centerIds);
+  //           return includes;
+  //         });
+  //       }
+  //       console.log("Filtered courses:", filteredCourses);
+  //       setCourses(filteredCourses);
+  //       setSearchResults(filteredCourses);
+  //     },
+  //     (err) => console.error("Error fetching courses:", err.message)
+  //   );
+  //   return unsubscribe;
+  // }, [canDisplay, statusFilter, modeFilter, centerFilter]);
+
 
   const fetchCourses = useCallback(() => {
+    console.log("fetchCourses called");
     if (!canDisplay) return;
     const q = query(CourseCollectionRef, orderBy("createdAt", "asc"));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const courseData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          status: doc.data().status || "Active",
-          mode: doc.data().mode || "Online",
-          centerIds: doc.data().centerIds
-            ? Array.isArray(doc.data().centerIds)
-              ? doc.data().centerIds
-              : [doc.data().centerIds]
-            : [],
-        }));
-
+        const courseData = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          // Handle both centerId (string) and centerIds (array)
+          const centerIds = data.centerIds
+            ? Array.isArray(data.centerIds)
+              ? data.centerIds
+              : typeof data.centerIds === "string"
+              ? [data.centerIds]
+              : []
+            : data.centerId
+            ? typeof data.centerId === "string"
+              ? [data.centerId]
+              : []
+            : [];
+          console.log(`Course ${doc.id} centerIds:`, centerIds);
+          return {
+            id: doc.id,
+            ...data,
+            status: data.status || "Active",
+            mode: data.mode || "Online",
+            centerIds, // Always store as centerIds
+          };
+        });
         let filteredCourses = courseData;
         if (statusFilter !== "All") {
           filteredCourses = filteredCourses.filter(
@@ -162,11 +715,14 @@ export default function Courses() {
           );
         }
         if (centerFilter !== "All") {
-          filteredCourses = filteredCourses.filter((course) =>
-            course.centerIds.includes(centerFilter)
-          );
+          console.log("Applying center filter:", centerFilter);
+          filteredCourses = filteredCourses.filter((course) => {
+            const includes = course.centerIds.includes(centerFilter);
+            console.log(`Course ${course.id} includes ${centerFilter}:`, includes, course.centerIds);
+            return includes;
+          });
         }
-
+        console.log("Filtered courses:", filteredCourses);
         setCourses(filteredCourses);
         setSearchResults(filteredCourses);
       },
@@ -175,6 +731,22 @@ export default function Courses() {
     return unsubscribe;
   }, [canDisplay, statusFilter, modeFilter, centerFilter]);
 
+
+  // Add debug log before useEffect
+  console.log("fetchCourses defined:", typeof fetchCourses);
+  
+  useEffect(() => {
+    if (!canDisplay) {
+      setLoadingCenters(false);
+      return;
+    }
+    const unsubscribeCourses = fetchCourses();
+    fetchCenters().then(() => {
+      if (isAdmin) fetchLogs();
+    });
+    return () => unsubscribeCourses && unsubscribeCourses();
+  }, [fetchCourses, fetchCenters, fetchLogs, canDisplay, isAdmin]);
+  
   const debouncedSearch = useCallback(
     debounce((term) => {
       if (!term.trim()) {
@@ -195,13 +767,25 @@ export default function Courses() {
   }, [searchTerm, debouncedSearch]);
 
   useEffect(() => {
-    if (!canDisplay) return;
+    if (!canDisplay) {
+      setLoadingCenters(false);
+      return;
+    }
     const unsubscribeCourses = fetchCourses();
     fetchCenters().then(() => {
       if (isAdmin) fetchLogs();
     });
     return () => unsubscribeCourses && unsubscribeCourses();
   }, [fetchCourses, fetchCenters, fetchLogs, canDisplay, isAdmin]);
+
+  // useEffect(() => {
+  //   if (!canDisplay) return;
+  //   const unsubscribeCourses = fetchCourses();
+  //   fetchCenters().then(() => {
+  //     if (isAdmin) fetchLogs();
+  //   });
+  //   return () => unsubscribeCourses && unsubscribeCourses();
+  // }, [fetchCourses, fetchCenters, fetchLogs, canDisplay, isAdmin]);
 
   const handleCreateCourseClick = () => {
     if (!canCreate) {
@@ -338,7 +922,112 @@ export default function Courses() {
               <MenuItem value="Hybrid">Hybrid</MenuItem>
             </Select>
           </FormControl>
+
           <FormControl sx={{ minWidth: 200 }} size="small">
+  <InputLabel id="center-filter-label">Filter by Center</InputLabel>
+  <Select
+    labelId="center-filter-label"
+    value={centerFilter}
+    label="Filter by Center"
+    onChange={(e) => setCenterFilter(e.target.value)}
+    disabled={loadingCenters}
+  >
+    <MenuItem value="All">All Centers</MenuItem>
+    {loadingCenters ? (
+      <MenuItem disabled>Loading centers...</MenuItem>
+    ) : centers.length > 0 ? (
+      centers.map((center) => (
+        <MenuItem key={center.id} value={center.id}>
+          {center.name || `Center ${center.id}`}
+        </MenuItem>
+      ))
+    ) : (
+      <MenuItem disabled>No Centers Available</MenuItem>
+    )}
+  </Select>
+</FormControl>
+
+
+          {/* <FormControl sx={{ minWidth: 200 }} size="small">
+  <InputLabel id="center-filter-label">Filter by Center</InputLabel>
+  <Select
+    labelId="center-filter-label"
+    value={centerFilter}
+    label="Filter by Center"
+    onChange={(e) => setCenterFilter(e.target.value)}
+    disabled={loadingCenters}
+  >
+    <MenuItem value="All">All Centers</MenuItem>
+    {loadingCenters ? (
+      <MenuItem disabled>Loading centers...</MenuItem>
+    ) : centers.length > 0 ? (
+      centers.map((center) => (
+        <MenuItem key={center.id} value={center.id}>
+          {center.name || `Center ${center.id}`}
+        </MenuItem>
+      ))
+    ) : (
+      <MenuItem disabled>No Centers Available</MenuItem>
+    )}
+  </Select>
+</FormControl> */}
+          {/* <FormControl sx={{ minWidth: 200 }} size="small">
+  <InputLabel id="center-filter-label">Filter by Center</InputLabel>
+  <Select
+    labelId="center-filter-label"
+    value={centerFilter}
+    label="Filter by Center"
+    onChange={(e) => setCenterFilter(e.target.value)}
+  >
+    <MenuItem value="All">All Centers</MenuItem>
+    {centers.length > 0 ? (
+      centers.map((center) => (
+        <MenuItem key={center.id} value={center.id}>
+          {center.name || `Center ${center.id}`}
+        </MenuItem>
+      ))
+    ) : (
+      <MenuItem disabled>Loading centers...</MenuItem>
+    )}
+  </Select>
+</FormControl> */}
+          {/* <FormControl sx={{ minWidth: 200 }} size="small">
+  <InputLabel id="center-filter-label">Filter by Center</InputLabel>
+  <Select
+    labelId="center-filter-label"
+    value={centerFilter}
+    label="Filter by Center"
+    onChange={(e) => setCenterFilter(e.target.value)}
+  >
+    <MenuItem value="All">All Centers</MenuItem>
+    {centers.map((center) => (
+      <MenuItem key={center.id} value={center.id}>
+        {center.name}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl> */}
+          {/* <FormControl sx={{ minWidth: 200 }} size="small">
+  <InputLabel id="center-filter-label">Filter by Center</InputLabel>
+  <Select
+    labelId="center-filter-label"
+    value={centerFilter}
+    label="Filter by Center"
+    onChange={(e) => setCenterFilter(e.target.value)}
+  >
+    <MenuItem value="All">All Centers</MenuItem>
+    {centers.length > 0 ? (
+      centers.map((center) => (
+        <MenuItem key={center.id} value={center.id}>
+          {center.name || "Unnamed Center"}
+        </MenuItem>
+      ))
+    ) : (
+      <MenuItem disabled>No Centers Available</MenuItem>
+    )}
+  </Select>
+</FormControl> */}
+          {/* <FormControl sx={{ minWidth: 200 }} size="small">
             <InputLabel id="center-filter-label">Filter by Center</InputLabel>
             <Select
               labelId="center-filter-label"
@@ -353,7 +1042,7 @@ export default function Courses() {
                 </MenuItem>
               ))}
             </Select>
-          </FormControl>
+          </FormControl> */}
         </div>
 
         <div className="rounded-lg shadow-md overflow-x-auto max-h-[70vh] overflow-y-auto">
@@ -395,7 +1084,7 @@ export default function Courses() {
                     <td className="px-4 py-3 text-gray-600">{course.fee || "N/A"}</td>
                     <td className="px-4 py-3 text-gray-600">{course.duration || "N/A"}</td>
                     <td className="px-4 py-3 text-gray-600">{course.mode || "N/A"}</td>
-                    <td className="px-4 py-3 text-gray-600">
+                    {/* <td className="px-4 py-3 text-gray-600">
                       {course.centerIds.length > 0
                         ? course.centerIds
                             .map(
@@ -404,7 +1093,48 @@ export default function Courses() {
                             )
                             .join(", ")
                         : "N/A"}
-                    </td>
+                    </td> */}
+
+<td className="px-4 py-3 text-gray-600">
+  {course.centerIds && Array.isArray(course.centerIds) && course.centerIds.length > 0
+    ? course.centerIds
+        .map((centerId) => {
+          const center = centers.find((c) => c.id === centerId || c.centerId === centerId);
+          const displayName = center ? center.name || `Center ${centerId}` : `Unknown Center (${centerId})`;
+          console.log(`Course ${course.id}, centerId ${centerId}:`, { found: !!center, displayName });
+          return displayName;
+        })
+        .join(", ")
+    : "No Centers Assigned"}
+</td>
+
+
+{/* <td className="px-4 py-3 text-gray-600">
+  {course.centerIds && course.centerIds.length > 0
+    ? course.centerIds
+        .map((centerId) => {
+          const center = centers.find((c) => c.id === centerId);
+          const displayName = center ? center.name : centerId;
+          console.log(`Course ${course.id}, centerId ${centerId}:`, { found: !!center, displayName });
+          return displayName;
+        })
+        .join(", ")
+    : "N/A"}
+</td> */}
+
+
+                    {/* <td className="px-4 py-3 text-gray-600">
+  {course.centerIds && course.centerIds.length > 0
+    ? course.centerIds
+        .map((centerId) => {
+          const center = centers.find((c) => c.id === centerId);
+          const displayName = center ? center.name : centerId;
+          console.log(`Course ${course.id}, centerId ${centerId}:`, { found: !!center, displayName });
+          return displayName;
+        })
+        .join(", ")
+    : "N/A"}
+</td> */}
                     <td className="px-4 py-3 text-gray-600">{course.status || "Active"}</td>
                     <td className="px-4 py-3">
                       <FormControl size="small">
