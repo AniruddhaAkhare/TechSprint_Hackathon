@@ -418,7 +418,7 @@ const Sidebar = () => {
         {accordionState.hr && (
           <>
           {canViewInstructors && (
-              <Link to="/instructor" className="nav-link">
+              <Link to="/staff" className="nav-link">
                 <li className="nav-item">
                   <FaUserGraduate className="nav-icon" />
                   <span>Staff Management</span>
@@ -478,14 +478,6 @@ const Sidebar = () => {
                 <li className="nav-item">
                   <i className="fa-solid fa-building-columns nav-icon"></i>
                   <span>Institute Setup</span>
-                </li>
-              </Link>
-            )}
-            {canViewUsers && (
-              <Link to="/users" className="nav-link">
-                <li className="nav-item">
-                  <FaUsers className="nav-icon" />
-                  <span>User Management</span>
                 </li>
               </Link>
             )}

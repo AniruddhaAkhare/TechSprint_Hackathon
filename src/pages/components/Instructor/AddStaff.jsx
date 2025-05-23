@@ -1,18 +1,29 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, addDoc, doc, updateDoc, Timestamp } from "firebase/firestore";
-import { db } from "../../../config/firebase";
+import { collection, addDoc, doc, updateDoc, Timestamp, getDocs } from "firebase/firestore";
+import { db, auth } from "../../../config/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { s3Client } from "../../../config/aws-config";
 import { Upload } from "@aws-sdk/lib-storage";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function AddStaff() {
+  const { currentUser, rolePermissions } = useAuth();
+  const navigate = useNavigate();
+  const submissionRef = useRef(false);
+
+  // Permissions
+  const canCreate = rolePermissions?.Users?.create || false;
+
+  // State
   const [isOpen, setIsOpen] = useState(true);
-  const [Name, setName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [countryCode, setCountryCode] = useState("+91");
   const [emergencyCountryCode, setEmergencyCountryCode] = useState("+91");
@@ -22,13 +33,11 @@ export default function AddStaff() {
   const [joiningDate, setJoiningDate] = useState("");
   const [exitDate, setExitDate] = useState("");
   const [domain, setDomain] = useState("");
+  const [role, setRole] = useState("");
+  const [roles, setRoles] = useState([]);
   const [educationDetails, setEducationDetails] = useState([]);
   const [experienceDetails, setExperienceDetails] = useState([]);
-  const [emergencyContact, setEmergencyContact] = useState({ name: "", phone: "", countryCode: "+91" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
-  const submissionRef = useRef(false);
-
   const [documents, setDocuments] = useState({
     aadharCard: null,
     panCard: null,
@@ -58,20 +67,57 @@ export default function AddStaff() {
     { key: "india-+91", code: "+91", label: "India (+91)" },
   ];
 
-  const capitalizeFirstLetter = (str) => {
-    if (!str || typeof str !== "string") return str;
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-  };
-
+  // Fetch Roles
   useEffect(() => {
+    if (!canCreate) {
+      toast.error("You do not have permission to add staff.");
+      navigate("/unauthorized");
+      return;
+    }
+
+    const fetchRoles = async () => {
+      try {
+        const rolesSnapshot = await getDocs(collection(db, "roles"));
+        const rolesData = rolesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setRoles(rolesData);
+      } catch (error) {
+        console.error("Error fetching roles:", error);
+        toast.error("Failed to fetch roles");
+      }
+    };
+
+    fetchRoles();
+
     const today = new Date().toISOString().split("T")[0];
     setJoiningDate(today);
-  }, []);
+  }, [canCreate, navigate]);
 
+  // Activity Logging
+  const logActivity = async (action, details) => {
+    if (!currentUser) {
+      console.error("No current user available for logging");
+      return;
+    }
+    try {
+      const logData = {
+        userId: currentUser.uid,
+        userEmail: currentUser.email || "Unknown",
+        timestamp: Timestamp.now(),
+        action,
+        details,
+      };
+      await addDoc(collection(db, "activityLogs"), logData);
+      console.log("Activity logged:", { action, details });
+    } catch (error) {
+      console.error("Error logging activity:", error);
+    }
+  };
+
+  // File Handling
   const handleFileChange = (e, docType) => {
     const file = e.target.files[0];
     if (file) {
-      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+      const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
       if (!allowedTypes.includes(file.type)) {
         toast.error(`Invalid file type for ${file.name}. Allowed types: PDF, JPEG, PNG.`);
         return;
@@ -144,11 +190,13 @@ export default function AddStaff() {
   };
 
   const cleanPhoneNumber = (phone) => {
-    // return phone.replace(/^\+|\s+|[^\d]/g, '');
+    return phone.replace(/^\+|\D+/g, "");
+  };
 
-
-    return phone.replace(/^\+|\D+/g, '');
-    };
+  const capitalizeFirstLetter = (str) => {
+    if (!str || typeof str !== "string") return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
 
   const handleAddStaff = async (e) => {
     e.preventDefault();
@@ -156,53 +204,50 @@ export default function AddStaff() {
       console.warn("Submission already in progress, ignoring duplicate.");
       return;
     }
-    if (!Name.trim() || !email.trim()) {
-      toast.error("Please fill all required fields: Name, Email, Phone Number.");
+
+    if (!displayName.trim() || !email.trim() || !password.trim() || !role) {
+      toast.error("Please fill all required fields: Name, Email, Password, Role.");
       return;
     }
-  
+
     const cleanedPhone = cleanPhoneNumber(phone);
-    // const cleanedGuardianPhone = cleanPhoneNumber(guardianDetails.phone);
-    const cleanedEmergencyPhone = cleanPhoneNumber(emergencyContact.phone);
-  
-    // if (!/^\d{10,15}$/.test(cleanedPhone)) {
-    //   toast.error("Staff phone number must be 10-15 digits.");
-    //   return;
-    // }
+    const cleanedEmergencyPhone = cleanPhoneNumber(emergencyDetails.phone);
+
+    if (cleanedPhone && !/^\d{10,15}$/.test(cleanedPhone)) {
+      toast.error("Staff phone number must be 10-15 digits.");
+      return;
+    }
     if (emergencyDetails.phone && !/^\d{10,15}$/.test(cleanedEmergencyPhone)) {
       toast.error("Emergency phone number must be 10-15 digits.");
       return;
     }
-    // if (emergencyContact.phone && !/^\d{10,15}$/.test(cleanedEmergencyPhone)) {
-    //   toast.error("Emergency contact phone number must be 10-15 digits.");
-    //   return;
-    // }
-  
+
     submissionRef.current = true;
     setIsSubmitting(true);
-  
+
     try {
-      console.log("Starting staff submission:", { Name, email, phone: cleanedPhone });
-      const staffDocRef = await addDoc(collection(db, "Instructor"), {
-        Name: capitalizeFirstLetter(Name),
+      // Create Firebase Authentication User
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const authUser = userCredential.user;
+
+      // Add Staff to Firestore
+      const staffData = {
+        displayName: capitalizeFirstLetter(displayName),
         email,
-        phone: `${countryCode}${cleanedPhone}`, // Combine country code with cleaned phone number
+        phone: cleanedPhone ? `${countryCode}${cleanedPhone}` : "",
         emergency_details: {
           ...emergencyDetails,
           phone: emergencyDetails.phone ? `${emergencyCountryCode}${cleanedEmergencyPhone}` : "",
         },
-        // emergency_contact: {
-        //   name: emergencyContact.name,
-        //   phone: cleanedEmergencyPhone ? `${emergencyContact.countryCode}${cleanedEmergencyPhone}` : "",
-        // },
-        joining_date: Timestamp.fromDate(new Date(joiningDate)),
-        exit_date: Timestamp.fromDate(new Date(joiningDate)),
-        domain: domain,
+        joining_date: joiningDate ? Timestamp.fromDate(new Date(joiningDate)) : Timestamp.now(),
+        exit_date: exitDate ? Timestamp.fromDate(new Date(exitDate)) : null,
+        domain: domain || "",
+        role,
         created_at: Timestamp.now(),
         education_details: educationDetails,
         experience_details: experienceDetails,
-        address: address,
-        date_of_birth: dateOfBirth,
+        address,
+        date_of_birth: dateOfBirth || "",
         staff: {
           aadharCard: [],
           panCard: [],
@@ -219,45 +264,55 @@ export default function AddStaff() {
           parentSpouseAadhar: [],
           passportPhoto: [],
         },
-      });
-  
+      };
+
+      const staffDocRef = await addDoc(collection(db, "Users"), staffData);
       const staffId = staffDocRef.id;
-          console.log("Staff added to Firestore with ID:", staffId);
-    
-          const documentUpdates = {};
-          for (const [docType, file] of Object.entries(documents)) {
-            if (file) {
-              console.log(`Uploading document: ${docType}`);
-              try {
-                const url = await uploadFileToS3(file, docType, staffId);
-                documentUpdates[`staff.${docType}`] = [url];
-              } catch (uploadErr) {
-                console.error(`Failed to upload ${docType}:`, uploadErr);
-                throw new Error(`Failed to upload ${docType}: ${uploadErr.message}`);
-              }
-            }
+      console.log("Staff added to Firestore with ID:", staffId);
+
+      // Upload Documents to S3
+      const documentUpdates = {};
+      for (const [docType, file] of Object.entries(documents)) {
+        if (file) {
+          console.log(`Uploading document: ${docType}`);
+          try {
+            const url = await uploadFileToS3(file, docType, staffId);
+            documentUpdates[`staff.${docType}`] = [url];
+          } catch (uploadErr) {
+            console.error(`Failed to upload ${docType}:`, uploadErr);
+            throw new Error(`Failed to upload ${docType}: ${uploadErr.message}`);
           }
-    
-          if (Object.keys(documentUpdates).length > 0) {
-            console.log("Updating Firestore with document URLs:", documentUpdates);
-            await updateDoc(doc(db, "Instructor", staffId), documentUpdates);
-          }
-    
-          toast.success("Staff added successfully!");
-          navigate("/instructor");
-      // Rest of your code...
+        }
+      }
+
+      if (Object.keys(documentUpdates).length > 0) {
+        console.log("Updating Firestore with document URLs:", documentUpdates);
+        await updateDoc(doc(db, "Users", staffId), documentUpdates);
+      }
+
+      // Log Activity
+      await logActivity("Created staff", {
+        userId: authUser.uid,
+        email,
+        name: displayName,
+        role: roles.find((r) => r.id === role)?.name || "Unknown",
+        phone: cleanedPhone ? `${countryCode}${cleanedPhone}` : "N/A",
+        domain: domain || "N/A",
+      });
+
+      toast.success("Staff added successfully!");
+      navigate("/staff");
     } catch (error) {
       console.error("Error adding staff:", error);
       toast.error(`Error adding staff: ${error.message}`);
-    } finally{
+    } finally {
       submissionRef.current = false;
-    setIsSubmitting(false);
-  }
-};
-
+      setIsSubmitting(false);
+    }
+  };
 
   const addEducation = () => {
-    setEducationDetails([...educationDetails, { level: '', institute: '', degree: '', specialization: '', grade: '', passingyr: '' }]);
+    setEducationDetails([...educationDetails, { level: "", institute: "", degree: "", specialization: "", grade: "", passingyr: "" }]);
   };
 
   const handleEducationChange = (index, field, value) => {
@@ -271,7 +326,7 @@ export default function AddStaff() {
   };
 
   const addExperience = () => {
-    setExperienceDetails([...experienceDetails, { companyName: '', designation: '', salary: '', years: '', description: '' }]);
+    setExperienceDetails([...experienceDetails, { companyName: "", designation: "", salary: "", years: "", description: "" }]);
   };
 
   const handleExperienceChange = (index, field, value) => {
@@ -288,13 +343,9 @@ export default function AddStaff() {
     setEmergencyDetails((prev) => ({ ...prev, [field]: value }));
   };
 
-  // const handleEmergencyContactChange = (field, value) => {
-  //   setEmergencyContact((prev) => ({ ...prev, [field]: value }));
-  // };
-
   const toggleSidebar = () => {
     setIsOpen(false);
-    setTimeout(() => navigate("/instructor"), 300);
+    setTimeout(() => navigate("/staff"), 300);
   };
 
   return (
@@ -307,7 +358,7 @@ export default function AddStaff() {
       <div
         className={`fixed top-0 right-0 h-full bg-white w-full sm:w-3/4 shadow-lg transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
-        } p-6 overflow-y-auto z-50`}
+        } p-6 overflow-y-auto z-50 overflow-x-auto`}
       >
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-800">Add Staff</h1>
@@ -329,8 +380,8 @@ export default function AddStaff() {
                 <label className="block text-sm font-medium text-gray-600">Name</label>
                 <input
                   type="text"
-                  value={Name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Name"
                   required
                   disabled={isSubmitting}
@@ -344,6 +395,18 @@ export default function AddStaff() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
+                  required
+                  disabled={isSubmitting}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password (min 6 characters)"
                   required
                   disabled={isSubmitting}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -369,7 +432,6 @@ export default function AddStaff() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Phone Number"
-                    // required
                     disabled={isSubmitting}
                     className="w-2/3 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -384,6 +446,22 @@ export default function AddStaff() {
                   disabled={isSubmitting}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600">Role</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  disabled={isSubmitting}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Role</option>
+                  {roles.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600">Date of Birth</label>
@@ -406,7 +484,7 @@ export default function AddStaff() {
                 <input
                   type="text"
                   value={emergencyDetails.name}
-                  onChange={(e) => handleEmergencyChange('name', e.target.value)}
+                  onChange={(e) => handleEmergencyChange("name", e.target.value)}
                   placeholder="Person Name"
                   disabled={isSubmitting}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -430,7 +508,7 @@ export default function AddStaff() {
                   <input
                     type="text"
                     value={emergencyDetails.phone}
-                    onChange={(e) => handleEmergencyChange('phone', e.target.value)}
+                    onChange={(e) => handleEmergencyChange("phone", e.target.value)}
                     placeholder="Phone"
                     disabled={isSubmitting}
                     className="w-2/3 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -442,7 +520,7 @@ export default function AddStaff() {
                 <input
                   type="email"
                   value={emergencyDetails.email}
-                  onChange={(e) => handleEmergencyChange('email', e.target.value)}
+                  onChange={(e) => handleEmergencyChange("email", e.target.value)}
                   placeholder="Email"
                   disabled={isSubmitting}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -453,7 +531,7 @@ export default function AddStaff() {
                 <input
                   type="text"
                   value={emergencyDetails.relation}
-                  onChange={(e) => handleEmergencyChange('relation', e.target.value)}
+                  onChange={(e) => handleEmergencyChange("relation", e.target.value)}
                   placeholder="Relation"
                   disabled={isSubmitting}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -464,7 +542,7 @@ export default function AddStaff() {
                 <input
                   type="text"
                   value={emergencyDetails.occupation}
-                  onChange={(e) => handleEmergencyChange('occupation', e.target.value)}
+                  onChange={(e) => handleEmergencyChange("occupation", e.target.value)}
                   placeholder="Occupation"
                   disabled={isSubmitting}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -475,89 +553,82 @@ export default function AddStaff() {
 
           <div>
             <h2 className="text-lg font-medium text-gray-700 mb-4">Address Details</h2>
-            {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-6"> */}
-              <div>
-                <h3 className="text-md font-medium text-gray-600 mb-2">Residential Address</h3>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    value={address.street}
-                    onChange={(e) => setAddress({ ...address, street: e.target.value })}
-                    placeholder="Street"
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    value={address.area}
-                    onChange={(e) => setAddress({ ...address, area: e.target.value })}
-                    placeholder="Area"
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
-
-                  <input
-                    type="text"
-                    value={address.city}
-                    onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                    placeholder="City"
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    value={address.state}
-                    onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                    placeholder="State"
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
-
-                  <input
-                    type="text"
-                    value={address.zip}
-                    onChange={(e) => setAddress({ ...address, zip: e.target.value })}
-                    placeholder="Zip Code"
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    value={address.country}
-                    onChange={(e) => setAddress({ ...address, country: e.target.value })}
-                    placeholder="Country"
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  </div>
-                </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  value={address.street}
+                  onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                  placeholder="Street"
+                  disabled={isSubmitting}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="text"
+                  value={address.area}
+                  onChange={(e) => setAddress({ ...address, area: e.target.value })}
+                  placeholder="Area"
+                  disabled={isSubmitting}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
-            {/* </div> */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  value={address.city}
+                  onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                  placeholder="City"
+                  disabled={isSubmitting}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="text"
+                  value={address.state}
+                  onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                  placeholder="State"
+                  disabled={isSubmitting}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  value={address.zip}
+                  onChange={(e) => setAddress({ ...address, zip: e.target.value })}
+                  placeholder="Zip Code"
+                  disabled={isSubmitting}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="text"
+                  value={address.country}
+                  onChange={(e) => setAddress({ ...address, country: e.target.value })}
+                  placeholder="Country"
+                  disabled={isSubmitting}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
           </div>
 
           <div>
             <h2 className="text-lg font-medium text-gray-700 mb-4">Document Uploads</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { key: 'aadharCard', label: 'Aadhar Card' },
-                { key: 'panCard', label: 'PAN Card' },
-                { key: 'addressProof', label: 'Address Proof' },
-                { key: 'tenthMarksheet', label: '10th Marksheet' },
-                { key: 'twelfthMarksheet', label: '12th Marksheet' },
-                { key: 'graduationMarksheet', label: 'Graduation Marksheet' },
-                { key: 'pgMarksheet', label: 'PG Marksheet' },
-                { key: 'offerLetter1', label: 'Last Offer Letter 1' },
-                { key: 'offerLetter2', label: 'Last Offer Letter 2' },
-                { key: 'experienceLetter1', label: 'Last Experience Letter 1' },
-                { key: 'experienceLetter2', label: 'Last Experience Letter 2' },
-                { key: 'salaryProof', label: 'Salary Proof' },
-                { key: 'parentSpouseAadhar', label: "Parent/Spouse Aadhar Card" },
-                { key: 'passportPhoto', label: 'Passport Size Photo' },
+                { key: "aadharCard", label: "Aadhar Card" },
+                { key: "panCard", label: "PAN Card" },
+                { key: "addressProof", label: "Address Proof" },
+                { key: "tenthMarksheet", label: "10th Marksheet" },
+                { key: "twelfthMarksheet", label: "12th Marksheet" },
+                { key: "graduationMarksheet", label: "Graduation Marksheet" },
+                { key: "pgMarksheet", label: "PG Marksheet" },
+                { key: "offerLetter1", label: "Last Offer Letter 1" },
+                { key: "offerLetter2", label: "Last Offer Letter 2" },
+                { key: "experienceLetter1", label: "Last Experience Letter 1" },
+                { key: "experienceLetter2", label: "Last Experience Letter 2" },
+                { key: "salaryProof", label: "Salary Proof" },
+                { key: "parentSpouseAadhar", label: "Parent/Spouse Aadhar Card" },
+                { key: "passportPhoto", label: "Passport Size Photo" },
               ].map((doc) => (
                 <div key={doc.key}>
                   <label className="block text-sm font-medium text-gray-600">{doc.label}</label>
@@ -608,11 +679,13 @@ export default function AddStaff() {
                       <td className="p-3">
                         <select
                           value={edu.level}
-                          onChange={(e) => handleEducationChange(index, 'level', e.target.value)}
+                          onChange={(e) => handleEducationChange(index, "level", e.target.value)}
                           disabled={isSubmitting}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="" disabled>Select Level</option>
+                          <option value="" disabled>
+                            Select Level
+                          </option>
                           <option value="School">School</option>
                           <option value="UG">UG</option>
                           <option value="PG">PG</option>
@@ -622,7 +695,7 @@ export default function AddStaff() {
                         <input
                           type="text"
                           value={edu.institute}
-                          onChange={(e) => handleEducationChange(index, 'institute', e.target.value)}
+                          onChange={(e) => handleEducationChange(index, "institute", e.target.value)}
                           placeholder="Institute Name"
                           disabled={isSubmitting}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -632,7 +705,7 @@ export default function AddStaff() {
                         <input
                           type="text"
                           value={edu.degree}
-                          onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
+                          onChange={(e) => handleEducationChange(index, "degree", e.target.value)}
                           placeholder="Degree"
                           disabled={isSubmitting}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -642,7 +715,7 @@ export default function AddStaff() {
                         <input
                           type="text"
                           value={edu.specialization}
-                          onChange={(e) => handleEducationChange(index, 'specialization', e.target.value)}
+                          onChange={(e) => handleEducationChange(index, "specialization", e.target.value)}
                           placeholder="Specialization"
                           disabled={isSubmitting}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -652,7 +725,7 @@ export default function AddStaff() {
                         <input
                           type="text"
                           value={edu.grade}
-                          onChange={(e) => handleEducationChange(index, 'grade', e.target.value)}
+                          onChange={(e) => handleEducationChange(index, "grade", e.target.value)}
                           placeholder="Grade"
                           disabled={isSubmitting}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -662,7 +735,7 @@ export default function AddStaff() {
                         <input
                           type="number"
                           value={edu.passingyr}
-                          onChange={(e) => handleEducationChange(index, 'passingyr', e.target.value)}
+                          onChange={(e) => handleEducationChange(index, "passingyr", e.target.value)}
                           placeholder="Year"
                           disabled={isSubmitting}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -714,7 +787,7 @@ export default function AddStaff() {
                         <input
                           type="text"
                           value={exp.companyName}
-                          onChange={(e) => handleExperienceChange(index, 'companyName', e.target.value)}
+                          onChange={(e) => handleExperienceChange(index, "companyName", e.target.value)}
                           placeholder="Company Name"
                           disabled={isSubmitting}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -724,7 +797,7 @@ export default function AddStaff() {
                         <input
                           type="text"
                           value={exp.designation}
-                          onChange={(e) => handleExperienceChange(index, 'designation', e.target.value)}
+                          onChange={(e) => handleExperienceChange(index, "designation", e.target.value)}
                           placeholder="Designation"
                           disabled={isSubmitting}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -734,7 +807,7 @@ export default function AddStaff() {
                         <input
                           type="text"
                           value={exp.salary}
-                          onChange={(e) => handleExperienceChange(index, 'salary', e.target.value)}
+                          onChange={(e) => handleExperienceChange(index, "salary", e.target.value)}
                           placeholder="Salary"
                           disabled={isSubmitting}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -744,7 +817,7 @@ export default function AddStaff() {
                         <input
                           type="number"
                           value={exp.years}
-                          onChange={(e) => handleExperienceChange(index, 'years', e.target.value)}
+                          onChange={(e) => handleExperienceChange(index, "years", e.target.value)}
                           placeholder="Years"
                           disabled={isSubmitting}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -754,7 +827,7 @@ export default function AddStaff() {
                         <input
                           type="text"
                           value={exp.description}
-                          onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
+                          onChange={(e) => handleExperienceChange(index, "description", e.target.value)}
                           placeholder="Description"
                           disabled={isSubmitting}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -809,7 +882,6 @@ export default function AddStaff() {
                 />
               </div>
             </div>
-              
           </div>
 
           <div className="flex justify-end space-x-4">
@@ -828,7 +900,7 @@ export default function AddStaff() {
                 isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
               } transition duration-200`}
             >
-              {isSubmitting ? 'Processing...' : 'Add Staff'}
+              {isSubmitting ? "Processing..." : "Add Staff"}
             </button>
           </div>
         </form>

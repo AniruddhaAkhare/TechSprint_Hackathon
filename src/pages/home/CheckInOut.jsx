@@ -7,14 +7,14 @@ import "./CheckInOut.css";
 
 const CheckInOut = () => {
   const { user } = useAuth();
-  const { userStatus, branches } = useCheckInReminder(); // Use context for userStatus and branches
+  const { userStatus, branches } = useCheckInReminder(); 
   const [error, setError] = useState("");
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [currentDuration, setCurrentDuration] = useState(null);
   const [liveDuration, setLiveDuration] = useState(null);
-  const CHECK_IN_RADIUS = 200; // 100 meters
+  const CHECK_IN_RADIUS = 300; // 100 meters
   const AUTO_CHECKOUT_INTERVAL = 300000; // 5 minutes
-  const GRACE_PERIOD = 2;
+  // const GRACE_PERIOD = 2;
 
   useEffect(() => {
     let timer;
@@ -65,7 +65,7 @@ const CheckInOut = () => {
 
           if (distance > CHECK_IN_RADIUS) {
             outOfRangeCount++;
-            if (outOfRangeCount >= GRACE_PERIOD) {
+            if (outOfRangeCount >= 1) {
               handleAutoCheckOut();
             }
           } else {
@@ -161,7 +161,7 @@ const CheckInOut = () => {
             setError("Failed to check in. Please try again.");
           }
         } else {
-          setError("You are not within 200 meters of any branch.");
+          setError("You are not within 300 meters of any branch.");
         }
         setIsFetchingLocation(false);
       },
@@ -348,7 +348,7 @@ const CheckInOut = () => {
 
   return (
     <div className="check-in-out p-4">
-      <h3 className="text-2xl font-bold mb-4">Check-In/Check-Out</h3>
+      <h3 className="text-xl font-bold mb-4">Check-In/Check-Out</h3>
       {error && <p className="error text-red-500 mb-4">{error}</p>}
       <div className="status mb-4">
         <p>

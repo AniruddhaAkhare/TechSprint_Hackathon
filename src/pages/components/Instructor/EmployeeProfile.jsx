@@ -23,7 +23,7 @@ export default function EmployeeProfile() {
     useEffect(() => {
         const fetchEmployee = async () => {
             try {
-                const employeeRef = doc(db, "Instructor", employeeId);
+                const employeeRef = doc(db, "Users", employeeId);
                 const employeeSnap = await getDoc(employeeRef);
 
                 if (employeeSnap.exists()) {
@@ -59,7 +59,7 @@ export default function EmployeeProfile() {
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center space-x-4">
                         <button
-                            onClick={() => navigate("/instructor")}
+                            onClick={() => navigate("/staff")}
                             className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition duration-200"
                         >
                             Back
