@@ -17,6 +17,46 @@ const Batches = () => {
     const [assessments, setAssessments] = useState({});
     const [expandedBatch, setExpandedBatch] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [instituteId, setInstituteId] = useState();
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!user) {
+                // setError('No user is signed in');
+                // setLoading(false);
+                return;
+            }
+
+            try {
+                // Fetch user data and institute ID
+                const userDocRef = doc(db, 'Users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    setUserData(data);
+
+                    const institute = data.instituteId;
+                    if (institute) {
+                        setInstituteId(institute);
+                        // localStorage.setItem('instituteId', institute);
+                    } else {
+                        // setError('Institute ID not found in user document');
+                    }
+                } else {
+                    // setError('User data not found');
+                }
+            } catch (err) {
+                // setError('Failed to fetch data: ' + err.message);
+            } finally {
+                // setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [user]);
+
+
 
     useEffect(() => {
         console.log("Student ID from useParams:", studentId);
@@ -37,7 +77,6 @@ const Batches = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const instituteId = "9z6G6BLzfDScI0mzMOlB";
                 console.log("Institute ID:", instituteId);
                 if (!instituteId) {
                     throw new Error("No institute ID found for the user");
@@ -57,7 +96,7 @@ const Batches = () => {
             }
         };
         fetchData();
-    }, [studentId, user]);
+    }, [studentId, user, instituteId]);
 
     const getInstituteId = async () => {
         if (!user || !user.uid) {
