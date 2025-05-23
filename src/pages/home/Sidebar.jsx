@@ -219,6 +219,18 @@ const Sidebar = () => {
             <span>Home</span>
           </li>
         </Link>
+
+
+        {/* <ul className="nav-list"> */}
+        <Link to="/tasks">
+          <li className="nav-item mt-3 mb-3">
+            <FaTachometerAlt className="nav-icon" />
+            <span>Tasks</span>
+          </li>
+        </Link>
+        
+
+
         {/* <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("home")}>
           Home
           {accordionState.home ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}

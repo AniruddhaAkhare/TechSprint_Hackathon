@@ -807,6 +807,7 @@ import ForgetPasswordForm from './pages/home/ForgetPasswordForm.jsx';
 import InstituteSetup from './pages/components/InstituteSetup/InstituteSetup.jsx';
 // Components
 import Dashboard from './pages/components/Dashboard/Dashboard.jsx';
+import TaskCallSchdule from './pages/components/Tasks/TaskCallSchdule.jsx';
 import Roles from './pages/components/UsersAndRoles/Roles';
 import Batches from './pages/components/CourseDelivery/Batch/Batches.jsx';
 import CreateBatch from './pages/components/CourseDelivery/Batch/CreateBatch.jsx';
@@ -934,15 +935,18 @@ export default function App() {
                 <Route path="/registration-welcome" element={<AfterEmployeeRegistration/>} />
                 <Route path="/employee-registration" element={!user ? <EmployeeRegistrationForm /> : <Navigate to="/dashboard" />} />
 
+
                 
                 <Route path="/forgetPassword" element={!user ? <ForgetPasswordForm /> : <Navigate to="/dashboard" />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                {/* <Route path="/tasks" element={<ProtectedRoute><TaskCallSchdule /></ProtectedRoute>} /> */}
                 <Route path="/roles" element={<ProtectedRoute permissionSection="roles"><Roles /></ProtectedRoute>} />
                 <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
 
                 {/* Protected Routes */}
                 <Route path="/instituteSetup" element={<ProtectedRoute permissionSection="instituteSetup"><InstituteSetup /></ProtectedRoute>} />
                 <Route path="/my-profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/tasks" element={<TaskCallSchdule />}/>
                 {/* Course Delivery Routes */}
                 <Route path="/courses" element={<ProtectedRoute permissionSection="Course"><Courses /></ProtectedRoute>} />
                 <Route path="/createCourses" element={<ProtectedRoute permissionSection="Course" action="create"><CreateCourses /></ProtectedRoute>} />
