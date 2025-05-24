@@ -1,7 +1,7 @@
 // // // // import { useState, useEffect } from "react";
 // // // // import { db } from "../../../../config/firebase.js";
-// // // // import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, updateDoc, getDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
-// // // // import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
+// // // // import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, updateDoc, getDoc, arrayUnion, serverTimestamp, where } from "firebase/firestore";
+// // // // import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input, Textarea, Select, Option } from "@material-tailwind/react";
 // // // // import { useAuth } from "../../../../context/AuthContext.jsx";
 // // // // import AddCompanies from "./AddCompanies.jsx";
 // // // // import AddBulkCompanies from "./AddBulkCompanies.jsx";
@@ -26,16 +26,57 @@
 // // // //     const [openAddOptions, setOpenAddOptions] = useState(false);
 // // // //     const [isModalOpen, setIsModalOpen] = useState(false);
 // // // //     const [selectedCompany, setSelectedCompany] = useState(null);
-// // // //     const [userDisplayName, setUserDisplayName] = useState(""); // New state for displayName
+// // // //     const [userDisplayName, setUserDisplayName] = useState("");
+// // // //     const [openCallSchedule, setOpenCallSchedule] = useState(false);
+// // // //     const [openReminderDialog, setOpenReminderDialog] = useState(false);
+// // // //     const [reminderDetails, setReminderDetails] = useState(null);
+// // // //     const [callScheduleForm, setCallScheduleForm] = useState({
+// // // //         companyId: "",
+// // // //         callDate: "",
+// // // //         callTime: "",
+// // // //         purpose: "",
+// // // //         reminderTime: "15",
+// // // //     });
+// // // //     const [callSchedules, setCallSchedules] = useState([]);
 
 // // // //     const CompanyCollectionRef = collection(db, "Companies");
+// // // //     const reminderAudio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
 
 // // // //     const canCreate = rolePermissions?.Companies?.create || false;
 // // // //     const canUpdate = rolePermissions?.Companies?.update || false;
 // // // //     const canDelete = rolePermissions?.Companies?.delete || false;
 // // // //     const canDisplay = rolePermissions?.Companies?.display || false;
 
-// // // //     // Fetch user displayName from Users collection
+// // // //     // Fetch call schedules for the selected company
+// // // //     useEffect(() => {
+// // // //         if (!selectedCompany?.id) return;
+// // // //         const fetchCallSchedules = async () => {
+// // // //             try {
+// // // //                 const q = query(
+// // // //                     collection(db, "Companies", selectedCompany.id, "notes"),
+// // // //                     where("noteType", "==", "call-schedule"),
+// // // //                     orderBy("createdAt", "desc")
+// // // //                 );
+// // // //                 const snapshot = await getDocs(q);
+// // // //                 setCallSchedules(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+// // // //             } catch (error) {
+// // // //                 console.error("Error fetching call schedules:", error);
+// // // //                 toast.error("Failed to fetch call schedules.");
+// // // //             }
+// // // //         };
+// // // //         fetchCallSchedules();
+// // // //     }, [selectedCompany?.id]);
+
+// // // //     // Preload reminder audio
+// // // //     useEffect(() => {
+// // // //         reminderAudio.load();
+// // // //         reminderAudio.onerror = () => {
+// // // //             console.error("Error loading reminder audio");
+// // // //             toast.error("Failed to load reminder audio.");
+// // // //         };
+// // // //     }, []);
+
+// // // //     // Fetch user displayName
 // // // //     useEffect(() => {
 // // // //         if (!user?.uid) return;
 
@@ -47,7 +88,7 @@
 // // // //                     const userData = userDoc.data();
 // // // //                     setUserDisplayName(userData.displayName || user.email || "Unknown User");
 // // // //                 } else {
-// // // //                     console.warn("User document not found in Users collection");
+// // // //                     console.warn("User document not found");
 // // // //                     setUserDisplayName(user.email || "Unknown User");
 // // // //                 }
 // // // //             } catch (error) {
@@ -103,6 +144,35 @@
 // // // //         else setSearchResults([]);
 // // // //     }, [searchTerm, companies]);
 
+// // // //     const handleDeleteSchedule = async (noteId) => {
+// // // //         if (!canDelete || !selectedCompany?.id) return;
+// // // //         try {
+// // // //             const noteRef = doc(db, "Companies", selectedCompany.id, "notes", noteId);
+// // // //             const noteDoc = await getDoc(noteRef);
+// // // //             if (!noteDoc.exists()) throw new Error("Note not found");
+// // // //             const noteData = noteDoc.data();
+
+// // // //             const historyEntry = {
+// // // //                 action: "Deleted Call Schedule",
+// // // //                 performedBy: userDisplayName,
+// // // //                 timestamp: new Date().toISOString(),
+// // // //                 details: `Deleted call schedule for ${noteData.callDate} ${noteData.callTime}`,
+// // // //             };
+// // // //             await updateDoc(doc(db, "Companies", selectedCompany.id), {
+// // // //                 history: arrayUnion(historyEntry),
+// // // //                 updatedAt: serverTimestamp(),
+// // // //             });
+
+// // // //             await deleteDoc(noteRef);
+// // // //             setCallSchedules(callSchedules.filter((s) => s.id !== noteId));
+// // // //             toast.success("Call schedule deleted successfully!");
+// // // //             logActivity("DELETE_CALL_SCHEDULE", { companyId: selectedCompany.id, noteId });
+// // // //         } catch (error) {
+// // // //             console.error("Error deleting call schedule:", error);
+// // // //             toast.error(`Failed to delete call schedule: ${error.message}`);
+// // // //         }
+// // // //     };
+
 // // // //     const fetchCompanies = async () => {
 // // // //         try {
 // // // //             setLoading(true);
@@ -112,6 +182,7 @@
 // // // //                 id: doc.id,
 // // // //                 ...doc.data(),
 // // // //             }));
+// // // //             console.log("Fetched Companies:", companyData); // Log to inspect data
 // // // //             setCompanies(companyData);
 // // // //         } catch (err) {
 // // // //             console.error("Error fetching companies:", err);
@@ -164,13 +235,13 @@
 
 // // // //     const handleCloseBulk = () => {
 // // // //         setIsAddBulkOpen(false);
+// // // //         setSearchTerm(""); // Clear search term to show all companies
 // // // //         fetchCompanies();
 // // // //     };
 
 // // // //     const deleteCompany = async () => {
 // // // //         if (!canDelete || !deleteId) return;
 // // // //         try {
-// // // //             // Fetch company data to get name for history
 // // // //             const companyRef = doc(db, "Companies", deleteId);
 // // // //             const companyDoc = await getDoc(companyRef);
 // // // //             if (!companyDoc.exists()) {
@@ -179,7 +250,6 @@
 // // // //             const companyData = companyDoc.data();
 // // // //             const companyName = companyData.name;
 
-// // // //             // Add history entry to company document
 // // // //             const historyEntry = {
 // // // //                 action: "Deleted",
 // // // //                 performedBy: userDisplayName,
@@ -191,7 +261,6 @@
 // // // //                 updatedAt: serverTimestamp(),
 // // // //             });
 
-// // // //             // Delete the company
 // // // //             await deleteDoc(companyRef);
 // // // //             fetchCompanies();
 // // // //             setOpenDelete(false);
@@ -202,6 +271,112 @@
 // // // //             console.error("Error deleting company:", err);
 // // // //             setDeleteMessage("An error occurred while trying to delete the company.");
 // // // //             toast.error(`Failed to delete company: ${err.message}`);
+// // // //         }
+// // // //     };
+
+// // // //     // Call Schedule Handlers
+// // // //     const handleOpenCallSchedule = (company) => {
+// // // //         if (!canCreate) return;
+// // // //         setCallScheduleForm({
+// // // //             companyId: company.id,
+// // // //             callDate: "",
+// // // //             callTime: "",
+// // // //             purpose: "",
+// // // //             reminderTime: "15",
+// // // //         });
+// // // //         setOpenCallSchedule(true);
+// // // //         logActivity("OPEN_CALL_SCHEDULE", { companyId: company.id });
+// // // //     };
+
+// // // //     const handleCallScheduleSubmit = async () => {
+// // // //         if (!canCreate) return;
+// // // //         const { companyId, callDate, callTime, purpose, reminderTime } = callScheduleForm;
+// // // //         if (!companyId || !callDate || !callTime || !purpose) {
+// // // //             toast.error("Please fill all required fields.");
+// // // //             return;
+// // // //         }
+
+// // // //         try {
+// // // //             const companyRef = doc(db, "Companies", companyId);
+// // // //             const companyDoc = await getDoc(companyRef);
+// // // //             if (!companyDoc.exists()) {
+// // // //                 throw new Error("Company not found");
+// // // //             }
+// // // //             const companyName = companyDoc.data().name;
+
+// // // //             const callDateTime = new Date(`${callDate}T${callTime}`);
+// // // //             const reminderDateTime = new Date(callDateTime.getTime() - parseInt(reminderTime) * 60000);
+
+// // // //             const noteData = {
+// // // //                 noteType: "call-schedule",
+// // // //                 content: purpose,
+// // // //                 createdAt: serverTimestamp(),
+// // // //                 createdBy: userDisplayName,
+// // // //                 callDate,
+// // // //                 callTime,
+// // // //                 reminderTime,
+// // // //                 status: "scheduled",
+// // // //             };
+
+// // // //             const noteRef = await addDoc(collection(db, "Companies", companyId, "notes"), noteData);
+
+// // // //             const historyEntry = {
+// // // //                 action: "Added Call Schedule",
+// // // //                 performedBy: userDisplayName,
+// // // //                 timestamp: new Date().toISOString(),
+// // // //                 details: `Scheduled call for ${callDate} ${callTime}: ${purpose}`,
+// // // //             };
+// // // //             await updateDoc(companyRef, {
+// // // //                 history: arrayUnion(historyEntry),
+// // // //                 updatedAt: serverTimestamp(),
+// // // //             });
+
+// // // //             // Schedule reminder (notification, beep, and dialog)
+// // // //             const timeout = reminderDateTime.getTime() - Date.now();
+// // // //             if (timeout > 0) {
+// // // //                 setTimeout(() => {
+// // // //                     // Browser notification
+// // // //                     if (Notification.permission === "granted") {
+// // // //                         new Notification("Call Reminder", {
+// // // //                             body: `Call scheduled with ${companyName} at ${callTime}: ${purpose}`,
+// // // //                             icon: "/path/to/icon.png",
+// // // //                         });
+// // // //                     } else if (Notification.permission !== "denied") {
+// // // //                         Notification.requestPermission().then((permission) => {
+// // // //                             if (permission === "granted") {
+// // // //                                 new Notification("Call Reminder", {
+// // // //                                     body: `Call scheduled with ${companyName} at ${callTime}: ${purpose}`,
+// // // //                                     icon: "/path/to/icon.png",
+// // // //                                 });
+// // // //                             }
+// // // //                         });
+// // // //                     }
+
+// // // //                     // Play beep sound
+// // // //                     reminderAudio.play().catch((error) => {
+// // // //                         console.error("Error playing reminder audio:", error);
+// // // //                         toast.error("Failed to play reminder sound.");
+// // // //                     });
+
+// // // //                     // Show reminder dialog
+// // // //                     setReminderDetails({
+// // // //                         companyName,
+// // // //                         callDate,
+// // // //                         callTime,
+// // // //                         purpose,
+// // // //                     });
+// // // //                     setOpenReminderDialog(true);
+
+// // // //                     logActivity("TRIGGER_CALL_REMINDER", { companyId, callDate, callTime, purpose });
+// // // //                 }, timeout);
+// // // //             }
+
+// // // //             setOpenCallSchedule(false);
+// // // //             toast.success("Call scheduled successfully!");
+// // // //             logActivity("ADD_CALL_SCHEDULE", { companyId, callDate, callTime, purpose });
+// // // //         } catch (error) {
+// // // //             console.error("Error scheduling call:", error);
+// // // //             toast.error(`Failed to schedule call: ${error.message}`);
 // // // //         }
 // // // //     };
 
@@ -220,16 +395,24 @@
 // // // //             <div className="flex justify-between items-center mb-6">
 // // // //                 <div>
 // // // //                     <h1 className="text-2xl font-semibold text-gray-800">Companies</h1>
-// // // //                     {/* <p className="text-gray-600 mt-1">Total Companies: {companies.length}</p> */}
 // // // //                 </div>
 // // // //                 {canCreate && (
-// // // //                     <button
-// // // //                         type="button"
-// // // //                         className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200"
-// // // //                         onClick={handleAddCompanyClick}
-// // // //                     >
-// // // //                         + Add Company
-// // // //                     </button>
+// // // //                     <div className="flex space-x-4">
+// // // //                         <button
+// // // //                             type="button"
+// // // //                             className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200"
+// // // //                             onClick={handleAddCompanyClick}
+// // // //                         >
+// // // //                             + Add Company
+// // // //                         </button>
+// // // //                         <button
+// // // //                             type="button"
+// // // //                             className="bg-green-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-700 transition duration-200"
+// // // //                             onClick={() => handleOpenCallSchedule({ id: "" })}
+// // // //                         >
+// // // //                             Schedule Call
+// // // //                         </button>
+// // // //                     </div>
 // // // //                 )}
 // // // //             </div>
 
@@ -243,7 +426,6 @@
 // // // //                         className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 // // // //                     />
 // // // //                     <p className="text-gray-600 mt-3 ml-auto">Total Companies: {companies.length}</p>
-
 // // // //                 </div>
 
 // // // //                 <div className="overflow-x-auto h-[70vh] overflow-y-auto">
@@ -259,7 +441,7 @@
 // // // //                                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 min-w-52">URL</th>
 // // // //                                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 min-w-52">Hiring Period</th>
 // // // //                                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 min-w-52">Company Type</th>
-// // // //                                 {(canUpdate || canDelete) && (
+// // // //                                 {(canUpdate || canDelete || canCreate) && (
 // // // //                                     <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Action</th>
 // // // //                                 )}
 // // // //                             </tr>
@@ -280,7 +462,7 @@
 // // // //                                     <td className="px-4 py-3 text-gray-800">{company.url || "N/A"}</td>
 // // // //                                     <td className="px-4 py-3 text-gray-800">{company.fromDate || "N/A"} to {company.toDate || "N/A"}</td>
 // // // //                                     <td className="px-4 py-3 text-gray-800">{company.companyType || "N/A"}</td>
-// // // //                                     {(canUpdate || canDelete) && (
+// // // //                                     {(canUpdate || canDelete || canCreate) && (
 // // // //                                         <td className="px-4 py-3 text-gray-800" onClick={(e) => e.stopPropagation()}>
 // // // //                                             {canUpdate && (
 // // // //                                                 <button
@@ -293,9 +475,17 @@
 // // // //                                             {canDelete && (
 // // // //                                                 <button
 // // // //                                                     onClick={() => handleDeleteClick(company.id)}
-// // // //                                                     className="text-red-600 hover:text-red-800"
+// // // //                                                     className="text-red-600 hover:text-red-800 mr-3"
 // // // //                                                 >
 // // // //                                                     Delete
+// // // //                                                 </button>
+// // // //                                             )}
+// // // //                                             {canCreate && (
+// // // //                                                 <button
+// // // //                                                     onClick={() => handleOpenCallSchedule(company)}
+// // // //                                                     className="text-green-600 hover:text-green-800"
+// // // //                                                 >
+// // // //                                                     Schedule Call
 // // // //                                                 </button>
 // // // //                                             )}
 // // // //                                         </td>
@@ -304,7 +494,7 @@
 // // // //                             ))}
 // // // //                             {(searchResults.length > 0 ? searchResults : companies).length === 0 && (
 // // // //                                 <tr>
-// // // //                                     <td colSpan={(canUpdate || canDelete) ? 10 : 9} className="px-4 py-3 text-center text-gray-500">
+// // // //                                     <td colSpan={(canUpdate || canDelete || canCreate) ? 10 : 9} className="px-4 py-3 text-center text-gray-500">
 // // // //                                         No companies found
 // // // //                                     </td>
 // // // //                                 </tr>
@@ -336,6 +526,7 @@
 // // // //                 <AddBulkCompanies
 // // // //                     isOpen={isAddBulkOpen}
 // // // //                     toggleSidebar={handleCloseBulk}
+// // // //                     fetchCompanies={fetchCompanies} // Pass fetchCompanies
 // // // //                 />
 // // // //             )}
 
@@ -346,6 +537,8 @@
 // // // //                     onRequestClose={() => setIsModalOpen(false)}
 // // // //                     company={selectedCompany}
 // // // //                     rolePermissions={rolePermissions}
+// // // //                     callSchedules={callSchedules}
+// // // //                     handleDeleteSchedule={handleDeleteSchedule}
 // // // //                 />
 // // // //             )}
 
@@ -421,6 +614,117 @@
 // // // //                     </DialogFooter>
 // // // //                 </Dialog>
 // // // //             )}
+
+// // // //             {/* Call Schedule Dialog */}
+// // // //             {canCreate && openCallSchedule && (
+// // // //                 <Dialog
+// // // //                     open={openCallSchedule}
+// // // //                     handler={() => setOpenCallSchedule(false)}
+// // // //                     className="rounded-lg shadow-lg max-w-sm max-h-[80vh] overflow-auto"
+// // // //                 >
+// // // //                     <DialogHeader className="text-gray-800 font-semibold">Schedule Call</DialogHeader>
+// // // //                     <DialogBody className="text-gray-600 space-y-4">
+// // // //                         {callScheduleForm.companyId && (
+// // // //                             <Input
+// // // //                                 label="Company"
+// // // //                                 value={companies.find((c) => c.id === callScheduleForm.companyId)?.name || ""}
+// // // //                                 disabled
+// // // //                             />
+// // // //                         )}
+// // // //                         {!callScheduleForm.companyId && (
+// // // //                             <Select
+// // // //                                 label="Select Company"
+// // // //                                 value={callScheduleForm.companyId}
+// // // //                                 onChange={(value) =>
+// // // //                                     setCallScheduleForm({ ...callScheduleForm, companyId: value })
+// // // //                                 }
+// // // //                             >
+// // // //                                 {companies.map((company) => (
+// // // //                                     <Option key={company.id} value={company.id}>
+// // // //                                         {company.name}
+// // // //                                     </Option>
+// // // //                                 ))}
+// // // //                             </Select>
+// // // //                         )}
+// // // //                         <Input
+// // // //                             type="date"
+// // // //                             label="Call Date"
+// // // //                             value={callScheduleForm.callDate}
+// // // //                             onChange={(e) =>
+// // // //                                 setCallScheduleForm({ ...callScheduleForm, callDate: e.target.value })
+// // // //                             }
+// // // //                         />
+// // // //                         <Input
+// // // //                             type="time"
+// // // //                             label="Call Time"
+// // // //                             value={callScheduleForm.callTime}
+// // // //                             onChange={(e) =>
+// // // //                                 setCallScheduleForm({ ...callScheduleForm, callTime: e.target.value })
+// // // //                             }
+// // // //                         />
+// // // //                         <Textarea
+// // // //                             label="Purpose"
+// // // //                             value={callScheduleForm.purpose}
+// // // //                             onChange={(e) =>
+// // // //                                 setCallScheduleForm({ ...callScheduleForm, purpose: e.target.value })
+// // // //                             }
+// // // //                         />
+// // // //                         <Select
+// // // //                             label="Reminder (minutes before)"
+// // // //                             value={callScheduleForm.reminderTime}
+// // // //                             onChange={(value) =>
+// // // //                                 setCallScheduleForm({ ...callScheduleForm, reminderTime: value })
+// // // //                             }
+// // // //                         >
+// // // //                             <Option value="5">5 minutes</Option>
+// // // //                             <Option value="15">15 minutes</Option>
+// // // //                             <Option value="30">30 minutes</Option>
+// // // //                             <Option value="60">1 hour</Option>
+// // // //                         </Select>
+// // // //                     </DialogBody>
+// // // //                     <DialogFooter className="space-x-4">
+// // // //                         <Button
+// // // //                             variant="text"
+// // // //                             color="gray"
+// // // //                             onClick={() => setOpenCallSchedule(false)}
+// // // //                         >
+// // // //                             Cancel
+// // // //                         </Button>
+// // // //                         <Button
+// // // //                             variant="filled"
+// // // //                             color="green"
+// // // //                             onClick={handleCallScheduleSubmit}
+// // // //                         >
+// // // //                             Schedule
+// // // //                         </Button>
+// // // //                     </DialogFooter>
+// // // //                 </Dialog>
+// // // //             )}
+
+// // // //             {/* Reminder Dialog */}
+// // // //             {openReminderDialog && reminderDetails && (
+// // // //                 <Dialog
+// // // //                     open={openReminderDialog}
+// // // //                     handler={() => setOpenReminderDialog(false)}
+// // // //                     className="rounded-lg shadow-lg max-w-sm max-h-[80vh] overflow-auto"
+// // // //                 >
+// // // //                     <DialogHeader className="text-gray-800 font-semibold">Call Reminder</DialogHeader>
+// // // //                     <DialogBody className="text-gray-600 space-y-2">
+// // // //                         <p><strong>Company:</strong> {reminderDetails.companyName}</p>
+// // // //                         <p><strong>Call Time:</strong> {reminderDetails.callDate} {reminderDetails.callTime}</p>
+// // // //                         <p><strong>Purpose:</strong> {reminderDetails.purpose}</p>
+// // // //                     </DialogBody>
+// // // //                     <DialogFooter>
+// // // //                         <Button
+// // // //                             variant="filled"
+// // // //                             color="blue"
+// // // //                             onClick={() => setOpenReminderDialog(false)}
+// // // //                         >
+// // // //                             Close
+// // // //                         </Button>
+// // // //                     </DialogFooter>
+// // // //                 </Dialog>
+// // // //             )}
 // // // //         </div>
 // // // //     );
 // // // // }
@@ -429,7 +733,7 @@
 
 // // // import { useState, useEffect } from "react";
 // // // import { db } from "../../../../config/firebase.js";
-// // // import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, updateDoc, getDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
+// // // import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, updateDoc, getDoc, arrayUnion, serverTimestamp, where } from "firebase/firestore";
 // // // import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input, Textarea, Select, Option } from "@material-tailwind/react";
 // // // import { useAuth } from "../../../../context/AuthContext.jsx";
 // // // import AddCompanies from "./AddCompanies.jsx";
@@ -457,6 +761,8 @@
 // // //     const [selectedCompany, setSelectedCompany] = useState(null);
 // // //     const [userDisplayName, setUserDisplayName] = useState("");
 // // //     const [openCallSchedule, setOpenCallSchedule] = useState(false);
+// // //     const [openReminderDialog, setOpenReminderDialog] = useState(false);
+// // //     const [reminderDetails, setReminderDetails] = useState(null);
 // // //     const [callScheduleForm, setCallScheduleForm] = useState({
 // // //         companyId: "",
 // // //         callDate: "",
@@ -464,13 +770,44 @@
 // // //         purpose: "",
 // // //         reminderTime: "15",
 // // //     });
+// // //     const [callSchedules, setCallSchedules] = useState([]);
 
 // // //     const CompanyCollectionRef = collection(db, "Companies");
+// // //     const reminderAudio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
 
 // // //     const canCreate = rolePermissions?.Companies?.create || false;
 // // //     const canUpdate = rolePermissions?.Companies?.update || false;
 // // //     const canDelete = rolePermissions?.Companies?.delete || false;
 // // //     const canDisplay = rolePermissions?.Companies?.display || false;
+
+// // //     // Fetch call schedules for the selected company
+// // //     useEffect(() => {
+// // //         if (!selectedCompany?.id) return;
+// // //         const fetchCallSchedules = async () => {
+// // //             try {
+// // //                 const q = query(
+// // //                     collection(db, "Companies", selectedCompany.id, "notes"),
+// // //                     where("noteType", "==", "call-schedule"),
+// // //                     orderBy("createdAt", "desc")
+// // //                 );
+// // //                 const snapshot = await getDocs(q);
+// // //                 setCallSchedules(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+// // //             } catch (error) {
+// // //                 console.error("Error fetching call schedules:", error);
+// // //                 toast.error("Failed to fetch call schedules.");
+// // //             }
+// // //         };
+// // //         fetchCallSchedules();
+// // //     }, [selectedCompany?.id]);
+
+// // //     // Preload reminder audio
+// // //     useEffect(() => {
+// // //         reminderAudio.load();
+// // //         reminderAudio.onerror = () => {
+// // //             console.error("Error loading reminder audio");
+// // //             toast.error("Failed to load reminder audio.");
+// // //         };
+// // //     }, []);
 
 // // //     // Fetch user displayName
 // // //     useEffect(() => {
@@ -540,6 +877,35 @@
 // // //         else setSearchResults([]);
 // // //     }, [searchTerm, companies]);
 
+// // //     const handleDeleteSchedule = async (noteId) => {
+// // //         if (!canDelete || !selectedCompany?.id) return;
+// // //         try {
+// // //             const noteRef = doc(db, "Companies", selectedCompany.id, "notes", noteId);
+// // //             const noteDoc = await getDoc(noteRef);
+// // //             if (!noteDoc.exists()) throw new Error("Note not found");
+// // //             const noteData = noteDoc.data();
+
+// // //             const historyEntry = {
+// // //                 action: "Deleted Call Schedule",
+// // //                 performedBy: userDisplayName,
+// // //                 timestamp: new Date().toISOString(),
+// // //                 details: `Deleted call schedule for ${noteData.callDate} ${noteData.callTime}`,
+// // //             };
+// // //             await updateDoc(doc(db, "Companies", selectedCompany.id), {
+// // //                 history: arrayUnion(historyEntry),
+// // //                 updatedAt: serverTimestamp(),
+// // //             });
+
+// // //             await deleteDoc(noteRef);
+// // //             setCallSchedules(callSchedules.filter((s) => s.id !== noteId));
+// // //             toast.success("Call schedule deleted successfully!");
+// // //             logActivity("DELETE_CALL_SCHEDULE", { companyId: selectedCompany.id, noteId });
+// // //         } catch (error) {
+// // //             console.error("Error deleting call schedule:", error);
+// // //             toast.error(`Failed to delete call schedule: ${error.message}`);
+// // //         }
+// // //     };
+
 // // //     const fetchCompanies = async () => {
 // // //         try {
 // // //             setLoading(true);
@@ -549,6 +915,7 @@
 // // //                 id: doc.id,
 // // //                 ...doc.data(),
 // // //             }));
+// // //             console.log("Fetched Companies:", companyData); // Log to inspect data
 // // //             setCompanies(companyData);
 // // //         } catch (err) {
 // // //             console.error("Error fetching companies:", err);
@@ -601,6 +968,7 @@
 
 // // //     const handleCloseBulk = () => {
 // // //         setIsAddBulkOpen(false);
+// // //         setSearchTerm(""); // Clear search term to show all companies
 // // //         fetchCompanies();
 // // //     };
 
@@ -612,8 +980,7 @@
 // // //             if (!companyDoc.exists()) {
 // // //                 throw new Error("Company not found");
 // // //             }
-// // //             const companyData = companyDoc.data();
-// // //             const companyName = companyData.name;
+// // //             const companyName = companyDoc.data().name;
 
 // // //             const historyEntry = {
 // // //                 action: "Deleted",
@@ -696,28 +1063,49 @@
 // // //                 updatedAt: serverTimestamp(),
 // // //             });
 
-// // //             // Schedule browser notification
-// // //             if (Notification.permission === "granted") {
-// // //                 const timeout = reminderDateTime.getTime() - Date.now();
-// // //                 if (timeout > 0) {
-// // //                     setTimeout(() => {
+// // //             // Update callSchedules state locally
+// // //             if (companyId === selectedCompany?.id) {
+// // //                 setCallSchedules([{ id: noteRef.id, ...noteData }, ...callSchedules]);
+// // //             }
+
+// // //             // Schedule reminder (notification, beep, and dialog)
+// // //             const timeout = reminderDateTime.getTime() - Date.now();
+// // //             if (timeout > 0) {
+// // //                 setTimeout(() => {
+// // //                     // Browser notification
+// // //                     if (Notification.permission === "granted") {
 // // //                         new Notification("Call Reminder", {
 // // //                             body: `Call scheduled with ${companyName} at ${callTime}: ${purpose}`,
 // // //                             icon: "/path/to/icon.png",
 // // //                         });
-// // //                     }, timeout);
-// // //                 }
-// // //             } else if (Notification.permission !== "denied") {
-// // //                 Notification.requestPermission().then((permission) => {
-// // //                     if (permission === "granted" && timeout > 0) {
-// // //                         setTimeout(() => {
-// // //                             new Notification("Call Reminder", {
-// // //                                 body: `Call scheduled with ${companyName} at ${callTime}: ${purpose}`,
-// // //                                 icon: "/path/to/icon.png",
-// // //                             });
-// // //                         }, timeout);
+// // //                     } else if (Notification.permission !== "denied") {
+// // //                         Notification.requestPermission().then((permission) => {
+// // //                             if (permission === "granted") {
+// // //                                 new Notification("Call Reminder", {
+// // //                                     body: `Call scheduled with ${companyName} at ${callTime}: ${purpose}`,
+// // //                                     icon: "/path/to/icon.png",
+// // //                                 });
+// // //                             }
+// // //                         });
 // // //                     }
-// // //                 });
+
+// // //                     // Play beep sound
+// // //                     reminderAudio.play().catch((error) => {
+// // //                         console.error("Error playing reminder audio:", error);
+// // //                         toast.error("Failed to play reminder sound.");
+// // //                     });
+
+// // //                     // Show reminder dialog
+// // //                     setReminderDetails({
+// // //                         companyName,
+// // //                         callDate,
+// // //                         callTime,
+// // //                         purpose,
+// // //                     });
+// // //                     setOpenReminderDialog(true);
+
+// // //                     logActivity("TRIGGER_CALL_REMINDER", { companyId, callDate, callTime, purpose });
+// // //                 }, timeout);
 // // //             }
 
 // // //             setOpenCallSchedule(false);
@@ -875,6 +1263,7 @@
 // // //                 <AddBulkCompanies
 // // //                     isOpen={isAddBulkOpen}
 // // //                     toggleSidebar={handleCloseBulk}
+// // //                     fetchCompanies={fetchCompanies} // Pass fetchCompanies
 // // //                 />
 // // //             )}
 
@@ -885,6 +1274,8 @@
 // // //                     onRequestClose={() => setIsModalOpen(false)}
 // // //                     company={selectedCompany}
 // // //                     rolePermissions={rolePermissions}
+// // //                     callSchedules={callSchedules}
+// // //                     handleDeleteSchedule={handleDeleteSchedule}
 // // //                 />
 // // //             )}
 
@@ -966,7 +1357,7 @@
 // // //                 <Dialog
 // // //                     open={openCallSchedule}
 // // //                     handler={() => setOpenCallSchedule(false)}
-// // //                     className="rounded-lg shadow-lg"
+// // //                     className="rounded-lg shadow-lg max-w-sm max-h-[80vh] overflow-auto"
 // // //                 >
 // // //                     <DialogHeader className="text-gray-800 font-semibold">Schedule Call</DialogHeader>
 // // //                     <DialogBody className="text-gray-600 space-y-4">
@@ -1022,6 +1413,7 @@
 // // //                                 setCallScheduleForm({ ...callScheduleForm, reminderTime: value })
 // // //                             }
 // // //                         >
+               
 // // //                             <Option value="5">5 minutes</Option>
 // // //                             <Option value="15">15 minutes</Option>
 // // //                             <Option value="30">30 minutes</Option>
@@ -1046,15 +1438,38 @@
 // // //                     </DialogFooter>
 // // //                 </Dialog>
 // // //             )}
+
+// // //             {/* Reminder Dialog */}
+// // //             {openReminderDialog && reminderDetails && (
+// // //                 <Dialog
+// // //                     open={openReminderDialog}
+// // //                     handler={() => setOpenReminderDialog(false)}
+// // //                     className="rounded-lg shadow-lg max-w-sm max-h-[80vh] overflow-auto"
+// // //                 >
+// // //                     <DialogHeader className="text-gray-800 font-semibold">Call Reminder</DialogHeader>
+// // //                     <DialogBody className="text-gray-600 space-y-2">
+// // //                         <p><strong>Company:</strong> {reminderDetails.companyName}</p>
+// // //                         <p><strong>Call Time:</strong> {reminderDetails.callDate} {reminderDetails.callTime}</p>
+// // //                         <p><strong>Purpose:</strong> {reminderDetails.purpose}</p>
+// // //                     </DialogBody>
+// // //                     <DialogFooter>
+// // //                         <Button
+// // //                             variant="filled"
+// // //                             color="blue"
+// // //                             onClick={() => setOpenReminderDialog(false)}
+// // //                         >
+// // //                             Close
+// // //                         </Button>
+// // //                     </DialogFooter>
+// // //                 </Dialog>
+// // //             )}
 // // //         </div>
 // // //     );
 // // // }
 
-
-
 // // import { useState, useEffect } from "react";
 // // import { db } from "../../../../config/firebase.js";
-// // import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, updateDoc, getDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
+// // import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, updateDoc, getDoc, arrayUnion, serverTimestamp, where } from "firebase/firestore";
 // // import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Input, Textarea, Select, Option } from "@material-tailwind/react";
 // // import { useAuth } from "../../../../context/AuthContext.jsx";
 // // import AddCompanies from "./AddCompanies.jsx";
@@ -1101,19 +1516,25 @@
 // //     const canDelete = rolePermissions?.Companies?.delete || false;
 // //     const canDisplay = rolePermissions?.Companies?.display || false;
 
+// //     // Fetch call schedules for the selected company
 // //     useEffect(() => {
-// //     if (!company?.id) return;
-// //     const fetchCallSchedules = async () => {
-// //         const q = query(
-// //             collection(db, "Companies", company.id, "notes"),
-// //             where("noteType", "==", "call-schedule"),
-// //             orderBy("createdAt", "desc")
-// //         );
-// //         const snapshot = await getDocs(q);
-// //         setCallSchedules(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-// //     };
-// //     fetchCallSchedules();
-// // }, [company?.id]);
+// //         if (!selectedCompany?.id) return;
+// //         const fetchCallSchedules = async () => {
+// //             try {
+// //                 const q = query(
+// //                     collection(db, "Companies", selectedCompany.id, "notes"),
+// //                     where("noteType", "==", "call-schedule"),
+// //                     orderBy("createdAt", "desc")
+// //                 );
+// //                 const snapshot = await getDocs(q);
+// //                 setCallSchedules(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+// //             } catch (error) {
+// //                 console.error("Error fetching call schedules:", error);
+// //                 toast.error("Failed to fetch call schedules.");
+// //             }
+// //         };
+// //         fetchCallSchedules();
+// //     }, [selectedCompany?.id]);
 
 // //     // Preload reminder audio
 // //     useEffect(() => {
@@ -1193,28 +1614,28 @@
 // //     }, [searchTerm, companies]);
 
 // //     const handleDeleteSchedule = async (noteId) => {
-// //         if (!canDelete) return;
+// //         if (!canDelete || !selectedCompany?.id) return;
 // //         try {
-// //             const noteRef = doc(db, "Companies", company.id, "notes", noteId);
+// //             const noteRef = doc(db, "Companies", selectedCompany.id, "notes", noteId);
 // //             const noteDoc = await getDoc(noteRef);
 // //             if (!noteDoc.exists()) throw new Error("Note not found");
 // //             const noteData = noteDoc.data();
-    
+
 // //             const historyEntry = {
 // //                 action: "Deleted Call Schedule",
 // //                 performedBy: userDisplayName,
 // //                 timestamp: new Date().toISOString(),
 // //                 details: `Deleted call schedule for ${noteData.callDate} ${noteData.callTime}`,
 // //             };
-// //             await updateDoc(doc(db, "Companies", company.id), {
+// //             await updateDoc(doc(db, "Companies", selectedCompany.id), {
 // //                 history: arrayUnion(historyEntry),
 // //                 updatedAt: serverTimestamp(),
 // //             });
-    
+
 // //             await deleteDoc(noteRef);
 // //             setCallSchedules(callSchedules.filter((s) => s.id !== noteId));
 // //             toast.success("Call schedule deleted successfully!");
-// //             logActivity("DELETE_CALL_SCHEDULE", { companyId: company.id, noteId });
+// //             logActivity("DELETE_CALL_SCHEDULE", { companyId: selectedCompany.id, noteId });
 // //         } catch (error) {
 // //             console.error("Error deleting call schedule:", error);
 // //             toast.error(`Failed to delete call schedule: ${error.message}`);
@@ -1230,6 +1651,7 @@
 // //                 id: doc.id,
 // //                 ...doc.data(),
 // //             }));
+// //             console.log("Fetched Companies:", companyData); // Log to inspect data
 // //             setCompanies(companyData);
 // //         } catch (err) {
 // //             console.error("Error fetching companies:", err);
@@ -1282,6 +1704,7 @@
 
 // //     const handleCloseBulk = () => {
 // //         setIsAddBulkOpen(false);
+// //         setSearchTerm(""); // Clear search term to show all companies
 // //         fetchCompanies();
 // //     };
 
@@ -1293,8 +1716,7 @@
 // //             if (!companyDoc.exists()) {
 // //                 throw new Error("Company not found");
 // //             }
-// //             const companyData = companyDoc.data();
-// //             const companyName = companyData.name;
+// //             const companyName = companyDoc.data().name;
 
 // //             const historyEntry = {
 // //                 action: "Deleted",
@@ -1376,6 +1798,11 @@
 // //                 history: arrayUnion(historyEntry),
 // //                 updatedAt: serverTimestamp(),
 // //             });
+
+// //             // Update callSchedules state locally
+// //             if (companyId === selectedCompany?.id) {
+// //                 setCallSchedules([{ id: noteRef.id, ...noteData }, ...callSchedules]);
+// //             }
 
 // //             // Schedule reminder (notification, beep, and dialog)
 // //             const timeout = reminderDateTime.getTime() - Date.now();
@@ -1572,6 +1999,7 @@
 // //                 <AddBulkCompanies
 // //                     isOpen={isAddBulkOpen}
 // //                     toggleSidebar={handleCloseBulk}
+// //                     fetchCompanies={fetchCompanies} // Pass fetchCompanies
 // //                 />
 // //             )}
 
@@ -1582,6 +2010,8 @@
 // //                     onRequestClose={() => setIsModalOpen(false)}
 // //                     company={selectedCompany}
 // //                     rolePermissions={rolePermissions}
+// //                     callSchedules={callSchedules}
+// //                     handleDeleteSchedule={handleDeleteSchedule}
 // //                 />
 // //             )}
 
@@ -1773,7 +2203,6 @@
 // // }
 
 
-
 // import { useState, useEffect } from "react";
 // import { db } from "../../../../config/firebase.js";
 // import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, updateDoc, getDoc, arrayUnion, serverTimestamp, where } from "firebase/firestore";
@@ -1837,7 +2266,14 @@
 //                 setCallSchedules(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
 //             } catch (error) {
 //                 console.error("Error fetching call schedules:", error);
-//                 toast.error("Failed to fetch call schedules.");
+//                 if (error.code === "failed-precondition" && error.message.includes("The query requires an index")) {
+//                     toast.error(
+//                         "Failed to fetch call schedules: A Firestore index is required. Create it in the Firebase Console and try again.",
+//                         { autoClose: 10000 }
+//                     );
+//                 } else {
+//                     toast.error(`Failed to fetch call schedules: ${error.message}`);
+//                 }
 //             }
 //         };
 //         fetchCallSchedules();
@@ -1958,7 +2394,7 @@
 //                 id: doc.id,
 //                 ...doc.data(),
 //             }));
-//             console.log("Fetched Companies: ", companyData);
+//             console.log("Fetched Companies:", companyData);
 //             setCompanies(companyData);
 //         } catch (err) {
 //             console.error("Error fetching companies:", err);
@@ -2011,6 +2447,7 @@
 
 //     const handleCloseBulk = () => {
 //         setIsAddBulkOpen(false);
+//         setSearchTerm("");
 //         fetchCompanies();
 //     };
 
@@ -2022,8 +2459,7 @@
 //             if (!companyDoc.exists()) {
 //                 throw new Error("Company not found");
 //             }
-//             const companyData = companyDoc.data();
-//             const companyName = companyData.name;
+//             const companyName = companyDoc.data().name;
 
 //             const historyEntry = {
 //                 action: "Deleted",
@@ -2049,7 +2485,6 @@
 //         }
 //     };
 
-//     // Call Schedule Handlers
 //     const handleOpenCallSchedule = (company) => {
 //         if (!canCreate) return;
 //         setCallScheduleForm({
@@ -2106,11 +2541,13 @@
 //                 updatedAt: serverTimestamp(),
 //             });
 
-//             // Schedule reminder (notification, beep, and dialog)
+//             if (companyId === selectedCompany?.id) {
+//                 setCallSchedules([{ id: noteRef.id, ...noteData }, ...callSchedules]);
+//             }
+
 //             const timeout = reminderDateTime.getTime() - Date.now();
 //             if (timeout > 0) {
 //                 setTimeout(() => {
-//                     // Browser notification
 //                     if (Notification.permission === "granted") {
 //                         new Notification("Call Reminder", {
 //                             body: `Call scheduled with ${companyName} at ${callTime}: ${purpose}`,
@@ -2127,13 +2564,11 @@
 //                         });
 //                     }
 
-//                     // Play beep sound
 //                     reminderAudio.play().catch((error) => {
 //                         console.error("Error playing reminder audio:", error);
 //                         toast.error("Failed to play reminder sound.");
 //                     });
 
-//                     // Show reminder dialog
 //                     setReminderDetails({
 //                         companyName,
 //                         callDate,
@@ -2166,7 +2601,6 @@
 //     return (
 //         <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
 //             <ToastContainer position="top-right" autoClose={3000} />
-//             {/* Header */}
 //             <div className="flex justify-between items-center mb-6">
 //                 <div>
 //                     <h1 className="text-2xl font-semibold text-gray-800">Companies</h1>
@@ -2279,7 +2713,6 @@
 //                 </div>
 //             </div>
 
-//             {/* Backdrop for Sidebar */}
 //             {(canCreate || canUpdate) && (isAddSingleOpen || isAddBulkOpen) && (
 //                 <div
 //                     className="fixed inset-0 bg-black bg-opacity-50 z-40"
@@ -2287,7 +2720,6 @@
 //                 />
 //             )}
 
-//             {/* Sidebar (AddCompanies) */}
 //             {(canCreate || canUpdate) && (
 //                 <AddCompanies
 //                     isOpen={isAddSingleOpen}
@@ -2296,7 +2728,6 @@
 //                 />
 //             )}
 
-//             {/* Sidebar (AddBulkCompanies) */}
 //             {canCreate && (
 //                 <AddBulkCompanies
 //                     isOpen={isAddBulkOpen}
@@ -2305,7 +2736,6 @@
 //                 />
 //             )}
 
-//             {/* Company Modal */}
 //             {canDisplay && (
 //                 <CompanyModal
 //                     isOpen={isModalOpen}
@@ -2317,7 +2747,6 @@
 //                 />
 //             )}
 
-//             {/* Add Options Dialog */}
 //             {canCreate && openAddOptions && (
 //                 <Dialog
 //                     open={openAddOptions}
@@ -2360,7 +2789,6 @@
 //                 </Dialog>
 //             )}
 
-//             {/* Delete Confirmation Dialog */}
 //             {canDelete && openDelete && (
 //                 <Dialog
 //                     open={openDelete}
@@ -2390,7 +2818,6 @@
 //                 </Dialog>
 //             )}
 
-//             {/* Call Schedule Dialog */}
 //             {canCreate && openCallSchedule && (
 //                 <Dialog
 //                     open={openCallSchedule}
@@ -2476,7 +2903,6 @@
 //                 </Dialog>
 //             )}
 
-//             {/* Reminder Dialog */}
 //             {openReminderDialog && reminderDetails && (
 //                 <Dialog
 //                     open={openReminderDialog}
@@ -2569,7 +2995,14 @@ export default function Companies() {
                 setCallSchedules(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
             } catch (error) {
                 console.error("Error fetching call schedules:", error);
-                toast.error("Failed to fetch call schedules.");
+                if (error.code === "failed-precondition" && error.message.includes("The query requires an index")) {
+                    toast.error(
+                        "Failed to fetch call schedules: A Firestore index is required. Create it in the Firebase Console and try again.",
+                        { autoClose: 10000 }
+                    );
+                } else {
+                    toast.error(`Failed to fetch call schedules: ${error.message}`);
+                }
             }
         };
         fetchCallSchedules();
@@ -2690,7 +3123,7 @@ export default function Companies() {
                 id: doc.id,
                 ...doc.data(),
             }));
-            console.log("Fetched Companies:", companyData); // Log to inspect data
+            console.log("Fetched Companies:", companyData);
             setCompanies(companyData);
         } catch (err) {
             console.error("Error fetching companies:", err);
@@ -2743,7 +3176,7 @@ export default function Companies() {
 
     const handleCloseBulk = () => {
         setIsAddBulkOpen(false);
-        setSearchTerm(""); // Clear search term to show all companies
+        setSearchTerm("");
         fetchCompanies();
     };
 
@@ -2755,8 +3188,7 @@ export default function Companies() {
             if (!companyDoc.exists()) {
                 throw new Error("Company not found");
             }
-            const companyData = companyDoc.data();
-            const companyName = companyData.name;
+            const companyName = companyDoc.data().name;
 
             const historyEntry = {
                 action: "Deleted",
@@ -2782,7 +3214,6 @@ export default function Companies() {
         }
     };
 
-    // Call Schedule Handlers
     const handleOpenCallSchedule = (company) => {
         if (!canCreate) return;
         setCallScheduleForm({
@@ -2839,11 +3270,13 @@ export default function Companies() {
                 updatedAt: serverTimestamp(),
             });
 
-            // Schedule reminder (notification, beep, and dialog)
+            if (companyId === selectedCompany?.id) {
+                setCallSchedules([{ id: noteRef.id, ...noteData }, ...callSchedules]);
+            }
+
             const timeout = reminderDateTime.getTime() - Date.now();
             if (timeout > 0) {
                 setTimeout(() => {
-                    // Browser notification
                     if (Notification.permission === "granted") {
                         new Notification("Call Reminder", {
                             body: `Call scheduled with ${companyName} at ${callTime}: ${purpose}`,
@@ -2860,13 +3293,11 @@ export default function Companies() {
                         });
                     }
 
-                    // Play beep sound
                     reminderAudio.play().catch((error) => {
                         console.error("Error playing reminder audio:", error);
                         toast.error("Failed to play reminder sound.");
                     });
 
-                    // Show reminder dialog
                     setReminderDetails({
                         companyName,
                         callDate,
@@ -2899,7 +3330,6 @@ export default function Companies() {
     return (
         <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
             <ToastContainer position="top-right" autoClose={3000} />
-            {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-2xl font-semibold text-gray-800">Companies</h1>
@@ -3012,7 +3442,6 @@ export default function Companies() {
                 </div>
             </div>
 
-            {/* Backdrop for Sidebar */}
             {(canCreate || canUpdate) && (isAddSingleOpen || isAddBulkOpen) && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40"
@@ -3020,7 +3449,6 @@ export default function Companies() {
                 />
             )}
 
-            {/* Sidebar (AddCompanies) */}
             {(canCreate || canUpdate) && (
                 <AddCompanies
                     isOpen={isAddSingleOpen}
@@ -3029,16 +3457,14 @@ export default function Companies() {
                 />
             )}
 
-            {/* Sidebar (AddBulkCompanies) */}
             {canCreate && (
                 <AddBulkCompanies
                     isOpen={isAddBulkOpen}
                     toggleSidebar={handleCloseBulk}
-                    fetchCompanies={fetchCompanies} // Pass fetchCompanies
+                    fetchCompanies={fetchCompanies}
                 />
             )}
 
-            {/* Company Modal */}
             {canDisplay && (
                 <CompanyModal
                     isOpen={isModalOpen}
@@ -3050,7 +3476,6 @@ export default function Companies() {
                 />
             )}
 
-            {/* Add Options Dialog */}
             {canCreate && openAddOptions && (
                 <Dialog
                     open={openAddOptions}
@@ -3093,7 +3518,6 @@ export default function Companies() {
                 </Dialog>
             )}
 
-            {/* Delete Confirmation Dialog */}
             {canDelete && openDelete && (
                 <Dialog
                     open={openDelete}
@@ -3123,7 +3547,6 @@ export default function Companies() {
                 </Dialog>
             )}
 
-            {/* Call Schedule Dialog */}
             {canCreate && openCallSchedule && (
                 <Dialog
                     open={openCallSchedule}
@@ -3209,7 +3632,6 @@ export default function Companies() {
                 </Dialog>
             )}
 
-            {/* Reminder Dialog */}
             {openReminderDialog && reminderDetails && (
                 <Dialog
                     open={openReminderDialog}
@@ -3235,4 +3657,4 @@ export default function Companies() {
             )}
         </div>
     );
-            }
+}

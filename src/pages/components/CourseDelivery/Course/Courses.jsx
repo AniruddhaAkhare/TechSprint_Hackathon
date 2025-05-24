@@ -55,7 +55,7 @@ export default function Courses() {
   const CourseCollectionRef = collection(db, "Course");
   const EnrollmentsCollectionRef = collection(db, "enrollments");
   const LogsCollectionRef = collection(db, "activityLogs");
-  const instituteId = "9z6G6BLzfDScI0mzMOlB";
+  const instituteId = "RDJ9wMXGrIUk221MzDxP";
   const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
 
   const toggleSidebar = () => setIsOpen((prev) => !prev);
