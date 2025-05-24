@@ -137,7 +137,7 @@ export default function StaffAndUsers() {
       const authUser = userCredential.user;
 
       const userData = {
-        displayName: newUser.displayName,
+        displayName: newUser.name, // Fixed: Changed from newUser.displayName to newUser.name
         email: newUser.email,
         role: newUser.role,
         phone: newUser.phone || "",
@@ -245,7 +245,6 @@ export default function StaffAndUsers() {
   };
 
   // Redirect if no permissions
-  //   if (!currentUser) return <Navigate to="/login" />;
   if (!canDisplay) return null;
 
   return (
@@ -253,17 +252,14 @@ export default function StaffAndUsers() {
       <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-gray-800">Staff and Users</h1>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-800">Staff and Users</h1>
+            <p className="text-gray-600 mt-2">Total Staff: {users.length}</p>
+          </div>
           {canCreate && (
             <div className="flex space-x-4">
-              {/* <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
-              >
-                + Add User
-              </button> */}
               <button
-                onClick={() => navigate("/addstafftemp")}
+                onClick={() => navigate("/addstaff")}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
               >
                 + Add Staff
@@ -292,13 +288,13 @@ export default function StaffAndUsers() {
             <table className="w-full table-auto">
               <thead className="bg-gray-100 sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Name</th>
-                  <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Email</th>
-                  <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Phone</th>
-                  <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Domain</th>
-                  <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Role</th>
+                  <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 w-full">Name</th>
+                  <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 w-40">Email</th>
+                  <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 w-40">Phone</th>
+                  <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 w-40">Domain</th>
+                  <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 w-40">Role</th>
                   {(canUpdate || canDelete) && (
-                    <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Actions</th>
+                    <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 w-full">Actions</th>
                   )}
                 </tr>
               </thead>

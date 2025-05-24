@@ -29,7 +29,7 @@ export default function EmployeeProfile() {
                 if (employeeSnap.exists()) {
                     const data = employeeSnap.data();
                     setEmployee({
-                        Name: data.Name || "",
+                        Name: data.displayName || "",
                         email: data.email || "",
                         phone: data.phone || "",
                         // date_of_birth: data.date_of_birth ? data.date_of_birth.toDate().toISOString().split("T")[0] : "N/A",

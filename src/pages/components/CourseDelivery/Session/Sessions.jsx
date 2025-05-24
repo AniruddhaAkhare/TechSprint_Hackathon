@@ -37,7 +37,7 @@ export default function Sessions() {
     const SessionCollectionRef = collection(db, "Sessions");
     const CourseCollectionRef = collection(db, "Courses");
     const BatchCollectionRef = collection(db, "Batch");
-    const instituteId = "9z6G6BLzfDScI0mzMOlB"; // Hardcoded from Batches component
+    const instituteId = "RDJ9wMXGrIUk221MzDxP"; // Hardcoded from Batches component
     const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
 
     const toggleSidebar = () => setIsOpen(prev => !prev);
