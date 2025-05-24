@@ -148,6 +148,7 @@ export default function App() {
                 {/* Protected Routes */}
                 <Route path="/instituteSetup" element={<ProtectedRoute permissionSection="instituteSetup"><InstituteSetup /></ProtectedRoute>} />
                 <Route path="/my-profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                
                 {/* Course Delivery Routes */}
                 <Route path="/courses" element={<ProtectedRoute permissionSection="Course"><Courses /></ProtectedRoute>} />
                 <Route path="/createCourses" element={<ProtectedRoute permissionSection="Course" action="create"><CreateCourses /></ProtectedRoute>} />

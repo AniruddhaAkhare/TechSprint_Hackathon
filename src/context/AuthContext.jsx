@@ -220,11 +220,11 @@ export function AuthProvider({ children }) {
 
       try {
         if (currentUser) {
-          const userDocRef = doc(db, 'Instructor', currentUser.uid);
+          const userDocRef = doc(db, 'Users', currentUser.uid);
           const userDoc = await getDoc(userDocRef);
 
           if (!userDoc.exists()) {
-            const defaultRole = '7Tl5zWnEZgkJR9rcVp5r';
+            const defaultRole = '9dWp6jTZwysa90GWV4sB';
             const userData = {
               uid: currentUser.uid, // Explicitly store UID
               email: currentUser.email,

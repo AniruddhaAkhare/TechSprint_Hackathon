@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, onSnapshot } from "firebase/firestore";
 
 const EmployeePage = () => {
   const db = getFirestore();
@@ -10,35 +10,38 @@ const EmployeePage = () => {
   const [error, setError] = useState(null);
   const [hoveredSegment, setHoveredSegment] = useState(null);
 
-  // Fetch employee data
+  // Fetch employee data in real-time
   useEffect(() => {
-    const fetchEmployeeData = async () => {
-      if (!email) {
-        setError("No employee email provided");
-        setLoading(false);
-        return;
-      }
+    if (!email) {
+      setError("No employee email provided");
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const userDocRef = doc(db, "Users", email);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const data = userDocSnap.data();
+    const userDocRef = doc(db, "Users", email);
+    const unsubscribe = onSnapshot(
+      userDocRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
           console.log("Employee data:", data);
           setEmployeeData(data);
+          setError(null);
         } else {
           setError("Employee data not found");
         }
-      } catch (err) {
+        setLoading(false);
+      },
+      (err) => {
         console.error("Error fetching employee data:", err);
         setError("Failed to fetch employee data: " + err.message);
-      } finally {
         setLoading(false);
       }
-    };
+    );
 
-    fetchEmployeeData();
-  }, [email, db]);
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+  }, [email]);
 
   // Calculate total working hours for a day
   const calculateTotalHours = (sessions) => {
@@ -46,7 +49,7 @@ const EmployeePage = () => {
 
     const totalMs = sessions.reduce((total, session) => {
       const checkIn = new Date(session.checkIn).getTime();
-      const checkOut = session.checkOut ? new Date(session.checkOut).getTime() : checkIn;
+      const checkOut = session.checkOut ? new Date(session.checkOut).getTime() : Date.now();
       return total + (checkOut - checkIn);
     }, 0);
 
@@ -55,9 +58,25 @@ const EmployeePage = () => {
     return `${hours}h ${minutes}m`;
   };
 
+  // Calculate session duration for callout
+  const calculateSessionDuration = (session) => {
+    const checkIn = new Date(session.checkIn).getTime();
+    const checkOut = session.checkOut ? new Date(session.checkOut).getTime() : Date.now();
+    const durationMs = checkOut - checkIn;
+    const hours = Math.floor(durationMs / (1000 * 60 * 60));
+    const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
+  };
+
   // Calculate timeline segments for a day
-  const renderTimeline = (day) => {
-    const sessions = day.sessions || [];
+  const renderTimeline = (day, index) => {
+    const sessions = (day.sessions || [])
+      .filter((session) => {
+        const checkIn = new Date(session.checkIn);
+        return !isNaN(checkIn.getTime());
+      })
+      .sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
+
     const date = new Date(day.date);
     const startOfDay = new Date(date.setHours(0, 0, 0, 0)).getTime();
     const endOfDay = new Date(date.setHours(23, 59, 59, 999)).getTime();
@@ -68,32 +87,39 @@ const EmployeePage = () => {
     let segments = [];
     let lastEnd = startOfDay;
 
-    sessions
-      .sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn))
-      .forEach((session) => {
-        const checkIn = new Date(session.checkIn).getTime();
-        const checkOut = session.checkOut ? new Date(session.checkOut).getTime() : checkIn;
+    sessions.forEach((session, sessionIndex) => {
+      const checkIn = new Date(session.checkIn).getTime();
+      const checkOut = session.checkOut ? new Date(session.checkOut).getTime() : Date.now();
 
+      if (checkIn >= startOfDay && checkIn <= endOfDay) {
         if (checkIn > lastEnd) {
           segments.push({
             start: lastEnd,
             end: checkIn,
             isActive: false,
-            width: ((checkIn - lastEnd) / totalMs) * 100,
+            width: Math.max(((checkIn - lastEnd) / totalMs) * 100, 2),
           });
         }
 
         segments.push({
           start: checkIn,
-          end: checkOut,
+          end: checkOut > endOfDay ? endOfDay : checkOut,
           isActive: true,
-          width: ((checkOut - checkIn) / totalMs) * 100,
-          checkInTime: new Date(session.checkIn).toLocaleTimeString(),
-          checkOutTime: session.checkOut ? new Date(session.checkOut).toLocaleTimeString() : "Ongoing",
+          width: Math.max(((checkOut > endOfDay ? endOfDay : checkOut - checkIn) / totalMs) * 100, 2),
+          checkInTime: new Date(session.checkIn).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+          checkOutTime: session.checkOut
+            ? new Date(session.checkOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })
+            : "Ongoing",
+          duration: calculateSessionDuration(session),
         });
 
-        lastEnd = checkOut;
-      });
+        lastEnd = checkOut > endOfDay ? endOfDay : checkOut;
+      }
+    });
 
     if (lastEnd < endOfDay) {
       segments.push({
@@ -105,38 +131,53 @@ const EmployeePage = () => {
     }
 
     return (
-      <div className="flex items-center gap-4 relative">
-        <div className="w-24 text-gray-600 font-medium">
-          {date.toLocaleDateString()}
+      <div className="flex items-center gap-4 relative" key={index}>
+        <div className="w-28 text-gray-600 font-medium shrink-0">
+          {date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}
         </div>
-        <div className="flex-1 flex h-4 rounded-full overflow-hidden bg-gray-300 relative">
-          {segments.map((segment, index) => (
+        <div className="flex-1 flex h-6 rounded-full overflow-hidden bg-gray-200 relative">
+          {segments.map((segment, segIndex) => (
             <div
-              key={index}
-              className={`h-full ${segment.isActive ? "bg-green-500" : "bg-gray-300"}`}
-              style={{ width: `${segment.width}%` }}
-              onMouseEnter={() => segment.isActive && setHoveredSegment({ ...segment, index })}
+              key={`${index}-${segIndex}`}
+              className={`h-full transition-colors duration-200 ${
+                segment.isActive ? "bg-green-600 hover:bg-green-700" : "bg-gray-200"
+              }`}
+              style={{ width: `${segment.width}%`, minWidth: segment.isActive ? "8px" : "0" }}
+              onMouseEnter={() =>
+                segment.isActive && setHoveredSegment({ ...segment, index: segIndex, dayIndex: index })
+              }
               onMouseLeave={() => setHoveredSegment(null)}
+              onClick={() => segment.isActive && setHoveredSegment({ ...segment, index: segIndex, dayIndex: index })}
             />
           ))}
-          {hoveredSegment && (
+          {hoveredSegment && hoveredSegment.dayIndex === index && (
             <div
-              className="absolute z-10 bg-white p-2 rounded shadow-lg border border-gray-200"
+              className="absolute z-50 bg-white p-4 rounded-lg shadow-xl border border-gray-200 text-sm text-gray-800 min-w-[150px]"
               style={{
-                top: '-50px',
-                left: `${segments.slice(0, hoveredSegment.index).reduce((sum, seg) => sum + seg.width, 0)}%`,
+                top: "-80px",
+                left: `${
+                  Math.min(
+                    Math.max(
+                      segments
+                        .slice(0, hoveredSegment.index)
+                        .reduce((sum, seg) => sum + seg.width, 0) + hoveredSegment.width / 2,
+                      10
+                    ),
+                    90
+                  )
+                }%`,
+                transform: "translateX(-50%)",
+                transition: "opacity 0.2s ease-in-out",
+                opacity: hoveredSegment ? 1 : 0,
               }}
             >
-              <p className="text-sm text-gray-800">
-                Check-In: {hoveredSegment.checkInTime}
-              </p>
-              <p className="text-sm text-gray-800">
-                Check-Out: {hoveredSegment.checkOutTime}
-              </p>
+              <p className="font-semibold">Check-In: {hoveredSegment.checkInTime}</p>
+              <p className="font-semibold">Check-Out: {hoveredSegment.checkOutTime}</p>
+              <p>Duration: {hoveredSegment.duration}</p>
             </div>
           )}
         </div>
-        <div className="w-20 text-gray-600 font-medium">
+        <div className="w-20 text-gray-600 font-medium text-right">
           {totalHours}
         </div>
       </div>
@@ -146,7 +187,7 @@ const EmployeePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
+        <p className="text-gray-600 text-lg">Loading employee data...</p>
       </div>
     );
   }
@@ -154,13 +195,13 @@ const EmployeePage = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-600 text-lg">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 p-4 fixed inset-0 left-[300px]">
+    <div className="min-h-screen bg-gray-100 py-8 px-4 fixed inset-0 left-[300px] overflow-auto">
       <div className="max-w-4xl mx-auto">
         {/* Employee Details Card */}
         <div className="bg-white p-8 rounded-lg shadow-lg mb-8">
@@ -173,7 +214,7 @@ const EmployeePage = () => {
               </div>
               <span
                 className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-                  employeeData.checkedIn ? "bg-green-500" : "bg-red-500"
+                  employeeData.checkedIn ? "bg-green-600" : "bg-red-600"
                 }`}
               />
             </div>
@@ -188,7 +229,7 @@ const EmployeePage = () => {
             </p>
             <p className="text-gray-700">
               <span className="font-semibold">Status:</span>{" "}
-              <span className={employeeData.active ? "text-green-500" : "text-red-500"}>
+              <span className={employeeData.active ? "text-green-600" : "text-red-600"}>
                 {employeeData.active ? "Active" : "Inactive"}
               </span>
             </p>
@@ -197,19 +238,27 @@ const EmployeePage = () => {
             </p>
             <p className="text-gray-700">
               <span className="font-semibold">Last Check-In:</span>{" "}
-              {employeeData.lastCheckIn ? new Date(employeeData.lastCheckIn).toLocaleString() : "N/A"}
+              {employeeData.lastCheckIn
+                ? new Date(employeeData.lastCheckIn).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
+                : "N/A"}
             </p>
             <p className="text-gray-700">
               <span className="font-semibold">Last Check-Out:</span>{" "}
-              {employeeData.lastCheckOut ? new Date(employeeData.lastCheckOut).toLocaleString() : "N/A"}
+              {employeeData.lastCheckOut
+                ? new Date(employeeData.lastCheckOut).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
+                : "N/A"}
             </p>
             <p className="text-gray-700">
               <span className="font-semibold">Last Login:</span>{" "}
-              {employeeData.lastLogin ? new Date(employeeData.lastLogin).toLocaleString() : "N/A"}
+              {employeeData.lastLogin
+                ? new Date(employeeData.lastLogin).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
+                : "N/A"}
             </p>
             <p className="text-gray-700">
               <span className="font-semibold">Created At:</span>{" "}
-              {employeeData.createdAt ? new Date(employeeData.createdAt).toLocaleString() : "N/A"}
+              {employeeData.created_at
+                ? new Date(employeeData.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
+                : "N/A"}
             </p>
             <p className="text-gray-700">
               <span className="font-semibold">Total Duration (Latest Day):</span>{" "}
@@ -224,10 +273,9 @@ const EmployeePage = () => {
           {employeeData.dailyDurations && employeeData.dailyDurations.length > 0 ? (
             <div className="space-y-4">
               {employeeData.dailyDurations
+                .filter((day) => new Date(day.date).getTime())
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .map((day, index) => (
-                  <div key={index}>{renderTimeline(day)}</div>
-                ))}
+                .map((day, index) => renderTimeline(day, index))}
             </div>
           ) : (
             <p className="text-gray-600">No check-in/check-out data available.</p>
