@@ -129,7 +129,7 @@ export default function Courses() {
         setCenters([]);
         return [];
       }
-      const instituteId = instituteSnapshot.docs[0].id;
+      const instituteId = 'RDJ9wMXGrIUk221MzDxP';
       console.log("Using institute ID:", instituteId);
       const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
       const q = query(CenterCollectionRef, where("isActive", "==", true));

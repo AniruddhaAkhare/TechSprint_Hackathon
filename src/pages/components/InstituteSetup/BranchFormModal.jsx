@@ -390,7 +390,7 @@ const BranchFormModal = ({
   };
 
   return (
-    <div className="modal">
+    <div className="modal h-full overflow-y-auto">
       <div className="modal-content">
         <h2>{currentBranch ? "Edit Center" : "Add Center"}</h2>
         <form onSubmit={handleBranchSubmit}>

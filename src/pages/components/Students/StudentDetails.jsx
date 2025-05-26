@@ -111,7 +111,7 @@ export default function StudentDetails() {
     });
 
     // Fetch Centers
-    const centersQuery = query(collection(db, "instituteSetup", "9z6G6BLzfDScI0mzMOlB", "Center"));
+    const centersQuery = query(collection(db, "instituteSetup", "RDJ9wMXGrIUk221MzDxP", "Center"));
     const unsubscribeCenters = onSnapshot(centersQuery, (snapshot) => {
       const centerList = snapshot.docs.map((doc) => ({
         id: doc.id,

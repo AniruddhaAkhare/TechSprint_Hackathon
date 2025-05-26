@@ -96,6 +96,7 @@ const InstallmentReport = () => {
                 transactions: [],
                 totalPaid: 0,
                 remaining: 0,
+                validationError: '',
               };
             }
 
@@ -113,7 +114,16 @@ const InstallmentReport = () => {
               );
               totalFees = regAmount + installmentTotal;
             } else if (course.feeTemplate === 'Finance') {
-              totalFees = toNumber(course.financeDetails?.feeAfterDiscount || 0);
+              totalFees = toNumber(course.financeDetails?.loanAmount || course.financeDetails?.feeAfterDiscount || 0);
+
+              // Validate DP + SF + DA = TL
+              const downPayment = toNumber(course.financeDetails?.downPayment || 0);
+              const subventionFee = toNumber(course.financeDetails?.subventionFee || 0);
+              const disburseAmount = toNumber(course.financeDetails?.disburseAmount || 0);
+              const sum = downPayment + subventionFee + disburseAmount;
+              if (totalFees !== sum && totalFees !== 0) {
+                enrollmentMap[key].validationError = `Formula Error: DP (${downPayment}) + SF (${subventionFee}) + DA (${disburseAmount}) = ${sum}, but Total Loan is ${totalFees}`;
+              }
             }
 
             enrollmentMap[key].totalFees = totalFees;
@@ -218,21 +228,17 @@ const InstallmentReport = () => {
               });
             } else if (course.feeTemplate === 'Finance') {
               const { financeDetails } = course;
-            
-              // Set total fees to Total Loan (TL)
-              const totalFees = toNumber(financeDetails?.totalLoan || financeDetails?.feeAfterDiscount || 89000);
-              enrollmentMap[key].totalFees = totalFees;
-            
-              // Downpayment (DP) - ₹23,018
+
+              // Down Payment (DP)
               if (financeDetails?.downPayment) {
                 const downPayment = toNumber(financeDetails.downPayment);
                 const status = financeDetails.downPaymentDate ? 'Paid' : 'Pending';
                 const dateField = financeDetails.downPaymentDate || null;
                 const inRange = dateField ? isDateInRange(dateField, start, end) : false;
-            
+
                 if (inRange || (filter === 'all' && dateField)) {
                   enrollmentMap[key].transactions.push({
-                    type: 'Finance (Downpayment)',
+                    type: 'Finance (Down Payment - DP)',
                     amount: downPayment,
                     status,
                     date: dateField,
@@ -240,54 +246,47 @@ const InstallmentReport = () => {
                   if (status === 'Paid') {
                     enrollmentMap[key].totalPaid += downPayment;
                     totalReceivedAcc += downPayment;
-                    totalPendingAcc += (totalFees - downPayment);
-
                   } else {
                     totalPendingAcc += downPayment;
                   }
                 }
               }
-            
-              // Disburse Amount (DA) - ₹60,206
-              if (financeDetails?.disburseAmount) {
+
+              // Disburse Amount (DA)
+              if (financeDetails?.disburseAmount && financeDetails?.loanStatus === 'Disbursed') {
                 const disburseAmount = toNumber(financeDetails.disburseAmount);
-                const status = financeDetails.disburseDate ? 'Approved' : (financeDetails.loanStatus || 'Pending');
-                const dateField = financeDetails.disburseDate || financeDetails.loanApprovalDate || null;
+                const dateField = financeDetails.disburseDate || null;
                 const inRange = dateField ? isDateInRange(dateField, start, end) : false;
-            
+
                 if (inRange || (filter === 'all' && dateField)) {
                   enrollmentMap[key].transactions.push({
-                    type: 'Finance (Disburse Amount)',
+                    type: 'Finance (Disburse Amount - DA)',
                     amount: disburseAmount,
-                    status,
+                    status: 'Disbursed',
                     date: dateField,
                   });
-                  if (status === 'Approved') {
-                    enrollmentMap[key].totalPaid += disburseAmount;
-                    totalReceivedAcc += disburseAmount;
-                  } else if (status === 'Pending') {
-                    totalPendingAcc += disburseAmount;
-                  }
+                  enrollmentMap[key].totalPaid += disburseAmount;
+                  totalReceivedAcc += disburseAmount;
                 }
               }
-            
-              // Subvention Fee (SF) - ₹5,776 (track for reporting, no impact on paid/pending)
+
+              // Subvention Fee (SF) - tracked but not affecting totals
               if (financeDetails?.subventionFee) {
                 const subventionFee = toNumber(financeDetails.subventionFee);
                 const dateField = financeDetails.subventionFeeDate || null;
                 const inRange = dateField ? isDateInRange(dateField, start, end) : false;
-            
+
                 if (inRange || (filter === 'all' && dateField)) {
                   enrollmentMap[key].transactions.push({
-                    type: 'Finance (Subvention Fee)',
+                    type: 'Finance (Subvention Fee - SF)',
                     amount: subventionFee,
                     status: 'Paid to Partner',
                     date: dateField,
                   });
-                  // Subvention fee is an institutional cost, so it doesn't affect totalPaid or totalPending
+                  // Subvention Fee does not affect totalPaid or totalPending
                 }
               }
-            
+
               // Calculate remaining balance
               enrollmentMap[key].remaining = totalFees - enrollmentMap[key].totalPaid;
             } else if (course.feeTemplate === 'Free' && filter === 'all') {
@@ -409,6 +408,9 @@ const InstallmentReport = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Remaining
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Validation
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -439,10 +441,13 @@ const InstallmentReport = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
                         ₹{toNumber(row.remaining).toFixed(2)}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                        {row.validationError || 'Valid'}
+                      </td>
                     </tr>
                     {expandedRows[index] && (
                       <tr>
-                        <td colSpan={6} className="px-6 py-4 bg-gray-50">
+                        <td colSpan={7} className="px-6 py-4 bg-gray-50">
                           <div className="overflow-x-auto">
                             <table className="w-full divide-y divide-gray-200">
                               <thead className="bg-gray-100">
@@ -488,7 +493,7 @@ const InstallmentReport = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
                     No fee data available.
                   </td>
                 </tr>

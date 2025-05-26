@@ -19,7 +19,7 @@ export function InstituteProvider({ children }) {
         .filter((inst) => inst.ownerId === user.uid || inst.admins?.includes(user.uid));
       setInstitutes(instituteData);
       if (instituteData.length > 0 && !selectedInstitute) {
-        setSelectedInstitute(instituteData[0].id);
+        setSelectedInstitute('RDJ9wMXGrIUk221MzDxP');
       }
     } catch (err) {
       console.error("Error fetching institutes:", err.message);
