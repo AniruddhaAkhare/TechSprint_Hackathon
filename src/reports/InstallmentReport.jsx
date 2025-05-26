@@ -114,15 +114,20 @@ const InstallmentReport = () => {
               );
               totalFees = regAmount + installmentTotal;
             } else if (course.feeTemplate === 'Finance') {
-              totalFees = toNumber(course.financeDetails?.loanAmount || course.financeDetails?.feeAfterDiscount || 0);
+              // Use feeAfterDiscount as totalFees, or sum of registration amounts
+              totalFees = toNumber(course.financeDetails?.feeAfterDiscount || 0);
 
-              // Validate DP + SF + DA = TL
-              const downPayment = toNumber(course.financeDetails?.downPayment || 0);
-              const subventionFee = toNumber(course.financeDetails?.subventionFee || 0);
-              const disburseAmount = toNumber(course.financeDetails?.disburseAmount || 0);
-              const sum = downPayment + subventionFee + disburseAmount;
-              if (totalFees !== sum && totalFees !== 0) {
-                enrollmentMap[key].validationError = `Formula Error: DP (${downPayment}) + SF (${subventionFee}) + DA (${disburseAmount}) = ${sum}, but Total Loan is ${totalFees}`;
+              // Validate sum of Loan Amount registrations matches loanAmount
+              const loanRegistrations = (course.financeDetails?.registrations || []).filter(
+                (reg) => reg.amountType === 'Loan Amount'
+              );
+              const totalLoanAmount = loanRegistrations.reduce(
+                (sum, reg) => sum + toNumber(reg.amount || 0),
+                0
+              );
+              const expectedLoanAmount = toNumber(course.financeDetails?.loanAmount || 0);
+              if (totalLoanAmount !== expectedLoanAmount && expectedLoanAmount !== 0) {
+                enrollmentMap[key].validationError = `Formula Error: Sum of Loan Amount registrations (${totalLoanAmount}) does not match Loan Amount (${expectedLoanAmount})`;
               }
             }
 
@@ -145,6 +150,8 @@ const InstallmentReport = () => {
                     amount: regAmount,
                     status,
                     date: dateField,
+                    paymentMethod: fullFeesDetails.registration.paymentMethod || 'N/A',
+                    amountType: 'N/A',
                   });
                   if (status === 'Paid') {
                     enrollmentMap[key].totalPaid += regAmount;
@@ -168,6 +175,8 @@ const InstallmentReport = () => {
                     amount: finalAmount,
                     status,
                     date: dateField,
+                    paymentMethod: fullFeesDetails.finalPayment.paymentMethod || 'N/A',
+                    amountType: 'N/A',
                   });
                   if (status === 'Paid') {
                     enrollmentMap[key].totalPaid += finalAmount;
@@ -193,6 +202,8 @@ const InstallmentReport = () => {
                     amount: regAmount,
                     status,
                     date: dateField,
+                    paymentMethod: registration.paymentMethod || 'N/A',
+                    amountType: 'N/A',
                   });
                   if (status === 'Paid') {
                     enrollmentMap[key].totalPaid += regAmount;
@@ -217,6 +228,8 @@ const InstallmentReport = () => {
                     amount: status === 'Paid' ? paidAmount : dueAmount,
                     status,
                     date: dateField,
+                    paymentMethod: installment.paymentMethod || 'N/A',
+                    amountType: 'N/A',
                   });
                   if (status === 'Paid') {
                     enrollmentMap[key].totalPaid += paidAmount;
@@ -229,72 +242,68 @@ const InstallmentReport = () => {
             } else if (course.feeTemplate === 'Finance') {
               const { financeDetails } = course;
 
-              // Down Payment (DP)
-              if (financeDetails?.downPayment) {
-                const downPayment = toNumber(financeDetails.downPayment);
-                const status = financeDetails.downPaymentDate ? 'Paid' : 'Pending';
-                const dateField = financeDetails.downPaymentDate || null;
+              // Process Registrations
+              (financeDetails?.registrations || []).forEach((registration, regIndex) => {
+                const regAmount = toNumber(registration.amount || 0);
+                const status = registration.status || 'Pending';
+                const dateField = registration.date || null;
                 const inRange = dateField ? isDateInRange(dateField, start, end) : false;
 
-                if (inRange || (filter === 'all' && dateField)) {
+                if ((inRange || (filter === 'all' && dateField)) && regAmount > 0) {
                   enrollmentMap[key].transactions.push({
-                    type: 'Finance (Down Payment - DP)',
-                    amount: downPayment,
+
+                    // type: `Finance ${registration.srNo}`,
+                    type: 'Finance',
+                    amount: regAmount,
                     status,
                     date: dateField,
+                    paymentMethod: registration.paymentMethod || 'N/A',
+                    amountType: registration.amountType || 'Non-Loan Amount',
                   });
                   if (status === 'Paid') {
-                    enrollmentMap[key].totalPaid += downPayment;
-                    totalReceivedAcc += downPayment;
+                    enrollmentMap[key].totalPaid += regAmount;
+                    totalReceivedAcc += regAmount;
                   } else {
-                    totalPendingAcc += downPayment;
+                    totalPendingAcc += regAmount;
                   }
                 }
-              }
 
-              // Disburse Amount (DA)
-              if (financeDetails?.disburseAmount && financeDetails?.loanStatus === 'Disbursed') {
-                const disburseAmount = toNumber(financeDetails.disburseAmount);
-                const dateField = financeDetails.disburseDate || null;
-                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
+                // Process Loan Sub-Registrations for Loan Amount registrations
+                if (registration.amountType === 'Loan Amount') {
+                  (registration.loanSubRegistrations || []).forEach((subReg, subIndex) => {
+                    const subRegAmount = toNumber(subReg.amount || 0);
+                    const subStatus = subReg.status || 'Pending';
+                    const subDateField = subReg.date || null;
+                    const subInRange = subDateField ? isDateInRange(subDateField, start, end) : false;
 
-                if (inRange || (filter === 'all' && dateField)) {
-                  enrollmentMap[key].transactions.push({
-                    type: 'Finance (Disburse Amount - DA)',
-                    amount: disburseAmount,
-                    status: 'Disbursed',
-                    date: dateField,
+                    // if ((subInRange || (filter === 'all' && subDateField)) && subRegAmount > 0) {
+                    //   enrollmentMap[key].transactions.push({
+                    //     type: `Finance (Loan Sub-Registration ${registration.srNo}.${subReg.srNo})`,
+                    //     amount: subRegAmount,
+                    //     status: subStatus,
+                    //     date: subDateField,
+                    //     paymentMethod: subReg.paymentMethod || 'N/A',
+                    //     amountType: 'Loan Amount',
+                    //   });
+                    //   if (subStatus === 'Paid') {
+                    //     enrollmentMap[key].totalPaid += subRegAmount;
+                    //     totalReceivedAcc += subRegAmount;
+                    //     // totalPendingAcc += (loanAmount - subRegAmount);
+                    //   } else {
+                    //     totalPendingAcc += subRegAmount;
+                    //   }
+                    // }
                   });
-                  enrollmentMap[key].totalPaid += disburseAmount;
-                  totalReceivedAcc += disburseAmount;
                 }
-              }
-
-              // Subvention Fee (SF) - tracked but not affecting totals
-              if (financeDetails?.subventionFee) {
-                const subventionFee = toNumber(financeDetails.subventionFee);
-                const dateField = financeDetails.subventionFeeDate || null;
-                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
-
-                if (inRange || (filter === 'all' && dateField)) {
-                  enrollmentMap[key].transactions.push({
-                    type: 'Finance (Subvention Fee - SF)',
-                    amount: subventionFee,
-                    status: 'Paid to Partner',
-                    date: dateField,
-                  });
-                  // Subvention Fee does not affect totalPaid or totalPending
-                }
-              }
-
-              // Calculate remaining balance
-              enrollmentMap[key].remaining = totalFees - enrollmentMap[key].totalPaid;
+              });
             } else if (course.feeTemplate === 'Free' && filter === 'all') {
               enrollmentMap[key].transactions.push({
                 type: 'Free',
                 amount: 0,
                 status: 'N/A',
                 date: null,
+                paymentMethod: 'N/A',
+                amountType: 'N/A',
               });
             }
 
@@ -464,6 +473,12 @@ const InstallmentReport = () => {
                                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Date
                                   </th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Payment Method
+                                  </th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Amount Type
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody className="bg-white divide-y divide-gray-200">
@@ -480,6 +495,12 @@ const InstallmentReport = () => {
                                     </td>
                                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                                       {txn.date ? new Date(txn.date).toLocaleDateString() : 'N/A'}
+                                    </td>
+                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                      {txn.paymentMethod}
+                                    </td>
+                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                      {txn.amountType}
                                     </td>
                                   </tr>
                                 ))}
