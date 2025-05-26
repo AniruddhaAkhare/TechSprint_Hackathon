@@ -132,17 +132,17 @@ export default function App() {
             <div style={{ flex: 1, padding: '20px' }}>
               <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
-                <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/dashboard" />} />
-                <Route path="/register" element={!user ? <RegisterForm /> : <Navigate to="/dashboard" />} />
+                <Route path="/" element={user ? <Navigate to="/my-profile" /> : <LandingPage />} />
+                <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/my-profile" />} />
+                <Route path="/register" element={!user ? <RegisterForm /> : <Navigate to="/my-profile" />} />
                 <Route path="/registration-welcome" element={<AfterEmployeeRegistration/>} />
-                <Route path="/employee-registration" element={!user ? <EmployeeRegistrationForm /> : <Navigate to="/dashboard" />} />
+                <Route path="/employee-registration" element={!user ? <EmployeeRegistrationForm /> : <Navigate to="/my-profile" />} />
 
 
                 
                 <Route path="/staff" element={<ProtectedRoute permissionSection="Users"><StaffAndUsers /></ProtectedRoute>} />
 
-                <Route path="/forgetPassword" element={!user ? <ForgetPasswordForm /> : <Navigate to="/dashboard" />} />
+                <Route path="/forgetPassword" element={!user ? <ForgetPasswordForm /> : <Navigate to="/my-profile" />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 {/* <Route path="/tasks" element={<ProtectedRoute><TaskCallSchdule /></ProtectedRoute>} /> */}
                 <Route path="/roles" element={<ProtectedRoute permissionSection="roles"><Roles /></ProtectedRoute>} />
