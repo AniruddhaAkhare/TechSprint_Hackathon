@@ -73,7 +73,7 @@ const CheckInOut = () => {
           }
         },
         (error) => {
-          console.error("Error checking location:", error);
+          //console.error("Error checking location:", error);
         },
         {
           enableHighAccuracy: false,
@@ -157,7 +157,7 @@ const CheckInOut = () => {
             setError("");
             // sendCheckInEmail(user.email, proximity.branchName, timestamp);
           } catch (error) {
-            console.error("Error checking in:", error);
+            //console.error("Error checking in:", error);
             setError("Failed to check in. Please try again.");
           }
         } else {
@@ -263,7 +263,7 @@ const CheckInOut = () => {
       setError("");
       // sendCheckOutEmail(user.email, timestamp, durationHours);
     } catch (error) {
-      console.error("Error checking out:", error);
+      //console.error("Error checking out:", error);
       setError("Failed to check out. Please try again.");
     }
   };
@@ -341,7 +341,7 @@ const CheckInOut = () => {
       );
       // sendCheckOutEmail(user.email, timestamp, durationHours, true);
     } catch (error) {
-      console.error("Error during auto-checkout:", error);
+      //console.error("Error during auto-checkout:", error);
       setError("Failed to auto-check out. Please try again.");
     }
   };

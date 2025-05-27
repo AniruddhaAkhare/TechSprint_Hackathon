@@ -25,10 +25,10 @@ export default function MockTestSession() {
                 const data = studentSnap.data();
                 setMockTests(data.mockTests || []);
             } else {
-                console.error("Student document not found");
+                //console.error("Student document not found");
             }
         } catch (error) {
-            console.error("Error fetching mock tests:", error);
+            //console.error("Error fetching mock tests:", error);
         }
     };
 

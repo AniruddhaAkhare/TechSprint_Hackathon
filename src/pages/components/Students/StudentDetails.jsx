@@ -92,7 +92,7 @@ export default function StudentDetails() {
       ].sort();
       setGoalOptions(uniqueGoals);
     }, (error) => {
-      console.error("Error fetching students:", error);
+      //console.error("Error fetching students:", error);
       toast.error("Failed to fetch students");
     });
 
@@ -106,7 +106,7 @@ export default function StudentDetails() {
       }));
       setCourses(courseList);
     }, (error) => {
-      console.error("Error fetching courses:", error);
+      //console.error("Error fetching courses:", error);
       toast.error("Failed to fetch courses");
     });
 
@@ -120,7 +120,7 @@ export default function StudentDetails() {
       setCenters(centerList);
       setAvailableCenters(centerList);
     }, (error) => {
-      console.error("Error fetching centers:", error);
+      //console.error("Error fetching centers:", error);
       toast.error("Failed to fetch centers");
     });
 
@@ -136,7 +136,7 @@ export default function StudentDetails() {
       setBatches(batchList);
       setAvailableBatches(batchList);
     }, (error) => {
-      console.error("Error fetching batches:", error);
+      //console.error("Error fetching batches:", error);
       toast.error("Failed to fetch batches");
     });
 
@@ -239,7 +239,7 @@ export default function StudentDetails() {
       await batch.commit();
       toast.success(`Status updated to ${newStatus}`);
     } catch (error) {
-      console.error("Error updating status:", error);
+      //console.error("Error updating status:", error);
       toast.error("Failed to update status");
     }
   };
@@ -257,7 +257,7 @@ export default function StudentDetails() {
       toast.success("Student deleted successfully!");
       setOpenDelete(false);
     } catch (error) {
-      console.error("Error deleting student:", error);
+      //console.error("Error deleting student:", error);
       toast.error("Failed to delete student");
     }
   };
@@ -644,7 +644,7 @@ export default function StudentDetails() {
 //       ].sort();
 //       setGoalOptions(uniqueGoals);
 //     }, (error) => {
-//       console.error("Error fetching students:", error);
+//       //console.error("Error fetching students:", error);
 //       toast.error("Failed to fetch students");
 //     });
 
@@ -658,7 +658,7 @@ export default function StudentDetails() {
 //       }));
 //       setCourses(courseList);
 //     }, (error) => {
-//       console.error("Error fetching courses:", error);
+//       //console.error("Error fetching courses:", error);
 //       toast.error("Failed to fetch courses");
 //     });
 
@@ -680,7 +680,7 @@ export default function StudentDetails() {
 //         setCenters(centerList);
 //         setAvailableCenters(centerList);
 //       }, (error) => {
-//         console.error("Error fetching centers:", error);
+//         //console.error("Error fetching centers:", error);
 //         toast.error("Failed to fetch centers");
 //       });
 //     };
@@ -697,7 +697,7 @@ export default function StudentDetails() {
 //       setBatches(batchList);
 //       setAvailableBatches(batchList);
 //     }, (error) => {
-//       console.error("Error fetching batches:", error);
+//       //console.error("Error fetching batches:", error);
 //       toast.error("Failed to fetch batches");
 //     });
 
@@ -812,7 +812,7 @@ export default function StudentDetails() {
 //       await batch.commit();
 //       toast.success(`Status updated to ${newStatus}`);
 //     } catch (error) {
-//       console.error("Error updating status:", error);
+//       //console.error("Error updating status:", error);
 //       toast.error("Failed to update status");
 //     }
 //   };
@@ -830,7 +830,7 @@ export default function StudentDetails() {
 //       toast.success("Student deleted successfully!");
 //       setOpenDelete(false);
 //     } catch (error) {
-//       console.error("Error deleting student:", error);
+//       //console.error("Error deleting student:", error);
 //       toast.error("Failed to delete student");
 //     }
 //   };
@@ -913,7 +913,7 @@ export default function StudentDetails() {
 //       setSelectedStudents([]);
 //       setSelectedCourse([]);
 //     } catch (error) {
-//       console.error("Error enrolling students:", error);
+//       //console.error("Error enrolling students:", error);
 //       toast.error("Failed to enroll students.");
 //     }
 //   };

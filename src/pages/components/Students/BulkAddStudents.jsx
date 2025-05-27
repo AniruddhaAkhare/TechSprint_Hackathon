@@ -78,7 +78,7 @@ export default function BulkAddStudents() {
           setOpenConfirm(true);
         },
         error: (error) => {
-          console.error("Error parsing CSV:", error);
+          //console.error("Error parsing CSV:", error);
           toast.error("Failed to parse CSV file");
         },
       });
@@ -161,7 +161,7 @@ export default function BulkAddStudents() {
       setFile(null);
       setParsedData([]);
     } catch (error) {
-      console.error("Error uploading students:", error);
+      //console.error("Error uploading students:", error);
       toast.error("Failed to upload students");
     }
   };

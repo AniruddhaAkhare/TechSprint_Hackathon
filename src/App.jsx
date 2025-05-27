@@ -46,7 +46,7 @@ import CreateAttendenceRemarks from './pages/components/Performance/Attendance/C
 import CreateFeesRemarks from './pages/components/Performance/Fees/CreateFeesRemarks.jsx';
 import FeesRemarks from './pages/components/Performance/Fees/FeesRemarks.jsx';
 // import Profile from './pages/components/Profile.jsx';
-import InstallmentReport from './reports/InstallmentReport.jsx';
+import InstallmentReport from './pages/components/reports/InstallmentReport.jsx';
 import Invoices from './pages/components/Invoices/Invoices.jsx';
 import CreateInvoice from './pages/components/Invoices/CreateInvoice.jsx';
 import UpdateInvoice from './pages/components/Invoices/UpdateInvoice.jsx';
@@ -63,9 +63,9 @@ import Subscribe from './pages/home/Subscribe.jsx';
 import QuestionBank from './pages/components/QuestionBank/QuestionBank.jsx';
 import QuestionTemplate from './pages/components/QuestionBank/QuestionTemplate.jsx';
 import AdminLogs from './pages/components/AdminLogs.jsx';
-import CourseAnalyticsDashboard from './pages/components/CourseDelivery/Course/CourseAnalyticsDashboard.jsx'
-import InstallmentDashboard from './reports/InstallmentDashboard.jsx';
-import AttendanceDashboard from './StudentInformation/AttendanceDashboard.jsx'
+import CourseAnalyticsDashboard from './pages/components/CourseDelivery/Course/CourseAnalyticsDashboard.jsx';
+import InstallmentDashboard from './pages/components/reports/InstallmentDashboard';
+import AttendanceDashboard from './StudentInformation/AttendanceDashboard.jsx';
 import EnquiryDashboard from './pages/components/EnquiryManagement/EnquiryDashboard.jsx';
 import EnquiryAnalyticsPage from './pages/components/EnquiryManagement/EnquiryAnalyticsPage.jsx';
 import EnquiryForms from './pages/components/EnquiryForm/EnquiryForm.jsx';
@@ -82,16 +82,16 @@ import Companies from './pages/components/PlacementManagement/Companies/Companie
 import JobOpenings from './pages/components/PlacementManagement/JobOpenings/JobOpenings.jsx';
 import RecruiterView from './pages/components/PlacementManagement/JobOpenings/RecruiterView.jsx';
 import UniqueEnquiryForm from '../formEnquiry/UniqueEnquiryForm.jsx';
-import EmployeeProfile from './pages/components/Instructor/EmployeeProfile.jsx';
+import EmployeeProfile from './pages/components/Staff/EmployeeProfile.jsx';
 import ActiveStatus from './pages/ActiveStatus.jsx';
 import EmployeeRegistrationForm from './pages/home/EmployeeRegistrationForm.jsx';
 import AfterEmployeeRegistration from './pages/home/AfterEmployeeRegistration.jsx';
 import BulkAddStudents from './pages/components/Students/BulkAddStudents.jsx';
 import { CheckInReminderProvider } from './context/CheckInRemainderContext.jsx';
 import { ToastContainer } from 'react-toastify';
-import AddStaff from './pages/components/Instructor/AddStaff.jsx';
-import EditStaff from './pages/components/Instructor/EditStaff.jsx';
-import StaffAndUsers from './pages/components/Instructor/StaffAndUsers.jsx';
+import AddStaff from './pages/components/Staff/AddStaff.jsx'
+import EditStaff from './pages/components/Staff/EditStaff.jsx';
+import StaffAndUsers from './pages/components/Staff/StaffAndUsers.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();

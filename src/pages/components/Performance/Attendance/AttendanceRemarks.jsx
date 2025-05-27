@@ -19,7 +19,7 @@ export default function AttendanceRemarks() {
 
     const logActivity = useCallback(async (action, details) => {
         if (!user) {
-            console.error("No user logged in for logging activity");
+            //console.error("No user logged in for logging activity");
             return;
         }
         try {
@@ -41,9 +41,8 @@ export default function AttendanceRemarks() {
                     throw err;
                 }
             });
-            console.log("Activity logged:", { action, details });
         } catch (err) {
-            console.error("Error logging activity:", err.message);
+            //console.error("Error logging activity:", err.message);
             toast.error("Failed to log activity.");
         }
     }, [user]);
@@ -65,12 +64,12 @@ export default function AttendanceRemarks() {
                 setAttendanceRemarks(data.attendanceRemarks || []);
                 toast.success("Attendance remarks loaded successfully.");
             } else {
-                console.error("Student document not found");
+                //console.error("Student document not found");
                 toast.error("Student document not found.");
                 setAttendanceRemarks([]);
             }
         }, (error) => {
-            console.error("Error fetching attendance remarks:", error.message);
+            //console.error("Error fetching attendance remarks:", error.message);
             toast.error("Failed to fetch attendance remarks.");
         });
 
@@ -89,7 +88,7 @@ export default function AttendanceRemarks() {
             });
             navigate("/createAttendanceRemarks", { state: { student, attendanceRemarks } });
         } catch (error) {
-            console.error("Error logging navigation:", error.message);
+            //console.error("Error logging navigation:", error.message);
             toast.error("Failed to initiate create attendance remark.");
         }
     };

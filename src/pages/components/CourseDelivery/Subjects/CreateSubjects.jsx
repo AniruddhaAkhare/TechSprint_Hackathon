@@ -63,10 +63,9 @@ const CreateSubjects = ({ isOpen, toggleSidebar }) => {
         batches: selectedBatches,
       };
       await addDoc(collection(db, "Subjects"), subjectData);
-      console.log("Subject created successfully", subjectData);
       toggleSidebar();
     } catch (error) {
-      console.error("Error creating subject:", error);
+      // //console.error("Error creating subject:", error);
     }
   };
 

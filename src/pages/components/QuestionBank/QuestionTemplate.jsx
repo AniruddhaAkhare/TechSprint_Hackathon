@@ -36,7 +36,7 @@ const QuestionTemplate = () => {
                 }));
                 setTemplates(templatesData);
             } catch (error) {
-                console.error('Error fetching templates:', error);
+                //console.error('Error fetching templates:', error);
             }
         };
 
@@ -50,7 +50,7 @@ const QuestionTemplate = () => {
                 }));
                 setQuestions(questionsData);
             } catch (error) {
-                console.error('Error fetching questions:', error);
+                //console.error('Error fetching questions:', error);
             }
         };
 
@@ -72,7 +72,7 @@ const QuestionTemplate = () => {
                 timestamp: serverTimestamp(),
             });
         } catch (error) {
-            console.error('Error logging activity:', error);
+            //console.error('Error logging activity:', error);
         }
     };
 
@@ -128,7 +128,7 @@ const QuestionTemplate = () => {
             setIsDialogOpen(false);
             setTemplateData({ name: '', subject: '', selectedQuestions: [] });
         } catch (error) {
-            console.error('Error saving template:', error);
+            //console.error('Error saving template:', error);
             alert('Failed to save template. Please try again.');
         }
     };
@@ -158,7 +158,7 @@ const QuestionTemplate = () => {
             });
             alert('Template deleted successfully!');
         } catch (error) {
-            console.error('Error deleting template:', error);
+            //console.error('Error deleting template:', error);
             alert('Failed to delete template. Please try again.');
         }
     };
@@ -186,7 +186,7 @@ const QuestionTemplate = () => {
             setSelectedTemplates([]);
             alert(`${selectedTemplates.length} template(s) deleted successfully!`);
         } catch (error) {
-            console.error('Error deleting multiple templates:', error);
+            //console.error('Error deleting multiple templates:', error);
             alert('Failed to delete some templates. Please try again.');
         }
     };

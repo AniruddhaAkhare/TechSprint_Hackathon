@@ -243,7 +243,7 @@ export default function AddStudent() {
       const querySnapshot = await getDocs(collection(db, "Course"));
       setCourses(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     } catch (error) {
-      console.error("Error fetching courses:", error);
+      //console.error("Error fetching courses:", error);
     }
   };
 
@@ -252,7 +252,7 @@ export default function AddStudent() {
       const querySnapshot = await getDocs(collection(db, "Batch"));
       setBatches(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     } catch (error) {
-      console.error("Error fetching batches:", error);
+      //console.error("Error fetching batches:", error);
     }
   };
 
@@ -260,10 +260,10 @@ export default function AddStudent() {
     try {
       const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
       if (instituteSnapshot.empty) {
-        console.error("No instituteSetup document found");
+        //console.error("No instituteSetup document found");
         return;
       }
-      const instituteId = instituteSnapshot.docs[0].id;
+      const instituteId = "RDJ9wMXGrIUk221MzDxP";
 
       const centerQuery = query(
         collection(db, "instituteSetup", instituteId, "Center"),
@@ -273,7 +273,7 @@ export default function AddStudent() {
       const centersList = centerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setCenters(centersList);
     } catch (error) {
-      console.error("Error fetching centers:", error);
+      //console.error("Error fetching centers:", error);
     }
   };
 
@@ -286,7 +286,7 @@ export default function AddStudent() {
   //     }
   //     setFeeTemplates(templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   //   } catch (error) {
-  //     console.error("Error in fetching payment type:", error);
+  //     //console.error("Error in fetching payment type:", error);
   //   }
   // };
 
@@ -385,32 +385,28 @@ export default function AddStudent() {
       // Send welcome email after successful student creation
       // Send welcome email after successful student creation
       try {
-        console.log("Preparing to send welcome email", {
-          toEmail: email,
-          fullName: `${capitalizeFirstLetter(Name)}`,
-        }); // Debug log
+       
         
         
         await sendWelcomeEmail({
           toEmail: email,
           fullName: `${capitalizeFirstLetter(Name)}`
         });
-        console.log("Welcome email sent successfully to:", email); // Debug log
         alert("Student added successfully! Welcome email sent.");
       } catch (emailError) {
-        console.error("Welcome email failed to send:", {
-          message: emailError.message,
-          code: emailError.code,
-          details: emailError.details || emailError,
-          stack: emailError.stack,
-        }); // Enhanced error logging
+        //console.error("Welcome email failed to send:", {
+        //   message: emailError.message,
+        //   code: emailError.code,
+        //   details: emailError.details || emailError,
+        //   stack: emailError.stack,
+        // }); // Enhanced error logging
         alert("Student added successfully, but welcome email failed to send.");
       }
 
 
       navigate("/studentdetails");
     } catch (error) {
-      console.error("Error adding student:", error);
+      console.error("");
       alert("Error adding student. Please try again.");
     } finally {
       setIsSubmitting(false);

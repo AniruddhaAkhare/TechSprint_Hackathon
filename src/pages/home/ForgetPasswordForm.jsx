@@ -46,7 +46,7 @@ export default function ForgetPasswordForm() {
             alert('Password reset email sent! Check your inbox.');
             window.location.href = '/login'; // Redirect back to login after success
         } catch (error) {
-            console.error('Error sending password reset email:', error);
+            //console.error('Error sending password reset email:', error);
             alert('Failed to send reset email. ' + error.message);
         } finally {
             setLoading(false);

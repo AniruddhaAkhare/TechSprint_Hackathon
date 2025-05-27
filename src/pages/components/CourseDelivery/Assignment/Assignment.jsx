@@ -16,7 +16,6 @@ export default function Assignments() {
             fetchBatches();
             alert('Batch deleted successfully!');
         } catch (err) {
-            console.error("Error deleting batch:", err);
             alert('Failed to delete batch. Please try again.');
         } finally {
             setOpenDelete(false);
@@ -43,7 +42,6 @@ export default function Assignments() {
                 }));
                 setAssignments(assignmentList);
             } catch (error) {
-                console.error("Error fetching assignments:", error);
             }
         };
 

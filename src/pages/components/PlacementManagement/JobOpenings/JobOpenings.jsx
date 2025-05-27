@@ -49,7 +49,7 @@ export default function JobOpenings() {
           setUserDisplayName(user.email || "Unknown User");
         }
       } catch (error) {
-        console.error("Error fetching user displayName:", error);
+        //console.error("Error fetching user displayName:", error);
         toast.error(`Failed to fetch user data: ${error.message}`);
         setUserDisplayName(user.email || "Unknown User");
       }
@@ -69,7 +69,7 @@ export default function JobOpenings() {
       };
       await addDoc(collection(db, "activityLogs"), activityLog);
     } catch (error) {
-      console.error("Error logging activity:", error);
+      //console.error("Error logging activity:", error);
     }
   };
 
@@ -109,7 +109,7 @@ export default function JobOpenings() {
         setSelectedJob(jobData[0]);
       }
     } catch (err) {
-      console.error("Error fetching job openings:", err);
+      //console.error("Error fetching job openings:", err);
       toast.error("Failed to fetch job openings.");
     } finally {
       setLoading(false);
@@ -198,7 +198,7 @@ export default function JobOpenings() {
       toast.success("Job opening deleted successfully!");
       logActivity("DELETE_JOB", { jobId: deleteId, title: jobTitle });
     } catch (err) {
-      console.error("Error deleting job:", err);
+      //console.error("Error deleting job:", err);
       setDeleteMessage("An error occurred while trying to delete the job opening.");
       toast.error(`Failed to delete job opening: ${err.message}`);
     }
@@ -226,7 +226,7 @@ export default function JobOpenings() {
       XLSX.writeFile(wb, `Applications_${jobId}.xlsx`);
       logActivity("EXPORT_EXCEL", { jobId });
     } catch (err) {
-      console.error("Error exporting to Excel:", err);
+      //console.error("Error exporting to Excel:", err);
       toast.error("Failed to export applications.");
     }
   };
@@ -255,7 +255,7 @@ export default function JobOpenings() {
       doc.save(`Applications_${jobId}.pdf`);
       logActivity("EXPORT_PDF", { jobId });
     } catch (err) {
-      console.error("Error exporting to PDF:", err);
+      //console.error("Error exporting to PDF:", err);
       toast.error("Failed to export applications.");
     }
   };

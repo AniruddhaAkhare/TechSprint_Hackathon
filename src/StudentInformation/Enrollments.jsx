@@ -35,7 +35,7 @@ export default function  Enrollments ({ studentId })  {
                     setError("Student not found.");
                 }
             } catch (error) {
-                console.error("Error fetching student enrollments:", error);
+                //console.error("Error fetching student enrollments:", error);
                 setError("Failed to fetch enrollment data.");
             } finally {
                 setIsLoading(false);

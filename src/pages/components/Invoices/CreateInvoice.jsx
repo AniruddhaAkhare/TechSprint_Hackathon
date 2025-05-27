@@ -353,7 +353,7 @@
 // // //       alert("Invoice saved successfully!");
       
 // // //     } catch (error) {
-// // //       console.error("Error saving invoice: ", error);
+// // //       //console.error("Error saving invoice: ", error);
 // // //     }
 // // //   };
 
@@ -368,7 +368,7 @@
 // // //             }));
 // // //             setStudent(studentList);
 // // //         } catch (error) {
-// // //             console.error("Error fetching students:", error);
+// // //             //console.error("Error fetching students:", error);
 // // //         }
 // // //     };
 
@@ -479,7 +479,7 @@
 // //         }));
 // //         setStudents(studentList);
 // //       } catch (error) {
-// //         console.error("Error fetching students:", error);
+// //         //console.error("Error fetching students:", error);
 // //       }
 // //     };
 
@@ -526,7 +526,7 @@
 // //       });
 // //       alert("Invoice saved successfully!");
 // //     } catch (error) {
-// //       console.error("Error saving invoice: ", error);
+// //       //console.error("Error saving invoice: ", error);
 // //     }
 // //   };
 
@@ -618,7 +618,7 @@
 //         }));
 //         setStudents(studentList);
 //       } catch (error) {
-//         console.error("Error fetching students:", error);
+//         //console.error("Error fetching students:", error);
 //       }
 //     };
 
@@ -665,7 +665,7 @@
 //       });
 //       alert("Invoice saved successfully!");
 //     } catch (error) {
-//       console.error("Error saving invoice: ", error);
+//       //console.error("Error saving invoice: ", error);
 //     }
 //   };
 
@@ -767,7 +767,7 @@ export default function CreateInvoice() {
         }));
         setStudents(studentList);
       } catch (error) {
-        console.error("Error fetching students:", error);
+        // //console.error("Error fetching students:", error);
       }
     };
     fetchStudents();
@@ -783,7 +783,7 @@ export default function CreateInvoice() {
           }));
           setInstructor(instructorList);
         } catch (error) {
-          console.error("Error fetching instructor:", error);
+          // //console.error("Error fetching instructor:", error);
         }
       };
       fetchInstructor();
@@ -799,7 +799,7 @@ export default function CreateInvoice() {
           }));
           setCourse(courseList);
         } catch (error) {
-          console.error("Error fetching Courses:", error);
+          // //console.error("Error fetching Courses:", error);
         }
       };
       fetchCourses();
@@ -851,7 +851,7 @@ export default function CreateInvoice() {
       });
       alert("Invoice saved successfully!");
     } catch (error) {
-      console.error("Error saving invoice: ", error);
+      // //console.error("Error saving invoice: ", error);
     }
   };
 

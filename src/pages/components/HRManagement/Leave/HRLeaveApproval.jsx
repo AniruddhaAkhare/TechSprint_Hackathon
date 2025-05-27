@@ -40,7 +40,7 @@ const HRLeaveApproval = () => {
         setLeaves(leaveList);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        // //console.error("Error fetching data:", error);
         setError("Failed to load leave applications.");
         setLoading(false);
       }
@@ -69,7 +69,7 @@ const HRLeaveApproval = () => {
       await sendStatusEmail(leaveId, newStatus);
       toast.success(`Leave ${newStatus.toLowerCase()} successfully!`);
     } catch (error) {
-      console.error(`Error updating leave status to ${newStatus}:`, error);
+      // //console.error(`Error updating leave status to ${newStatus}:`, error);
       setError(`Failed to update leave status: ${error.message}`);
       toast.error(`Failed to update leave status.`);
     }
@@ -101,7 +101,6 @@ const HRLeaveApproval = () => {
         ).toLocaleDateString()} has been ${status.toLowerCase()}.</p>
         ${attachmentUrl ? `<p>Attachment: <a href="${attachmentUrl}">View Attachment</a></p>` : ""}`,
       };
-      console.log("Sending email payload:", payload);
 
       const response = await fetch(
         "http://localhost:5001/fireblaze-ignite/us-central1/sendEmail",
@@ -119,7 +118,7 @@ const HRLeaveApproval = () => {
         throw new Error(result.message || "Failed to send email");
       }
     } catch (error) {
-      console.error("Error sending status email:", error);
+      // //console.error("Error sending status email:", error);
       throw error;
     }
   };

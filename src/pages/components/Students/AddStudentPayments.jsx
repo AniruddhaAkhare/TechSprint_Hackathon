@@ -29,7 +29,7 @@ const AddStudentPayments = ({ admissionDate }) => {
             const templates = templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setFeeTemplates(templates);
         } catch (error) {
-            console.error("Error fetching fee templates:", error);
+            //console.error("Error fetching fee templates:", error);
         }
     };
 

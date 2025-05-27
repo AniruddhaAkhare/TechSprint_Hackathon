@@ -68,7 +68,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
           setUserDisplayName(user.email || "Unknown User");
         }
       } catch (error) {
-        console.error("Error fetching user displayName:", error);
+        //console.error("Error fetching user displayName:", error);
         toast.error(`Failed to fetch user data: ${error.message}`);
         setUserDisplayName(user.email || "Unknown User");
       }
@@ -89,7 +89,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
       };
       await addDoc(collection(db, "activityLogs"), activityLog);
     } catch (error) {
-      console.error("Error logging activity:", error);
+      //console.error("Error logging activity:", error);
     }
   };
 
@@ -106,7 +106,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
           const transactionSnapshot = await getDocs(collection(db, `Companies/${company.id}/Transactions`));
           setTransactionCount(transactionSnapshot.docs.length);
         } catch (error) {
-          console.error("Error fetching transactions:", error);
+          //console.error("Error fetching transactions:", error);
           setTransactionCount(0);
         }
       }
@@ -246,7 +246,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
       resetForm();
       toggleSidebar();
     } catch (error) {
-      console.error("Error saving Company:", error);
+      //console.error("Error saving Company:", error);
       toast.error("Failed to save Company. Please try again.");
     }
   };

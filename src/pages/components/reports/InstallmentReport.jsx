@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../config/firebase';
+import { db } from '../../../config/firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const getDateRange = (filter) => {
@@ -137,7 +137,6 @@ const InstallmentReport = () => {
             if (course.feeTemplate === 'FullFees') {
               const { fullFeesDetails } = course;
 
-              // Registration Payment
               if (fullFeesDetails?.registration?.amount) {
                 const regAmount = toNumber(fullFeesDetails.registration.amount);
                 const status = fullFeesDetails.registration.status || 'Pending';
@@ -323,7 +322,7 @@ const InstallmentReport = () => {
         setTotalReceived(totalReceivedAcc);
         setTotalPending(totalPendingAcc);
       } catch (error) {
-        console.error('Error fetching fee data:', error);
+        //console.error('Error fetching fee data:', error);
       } finally {
         setLoading(false);
       }

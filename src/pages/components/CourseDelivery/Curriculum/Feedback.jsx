@@ -50,10 +50,9 @@ export default function Feedback() {
 
     // emailService.sendEmail(formData) // Call the email service to send the data
     //   .then(response => {
-    //     console.log("Email sent successfully:", response);
     //   })
     //   .catch(error => {
-    //     console.error("Error sending email:", error);
+    //     //console.error("Error sending email:", error);
     //   });
   };
 

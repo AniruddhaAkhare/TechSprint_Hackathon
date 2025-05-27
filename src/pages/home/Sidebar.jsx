@@ -87,7 +87,7 @@ const Sidebar = () => {
             setUser({ name: "User"});
           }
         } catch (err) {
-          console.error("Error fetching user data:", err);
+          //console.error("Error fetching user data:", err);
           setError("Failed to fetch user data: " + err.message);
           setUser({name: "User"});
         }
@@ -99,7 +99,7 @@ const Sidebar = () => {
             if (instituteData.logoUrl) setInstituteLogo(instituteData.logoUrl);
           }
         } catch (err) {
-          console.error("Error fetching institute logo:", err);
+          //console.error("Error fetching institute logo:", err);
           setLogoError("Failed to fetch institute logo.");
         }
 
@@ -153,7 +153,7 @@ const Sidebar = () => {
             setTrialStatus({ trialActive: true, daysRemaining });
           }
         } catch (err) {
-          console.error("Error fetching trial status:", err);
+          //console.error("Error fetching trial status:", err);
           setError("Failed to fetch trial status: " + err.message);
           setTrialStatus({ trialActive: false, daysRemaining: 0 });
         }
@@ -174,7 +174,7 @@ const Sidebar = () => {
       setShowMenu(false);
       navigate("/login");
     } catch (err) {
-      console.error("Error logging out: ", err);
+      //console.error("Error logging out: ", err);
     }
   };
 
@@ -215,8 +215,9 @@ const Sidebar = () => {
       <ul className="nav-list">
         <Link to="/my-profile">
           <li className="nav-item mt-3 mb-3">
-            <FaTachometerAlt className="nav-icon" />
-            <span>Home</span>
+            {/* <FaTachometerAlt className="nav-icon" /> */}
+            <i class="fa fa-home" aria-hidden="true"></i>
+            <span>&nbsp;&nbsp;Home</span>
           </li>
         </Link>
 
@@ -224,8 +225,8 @@ const Sidebar = () => {
         {/* <ul className="nav-list"> */}
         <Link to="/tasks">
           <li className="nav-item mt-3 mb-3">
-            <FaTachometerAlt className="nav-icon" />
-            <span>Tasks</span>
+            <i class="fa-solid fa-list-check"></i>
+            <span>&nbsp;&nbsp;Tasks</span>
           </li>
         </Link>
         
@@ -250,16 +251,16 @@ const Sidebar = () => {
         {canViewEnquiry && (
           <Link to="/enquiry" className="nav-link" >
             <li className="nav-item">
-              <FaQuestionCircle className="nav-icon" />
-              <span>Enquiry Management</span>
+              <i class="fa-solid fa-circle-question"></i>
+              <span>&nbsp;&nbsp;Enquiry Management</span>
             </li>
           </Link>
         )}
         {canViewEnquiryForms && (
           <Link to="/addFormForEnquiry" className="nav-link" >
             <li className="nav-item">
-              <FaQuestionCircle className="nav-icon" />
-              <span>Enquiry Form</span>
+              <i class="fa-brands fa-wpforms"></i>
+              <span>&nbsp;&nbsp;Enquiry Form</span>
             </li>
           </Link>
         )}
@@ -275,72 +276,72 @@ const Sidebar = () => {
             {canViewCourses && (
               <Link to="/courses" className="nav-link">
                 <li className="nav-item">
-                  <FaBook className="nav-icon" />
-                  <span>Course Management</span>
+                  <i class="fa-solid fa-book"></i>
+                  <span>&nbsp;&nbsp;Course Management</span>
                 </li>
               </Link>
             )}
             {canViewCurriculum && (
               <Link to="/curriculum" className="nav-link">
                 <li className="nav-item">
-                  <FaClipboardList className="nav-icon" />
-                  <span>Curriculum Management</span>
+                  <i class="fa-solid fa-clipboard-list"></i>
+                  <span>&nbsp;&nbsp;Curriculum Management</span>
                 </li>
               </Link>
             )}
             {canViewBatches && (
               <Link to="/batches" className="nav-link">
                 <li className="nav-item">
-                  <FaCalendarAlt className="nav-icon" />
-                  <span>Batch Management</span>
+                  <i class="fa-solid fa-calendar-week"></i>
+                  <span>&nbsp;&nbsp;Batch Management</span>
                 </li>
               </Link>
             )}
             {canViewSessions && (
               <Link to="/sessions" className="nav-link">
                 <li className="nav-item">
-                  <FaCalendarAlt className="nav-icon" />
-                  <span>Session Management</span>
+                 <i class="fa-solid fa-calendar"></i>
+                  <span>&nbsp;&nbsp;Session Management</span>
                 </li>
               </Link>
             )}
             {canViewAttendance && (
               <Link to="/attendance" className="nav-link">
                 <li className="nav-item">
-                  <i className="fa-solid fa-clipboard-user nav-icon"></i>
-                  <span>Attendance Management</span>
+                  <i className="fa-solid fa-clipboard-user"></i>
+                  <span>&nbsp;&nbsp;Attendance Management</span>
                 </li>
               </Link>
             )}
             {canViewAssignments && (
               <Link to="/assignment" className="nav-link">
                 <li className="nav-item">
-                  <i className="fa-solid fa-book nav-icon"></i>
-                  <span>Assignment Management</span>
+                  <i className="fa-solid fa-book"></i>
+                  <span> &nbsp;&nbsp;Assignment Management</span>
                 </li>
               </Link>
             )}
             {canViewQuestionBank && (
               <Link to="/question-bank" className="nav-link">
                 <li className="nav-item">
-                  <i className="fa-solid fa-book nav-icon"></i>
-                  <span>Question Bank</span>
+                  <i className="fa-solid fa-book"></i>
+                  <span> &nbsp;&nbsp;Question Bank</span>
                 </li>
               </Link>
             )}
             {canViewQuestionTemplate && (
               <Link to="/question-template" className="nav-link">
                 <li className="nav-item">
-                  <i className="fa-solid fa-file-lines nav-icon"></i>
-                  <span>Question Template</span>
+                  <i className="fa-solid fa-file-lines"></i>
+                  <span>&nbsp;&nbsp;Question Template</span>
                 </li>
               </Link>
             )}
             {canViewPerformance && (
               <Link to="/addPerformance" className="nav-link">
                 <li className="nav-item">
-                  <i className="fa-solid fa-chart-simple nav-icon"></i>
-                  <span>Performance Management</span>
+                  <i className="fa-solid fa-chart-simple"></i>
+                  <span>&nbsp;&nbsp;Performance Management</span>
                 </li>
               </Link>
             )}
@@ -356,8 +357,8 @@ const Sidebar = () => {
             {canViewLearners && (
               <Link to="/studentdetails" className="nav-link">
                 <li className="nav-item">
-                  <FaMoneyBillAlt className="nav-icon" />
-                  <span>Learners</span>
+                  <i class="fa-solid fa-user-graduate"></i>
+                  <span>&nbsp;&nbsp;Learners</span>
                 </li>
               </Link>
             )}
@@ -374,24 +375,24 @@ const Sidebar = () => {
             {canViewFee && (
               <Link to="/reports" className="nav-link">
                 <li className="nav-item">
-                  <FaMoneyBillAlt className="nav-icon" />
-                  <span>Fee Management</span>
+                  <i class="fa-solid fa-money-bill"></i>
+                  <span>&nbsp;&nbsp;Fee Management</span>
                 </li>
               </Link>
             )}
             {canViewInvoices && (
               <Link to="/invoices" className="nav-link">
                 <li className="nav-item">
-                  <i className="fa-solid fa-money-bill-trend-up nav-icon"></i>
-                  <span>Invoice Management</span>
+                  <i className="fa-solid fa-money-bill-trend-up"></i>
+                  <span>&nbsp;&nbsp;Invoice Management</span>
                 </li>
               </Link>
             )}
             {canViewFinancePartners && (
               <Link to="/financePartners" className="nav-link">
                 <li className="nav-item">
-                  <i className="fa-solid fa-money-check-dollar nav-icon"></i>
-                  <span>Finance Partner</span>
+                  <i className="fa-solid fa-money-check-dollar"></i>
+                  <span>&nbsp;&nbsp;Finance Partner</span>
                 </li>
               </Link>
             )}
@@ -407,16 +408,16 @@ const Sidebar = () => {
             {canViewCompanies && (
               <Link to="/companies" className="nav-link">
                 <li className="nav-item">
-                  <FaUsers className="nav-icon" />
-                  <span>Companies</span>
+                  <i class="fa-solid fa-building"></i>
+                  <span>&nbsp;&nbsp;Companies</span>
                 </li>
               </Link>
             )}
             {canViewJobOpenings && (
               <Link to="/job-openings" className="nav-link">
                 <li className="nav-item">
-                  <FaUsers className="nav-icon" />
-                  <span>Job Openings</span>
+                  <i class="fa-solid fa-envelope-open"></i>
+                  <span>&nbsp;&nbsp;Job Openings</span>
                 </li>
               </Link>
             )}
@@ -432,32 +433,32 @@ const Sidebar = () => {
           {canViewInstructors && (
               <Link to="/staff" className="nav-link">
                 <li className="nav-item">
-                  <FaUserGraduate className="nav-icon" />
-                  <span>Staff Management</span>
+                  <i class="fa-solid fa-users"></i>
+                  <span>&nbsp;&nbsp;Staff Management</span>
                 </li>
               </Link>
             )}
             {canViewUsers && (
               <Link to="/employee-attendance" className="nav-link">
                 <li className="nav-item">
-                  <FaUsers className="nav-icon" />
-                  <span>CheckIn/CheckOut</span>
+                  <i class="fa-solid fa-check-to-slot"></i>
+                  <span> &nbsp;&nbsp;CheckIn/CheckOut</span>
                 </li>
               </Link>
             )}
             {canViewHolidays && (
               <Link to="/holiday-calendar" className="nav-link">
                 <li className="nav-item">
-                  <FaUsers className="nav-icon" />
-                  <span>Holiday Calendar</span>
+                  <i class="fa-solid fa-calendar-days"></i>
+                  <span>&nbsp;&nbsp;Holiday Calendar</span>
                 </li>
               </Link>
             )}
             {canViewLeaves && (
               <Link to="/leave-management" className="nav-link">
                 <li className="nav-item">
-                  <FaUsers className="nav-icon" />
-                  <span>Leave Management</span>
+                  <i class="fa-solid fa-right-from-bracket"></i>
+                  <span>&nbsp;&nbsp;Leave Management</span>
                 </li>
               </Link>
             )}
@@ -472,8 +473,8 @@ const Sidebar = () => {
           <>
             <Link to="/dashboard" className="nav-link" >
           <li className="nav-item">
-            <FaQuestionCircle className="nav-icon" />
-            <span>Organisational Dashboard</span>
+            <i class="fa-solid fa-table-columns"></i>
+            <span>&nbsp;&nbsp;Organisational Dashboard</span>
           </li>
         </Link>
           </>
@@ -488,24 +489,24 @@ const Sidebar = () => {
             {canViewInstitute && (
               <Link to="/instituteSetup" className="nav-link">
                 <li className="nav-item">
-                  <i className="fa-solid fa-building-columns nav-icon"></i>
-                  <span>Institute Setup</span>
+                  <i className="fa-solid fa-building-columns"></i>
+                  <span>&nbsp;&nbsp;Institute Setup</span>
                 </li>
               </Link>
             )}
             {canViewRoles && (
               <Link to="/roles" className="nav-link">
                 <li className="nav-item">
-                  <i className="fa-solid fa-user nav-icon"></i>
-                  <span>Roles Management</span>
+                  <i className="fa-solid fa-user"></i>
+                  <span>&nbsp;&nbsp;Roles Management</span>
                 </li>
               </Link>
             )}
             {canViewactivityLogs && (
               <Link to="/activity-logs" className="nav-link">
                 <li className="nav-item">
-                  <i className="fa-solid fa-history nav-icon"></i>
-                  <span>Activity Logs</span>
+                  <i className="fa-solid fa-history"></i>
+                  <span>&nbsp;&nbsp;Activity Logs</span>
                 </li>
               </Link>
             )}

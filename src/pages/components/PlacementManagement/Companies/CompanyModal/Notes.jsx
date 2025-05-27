@@ -389,7 +389,7 @@ const Notes = ({
 
       toast.success("Note added successfully!");
     } catch (error) {
-      console.error("Error adding note:", error);
+      //console.error("Error adding note:", error);
       toast.error(`Failed to add note: ${error.message}`);
     }
   };

@@ -10,7 +10,6 @@ export default function StudentProfile() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        console.log("Fetching student data for ID:", studentId);
 
         const fetchStudentData = async () => {
             // Fetch student data
@@ -20,7 +19,6 @@ export default function StudentProfile() {
             if (docSnap.exists()) {
                 setStudent(docSnap.data());
             } else {
-                console.log("No such document!");
             }
         };
 
@@ -30,10 +28,10 @@ export default function StudentProfile() {
                 // Fetch the instituteSetup document first to get its ID
                 const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
                 if (instituteSnapshot.empty) {
-                    console.error("No instituteSetup document found");
+                    //console.error("No instituteSetup document found");
                     return;
                 }
-                const instituteId = instituteSnapshot.docs[0].id;
+                const instituteId = "RDJ9wMXGrIUk221MzDxP";
 
                 // Fetch only active centers from the Center subcollection
                 const centerQuery = query(
@@ -44,7 +42,7 @@ export default function StudentProfile() {
                 const centersList = centerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setCenters(centersList);
             } catch (error) {
-                console.error("Error fetching centers:", error);
+                //console.error("Error fetching centers:", error);
             }
         };
 

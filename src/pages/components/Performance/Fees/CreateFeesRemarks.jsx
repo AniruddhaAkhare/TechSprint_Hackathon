@@ -32,10 +32,10 @@ export default function CreateFeesRemarks() {
                 const data = studentSnap.data();
                 setFeesRemarks(data.feesRemarks || []);
             } else {
-                console.error("Student document not found");
+                //console.error("Student document not found");
             }
         } catch (error) {
-            console.error("Error fetching fees data:", error);
+            //console.error("Error fetching fees data:", error);
         }
     };
 
@@ -69,7 +69,7 @@ export default function CreateFeesRemarks() {
             alert("Mock test added successfully!");
             setFeesRemarks([...feesRemarks, newFeesRemarks]); // Update local state
         } catch (error) {
-            console.error("Error adding mock test:", error);
+            //console.error("Error adding mock test:", error);
             alert("Failed to add mock test. See console for details.");
         }
     };

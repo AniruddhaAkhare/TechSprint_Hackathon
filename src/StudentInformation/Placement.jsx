@@ -29,7 +29,7 @@ const Placement = ({ studentId }) => {
                 console.warn(`Job with ID ${placement.jobId} not found`);
               }
             } catch (err) {
-              console.error(`Error fetching job ${placement.jobId}:`, err);
+              //console.error(`Error fetching job ${placement.jobId}:`, err);
             }
 
             return {
@@ -47,7 +47,7 @@ const Placement = ({ studentId }) => {
 
         setPlacements(placementData);
       } catch (err) {
-        console.error("Error fetching placements:", err);
+        //console.error("Error fetching placements:", err);
         toast.error("Failed to fetch placements.");
       }
     };

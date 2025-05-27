@@ -94,7 +94,7 @@
 // // // //       };
 // // // //       await addDoc(collection(db, "activityLogs"), activityLog);
 // // // //     } catch (error) {
-// // // //       console.error("Error logging activity:", error);
+// // // //       //console.error("Error logging activity:", error);
 // // // //     }
 // // // //   };
 
@@ -133,7 +133,7 @@
 // // // //           }));
 // // // //           setJobOpenings(jobs);
 // // // //         } catch (error) {
-// // // //           console.error("Error fetching job openings:", error);
+// // // //           //console.error("Error fetching job openings:", error);
 // // // //           toast.error("Failed to fetch job openings.");
 // // // //         }
 // // // //       };
@@ -1042,7 +1042,7 @@
 // // //       };
 // // //       await addDoc(collection(db, "activityLogs"), activityLog);
 // // //     } catch (error) {
-// // //       console.error("Error logging activity:", error);
+// // //       //console.error("Error logging activity:", error);
 // // //     }
 // // //   };
 
@@ -1079,7 +1079,7 @@
 // // //           }));
 // // //           setNotes(fetchedNotes);
 // // //         } catch (error) {
-// // //           console.error("Error fetching notes:", error);
+// // //           //console.error("Error fetching notes:", error);
 // // //           toast.error("Failed to fetch notes.");
 // // //         }
 // // //       };
@@ -1099,7 +1099,7 @@
 // // //           }));
 // // //           setJobOpenings(jobs);
 // // //         } catch (error) {
-// // //           console.error("Error fetching job openings:", error);
+// // //           //console.error("Error fetching job openings:", error);
 // // //           toast.error("Failed to fetch job openings.");
 // // //         }
 // // //       };
@@ -2069,7 +2069,7 @@
 // //       };
 // //       await addDoc(collection(db, "activityLogs"), activityLog);
 // //     } catch (error) {
-// //       console.error("Error logging activity:", error);
+// //       //console.error("Error logging activity:", error);
 // //     }
 // //   };
 
@@ -2106,7 +2106,7 @@
 // //           }));
 // //           setNotes(fetchedNotes);
 // //         } catch (error) {
-// //           console.error("Error fetching notes:", error);
+// //           //console.error("Error fetching notes:", error);
 // //           toast.error("Failed to fetch notes.");
 // //         }
 // //       };
@@ -2126,7 +2126,7 @@
 // //           }));
 // //           setJobOpenings(jobs);
 // //         } catch (error) {
-// //           console.error("Error fetching job openings:", error);
+// //           //console.error("Error fetching job openings:", error);
 // //           toast.error("Failed to fetch job openings.");
 // //         }
 // //       };
@@ -3218,7 +3218,7 @@
 //       };
 //       await addDoc(collection(db, "activityLogs"), activityLog);
 //     } catch (error) {
-//       console.error("Error logging activity:", error);
+//       //console.error("Error logging activity:", error);
 //     }
 //   };
 
@@ -3255,7 +3255,7 @@
 //           }));
 //           setNotes(fetchedNotes);
 //         } catch (error) {
-//           console.error("Error fetching notes:", error);
+//           //console.error("Error fetching notes:", error);
 //           toast.error("Failed to fetch notes.");
 //         }
 //       };
@@ -3275,7 +3275,7 @@
 //           }));
 //           setJobOpenings(jobs);
 //         } catch (error) {
-//           console.error("Error fetching job openings:", error);
+//           //console.error("Error fetching job openings:", error);
 //           toast.error("Failed to fetch job openings.");
 //         }
 //       };
@@ -4103,7 +4103,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, callSc
         const snapshot = await getDocs(q);
         setNotes(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
       } catch (error) {
-        console.error("Error fetching notes:", error);
+        //console.error("Error fetching notes:", error);
         toast.error("Failed to fetch notes.");
       }
     };
@@ -4122,7 +4122,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, callSc
           setUserDisplayName(user.email || "Unknown User");
         }
       } catch (error) {
-        console.error("Error fetching user displayName:", error);
+        //console.error("Error fetching user displayName:", error);
         toast.error("Failed to fetch user data.");
         setUserDisplayName(user.email || "Unknown User");
       }
@@ -4140,7 +4140,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, callSc
         userId: user.uid,
       });
     } catch (error) {
-      console.error("Error logging activity:", error);
+      //console.error("Error logging activity:", error);
     }
   };
 
@@ -4227,7 +4227,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, callSc
             }
             const reminderAudio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
             reminderAudio.play().catch((error) => {
-              console.error("Error playing reminder audio:", error);
+              //console.error("Error playing reminder audio:", error);
               toast.error("Failed to play reminder sound.");
             });
             toast.info(`Call Reminder: ${company.name} at ${noteData.callTime}`);
@@ -4236,7 +4236,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, callSc
         }
       }
     } catch (error) {
-      console.error("Error adding note:", error);
+      //console.error("Error adding note:", error);
       toast.error(`Failed to add note: ${error.message}`);
     }
   };

@@ -23,12 +23,7 @@ const LeaveApplication = () => {
 
   useEffect(() => {
     debugS3Config();
-    console.log("Environment Variables Debug:", {
-      bucket: import.meta.env.VITE_S3_BUCKET_NAME || "Not Set",
-      region: import.meta.env.VITE_AWS_REGION || "Not Set",
-      accessKey: import.meta.env.VITE_AWS_ACCESS_KEY_ID ? "Set" : "Not Set",
-      secretKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY ? "Set" : "Not Set",
-    });
+
   }, []);
 
   const handleChange = (e) => {
@@ -39,13 +34,7 @@ const LeaveApplication = () => {
   const handleAttachmentChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      console.log("Selected File Debug:", {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        isFile: file instanceof File,
-        isBlob: file instanceof Blob,
-      });
+     
       const validFormats = ["application/pdf", "image/jpeg", "image/png"];
       if (!validFormats.includes(file.type)) {
         setAttachmentError("Invalid file format. Only PDF, JPG, and PNG are supported.");
@@ -75,23 +64,17 @@ const LeaveApplication = () => {
         Body: new Uint8Array(arrayBuffer),
         ContentType: file.type,
       };
-      console.log("S3 Upload Params Debug:", {
-        bucket: params.Bucket,
-        key: params.Key,
-        contentType: params.ContentType,
-        bodyType: typeof params.Body,
-        bodyLength: params.Body.length,
-      });
+  
       await s3Client.send(new PutObjectCommand(params));
       const url = `https://${params.Bucket}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${params.Key}`;
       return url;
     } catch (error) {
-      console.error("Detailed S3 Upload Error:", {
-        message: error.message,
-        code: error.code,
-        stack: error.stack,
-        params,
-      });
+      // //console.error("Detailed S3 Upload Error:", {
+      //   message: error.message,
+      //   code: error.code,
+      //   stack: error.stack,
+      //   params,
+      // });
       throw new Error(`Failed to upload attachment: ${error.message}`);
     }
   };
@@ -146,7 +129,7 @@ const LeaveApplication = () => {
       setAttachmentError("");
       // sendApplicationEmail(user.email, leaveType, start, end, reason, attachmentUrl);
     } catch (error) {
-      console.error("Error submitting leave application:", error);
+      // //console.error("Error submitting leave application:", error);
       setError(error.message || "Failed to submit leave application.");
     }
   };
@@ -173,7 +156,7 @@ const LeaveApplication = () => {
   //       }),
   //     });
   //   } catch (error) {
-  //     console.error("Error sending application email:", error);
+  //     //console.error("Error sending application email:", error);
   //   }
   // };
 

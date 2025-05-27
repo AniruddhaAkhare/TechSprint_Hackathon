@@ -59,8 +59,7 @@ const Batches = () => {
 
 
     useEffect(() => {
-        console.log("Student ID from useParams:", studentId);
-        console.log("User:", user);
+
 
         if (!user) {
             toast.error("Please log in to view batches", { toastId: "auth-error" });
@@ -77,7 +76,7 @@ const Batches = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                console.log("Institute ID:", instituteId);
+
                 if (!instituteId) {
                     throw new Error("No institute ID found for the user");
                 }
@@ -89,7 +88,7 @@ const Batches = () => {
                     fetchCurriculum(),
                 ]);
             } catch (error) {
-                console.error("Error fetching data:", error);
+                //console.error("Error fetching data:", error);
                 toast.error(`Failed to load data: ${error.message}`, { toastId: "data-error" });
             } finally {
                 setLoading(false);
@@ -100,7 +99,7 @@ const Batches = () => {
 
     const getInstituteId = async () => {
         if (!user || !user.uid) {
-            console.error("No user or user UID available");
+            //console.error("No user or user UID available");
             toast.error("User not authenticated", { toastId: "user-auth-error" });
             return null;
         }
@@ -109,14 +108,14 @@ const Batches = () => {
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists()) {
                 const instituteId = userDoc.data().instituteId;
-                console.log("Fetched instituteId:", instituteId);
+
                 return instituteId || null;
             }
-            console.error("User document does not exist");
+            //console.error("User document does not exist");
             toast.error("User profile not found", { toastId: "user-profile-error" });
             return null;
         } catch (error) {
-            console.error("Error fetching instituteId:", error);
+            //console.error("Error fetching instituteId:", error);
             toast.error("Failed to fetch institute information", { toastId: "institute-error" });
             return null;
         }
@@ -124,14 +123,12 @@ const Batches = () => {
 
     const fetchBatches = async (instituteId) => {
         try {
-            console.log("Fetching enrollments for studentId:", studentId);
             // Step 1: Query enrollments to get the student's enrolled courses
             const enrollmentsQuery = query(
                 collection(db, "enrollments"),
                 where("studentId", "==", studentId) // Assuming enrollments has a studentId field
             );
             const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
-            console.log("Enrollments snapshot size:", enrollmentsSnapshot.size);
             const enrolledCourseIds = [];
             enrollmentsSnapshot.forEach(doc => {
                 const enrollment = doc.data();
@@ -143,92 +140,78 @@ const Batches = () => {
                     });
                 }
             });
-            console.log("Enrolled course IDs:", enrolledCourseIds);
 
             // Step 2: Fetch batches that include any of the enrolled courses or have the student in the students array
             const batchSnapshot = await getDocs(collection(db, "Batch"));
             const batchList = batchSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            console.log("All batches:", batchList);
             const studentBatches = batchList.filter(batch =>
                 (batch.students && batch.students.includes(studentId)) ||
                 (batch.courses && batch.courses.some(courseId => enrolledCourseIds.includes(courseId)))
             );
-            console.log("Filtered student batches:", studentBatches);
             setBatches(studentBatches);
 
             // Step 3: Fetch assessments for each student batch
             const assessmentsData = {};
             for (const batch of studentBatches) {
-                console.log(`Fetching assessments for batch: ${batch.id}`);
                 const assessmentsQuery = query(
                     collection(db, `Batch/${batch.id}/assessments`),
                     where("studentId", "==", studentId)
                 );
                 const assessmentsSnapshot = await getDocs(assessmentsQuery);
-                console.log(`Assessments for batch ${batch.id}:`, assessmentsSnapshot.size);
                 assessmentsData[batch.id] = assessmentsSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
                 }));
             }
-            console.log("Fetched assessments:", assessmentsData);
             setAssessments(assessmentsData);
         } catch (error) {
-            console.error("Error fetching batches or assessments:", error);
+            //console.error("Error fetching batches or assessments:", error);
             toast.error(`Failed to fetch batches or assessments: ${error.message}`, { toastId: "batches-error" });
         }
     };
 
     const fetchCenters = async (instituteId) => {
         try {
-            console.log("Fetching centers for instituteId:", instituteId);
             const snapshot = await getDocs(
                 collection(db, `instituteSetup/${instituteId}/Center`) // Fixed to match CreateBatch.jsx
             );
             const centersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            console.log("Fetched centers:", centersList);
             setCenters(centersList);
         } catch (error) {
-            console.error("Error fetching centers:", error);
+            //console.error("Error fetching centers:", error);
             toast.error("Failed to fetch centers", { toastId: "centers-error" });
         }
     };
 
     const fetchCourses = async () => {
         try {
-            console.log("Fetching courses");
             const snapshot = await getDocs(collection(db, "Course"));
             const coursesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            console.log("Fetched courses:", coursesList);
             setCourses(coursesList);
         } catch (error) {
-            console.error("Error fetching courses:", error);
+            //console.error("Error fetching courses:", error);
             toast.error("Failed to fetch courses", { toastId: "courses-error" });
         }
     };
 
     const fetchInstructors = async () => {
         try {
-            console.log("Fetching instructors");
             const snapshot = await getDocs(collection(db, "Instructor"));
             const instructorsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            console.log("Fetched instructors:", instructorsList);
             setInstructors(instructorsList);
         } catch (error) {
-            console.error("Error fetching instructors:", error);
+            //console.error("Error fetching instructors:", error);
             toast.error("Failed to fetch instructors", { toastId: "instructors-error" });
         }
     };
 
     const fetchCurriculum = async () => {
         try {
-            console.log("Fetching curriculum");
             const snapshot = await getDocs(collection(db, "curriculums"));
             const curriculumList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            console.log("Fetched curriculum:", curriculumList);
             setCurriculum(curriculumList);
         } catch (error) {
-            console.error("Error fetching curriculum:", error);
+            //console.error("Error fetching curriculum:", error);
             toast.error("Failed to fetch curriculum", { toastId: "curriculum-error" });
         }
     };

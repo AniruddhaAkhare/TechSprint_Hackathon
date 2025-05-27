@@ -68,7 +68,6 @@ export default function StaffAndUsers() {
         const usersQuery = query(usersCollectionRef);
         const usersSnapshot = await getDocs(usersQuery);
         const usersData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        console.log("Users Data:", usersData);
         setUsers(usersData);
 
         // Fetch Roles
@@ -88,7 +87,7 @@ export default function StaffAndUsers() {
           setCenters(centerData.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        //console.error("Error fetching data:", error);
         setError("Failed to fetch data");
       } finally {
         setLoading(false);
@@ -100,7 +99,7 @@ export default function StaffAndUsers() {
   // Activity Logging
   const logActivity = async (action, details) => {
     if (!currentUser) {
-      console.error("No current user available for logging");
+      //console.error("No current user available for logging");
       return;
     }
     try {
@@ -112,9 +111,8 @@ export default function StaffAndUsers() {
         details,
       };
       await addDoc(activityLogsCollectionRef, logData);
-      console.log("Activity logged:", { action, details });
     } catch (error) {
-      console.error("Error logging activity:", error);
+      //console.error("Error logging activity:", error);
     }
   };
 
@@ -160,7 +158,7 @@ export default function StaffAndUsers() {
       setNewUser({ name: "", email: "", password: "", role: "", phone: "", domain: "" });
       setIsCreateModalOpen(false);
     } catch (error) {
-      console.error("Error creating user:", error);
+      //console.error("Error creating user:", error);
       setError(error.message || "Failed to create user");
     } finally {
       setLoading(false);
@@ -198,7 +196,7 @@ export default function StaffAndUsers() {
       setSelectedUser(null);
       setSelectedRoleId("");
     } catch (error) {
-      console.error("Error updating role:", error);
+      //console.error("Error updating role:", error);
       setError("Failed to update role");
     } finally {
       setLoading(false);
@@ -231,7 +229,7 @@ export default function StaffAndUsers() {
       setIsDeleteModalOpen(false);
       setUserToDelete(null);
     } catch (error) {
-      console.error("Error deleting user:", error);
+      //console.error("Error deleting user:", error);
       setError("Failed to delete user");
     } finally {
       setLoading(false);

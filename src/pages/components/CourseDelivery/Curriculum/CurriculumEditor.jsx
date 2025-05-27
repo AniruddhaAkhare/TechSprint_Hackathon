@@ -47,7 +47,7 @@ const CurriculumEditor = () => {
         //   name: docSnap.data().name || "Unknown"
         // });
       } catch (error) {
-        console.error("Error fetching curriculum:", error);
+        // //console.error("Error fetching curriculum:", error);
       }
     };
 
@@ -56,7 +56,7 @@ const CurriculumEditor = () => {
 
   const logActivity = async (action, details) => {
     if (!user) {
-      console.error("No user logged in for logging activity");
+      // //console.error("No user logged in for logging activity");
       return;
     }
     try {
@@ -67,9 +67,8 @@ const CurriculumEditor = () => {
         action,
         details
       });
-      console.log("Activity logged:", action, details);
     } catch (err) {
-      console.error("Error logging activity:", err.message);
+      // //console.error("Error logging activity:", err.message);
     }
   };
 
@@ -102,7 +101,7 @@ const CurriculumEditor = () => {
       // });
       navigate(`/curriculum/${curriculumId}/section/${sectionId}/add-material`);
     } catch (error) {
-      console.error("Error logging navigation to add material:", error);
+      // //console.error("Error logging navigation to add material:", error);
     }
   };
 

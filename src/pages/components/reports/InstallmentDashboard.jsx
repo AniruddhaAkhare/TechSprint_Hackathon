@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../config/firebase";
+
+import { db } from "../../../config/firebase";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import {
   Chart as ChartJS,
@@ -317,7 +318,7 @@ export default function InstallmentDashboard() {
         setFeeData(data);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching fee data:", error);
+        //console.error("Error fetching fee data:", error);
         setLoading(false);
       }
     };
@@ -384,7 +385,7 @@ export default function InstallmentDashboard() {
         )
       );
     } catch (error) {
-      console.error("Error updating fee data:", error);
+      //console.error("Error updating fee data:", error);
     }
   };
 

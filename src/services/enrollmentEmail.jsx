@@ -16,16 +16,7 @@ if (process.env.NODE_ENV === 'development') {
  */
 const EnrollmentEmail = async (toEmail, fullName, course, feeDetails) => {
   // Enhanced logging
-  console.log("Preparing enrollment email with:", { 
-    toEmail, 
-    fullName, 
-    courseName: course?.name,
-    feeDetails: {
-      ...feeDetails,
-      totalFees: feeDetails?.totalFees ? `₹${feeDetails.totalFees}` : undefined,
-      feeAfterDiscount: feeDetails?.feeAfterDiscount ? `₹${feeDetails.feeAfterDiscount}` : undefined
-    }
-  });
+
 
   // Validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -98,14 +89,12 @@ const EnrollmentEmail = async (toEmail, fullName, course, feeDetails) => {
       </div>
     `;
 
-    console.log(`Sending enrollment email to ${toEmail}`);
     const result = await sendEmailFunction({
       toEmail: toEmail.trim(),
       subject,
       htmlContent: emailContent,
     });
 
-    console.log("Email sent successfully:", result.data);
     return {
       success: true,
       messageId: result.data?.messageId
@@ -119,7 +108,7 @@ const EnrollmentEmail = async (toEmail, fullName, course, feeDetails) => {
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     };
 
-    console.error("Failed to send enrollment email:", errorDetails);
+    //console.error("Failed to send enrollment email:", errorDetails);
     
     throw new Error(
       errorDetails.message || 

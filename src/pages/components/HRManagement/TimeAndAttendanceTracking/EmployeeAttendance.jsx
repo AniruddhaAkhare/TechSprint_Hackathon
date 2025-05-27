@@ -32,7 +32,7 @@
 //         }));
 //         setHolidays(holidaysData);
 //       } catch (err) {
-//         console.error("Error fetching data:", err);
+//         //console.error("Error fetching data:", err);
 //         setError("Failed to load data.");
 //       }
 //       setLoading(false);
@@ -228,7 +228,7 @@ const EmployeeAttendance = () => {
         }));
         setHolidays(holidaysData);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        // //console.error("Error fetching data:", err);
         setError("Failed to load data.");
       }
       setLoading(false);

@@ -41,7 +41,6 @@ export default function EnquiryForms() {
   const [selectedForm, setSelectedForm] = useState(null);
 
   const handleViewForm = (form) => {
-    console.log("Viewing form:", form);
     setSelectedForm(form);
   };
 
@@ -51,12 +50,10 @@ export default function EnquiryForms() {
 
   // New handler for viewing enquiries
   const handleViewEnquiries = (formId) => {
-    console.log("Viewing enquiries for form:", formId);
     // Navigate to a new route to view enquiries for this form
     navigate(`/enquiries/${formId}`);
   };
 
-  console.log("User permissions:", rolePermissions);
 
   const canCreate = rolePermissions?.enquiries?.create || false;
   const canUpdate = rolePermissions?.enquiries?.update || false;
@@ -93,7 +90,7 @@ export default function EnquiryForms() {
         }
       });
     } catch (err) {
-      console.error("Error logging activity:", err.message);
+      // //console.error("Error logging activity:", err.message);
     }
   };
 
@@ -106,34 +103,29 @@ export default function EnquiryForms() {
         const formId = data.formId || "unknown";
         counts[formId] = (counts[formId] || 0) + 1;
       });
-      console.log("Enquiry counts:", counts);
       setEnquiryCounts(counts);
     } catch (err) {
-      console.error("Error fetching enquiry counts:", err.message);
+      // //console.error("Error fetching enquiry counts:", err.message);
     }
   }, []);
 
   const fetchForms = useCallback(() => {
     if (!canDisplay) {
-      console.log("Cannot fetch forms: canDisplay is false");
       return;
     }
-    console.log("Fetching forms from enquiryForms collection");
     const q = query(FormsCollectionRef, orderBy("createdAt", "asc"));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        console.log("Snapshot received with", snapshot.docs.length, "documents");
         const formData = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        console.log("Processed form data:", formData);
         setForms(formData);
         setSearchResults(formData);
       },
       (err) => {
-        console.error("Error fetching forms:", err.message, err.code);
+        // //console.error("Error fetching forms:", err.message, err.code);
       }
     );
     return unsubscribe;
@@ -141,7 +133,6 @@ export default function EnquiryForms() {
 
   const debouncedSearch = useCallback(
     debounce((term) => {
-      console.log("Searching with term:", term);
       if (!term.trim()) {
         setSearchResults(forms);
         return;
@@ -152,7 +143,6 @@ export default function EnquiryForms() {
           form.createdBy?.toLowerCase().includes(term.toLowerCase()) ||
           form.role?.toLowerCase().includes(term.toLowerCase())
       );
-      console.log("Search results:", results);
       setSearchResults(results);
     }, 300),
     [forms]
@@ -171,8 +161,7 @@ export default function EnquiryForms() {
   }, [searchTerm, debouncedSearch]);
 
   useEffect(() => {
-    console.log("Forms state:", forms);
-    console.log("Search results state:", searchResults);
+
   }, [forms, searchResults]);
 
   const handleCreateFormClick = () => {
@@ -189,7 +178,6 @@ export default function EnquiryForms() {
       alert("You do not have permission to update enquiry forms.");
       return;
     }
-    console.log("Editing form:", form);
     setCurrentForm(form);
     setIsOpen(true);
   };
@@ -205,7 +193,7 @@ export default function EnquiryForms() {
       const snapshot = await getDocs(q);
       return !snapshot.empty;
     } catch (err) {
-      console.error("Error checking enquiries in form:", err.message);
+      // //console.error("Error checking enquiries in form:", err.message);
       return false;
     }
   };
@@ -229,7 +217,7 @@ export default function EnquiryForms() {
       setOpenDelete(false);
       setDeleteMessage("Are you sure you want to delete this form? This action cannot be undone.");
     } catch (err) {
-      console.error("Error deleting form:", err.message);
+      // //console.error("Error deleting form:", err.message);
       setDeleteMessage("An error occurred while trying to delete the form.");
     }
   };

@@ -38,7 +38,7 @@ const QuestionBank = () => {
         }));
         setQuestions(questionsData);
       } catch (error) {
-        console.error('Error fetching questions:', error);
+        //console.error('Error fetching questions:', error);
       }
     };
     fetchQuestions();
@@ -59,7 +59,7 @@ const QuestionBank = () => {
         timestamp: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Error logging activity:', error);
+      //console.error('Error logging activity:', error);
     }
   };
 
@@ -93,7 +93,7 @@ const QuestionBank = () => {
       }
       setIsPanelOpen(false);
     } catch (error) {
-      console.error('Error adding/updating question:', error);
+      //console.error('Error adding/updating question:', error);
       alert('Failed to save question. Please try again.');
     }
   };
@@ -113,7 +113,7 @@ const QuestionBank = () => {
       });
       alert('Question deleted successfully!');
     } catch (error) {
-      console.error('Error deleting question:', error);
+      //console.error('Error deleting question:', error);
       alert('Failed to delete question. Please try again.');
     }
   };
@@ -139,7 +139,7 @@ const QuestionBank = () => {
       setSelectedQuestions([]);
       alert(`${selectedQuestions.length} question(s) deleted successfully!`);
     } catch (error) {
-      console.error('Error deleting multiple questions:', error);
+      //console.error('Error deleting multiple questions:', error);
       alert('Failed to delete some questions. Please try again.');
     }
   };

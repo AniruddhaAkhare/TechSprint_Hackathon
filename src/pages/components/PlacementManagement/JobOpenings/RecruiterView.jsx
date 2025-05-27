@@ -36,7 +36,7 @@ export default function RecruiterView() {
         }));
         setApplications(appData);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        //console.error("Error fetching data:", err);
         toast.error("Failed to load job or applications.");
       } finally {
         setLoading(false);
@@ -57,7 +57,7 @@ export default function RecruiterView() {
       setApplications(applications.map((app) => (app.id === id ? { ...app, ...updates } : app)));
       toast.success("Application updated successfully!");
     } catch (err) {
-      console.error("Error updating application:", err);
+      //console.error("Error updating application:", err);
       toast.error("Failed to update application.");
     }
   };

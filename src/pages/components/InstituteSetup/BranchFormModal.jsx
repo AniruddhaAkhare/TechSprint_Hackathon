@@ -211,9 +211,7 @@ const BranchFormModal = ({
   );
 
   // Debug to confirm initial values
-  console.log("currentBranch.contactNumber:", currentBranch?.contactNumber);
-  console.log("initialCountryCode:", initialCountryCode);
-  console.log("initialNumber:", initialNumber);
+
 
   const [branchForm, setBranchForm] = useState({
     name: currentBranch?.name || "",
@@ -385,7 +383,7 @@ const BranchFormModal = ({
       });
       setBranchCountryCode("+91");
     } catch (error) {
-      console.error("Error saving branch: ", error);
+      // //console.error("Error saving branch: ", error);
       alert("Error saving branch");
     }
   };

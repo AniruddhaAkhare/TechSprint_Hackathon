@@ -76,7 +76,7 @@ const sendSessionEmail = async (toEmail, fullName, sessionDetails) => {
     };
 
   } catch (error) {
-    console.error("Failed to send session email:", {
+    //console.error("Failed to send session email:", {
       toEmail,
       fullName,
       error: error.message

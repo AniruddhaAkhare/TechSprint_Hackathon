@@ -8,7 +8,6 @@ import SearchBar from "../../../components/SearchBar.jsx";
 
 export default function IndividualCourseStudnets() {
     const params = useParams();
-    console.log("useParams:", params);
     const { courseId } = useParams();
     
     const [allStudents, setAllStudents] = useState([]);
@@ -28,7 +27,6 @@ export default function IndividualCourseStudnets() {
                     setSelectedStudents(courseData.students || []);
                 }
             } catch (error) {
-                console.error("Error fetching course:", error);
             }
         };
 
@@ -45,7 +43,6 @@ export default function IndividualCourseStudnets() {
                 }));
                 setAllStudents(studentData);
             } catch (error) {
-                console.error("Error fetching students:", error);
             }
         };
 
@@ -62,12 +59,10 @@ export default function IndividualCourseStudnets() {
 
     const handleSave = async () => {
         if (!courseId) {
-            console.error("Error: courseId is undefined.");
             return;
         }
 
         if (!Array.isArray(selectedStudents)) {
-            console.error("Error: selected students is not an array.", selectedStudents);
             return;
         }
 
@@ -76,7 +71,6 @@ export default function IndividualCourseStudnets() {
             await updateDoc(courseRef, { students: selectedStudents });
             alert("Students updated successfully!");
         } catch (error) {
-            console.error("Error updating course:", error);
         }
     };
 

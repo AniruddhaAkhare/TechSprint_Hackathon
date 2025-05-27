@@ -8,7 +8,6 @@ import SearchBar from "../../../components/SearchBar.jsx";
 
 export default function IndividualCourseBatch() {
     const params = useParams();
-    console.log("useParams:", params);
     const { courseId } = useParams();
     // State for batches
     const [allBatches, setAllBatches] = useState([]);
@@ -28,7 +27,6 @@ export default function IndividualCourseBatch() {
                     setSelectedBatches(courseData.batches || []);
                 }
             } catch (error) {
-                console.error("Error fetching course:", error);
             }
         };
 
@@ -45,7 +43,6 @@ export default function IndividualCourseBatch() {
                 }));
                 setAllBatches(batchData);
             } catch (error) {
-                console.error("Error fetching batches:", error);
             }
         };
 
@@ -62,12 +59,10 @@ export default function IndividualCourseBatch() {
 
     const handleSave = async () => {
         if (!courseId) {
-            console.error("Error: courseId is undefined.");
             return;
         }
 
         if (!Array.isArray(selectedBatches)) {
-            console.error("Error: selectedBatches is not an array.", selectedBatches);
             return;
         }
 
@@ -76,7 +71,6 @@ export default function IndividualCourseBatch() {
             await updateDoc(courseRef, { batches: selectedBatches });
             alert("Batches updated successfully!");
         } catch (error) {
-            console.error("Error updating course:", error);
         }
     };
 

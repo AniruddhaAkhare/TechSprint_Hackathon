@@ -72,7 +72,7 @@ const InstituteSetup = () => {
           });
         }
       } catch (error) {
-        console.error("Error fetching institute data:", error);
+        //console.error();
       }
     };
 
@@ -105,7 +105,7 @@ const InstituteSetup = () => {
       setLogoError("");
       return logoUrl;
     } catch (error) {
-      console.error("S3 Upload Error:", error);
+      // //console.error("S3 Upload Error:", error);
       setLogoError("Failed to upload logo: " + error.message);
       return null;
     }
@@ -141,10 +141,8 @@ const InstituteSetup = () => {
 
       if (!docSnap.exists() && canCreate) {
         await setDoc(docRef, updatedFormData);
-        console.log("Created new institute with ID:", instituteId);
       } else if (canUpdate) {
         await updateDoc(docRef, updatedFormData);
-        console.log("Updated institute with ID:", instituteId);
       }
 
       alert("Data saved successfully!");
@@ -153,7 +151,7 @@ const InstituteSetup = () => {
       if (nextStep) setActiveStep(nextStep);
       else navigate("/dashboard");
     } catch (error) {
-      console.error("Error saving data:", error);
+      // //console.error("Error saving data:", error);
       alert("Error saving data: " + error.message);
     }
   };
