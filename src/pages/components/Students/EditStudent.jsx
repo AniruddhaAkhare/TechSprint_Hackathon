@@ -340,7 +340,7 @@ export default function EditStudent() {
                 setCenters([]);
                 return;
             }
-            const instituteId = instituteSnapshot.docs[0].id;
+            const instituteId = "RDJ9wMXGrIUk221MzDxP";
             const centerQuery = query(
                 collection(db, "instituteSetup", instituteId, "Center"),
                 where("isActive", "==", true)
