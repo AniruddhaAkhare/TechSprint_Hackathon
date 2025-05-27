@@ -83,7 +83,7 @@ export default function Subjects() {
                 await deleteDoc(doc(db, "Subjects", deleteId));
                 fetchSubjects();
             } catch (err) {
-                console.error("Error deleting subjects:", err);
+                // //console.error("Error deleting subjects:", err);
             }
         }
         setOpenDelete(false);

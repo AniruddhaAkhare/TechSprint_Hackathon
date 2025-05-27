@@ -25,7 +25,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
       try {
         const instituteSnapshot = await getDocs(collection(db, 'instituteSetup'));
         if (instituteSnapshot.empty) {
-          console.error('No instituteSetup document found');
+          // //console.error('No instituteSetup document found');
           return;
         }
         const instituteId = instituteSnapshot.docs[0].id;
@@ -40,7 +40,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
         }));
         setCenters(centersList);
       } catch (err) {
-        console.error('Error fetching centers:', err);
+        // //console.error('Error fetching centers:', err);
         setError('Failed to load centers. Please try again.');
       }
     };
@@ -50,14 +50,12 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
   // Populate form with existing curriculum data for editing
   useEffect(() => {
     if (curriculumToEdit) {
-      console.log('Loading curriculum for edit:', curriculumToEdit);
       setFormData({
         name: curriculumToEdit.name || '',
         centers: curriculumToEdit.centers || [], // Expecting array of center IDs
         maxViewDuration: curriculumToEdit.maxViewDuration || 'Unlimited',
       });
     } else {
-      console.log('Resetting form for new curriculum');
       setFormData({
         name: '',
         centers: [],
@@ -115,7 +113,6 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
         const curriculumRef = doc(db, 'curriculums', curriculumToEdit.id);
         const oldDataSnap = await getDoc(curriculumRef);
         const oldData = oldDataSnap.data() || {};
-        console.log('Old data:', oldData);
 
         await updateDoc(curriculumRef, {
           name: formData.name,
@@ -145,9 +142,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
             name: formData.name,
             changes,
           });
-          console.log('Logged update changes:', changes);
         } else {
-          console.log('No changes detected or logActivity not available.');
         }
 
         onSubmit({
@@ -170,9 +165,8 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
             // curriculumId: docRef.id,
             name: formData.name,
           });
-          console.log('Logged creation of curriculum with ID:', docRef.id);
         } else {
-          console.error('logActivity function is not available');
+          // //console.error('logActivity function is not available');
         }
 
         onSubmit({
@@ -186,7 +180,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
       setLoading(false);
       onClose();
     } catch (err) {
-      console.error('Error saving curriculum:', err);
+      // //console.error('Error saving curriculum:', err);
       setError(`Failed to save curriculum: ${err.message}`);
       // if (logActivity) {
       //   await logActivity('error_curriculum', {

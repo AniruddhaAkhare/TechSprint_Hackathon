@@ -253,7 +253,7 @@ const KanbanBoard = () => {
       setNotePopupPosition({ top: 0, left: 0 });
       alert("Note added successfully!");
     } catch (error) {
-      console.error("Error adding note:", error);
+      // //console.error("Error adding note:", error);
       alert(`Failed to add note: ${error.message}`);
     }
   };
@@ -526,7 +526,7 @@ const KanbanBoard = () => {
           });
         }
       } catch (error) {
-        console.error("Error updating Firestore:", error);
+        // //console.error("Error updating Firestore:", error);
         // Rollback to previous columns state on error
         setColumns(columns);
         alert(`Failed to update stage: ${error.message}`);
@@ -700,7 +700,7 @@ const KanbanBoard = () => {
       setValidationErrors([]);
       alert("Bulk enquiries added successfully!");
     } catch (error) {
-      console.error("Error adding bulk enquiries:", error);
+      // //console.error("Error adding bulk enquiries:", error);
       alert(`Failed to add bulk enquiries: ${error.message}`);
     }
   };
@@ -762,7 +762,7 @@ const KanbanBoard = () => {
       setSelectedEnquiries([]);
       alert("Selected enquiries deleted successfully!");
     } catch (error) {
-      console.error("Error deleting enquiries:", error);
+      // //console.error("Error deleting enquiries:", error);
       alert(`Failed to delete enquiries: ${error.message}`);
     }
   };
@@ -848,7 +848,7 @@ const KanbanBoard = () => {
       setMassUpdateData({ assignTo: "", tagsToAdd: [], tagsToRemove: [] });
       alert("Selected enquiries updated successfully!");
     } catch (error) {
-      console.error("Error updating enquiries:", error);
+      // //console.error("Error updating enquiries:", error);
       alert(`Failed to update enquiries: ${error.message}`);
     }
   };

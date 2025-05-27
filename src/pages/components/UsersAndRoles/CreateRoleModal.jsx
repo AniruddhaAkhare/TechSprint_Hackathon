@@ -129,7 +129,7 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
       onClose();
       fetchRoles();
     } catch (error) {
-      console.error("Error saving document: ", error);
+      //console.error("Error saving document: ", error);
       alert("Failed to save role: " + error.message);
     }
   };

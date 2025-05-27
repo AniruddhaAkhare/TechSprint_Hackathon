@@ -24,7 +24,7 @@ export default function LoginForm() {
                 navigate('/dashboard');
         
         } catch (error) {
-            console.error('Login error:', error);
+            //console.error('Login error:', error);
             setError(error.message || 'Failed to log in. Please check your credentials and try again.');
         } finally {
             setIsLoading(false);

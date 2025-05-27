@@ -19,49 +19,43 @@ const EnquiryFormPage = () => {
         setError(null);
   
         // Fetch form data
-        console.log("Fetching form with ID:", id);
         const docRef = doc(db, "enquiryForms", id);
         const docSnap = await getDoc(docRef);
         if (!docSnap.exists()) {
-          console.error("Form not found for ID:", id);
+          // //console.error("Form not found for ID:", id);
           setError("Form not found");
           return;
         }
   
         const data = docSnap.data();
-        console.log("Fetched form data:", data);
         setFormTitle(data.name || "Enquiry Form");
   
         // Fetch instituteSetup document ID dynamically
-        console.log("Fetching instituteSetup documents...");
         const instituteSetupSnapshot = await getDocs(collection(db, "instituteSetup"));
         if (instituteSetupSnapshot.empty) {
           console.warn("No documents found in instituteSetup collection");
         } else {
-          console.log("instituteSetup document IDs:", instituteSetupSnapshot.docs.map(doc => doc.id));
         }
         const instituteSetupDocId = instituteSetupSnapshot.docs[0]?.id;
-        console.log("Selected instituteSetup document ID:", instituteSetupDocId || "None");
   
         // Fetch dynamic options concurrently
-        console.log("Fetching Courses, Center, Roles, and Users...");
         const [courseSnapshot, centerSnapshot, roleSnapshot, userSnapshot] = await Promise.all([
           getDocs(collection(db, "Course")).catch(err => {
-            console.error("Error fetching Courses:", err);
+            // //console.error("Error fetching Courses:", err);
             return { docs: [] };
           }),
           instituteSetupDocId
             ? getDocs(collection(db, "instituteSetup", instituteSetupDocId, "Center")).catch(err => {
-                console.error(`Error fetching Center for instituteSetup/${instituteSetupDocId}:`, err);
+                // //console.error(`Error fetching Center for instituteSetup/${instituteSetupDocId}:`, err);
                 return { docs: [] };
               })
             : Promise.resolve({ docs: [] }),
           getDocs(query(collection(db, "roles"), where("name", "==", "Sales"))).catch(err => {
-            console.error("Error fetching Sales role:", err);
+            // //console.error("Error fetching Sales role:", err);
             return { docs: [] };
           }),
           getDocs(collection(db, "Users")).catch(err => {
-            console.error("Error fetching Users:", err);
+            // //console.error("Error fetching Users:", err);
             return { docs: [] };
           }),
         ]);
@@ -69,37 +63,30 @@ const EnquiryFormPage = () => {
         // Process Course options
         const courseOptions = courseSnapshot.docs.map((doc) => {
           const data = doc.data();
-          console.log("Course document:", doc.id, data);
           return {
             value: data.name || doc.id,
             label: data.name || doc.id,
           };
         });
-        console.log("Course options:", courseOptions);
   
         // Process Branch (Center) options
         const branchOptions = centerSnapshot.docs.map((doc) => {
           const data = doc.data();
-          console.log("Center document:", doc.id, data);
           return {
             value: data.name || doc.id,
             label: data.name || doc.id,
           };
         });
-        console.log("Branch options:", branchOptions);
   
         // Process Assign To options (Users with Sales role)
         const salesRoleId = roleSnapshot.docs[0]?.id;
-        console.log("Sales role ID:", salesRoleId || "None");
         if (roleSnapshot.empty) {
           console.warn("No Sales role found");
         } else {
-          console.log("Sales role data:", roleSnapshot.docs[0].data());
         }
         const assignToOptions = userSnapshot.docs
           .filter((doc) => {
             const userData = doc.data();
-            console.log("User document:", doc.id, userData);
             return userData.role === salesRoleId;
           })
           .map((doc) => {
@@ -109,7 +96,6 @@ const EnquiryFormPage = () => {
               label: data.displayName || data.email || doc.id,
             };
           });
-        console.log("Assign To options:", assignToOptions);
   
         // Enrich fields with dynamic options
         const fields = data.fields || [];
@@ -125,7 +111,6 @@ const EnquiryFormPage = () => {
           } else if (field.id === "assignTo") {
             options = assignToOptions;
           }
-          console.log(`Field ${field.id} options:`, options);
           return {
             ...field,
             name: field.id,
@@ -151,11 +136,11 @@ const EnquiryFormPage = () => {
         initialFormData.assignedTo = defaultUser;
         setFormData(initialFormData);
       } catch (err) {
-        console.error("Error fetching form or options:", {
-          message: err.message,
-          code: err.code,
-          stack: err.stack,
-        });
+        // //console.error("Error fetching form or options:", {
+        //   message: err.message,
+        //   code: err.code,
+        //   stack: err.stack,
+        // });
         setError(`Error fetching form: ${err.message}`);
       } finally {
         setLoading(false);
@@ -165,255 +150,6 @@ const EnquiryFormPage = () => {
   }, [id]);
 
 
-  // useEffect(() => {
-  //   const fetchFormFields = async () => {
-  //     try {
-  //       setLoading(true);
-  //       setError(null);
-  
-  //       // Fetch form data
-  //       const docRef = doc(db, "enquiryForms", id);
-  //       const docSnap = await getDoc(docRef);
-  //       if (!docSnap.exists()) {
-  //         setError("Form not found");
-  //         return;
-  //       }
-  
-  //       const data = docSnap.data();
-  //       setFormTitle(data.name || "Enquiry Form");
-  
-  //       // Fetch instituteSetup document ID dynamically
-  //       const instituteSetupSnapshot = await getDocs(collection(db, "instituteSetup"));
-  //       if (instituteSetupSnapshot.empty) {
-  //         console.warn("No documents found in instituteSetup collection");
-  //       }
-  //       const instituteSetupDocId = instituteSetupSnapshot.docs[0]?.id;
-  //       console.log("instituteSetup document ID:", instituteSetupDocId);
-  
-  //       // Fetch dynamic options concurrently
-  //       const [courseSnapshot, centerSnapshot, roleSnapshot, userSnapshot] = await Promise.all([
-  //         getDocs(collection(db, "Course")),
-  //         instituteSetupDocId
-  //           ? getDocs(collection(db, "instituteSetup", instituteSetupDocId, "Center"))
-  //           : Promise.resolve({ docs: [] }),
-  //         getDocs(query(collection(db, "roles"), where("name", "==", "Sales"))),
-  //         getDocs(collection(db, "Users")),
-  //       ]);
-  
-  //       // Process Course options
-  //       const courseOptions = courseSnapshot.docs.map((doc) => ({
-  //         value: doc.data().name,
-  //         label: doc.data().name,
-  //       }));
-  //       console.log("Course options:", courseOptions);
-  
-  //       // Process Branch (Center) options
-  //       const branchOptions = centerSnapshot.docs.map((doc) => ({
-  //         value: doc.data().name,
-  //         label: doc.data().name,
-  //       }));
-  //       console.log("Branch options:", branchOptions);
-  
-  //       // Process Assign To options (Users with Sales role)
-  //       const salesRoleId = roleSnapshot.docs[0]?.id;
-  //       console.log("Sales role ID:", salesRoleId);
-  //       const assignToOptions = userSnapshot.docs
-  //         .filter((doc) => doc.data().role === salesRoleId) // Changed from roleId to role
-  //         .map((doc) => ({
-  //           value: doc.data().displayName || doc.data().email,
-  //           label: doc.data().displayName || doc.data().email,
-  //         }));
-  //       console.log("Assign To options:", assignToOptions);
-  
-  //       // Enrich fields with dynamic options
-  //       const fields = data.fields || [];
-  //       const enrichedFields = fields.map((field) => {
-  //         const fieldConfig = allEnquiryFields
-  //           .flatMap((category) => category.fields)
-  //           .find((f) => f.id === field.id);
-  //         let options = field.options || fieldConfig?.options || [];
-  //         if (field.id === "course") {
-  //           options = courseOptions;
-  //         } else if (field.id === "branch") {
-  //           options = branchOptions;
-  //         } else if (field.id === "assignTo") {
-  //           options = assignToOptions;
-  //         }
-  //         return {
-  //           ...field,
-  //           name: field.id,
-  //           type: fieldConfig?.type || "text",
-  //           label: fieldConfig?.label || field.id,
-  //           options,
-  //           required: fieldConfig?.required || false,
-  //         };
-  //       });
-  
-  //       setFormFields(enrichedFields);
-  
-  //       // Initialize formData with default values
-  //       const initialFormData = {};
-  //       enrichedFields.forEach((field) => {
-  //         if (field.defaultValue) {
-  //           initialFormData[field.name] = field.defaultValue;
-  //         }
-  //       });
-  //       const defaultUser = data.users?.[0] || data.roles?.[0] || "Form Submission";
-  //       initialFormData.createdBy = defaultUser;
-  //       initialFormData.owner = defaultUser;
-  //       initialFormData.assignedTo = defaultUser;
-  //       setFormData(initialFormData);
-  //     } catch (err) {
-  //       console.error("Error fetching form or options:", err);
-  //       setError(`Error fetching form: ${err.message}`);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchFormFields();
-  // }, [id]);
-
-  // useEffect(() => {
-  //   const fetchFormFields = async () => {
-  //     try {
-  //       setLoading(true);
-  //       setError(null);
-  
-  //       // Fetch form data
-  //       const docRef = doc(db, "enquiryForms", id);
-  //       const docSnap = await getDoc(docRef);
-  //       if (!docSnap.exists()) {
-  //         setError("Form not found");
-  //         return;
-  //       }
-  
-  //       const data = docSnap.data();
-  //       setFormTitle(data.name || "Enquiry Form");
-  
-  //       // Fetch dynamic options concurrently
-  //       const [courseSnapshot, centerSnapshot, roleSnapshot, userSnapshot] = await Promise.all([
-  //         getDocs(collection(db, "Course")),
-  //         getDocs(collection(db, "instituteSetup", "Center")),
-  //         getDocs(query(collection(db, "roles"), where("name", "==", "Sales"))),
-  //         getDocs(collection(db, "Users")),
-  //       ]);
-  
-  //       // Process Course options
-  //       const courseOptions = courseSnapshot.docs.map((doc) => ({
-  //         value: doc.data().name,
-  //         label: doc.data().name,
-  //       }));
-  
-  //       // Process Branch (Center) options
-  //       const branchOptions = centerSnapshot.docs.map((doc) => ({
-  //         value: doc.data().name,
-  //         label: doc.data().name,
-  //       }));
-  
-  //       // Process Assign To options (Users with Sales role)
-  //       const salesRoleId = roleSnapshot.docs[0]?.id;
-  //       const assignToOptions = userSnapshot.docs
-  //         .filter((doc) => doc.data().roleId === salesRoleId)
-  //         .map((doc) => ({
-  //           value: doc.data().displayName || doc.data().email,
-  //           label: doc.data().displayName || doc.data().email,
-  //         }));
-  
-  //       // Enrich fields with dynamic options
-  //       const fields = data.fields || [];
-  //       const enrichedFields = fields.map((field) => {
-  //         const fieldConfig = allEnquiryFields
-  //           .flatMap((category) => category.fields)
-  //           .find((f) => f.id === field.id);
-  //         let options = field.options || fieldConfig?.options || [];
-  //         if (field.id === "course") {
-  //           options = courseOptions;
-  //         } else if (field.id === "branch") {
-  //           options = branchOptions;
-  //         } else if (field.id === "assignTo") {
-  //           options = assignToOptions;
-  //         }
-  //         return {
-  //           ...field,
-  //           name: field.id,
-  //           type: fieldConfig?.type || "text",
-  //           label: fieldConfig?.label || field.id,
-  //           options,
-  //           required: fieldConfig?.required || false,
-  //         };
-  //       });
-  
-  //       setFormFields(enrichedFields);
-  
-  //       // Initialize formData with default values
-  //       const initialFormData = {};
-  //       enrichedFields.forEach((field) => {
-  //         if (field.defaultValue) {
-  //           initialFormData[field.name] = field.defaultValue;
-  //         }
-  //       });
-  //       const defaultUser = data.users?.[0] || data.roles?.[0] || "Form Submission";
-  //       initialFormData.createdBy = defaultUser;
-  //       initialFormData.owner = defaultUser;
-  //       initialFormData.assignedTo = defaultUser;
-  //       setFormData(initialFormData);
-  //     } catch (err) {
-  //       console.error("Error fetching form or options:", err);
-  //       setError(`Error fetching form: ${err.message}`);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchFormFields();
-  // }, [id]);
-
-  // useEffect(() => {
-  //   const fetchFormFields = async () => {
-  //     try {
-  //       const docRef = doc(db, "enquiryForms", id);
-  //       const docSnap = await getDoc(docRef);
-  //       if (docSnap.exists()) {
-  //         const data = docSnap.data();
-  //         setFormTitle(data.name || "Enquiry Form");
-  //         const fields = data.fields || [];
-  //         // Merge options from allEnquiryFields
-  //         const enrichedFields = fields.map((field) => {
-  //           const fieldConfig = allEnquiryFields
-  //             .flatMap((category) => category.fields)
-  //             .find((f) => f.id === field.id);
-  //           return {
-  //             ...field,
-  //             name: field.id,
-  //             type: fieldConfig?.type || "text",
-  //             label: fieldConfig?.label || field.id,
-  //             options: field.options || fieldConfig?.options || [], // Prioritize stored options
-  //             required: fieldConfig?.required || false,
-  //           };
-  //         });
-          
-  //         setFormFields(enrichedFields);
-
-  //         // Initialize formData with default values
-  //         const initialFormData = {};
-  //         enrichedFields.forEach((field) => {
-  //           if (field.defaultValue) {
-  //             initialFormData[field.name] = field.defaultValue;
-  //           }
-  //         });
-  //         const defaultUser = data.users?.[0] || data.roles?.[0] || "Form Submission";
-  //         initialFormData.createdBy = defaultUser;
-  //         initialFormData.owner = defaultUser;
-  //         initialFormData.assignedTo = defaultUser;
-  //         setFormData(initialFormData);
-  //       } else {
-  //         setError("Form not found");
-  //       }
-  //     } catch (err) {
-  //       setError(`Error fetching form: ${err.message}`);
-  //     }
-  //   };
-  //   fetchFormFields();
-  // }, [id]);
 
   const handleChange = (e, fieldName) => {
     setFormData({ ...formData, [fieldName]: e.target.value });
@@ -463,10 +199,8 @@ const EnquiryFormPage = () => {
       if (email) queries.push(query(enquiriesRef, where("email", "==", email)));
       if (phone) queries.push(query(enquiriesRef, where("phone", "==", phone)));
   
-      console.log("Duplicate check queries:", queries); // Debug
       if (queries.length > 0) {
         const snapshots = await Promise.all(queries.map((q) => getDocs(q)));
-        console.log("Query snapshots:", snapshots.map(s => s.docs)); // Debug
         for (const snapshot of snapshots) {
           if (!snapshot.empty) {
             existingEnquiry = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };

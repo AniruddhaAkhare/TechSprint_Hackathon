@@ -42,14 +42,11 @@ const FinanceForm = ({
 
   // Log canUpdate for debugging
   useEffect(() => {
-    console.log("canUpdate:", canUpdate);
   }, [canUpdate]);
 
   // Initialize registrations array if empty
   useEffect(() => {
-    console.log("Current registrations:", financeDetails.registrations);
     if (!financeDetails.registrations || financeDetails.registrations.length === 0) {
-      console.log("Initializing registrations array");
       handleFinanceChange(courseIndex, "registrations", "", [
         {
           srNo: 1,
@@ -97,11 +94,9 @@ const FinanceForm = ({
   ]);
 
   const handleAddRegistration = () => {
-    console.log("handleAddRegistration triggered");
     const currentRegistrations = Array.isArray(financeDetails.registrations)
       ? financeDetails.registrations
       : [];
-    console.log("Current registrations:", currentRegistrations);
     const newRegistration = {
       srNo: currentRegistrations.length + 1,
       amount: 0,
@@ -114,17 +109,13 @@ const FinanceForm = ({
       loanSubRegistrations: [],
     };
     const updatedRegistrations = [...currentRegistrations, newRegistration];
-    console.log("New registrations array:", updatedRegistrations);
     handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-    console.log("handleFinanceChange called with new registrations");
   };
 
   const handleDeleteRegistration = (index) => {
     if (financeDetails.registrations.length <= 1) {
-      console.log("Cannot delete last registration");
       return;
     }
-    console.log(`Deleting registration at index ${index}`);
     const updatedRegistrations = financeDetails.registrations
       .filter((_, i) => i !== index)
       .map((reg, i) => ({ ...reg, srNo: i + 1 }));
@@ -132,7 +123,6 @@ const FinanceForm = ({
   };
 
   const handleRegistrationChange = (index, field, value) => {
-    console.log(`Updating registration at index ${index}, field ${field} with value ${value}`);
     const updatedRegistrations = [...financeDetails.registrations];
     updatedRegistrations[index] = {
       ...updatedRegistrations[index],
@@ -142,7 +132,6 @@ const FinanceForm = ({
   };
 
   const handleAddLoanSubRegistration = (parentIndex) => {
-    console.log(`Adding sub-registration for parent index ${parentIndex}`);
     const updatedRegistrations = [...financeDetails.registrations];
     const newSubRegistration = {
       srNo: updatedRegistrations[parentIndex].loanSubRegistrations.length + 1,
@@ -161,10 +150,8 @@ const FinanceForm = ({
   };
 
   const handleDeleteLoanSubRegistration = (parentIndex, subIndex) => {
-    console.log(`Deleting sub-registration at parent index ${parentIndex}, sub-index ${subIndex}`);
     const updatedRegistrations = [...financeDetails.registrations];
     if (updatedRegistrations[parentIndex].loanSubRegistrations.length <= 1) {
-      console.log("Cannot delete last sub-registration");
       return;
     }
     updatedRegistrations[parentIndex].loanSubRegistrations = updatedRegistrations[parentIndex]
@@ -175,7 +162,6 @@ const FinanceForm = ({
   };
 
   const handleLoanSubRegistrationChange = (parentIndex, subIndex, field, value) => {
-    console.log(`Updating sub-registration at parent index ${parentIndex}, sub-index ${subIndex}, field ${field} with value ${value}`);
     const updatedRegistrations = [...financeDetails.registrations];
     updatedRegistrations[parentIndex].loanSubRegistrations[subIndex] = {
       ...updatedRegistrations[parentIndex].loanSubRegistrations[subIndex],
@@ -358,7 +344,6 @@ const FinanceForm = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {console.log("Rendering registrations:", financeDetails.registrations)}
             {(financeDetails.registrations || []).map((registration, index) => (
               <React.Fragment key={index}>
                 <TableRow>

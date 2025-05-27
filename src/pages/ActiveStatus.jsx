@@ -31,7 +31,6 @@ const ActiveStatus = () => {
 
         setActiveUsers(filteredUsers);
       } catch (error) {
-        console.error('Error fetching active users:', error);
       }
     };
 

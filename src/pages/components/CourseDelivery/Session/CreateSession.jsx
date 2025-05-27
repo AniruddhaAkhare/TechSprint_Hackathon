@@ -62,7 +62,6 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         // Fetch Centers
         const institutesSnapshot = await getDocs(collection(db, "instituteSetup"));
         if (institutesSnapshot.empty) {
-          console.log("No institutes found in instituteSetup collection");
           setAvailableCenters([]);
           setLoading(false);
           return;
@@ -102,7 +101,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
 
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        // //console.error("Error fetching data:", error);
         setError("Failed to load data. Please try again.");
         setLoading(false);
       }
@@ -254,7 +253,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
       resetForm();
       toggleSidebar();
     } catch (error) {
-      console.error("Error saving session:", error);
+      // //console.error("Error saving session:", error);
       alert("Failed to save session. Please try again.");
     }
   };

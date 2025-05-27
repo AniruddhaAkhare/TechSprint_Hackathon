@@ -65,7 +65,7 @@ export default function Companies() {
                 const snapshot = await getDocs(q);
                 setCallSchedules(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
             } catch (error) {
-                console.error("Error fetching call schedules:", error);
+                //console.error("Error fetching call schedules:", error);
                 if (error.code === "failed-precondition" && error.message.includes("The query requires an index")) {
                     toast.error(
                         "Failed to fetch call schedules: A Firestore index is required. Create it in the Firebase Console.",
@@ -83,12 +83,11 @@ export default function Companies() {
     useEffect(() => {
         reminderAudio.load();
         reminderAudio.onerror = () => {
-            console.error("Error loading reminder audio");
+            //console.error("Error loading reminder audio");
             toast.error("Failed to load reminder audio.");
         };
     }, []);
 
-    // Fetch user displayName
     useEffect(() => {
         if (!user?.uid) return;
         const fetchUserDisplayName = async () => {
@@ -99,11 +98,11 @@ export default function Companies() {
                     const userData = userDoc.data();
                     setUserDisplayName(userData.displayName || user.email || "Unknown User");
                 } else {
-                    console.warn("User document not found");
+                    // console.warn("");
                     setUserDisplayName(user.email || "Unknown User");
                 }
             } catch (error) {
-                console.error("Error fetching user displayName:", error);
+                //console.error("Error fetching user displayName:", error);
                 toast.error(`Failed to fetch user data: ${error.message}`);
                 setUserDisplayName(user.email || "Unknown User");
             }
@@ -122,7 +121,7 @@ export default function Companies() {
             };
             await addDoc(collection(db, "activityLogs"), activityLog);
         } catch (error) {
-            console.error("Error logging activity:", error);
+            //console.error("Error logging activity:", error);
         }
     };
 
@@ -261,7 +260,7 @@ export default function Companies() {
             toast.success("Company deleted successfully!");
             logActivity("DELETE_COMPANY", { companyId: deleteId, name: companyName });
         } catch (err) {
-            console.error("Error deleting company:", err);
+            //console.error("Error deleting company:", err);
             setDeleteMessage("An error occurred while trying to delete the company.");
             toast.error(`Failed to delete company: ${err.message}`);
         }
@@ -347,7 +346,7 @@ export default function Companies() {
                     }
 
                     reminderAudio.play().catch((error) => {
-                        console.error("Error playing reminder audio:", error);
+                        //console.error("Error playing reminder audio:", error);
                         toast.error("Failed to play reminder sound.");
                     });
 
@@ -367,7 +366,7 @@ export default function Companies() {
             toast.success("Call scheduled successfully!");
             logActivity("ADD_CALL_SCHEDULE", { companyId, callDate, callTime, purpose });
         } catch (error) {
-            console.error("Error scheduling call:", error);
+            //console.error("Error scheduling call:", error);
             toast.error(`Failed to schedule call: ${error.message}`);
         }
     };

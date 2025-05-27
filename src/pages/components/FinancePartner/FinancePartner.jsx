@@ -40,7 +40,7 @@ export default function FinancePartner() {
       };
       await addDoc(collection(db, 'activityLogs'), activityLog);
     } catch (error) {
-      console.error('Error logging activity:', error);
+      // //console.error('Error logging activity:', error);
     }
   };
 
@@ -84,7 +84,7 @@ export default function FinancePartner() {
       setPartners(partnerData);
       // logActivity('FETCH_PARTNERS_SUCCESS', { count: partnerData.length });
     } catch (err) {
-      console.error("Error fetching partners:", err);
+      // //console.error("Error fetching partners:", err);
       // logActivity('FETCH_PARTNERS_ERROR', { error: err.message });
     } finally {
       setLoading(false);
@@ -139,7 +139,7 @@ export default function FinancePartner() {
       setDeleteMessage("Are you sure you want to delete this partner? This action cannot be undone.");
       logActivity('DELETE PARTNER SUCCESS', { partnerId: deleteId });
     } catch (err) {
-      console.error("Error deleting partner:", err);
+      // //console.error("Error deleting partner:", err);
       setDeleteMessage("An error occurred while trying to delete the partner.");
       // logActivity('DELETE_PARTNER_ERROR', { partnerId: deleteId, error: err.message });
     }

@@ -14,7 +14,7 @@ const FormViewer = ({ form, onClose }) => {
     if (!form.qrCodeUrl && form.id) {
       setQrCodeUrl(generatedQrCodeUrl);
       updateDoc(doc(db, "enquiryForms", form.id), { qrCodeUrl: generatedQrCodeUrl }).catch((err) =>
-        console.error("Error updating qrCodeUrl:", err)
+        console.error()
       );
     }
   }, [form.id, form.qrCodeUrl, generatedQrCodeUrl]);
@@ -43,7 +43,7 @@ const FormViewer = ({ form, onClose }) => {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(formUrl).then(() => alert("Form URL copied to clipboard!")).catch((err) =>
-                    console.error("Failed to copy:", err)
+                    console.error()
                   );
                 }}
                 className="inline-block bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"

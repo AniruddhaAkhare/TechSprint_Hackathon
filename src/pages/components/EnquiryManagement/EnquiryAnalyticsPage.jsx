@@ -87,11 +87,10 @@ const EnquiryAnalyticsPage = () => {
           id: doc.id,
           ...doc.data(),
         }));
-        console.log("Fetched courses:", coursesData);
         setCourses(coursesData);
       },
       (error) => {
-        console.error("Error fetching courses:", error);
+        // //console.error("Error fetching courses:", error);
       }
     );
     return () => unsubscribe();
@@ -106,11 +105,10 @@ const EnquiryAnalyticsPage = () => {
           id: doc.id,
           ...doc.data(),
         }));
-        console.log("Fetched branches:", branchesData);
         setBranches(branchesData);
       },
       (error) => {
-        console.error("Error fetching branches:", error);
+        // //console.error("Error fetching branches:", error);
       }
     );
     return () => unsubscribe();
@@ -125,11 +123,10 @@ const EnquiryAnalyticsPage = () => {
           id: doc.id,
           ...doc.data(),
         }));
-        console.log("Fetched instructors:", instructorsData);
         setInstructors(instructorsData);
       },
       (error) => {
-        console.error("Error fetching instructors:", error);
+        // //console.error("Error fetching instructors:", error);
       }
     );
     return () => unsubscribe();
@@ -144,7 +141,6 @@ const EnquiryAnalyticsPage = () => {
           id: doc.id,
           ...doc.data(),
         }));
-        console.log("Fetched enquiries:", enquiries);
 
         setColumns((prevColumns) => {
           const updatedColumns = Object.keys(initialColumns).reduce((acc, key) => {
@@ -160,13 +156,12 @@ const EnquiryAnalyticsPage = () => {
               console.warn(`Invalid stage "${columnId}" for enquiry:`, enquiry);
             }
           });
-          console.log("Updated columns:", updatedColumns);
           setIsLoading(false);
           return { ...updatedColumns };
         });
       },
       (error) => {
-        console.error("Error fetching enquiries:", error);
+        // //console.error("Error fetching enquiries:", error);
         setIsLoading(false);
       }
     );
@@ -206,7 +201,6 @@ const EnquiryAnalyticsPage = () => {
 
       return dateMatch && branchMatch && courseMatch && sourceMatch && instructorMatch && tagsMatch;
     });
-    console.log("Filtered enquiries:", filtered);
     return filtered;
   };
 
@@ -214,7 +208,6 @@ const EnquiryAnalyticsPage = () => {
   const applyPendingFilters = () => {
     setFilters(pendingFilters);
     setIsFilterOpen(false); // Close filter panel after applying
-    console.log("Applied filters:", pendingFilters);
   };
 
   // Reset Filters Function
@@ -230,7 +223,6 @@ const EnquiryAnalyticsPage = () => {
     setFilters(initialFilters);
     setPendingFilters(initialFilters);
     setIsFilterOpen(false); // Close filter panel after resetting
-    console.log("Filters reset to initial state");
   };
 
   // Handle Tag Toggle for Pending Filters
@@ -249,7 +241,6 @@ const EnquiryAnalyticsPage = () => {
     name: column.name,
     count: applyFilters(column.items).length,
   }));
-  console.log("Stage data:", stageData);
 
   const sourceData = sourceOptions
     .map((source) => ({
@@ -257,7 +248,6 @@ const EnquiryAnalyticsPage = () => {
       value: allEnquiries.filter((item) => item.source === source).length,
     }))
     .filter((data) => data.value > 0);
-  console.log("Source data:", sourceData);
 
   const courseData = courses
     .map((course) => ({
@@ -265,7 +255,6 @@ const EnquiryAnalyticsPage = () => {
       count: allEnquiries.filter((item) => item.course === course.name).length,
     }))
     .filter((data) => data.count > 0);
-  console.log("Course data:", courseData);
 
   const branchData = branches
     .map((branch) => ({
@@ -273,7 +262,6 @@ const EnquiryAnalyticsPage = () => {
       count: allEnquiries.filter((item) => item.branch === branch.name).length,
     }))
     .filter((data) => data.count > 0);
-  console.log("Branch data:", branchData);
 
   const tagData = tagOptions
     .map((tag) => ({
@@ -281,7 +269,6 @@ const EnquiryAnalyticsPage = () => {
       count: allEnquiries.filter((item) => item.tags?.includes(tag)).length,
     }))
     .filter((data) => data.count > 0);
-  console.log("Tag data:", tagData);
 
   const timeSeriesData = [];
   const startDate = new Date();
@@ -301,7 +288,6 @@ const EnquiryAnalyticsPage = () => {
       }).length,
     });
   }
-  console.log("Time series data:", timeSeriesData);
 
   const totalEnquiries = allEnquiries.length;
   const closedWon = applyFilters(columns["closed-won"]?.items || []).length;

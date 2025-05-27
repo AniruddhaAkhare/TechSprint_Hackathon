@@ -82,7 +82,6 @@ export default function Batches() {
         }
       });
     } catch (err) {
-      console.error("Error logging activity:", err.message);
       toast.error("Failed to log activity.");
     }
   };
@@ -96,7 +95,6 @@ export default function Batches() {
       }));
       setCenters(centerData);
     }, (err) => {
-      console.error("Error fetching centers:", err.message);
       toast.error("Failed to fetch centers");
     });
     return unsubscribe;
@@ -124,7 +122,6 @@ export default function Batches() {
       setBatches(batchData);
       setSearchResults(batchData);
     }, (err) => {
-      console.error("Error fetching batches:", err.message);
       toast.error("Failed to fetch batches");
     });
     return unsubscribe;
@@ -237,7 +234,6 @@ export default function Batches() {
       const snapshot = await getDocs(q);
       return !snapshot.empty;
     } catch (err) {
-      console.error("Error checking students in batch:", err.message);
       return false;
     }
   };
@@ -264,7 +260,6 @@ export default function Batches() {
       );
       toast.success("Batch deleted successfully.");
     } catch (err) {
-      console.error("Error deleting batch:", err.message);
       setDeleteMessage("An error occurred while trying to delete the batch.");
       toast.error("Failed to delete batch.");
     }
@@ -281,9 +276,7 @@ export default function Batches() {
         await logActivity("Created batch", { name: formData.batchName });
       }
       handleClose();
-    } catch (err) {
-      console.error("Error logging batch action:", err.message);
-      toast.error("Failed to log batch action.");
+    } catch (err) {      toast.error("Failed to log batch action.");
     }
   };
 

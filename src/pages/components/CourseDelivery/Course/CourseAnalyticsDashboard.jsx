@@ -39,7 +39,6 @@ const CourseAnalyticsDashboard = () => {
       }));
       setCourses(courseData);
     } catch (err) {
-      console.error('Error fetching courses:', err.message);
     }
   }, []);
 
@@ -52,7 +51,6 @@ const CourseAnalyticsDashboard = () => {
       }));
       setStudents(studentData);
     } catch (err) {
-      console.error('Error fetching students:', err.message);
     }
   }, []);
 
@@ -65,7 +63,6 @@ const CourseAnalyticsDashboard = () => {
       }));
       setEnrollments(enrollmentData);
     } catch (err) {
-      console.error('Error fetching enrollments:', err.message);
     }
   }, []);
 

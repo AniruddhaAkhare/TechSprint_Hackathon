@@ -12,6 +12,6 @@ export const logActivity = async (action, details, user) => {
     };
     await addDoc(collection(db, "activityLogs"), activityLog);
   } catch (error) {
-    console.error("Error logging activity:", error);
+    //console.error("Error logging activity:", error);
   }
 };

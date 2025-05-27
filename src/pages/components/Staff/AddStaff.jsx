@@ -81,7 +81,7 @@ export default function AddStaff() {
         const rolesData = rolesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setRoles(rolesData);
       } catch (error) {
-        console.error("Error fetching roles:", error);
+        //console.error("Error fetching roles:", error);
         toast.error("Failed to fetch roles");
       }
     };
@@ -95,7 +95,7 @@ export default function AddStaff() {
   // Activity Logging
   const logActivity = async (action, details) => {
     if (!currentUser) {
-      console.error("No current user available for logging");
+      //console.error("No current user available for logging");
       return;
     }
     try {
@@ -107,9 +107,8 @@ export default function AddStaff() {
         details,
       };
       await addDoc(collection(db, "activityLogs"), logData);
-      console.log("Activity logged:", { action, details });
     } catch (error) {
-      console.error("Error logging activity:", error);
+      //console.error("Error logging activity:", error);
     }
   };
 
@@ -126,13 +125,7 @@ export default function AddStaff() {
         toast.error(`File ${file.name} is too large. Maximum size is 5MB.`);
         return;
       }
-      console.log(`Selected file for ${docType}:`, {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        instanceofFile: file instanceof File,
-        instanceofBlob: file instanceof Blob,
-      });
+
       setDocuments((prev) => ({ ...prev, [docType]: file }));
       setUploadProgress((prev) => ({ ...prev, [docType]: 0 }));
     } else {
@@ -152,11 +145,6 @@ export default function AddStaff() {
       throw new Error(`Invalid file for ${docType}: File object is null or not a File instance`);
     }
 
-    console.log(`Uploading ${docType}:`, {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-    });
 
     const fileName = `staff/${staffId}/${docType}_${Date.now()}_${file.name}`;
     const params = {
@@ -184,7 +172,7 @@ export default function AddStaff() {
       const url = `https://${params.Bucket}.s3.${region}.amazonaws.com/${params.Key}`;
       return url;
     } catch (err) {
-      console.error(`Error uploading ${docType}:`, err);
+      //console.error(`Error uploading ${docType}:`, err);
       throw err;
     }
   };
@@ -268,25 +256,22 @@ export default function AddStaff() {
 
       const staffDocRef = await addDoc(collection(db, "Users"), staffData);
       const staffId = staffDocRef.id;
-      console.log("Staff added to Firestore with ID:", staffId);
 
       // Upload Documents to S3
       const documentUpdates = {};
       for (const [docType, file] of Object.entries(documents)) {
         if (file) {
-          console.log(`Uploading document: ${docType}`);
           try {
             const url = await uploadFileToS3(file, docType, staffId);
             documentUpdates[`staff.${docType}`] = [url];
           } catch (uploadErr) {
-            console.error(`Failed to upload ${docType}:`, uploadErr);
+            //console.error(`Failed to upload ${docType}:`, uploadErr);
             throw new Error(`Failed to upload ${docType}: ${uploadErr.message}`);
           }
         }
       }
 
       if (Object.keys(documentUpdates).length > 0) {
-        console.log("Updating Firestore with document URLs:", documentUpdates);
         await updateDoc(doc(db, "Users", staffId), documentUpdates);
       }
 
@@ -303,7 +288,7 @@ export default function AddStaff() {
       toast.success("Staff added successfully!");
       navigate("/staff");
     } catch (error) {
-      console.error("Error adding staff:", error);
+      //console.error("Error adding staff:", error);
       toast.error(`Error adding staff: ${error.message}`);
     } finally {
       submissionRef.current = false;

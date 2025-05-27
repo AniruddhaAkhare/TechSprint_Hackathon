@@ -75,7 +75,7 @@
 //         }));
 //         setHolidays(holidaysData);
 //       } catch (err) {
-//         console.error("Error fetching holidays:", err);
+//         //console.error("Error fetching holidays:", err);
 //         setError("Failed to load holidays.");
 //       }
 //       setLoading(false);
@@ -127,7 +127,7 @@
 //       setHolidayName("");
 //       setSelectedDate(null);
 //     } catch (err) {
-//       console.error("Error adding holiday:", err);
+//       //console.error("Error adding holiday:", err);
 //       setError("Failed to add holiday.");
 //     }
 //   };
@@ -146,7 +146,7 @@
 //       setHolidayName("");
 //       setSelectedDate(null);
 //     } catch (err) {
-//       console.error("Error removing holiday:", err);
+//       //console.error("Error removing holiday:", err);
 //       setError("Failed to remove holiday.");
 //     }
 //   };
@@ -352,7 +352,7 @@ const HolidayCalendar = () => {
         }));
         setHolidays(holidaysData);
       } catch (err) {
-        console.error("Error fetching holidays:", err);
+        // //console.error("Error fetching holidays:", err);
         setError("Failed to load holidays.");
       }
       setLoading(false);
@@ -421,7 +421,7 @@ const HolidayCalendar = () => {
       setSelectedDate(null);
       toast.success(`Holiday ${isExistingHoliday ? "updated" : "added"} successfully!`);
     } catch (err) {
-      console.error(`Error ${isExistingHoliday ? "updating" : "adding"} holiday:`, err);
+      // //console.error(`Error ${isExistingHoliday ? "updating" : "adding"} holiday:`, err);
       setError(`Failed to ${isExistingHoliday ? "update" : "add"} holiday.`);
       toast.error(`Failed to ${isExistingHoliday ? "update" : "add"} holiday.`);
     }
@@ -446,7 +446,7 @@ const HolidayCalendar = () => {
       setSelectedDate(null);
       toast.success("Holiday removed successfully!");
     } catch (err) {
-      console.error("Error removing holiday:", err);
+      // //console.error("Error removing holiday:", err);
       setError("Failed to remove holiday.");
       toast.error("Failed to remove holiday.");
     }

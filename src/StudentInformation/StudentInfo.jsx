@@ -57,7 +57,7 @@
 //                     navigate(-1);
 //                 }
 //             } catch (error) {
-//                 console.error("Error fetching student data:", error);
+//                 //console.error("Error fetching student data:", error);
 //             }
 //         };
 
@@ -211,7 +211,7 @@ export default function StudentInfo() {
                     navigate(-1);
                 }
             } catch (error) {
-                console.error("Error fetching student data:", error);
+                //console.error("Error fetching student data:", error);
             }
         };
 

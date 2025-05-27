@@ -61,10 +61,8 @@ export default function LearnerList({ courseId, open, onClose }) {
                     
                     };
                 });
-                console.log(learnersWithNames);
                 setLearners(learnersWithNames);
             } catch (err) {
-                console.error("Error fetching learners:", err);
                 setError("Failed to load learners");
             } finally {
                 setIsLoading(false);

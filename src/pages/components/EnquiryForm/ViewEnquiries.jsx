@@ -37,7 +37,7 @@ export default function ViewEnquiries() {
         }));
         setEnquiries(enquiryData);
       } catch (err) {
-        console.error("Error fetching data:", err.message);
+        // //console.error("Error fetching data:", err.message);
         setError("Failed to load enquiries or form details.");
       } finally {
         setLoading(false);

@@ -41,10 +41,8 @@ const EditCourse = () => {
                         centers: docSnap.data().centers || [] 
                     }));
                 } else {
-                    console.log("No such course!");
                 }
             } catch (error) {
-                console.error("Error fetching course:", error);
             }
         };
 
@@ -58,7 +56,6 @@ const EditCourse = () => {
                 }));
                 setAllCenters(centersList);
             } catch (error) {
-                console.error("Error fetching centers:", error);
             }
         };
 
@@ -124,7 +121,6 @@ const EditCourse = () => {
             alert("Course updated successfully!");
             navigate(-1);
         } catch (error) {
-            console.error("Error updating course:", error);
         }
     };
 

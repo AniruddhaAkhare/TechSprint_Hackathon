@@ -31,7 +31,6 @@ const JobOpenings = ({
   };
 
   const handleEditJob = (job) => {
-    console.log("Editing job:", job); // Debug: Log job data
     const formattedJob = {
       id: job.id,
       title: job.title || "",
@@ -62,7 +61,6 @@ const JobOpenings = ({
     };
     setEditingJobId(job.id);
     setEditJob(formattedJob);
-    console.log("Edit job state set:", formattedJob); // Debug: Log formatted job
   };
 
   const handleSaveEdit = async () => {
@@ -78,7 +76,6 @@ const JobOpenings = ({
     // }
 
     try {
-      console.log("Saving edited job:", editJob); // Debug: Log job being saved
       await onUpdateJob(editJob);
       setEditingJobId(null);
       setEditJob({});
@@ -90,7 +87,6 @@ const JobOpenings = ({
   const handleCancelEdit = () => {
     setEditingJobId(null);
     setEditJob({});
-    console.log("Edit cancelled"); // Debug: Log cancellation
   };
 
   return (

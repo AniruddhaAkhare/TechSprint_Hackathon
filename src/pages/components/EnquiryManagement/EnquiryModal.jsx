@@ -29,10 +29,9 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         const rolesQuery = query(collection(db, 'roles'), where('name', '==', 'Sales'));
         const rolesSnapshot = await getDocs(rolesQuery);
         const roleIds = rolesSnapshot.docs.map(doc => doc.id);
-        console.log("Sales role IDs:", roleIds);
         setSalesRoleIds(roleIds);
       } catch (error) {
-        console.error('Error fetching Sales role IDs:', error);
+        // //console.error('Error fetching Sales role IDs:', error);
         setSalesRoleIds([]);
       }
     };
@@ -260,7 +259,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
 
   const uploadToS3 = async (audioBlob) => {
     if (!audioBlob) {
-      console.error("No audio blob available for upload");
+      // //console.error("No audio blob available for upload");
       alert("No audio recording to upload.");
       return null;
     }
@@ -283,20 +282,18 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         // ACL: "public-read",
       };
 
-      console.log("Uploading to S3 with params:", { bucketName, fileKey });
       await s3Client.send(new PutObjectCommand(params));
       const audioUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`;
-      console.log("Recording uploaded successfully:", audioUrl);
       alert("Recording uploaded successfully to S3!");
       setAudioBlob(null);
       return audioUrl;
     } catch (error) {
-      console.error("S3 Upload Error:", {
-        message: error.message,
-        name: error.name,
-        stack: error.stack,
-        code: error.code,
-      });
+      // //console.error("S3 Upload Error:", {
+      //   message: error.message,
+      //   name: error.name,
+      //   stack: error.stack,
+      //   code: error.code,
+      // });
       let errorMessage = "Failed to upload recording: ";
       if (error.name === "CredentialsError") {
         errorMessage += "Invalid or missing AWS credentials.";
@@ -307,7 +304,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       } else {
         errorMessage += error.message;
       }
-      console.error(errorMessage);
+      // //console.error(errorMessage);
       alert(errorMessage);
       return null;
     }
@@ -315,7 +312,6 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
 
   const stopRecording = async () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      console.log("Stopping recording...");
       setIsRecording(false);
       setIsUploading(true);
 
@@ -368,7 +364,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
           throw new Error("Failed to upload recording to S3");
         }
       } catch (error) {
-        console.error("Stop recording error:", error);
+        // //console.error("Stop recording error:", error);
         alert(`Failed to process recording: ${error.message}`);
       } finally {
         setIsUploading(false);
@@ -383,7 +379,6 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         alert("Audio recording is not supported in this browser.");
         return;
       }
-      console.log("Requesting microphone access...");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: "audio/webm" });
       audioChunksRef.current = [];
@@ -396,9 +391,8 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
-      console.log("Recording started");
     } catch (error) {
-      console.error("Recording error:", error);
+      // //console.error("Recording error:", error);
       alert(`Failed to start recording: ${error.message}. Please ensure microphone access is granted.`);
     }
   };
@@ -416,7 +410,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         alert("Failed to load enquiry: Enquiry not found.");
       }
     } catch (error) {
-      console.error("Error navigating to enquiry:", error);
+      // //console.error("Error navigating to enquiry:", error);
       alert(`Failed to load enquiry: ${error.message}`);
     }
   };
@@ -636,7 +630,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         alert("Enquiry saved successfully!");
       }
     } catch (error) {
-      console.error("Error saving enquiry:", error);
+      // //console.error("Error saving enquiry:", error);
       alert(`Failed to save enquiry: ${error.message}`);
     }
   };
@@ -651,7 +645,6 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
       const response = await fetch(url, { method: "HEAD" });
       if (response.ok) {
         setAudioStatus((prev) => ({ ...prev, [index]: "valid" }));
-        console.log(`Audio URL validated successfully: ${url}`);
       } else {
         if (response.status === 403) {
           throw new Error("HTTP 403: Forbidden - Check S3 bucket permissions or object ACL");
@@ -660,9 +653,8 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         }
       }
     } catch (error) {
-      console.error(`Attempt ${3 - retries} failed to validate audio URL ${url}:`, error);
+      // //console.error(`Attempt ${3 - retries} failed to validate audio URL ${url}:`, error);
       if (retries > 0) {
-        console.log(`Retrying validation for ${url} (${retries} retries left)...`);
         setTimeout(() => validateAudioUrl(url, index, retries - 1), 1000);
       } else {
         let errorMessage = "Unable to load audio: ";
@@ -692,23 +684,18 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         Key: decodeURIComponent(fileKey),
       };
 
-      console.log("Attempting to delete S3 object with params:", {
-        bucketName,
-        fileKey,
-        endpoint: `https://${bucketName}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${fileKey}`,
-      });
+
 
       const response = await s3Client.send(new DeleteObjectCommand(params));
-      console.log(`Successfully deleted S3 object: ${fileKey}`, response);
     } catch (error) {
-      console.error("S3 Delete Error:", {
-        message: error.message,
-        name: error.name,
-        stack: error.stack,
-        code: error.code,
-        requestId: error.$metadata?.requestId,
-        httpStatusCode: error.$metadata?.httpStatusCode,
-      });
+      // //console.error("S3 Delete Error:", {
+      //   message: error.message,
+      //   name: error.name,
+      //   stack: error.stack,
+      //   code: error.code,
+      //   requestId: error.$metadata?.requestId,
+      //   httpStatusCode: error.$metadata?.httpStatusCode,
+      // });
       let errorMessage = "Failed to delete recording from S3: ";
       if (error.name === "CredentialsError") {
         errorMessage += "Invalid or missing AWS credentials.";
@@ -779,7 +766,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
 
       alert("Recording deleted successfully!");
     } catch (error) {
-      console.error("Delete Recording Error:", error);
+      // //console.error("Delete Recording Error:", error);
       alert(`Failed to delete recording: ${error.message}`);
     }
   };
@@ -830,7 +817,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
             });
             setShowReminder(true);
             const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
-            audio.play().catch((error) => console.error("Error playing buzzer:", error));
+            audio.play().catch((error) => console.error());
           }, timeUntilReminder);
         } else {
           console.warn("Scheduled call is too soon or in the past; reminder not set.");
@@ -972,7 +959,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
   };
 
   const handleAudioError = (index, error) => {
-    console.error(`Audio error for note ${index}:`, error);
+    // //console.error(`Audio error for note ${index}:`, error);
     let errorMessage = "Failed to play audio: ";
     if (error.target?.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
       errorMessage += "The audio format is not supported by your browser.";
@@ -990,10 +977,9 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
         const rolesQuery = query(collection(db, 'roles'), where('name', '==', 'Sales'));
         const rolesSnapshot = await getDocs(rolesQuery);
         const roleIds = rolesSnapshot.docs.map(doc => doc.id);
-        console.log("Sales role IDs:", roleIds);
         setSalesRoleIds(roleIds);
       } catch (error) {
-        console.error('Error fetching Sales role IDs:', error);
+        // //console.error('Error fetching Sales role IDs:', error);
         setSalesRoleIds([]);
       } finally {
         setIsLoadingCounselors(false); // Set loading to false after fetching
@@ -2682,7 +2668,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
                   setTimeout(() => {
                     setShowReminder(true);
                     const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
-                    audio.play().catch((error) => console.error("Error playing buzzer:", error));
+                    audio.play().catch((error) => console.error());
                   }, 2 * 60 * 1000); // Snooze for 2 minutes
                 }}
                 className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"

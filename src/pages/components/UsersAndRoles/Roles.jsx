@@ -54,7 +54,7 @@ export default function Roles() {
         const rolesData = rolesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setRoles(rolesData);
       } catch (error) {
-        console.error('Error fetching roles:', error);
+        //console.error('Error fetching roles:', error);
       }
     };
     fetchRoles();
@@ -63,7 +63,7 @@ export default function Roles() {
   // Activity logging function
   const logActivity = async (action, details) => {
     if (!user) {
-      console.error("No current user available for logging");
+      //console.error("No current user available for logging");
       return;
     }
     try {
@@ -74,9 +74,7 @@ export default function Roles() {
         action,
         details,
       });
-      console.log("Activity logged with ID:", logRef.id, { action, details });
     } catch (err) {
-      console.error("Error logging activity:", err.message);
     }
   };
 
@@ -181,7 +179,7 @@ export default function Roles() {
       });
       alert('Role created successfully!');
     } catch (error) {
-      console.error('Error creating role:', error);
+      //console.error('Error creating role:', error);
       alert('Failed to create role.');
     }
   };
@@ -219,7 +217,7 @@ export default function Roles() {
       setIsEditModalOpen(false);
       alert('Role updated successfully!');
     } catch (error) {
-      console.error('Error updating role:', error);
+      //console.error('Error updating role:', error);
       alert('Failed to update role: ' + error.message);
     }
   };
@@ -250,7 +248,7 @@ export default function Roles() {
       setOpenDelete(false);
       alert('Role deleted successfully!');
     } catch (error) {
-      console.error('Error deleting role:', error);
+      //console.error('Error deleting role:', error);
       alert('Failed to delete role.');
     }
   };

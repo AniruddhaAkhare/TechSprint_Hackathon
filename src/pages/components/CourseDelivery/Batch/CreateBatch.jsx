@@ -57,7 +57,6 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user
         // Fetch Centers
         const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
         if (instituteSnapshot.empty) {
-          console.error("No instituteSetup document found");
           return;
         }
         const instituteId = instituteSnapshot.docs[0].id;
@@ -118,7 +117,6 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user
         setTemplates(templatesList);
         setAvailableTemplates(templatesList);
       } catch (error) {
-        console.error("Error fetching data:", error);
         await logActivity("FETCH_DATA_ERROR", { error: error.message }, user);
       }
     };
@@ -372,7 +370,6 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user
               user
             );
           } catch (emailError) {
-            console.error("Failed to send batch enrollment email:", emailError);
             await logActivity(
               "SEND_BATCH_ENROLLMENT_EMAIL_ERROR",
               {
@@ -396,7 +393,6 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user
       resetForm();
       toggleSidebar();
     } catch (error) {
-      console.error("Error saving batch:", error);
       alert("Failed to save batch. Please try again.");
       await logActivity("SAVE_BATCH_ERROR", { error: error.message, batchId }, user);
     }

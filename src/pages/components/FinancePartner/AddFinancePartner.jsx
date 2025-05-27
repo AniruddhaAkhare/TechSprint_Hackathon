@@ -233,7 +233,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
       };
       await addDoc(collection(db, "activityLogs"), activityLog);
     } catch (error) {
-      console.error("Error logging activity:", error);
+      // //console.error("Error logging activity:", error);
     }
   };
 
@@ -252,7 +252,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
           setTransactionCount(transactionSnapshot.docs.length);
           // logActivity("FETCH_TRANSACTIONS_SUCCESS", { transactionCount: transactionSnapshot.docs.length });
         } catch (error) {
-          console.error("Error fetching transactions:", error);
+          // //console.error("Error fetching transactions:", error);
           setTransactionCount(0);
           // logActivity("FETCH_TRANSACTIONS_ERROR", { error: error.message });
         }
@@ -316,7 +316,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
       resetForm();
       toggleSidebar();
     } catch (error) {
-      console.error("Error saving finance partner:", error);
+      // //console.error("Error saving finance partner:", error);
       toast.error("Failed to save finance partner. Please try again.");
       // logActivity(`${actionType.toUpperCase()}_PARTNER_ERROR`, { error: error.message, name: partnerName });
     }

@@ -29,7 +29,7 @@ const Curriculum = () => {
 
   const logActivity = async (action, details) => {
     if (!user) {
-      console.error("No user logged in for logging activity");
+      // //console.error("No user logged in for logging activity");
       return;
     }
     try {
@@ -51,9 +51,8 @@ const Curriculum = () => {
           throw err;
         }
       });
-      console.log("Activity logged:", { action, details });
     } catch (err) {
-      console.error("Error logging activity:", err.message);
+      // //console.error("Error logging activity:", err.message);
       toast.error("Failed to log activity.");
     }
   };
@@ -68,7 +67,7 @@ const Curriculum = () => {
       setCurriculums(curriculumData);
       setFilteredCurriculums(curriculumData);
     }, (err) => {
-      console.error("Error fetching curriculums:", err.message);
+      // //console.error("Error fetching curriculums:", err.message);
       toast.error("Failed to fetch curriculums");
     });
     return () => unsubscribe();
@@ -166,7 +165,7 @@ const Curriculum = () => {
         setSelectedCurriculumId(null);
         toast.success("Curriculum deleted successfully.");
       } catch (error) {
-        console.error("Error deleting curriculum:", error.message);
+        // //console.error("Error deleting curriculum:", error.message);
         toast.error("Failed to delete curriculum.");
       }
     }
@@ -195,7 +194,7 @@ const Curriculum = () => {
       handleCloseModal();
       toast.success(`Curriculum ${curriculumToEdit ? 'updated' : 'created'} successfully.`);
     } catch (error) {
-      console.error("Error logging curriculum action:", error.message);
+      // //console.error("Error logging curriculum action:", error.message);
       toast.error("Failed to log curriculum action.");
     }
   };

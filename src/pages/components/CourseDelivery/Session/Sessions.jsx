@@ -44,7 +44,7 @@ export default function Sessions() {
 
     const logActivity = async (action, details) => {
         if (!user) {
-            console.error("No user logged in for logging activity");
+            // //console.error("No user logged in for logging activity");
             return;
         }
         try {
@@ -66,9 +66,8 @@ export default function Sessions() {
                     throw err;
                 }
             });
-            console.log("Activity logged:", { action, details });
         } catch (err) {
-            console.error("Error logging activity:", err.message);
+            // //console.error("Error logging activity:", err.message);
             toast.error("Failed to log activity.");
         }
     };
@@ -88,7 +87,7 @@ export default function Sessions() {
             }));
             setCourses(courseData);
         }, (err) => {
-            console.error("Error fetching courses:", err.message);
+            // //console.error("Error fetching courses:", err.message);
             toast.error("Failed to fetch courses");
         });
         return unsubscribe;
@@ -104,7 +103,7 @@ export default function Sessions() {
             }));
             setBatches(batchData);
         }, (err) => {
-            console.error("Error fetching batches:", err.message);
+            // //console.error("Error fetching batches:", err.message);
             toast.error("Failed to fetch batches");
         });
         return unsubscribe;
@@ -119,7 +118,7 @@ export default function Sessions() {
             }));
             setCenters(centerData);
         }, (err) => {
-            console.error("Error fetching centers:", err.message);
+            // //console.error("Error fetching centers:", err.message);
             toast.error("Failed to fetch centers");
         });
         return unsubscribe;
@@ -141,7 +140,7 @@ export default function Sessions() {
             setSessions(sessionData);
             setSearchResults([]);
         }, (err) => {
-            console.error("Error fetching sessions:", err.message);
+            // //console.error("Error fetching sessions:", err.message);
             toast.error("Failed to fetch sessions");
         });
         return unsubscribe;
@@ -295,7 +294,7 @@ export default function Sessions() {
             setDeleteMessage("Are you sure you want to delete this session? This action cannot be undone.");
             toast.success("Session deleted successfully!");
         } catch (error) {
-            console.error("Error deleting session:", error.message);
+            // //console.error("Error deleting session:", error.message);
             setDeleteMessage("Failed to delete session. Please try again.");
             toast.error("Failed to delete session.");
         }
@@ -309,7 +308,7 @@ export default function Sessions() {
             handleClose();
             toast.success(`Session ${sessionData.id ? 'updated' : 'created'} successfully.`);
         } catch (error) {
-            console.error("Error logging session action:", error.message);
+            // //console.error("Error logging session action:", error.message);
             toast.error("Failed to log session action.");
         }
     };

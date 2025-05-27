@@ -729,7 +729,6 @@ const Dashboard = () => {
               PrequalifiedEnquiries: prequalifiedCount,
             }));
             // Debug: Log enquiries to verify stage data
-            console.log("Enquiries data:", enquiriesData.map((e) => ({ id: e.id, stage: e.stage })));
           } else {
             setData((prev) => ({
               ...prev,
@@ -810,7 +809,6 @@ const Dashboard = () => {
       }
     });
     // Debug: Log stage counts
-    console.log("Enquiry stage counts:", counts);
     return counts;
   };
 

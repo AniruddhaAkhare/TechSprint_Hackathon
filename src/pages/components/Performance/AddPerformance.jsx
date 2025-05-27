@@ -33,14 +33,14 @@ export default function AddPerformance() {
             setStudents(studentList);
             setShowStudents(true);
         } catch (error) {
-            console.error("Error fetching students:", error);
+            //console.error("Error fetching students:", error);
         }
     };
 
     const addMockTest = async (student) => {
         try {
             if (!student || !student.first_name) {
-                console.error("Error: student or student.first_name is undefined", student);
+                //console.error("Error: student or student.first_name is undefined", student);
                 return;
             }
 
@@ -53,14 +53,14 @@ export default function AddPerformance() {
             await addDoc(collection(db, `students/${student.id}/mockSessions`), mockTestData);
             alert("Mock test added successfully!");
         } catch (error) {
-            console.error("Error adding mock test:", error);
+            //console.error("Error adding mock test:", error);
         }
     };
 
     const addAttendanceReview = async (student) => {
         try {
             if (!student || !student.first_name) {
-                console.error("Error: student or student.first_name is undefined", student);
+                //console.error("Error: student or student.first_name is undefined", student);
                 return;
             }
 
@@ -73,14 +73,14 @@ export default function AddPerformance() {
             await addDoc(collection(db, `students/${student.id}/attendanceReview`), attendanceData);
             alert("Attendance review added successfully!");
         } catch (error) {
-            console.error("Error adding attendance review:", error);
+            //console.error("Error adding attendance review:", error);
         }
     };
 
     const addFeesData = async (student) => {
         try {
             if (!student || !student.first_name) {
-                console.error("Error: student or student.first_name is undefined", student);
+                //console.error("Error: student or student.first_name is undefined", student);
                 return;
             }
 
@@ -93,14 +93,14 @@ export default function AddPerformance() {
             await addDoc(collection(db, `students/${student.id}/feesReview`), feesData);
             alert("Fees data added successfully!");
         } catch (error) {
-            console.error("Error adding fees data:", error);
+            //console.error("Error adding fees data:", error);
         }
     };
 
     const addExaminationReview = async (student) => {
         try {
             if (!student || !student.first_name) {
-                console.error("Error: student or student.first_name is undefined", student);
+                //console.error("Error: student or student.first_name is undefined", student);
                 return;
             }
 
@@ -113,7 +113,7 @@ export default function AddPerformance() {
             await addDoc(collection(db, `students/${student.id}/examinationReview`), examinationReview);
             alert("Examination review added successfully!");
         } catch (error) {
-            console.error("Error adding examination review:", error);
+            //console.error("Error adding examination review:", error);
         }
     };
 

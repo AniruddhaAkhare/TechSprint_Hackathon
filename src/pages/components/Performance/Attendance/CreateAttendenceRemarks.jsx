@@ -33,10 +33,10 @@ export default function CreateAttendenceRemarks() {
                 const data = studentSnap.data();
                 setAttendanceRemarks(data.attendenceRemarks || []);
             } else {
-                console.error("Student document not found");
+                //console.error("Student document not found");
             }
         } catch (error) {
-            console.error("Error fetching attendance data:", error);
+            //console.error("Error fetching attendance data:", error);
         }
     };
 
@@ -70,7 +70,7 @@ export default function CreateAttendenceRemarks() {
             alert("Mock test added successfully!");
             setAttendanceRemarks([...attendanceRemarks, newAttenceRemarks]); // Update local state
         } catch (error) {
-            console.error("Error adding mock test:", error);
+            //console.error("Error adding mock test:", error);
             alert("Failed to add mock test. See console for details.");
         }
     };

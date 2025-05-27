@@ -31,7 +31,7 @@ const UserProfile = ({ authUser, handleLogout, toggleMenu, showMenu }) => {
                     setStatus("inactive");
                 }
             } catch (err) {
-                console.error("Error fetching check-in status:", err);
+                //console.error("Error fetching check-in status:", err);
                 setStatus("inactive");
             }
         };

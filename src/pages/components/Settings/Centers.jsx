@@ -23,7 +23,7 @@
     
 //             setCenters(centersList);
 //         } catch (error) {
-//             console.error("Error fetching centers:", error);
+//             //console.error("Error fetching centers:", error);
 //         }
 //     };
     
@@ -33,7 +33,7 @@
 //     //         const snapshot = await getDocs(collection(db, "Centers"));
 //     //         setCenters(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 //     //     } catch (error) {
-//     //         console.error("Error fetching centers:", error);
+//     //         //console.error("Error fetching centers:", error);
 //     //     }
 //     // };
 
@@ -80,7 +80,7 @@
 //                 fetchCenters();
 //                 alert("Center deleted successfully!");
 //             } catch (error) {
-//                 console.error("Error deleting center:", error);
+//                 //console.error("Error deleting center:", error);
 //                 alert("Failed to delete center. Please try again.");
 //             } finally {
 //                 setDeleteId(null);
@@ -197,7 +197,7 @@ export default function Centers() {
             
             setCenters(centersList);
         } catch (error) {
-            console.error("Error fetching centers:", error);
+            //console.error("Error fetching centers:", error);
         }
     };
 
@@ -242,7 +242,7 @@ export default function Centers() {
                 fetchCenters();
                 alert("Center deleted successfully!");
             } catch (error) {
-                console.error("Error deleting center:", error);
+                //console.error("Error deleting center:", error);
                 alert("Failed to delete center. Please try again.");
             } finally {
                 setDeleteId(null);

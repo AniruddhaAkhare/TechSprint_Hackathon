@@ -59,7 +59,7 @@ export default function EditStudent() {
             };
             await addDoc(collection(db, "activityLogs"), activityLog);
         } catch (error) {
-            console.error("Error logging activity:", error);
+            //console.error("Error logging activity:", error);
         }
     };
 
@@ -307,7 +307,7 @@ export default function EditStudent() {
                 navigate("/studentdetails");
             }
         } catch (error) {
-            console.error("Error fetching student data:", error);
+            //console.error("Error fetching student data:", error);
             toast.error("Failed to fetch student data");
         }
     };
@@ -317,7 +317,7 @@ export default function EditStudent() {
             const querySnapshot = await getDocs(collection(db, "Course"));
             setCourses(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         } catch (error) {
-            console.error("Error fetching courses:", error);
+            //console.error("Error fetching courses:", error);
             toast.error("Failed to fetch courses");
         }
     };
@@ -327,7 +327,7 @@ export default function EditStudent() {
             const querySnapshot = await getDocs(collection(db, "Batch"));
             setBatches(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         } catch (error) {
-            console.error("Error fetching batches:", error);
+            //console.error("Error fetching batches:", error);
             toast.error("Failed to fetch batches");
         }
     };
@@ -336,7 +336,7 @@ export default function EditStudent() {
         try {
             const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
             if (instituteSnapshot.empty) {
-                console.error("No instituteSetup document found");
+                //console.error("No instituteSetup document found");
                 setCenters([]);
                 return;
             }
@@ -349,7 +349,7 @@ export default function EditStudent() {
             const centersList = centerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setCenters(centersList);
         } catch (error) {
-            console.error("Error fetching centers:", error);
+            //console.error("Error fetching centers:", error);
             toast.error("Failed to fetch centers");
         }
     };
@@ -360,7 +360,7 @@ export default function EditStudent() {
             const templates = templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setFeeTemplates(templates);
         } catch (error) {
-            console.error("Error fetching fee templates:", error);
+            //console.error("Error fetching fee templates:", error);
             toast.error("Failed to fetch fee templates");
         }
     };
@@ -561,7 +561,7 @@ export default function EditStudent() {
             logActivity("UPDATE STUDENT SUCCESS", { updatedFields: Object.keys(student) });
             navigate("/studentdetails");
         } catch (error) {
-            console.error("Error updating student:", error);
+            //console.error("Error updating student:", error);
             toast.error("Failed to update student");
         }
     };
@@ -579,7 +579,7 @@ export default function EditStudent() {
                 logActivity("DELETE STUDENT SUCCESS", {});
                 navigate("/studentdetails");
             } catch (error) {
-                console.error("Error deleting student:", error);
+                //console.error("Error deleting student:", error);
                 toast.error("Failed to delete student");
             }
         } else {
@@ -626,7 +626,7 @@ export default function EditStudent() {
                 logActivity("APPLY FEE TEMPLATE", { templateId });
             }
         } catch (error) {
-            console.error("Error applying fee template:", error);
+            //console.error("Error applying fee template:", error);
             toast.error("Failed to apply fee template");
         }
     };

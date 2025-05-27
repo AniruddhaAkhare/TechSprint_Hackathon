@@ -26,7 +26,6 @@ const AdminLogs = () => {
   //     console.warn(`User document for UID ${uid} does not exist`);
   //     return null;
   //   } catch (error) {
-  //     console.error('Error fetching user role:', error);
   //     return null;
   //   }
   // };
@@ -48,7 +47,6 @@ const AdminLogs = () => {
   //     console.warn(`User document for userId ${userId} does not exist`);
   //     return { displayName: 'Unknown', email: 'Unknown' };
   //   } catch (error) {
-  //     console.error('Error fetching user data for userId:', userId, error);
   //     return { displayName: 'Unknown', email: 'Unknown' };
   //   }
   // };
@@ -62,7 +60,6 @@ const AdminLogs = () => {
   //     const date = new Date(timestamp);
   //     return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleString();
   //   } catch (error) {
-  //     console.error('Error formatting timestamp:', error, timestamp);
   //     return 'Invalid Date';
   //   }
   // };
@@ -218,7 +215,6 @@ const AdminLogs = () => {
   //         setLoading(false);
   //       },
   //       (error) => {
-  //         console.error('Error listening to logs:', error);
   //         setLoading(false);
   //       }
   //     );

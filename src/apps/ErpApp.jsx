@@ -11,7 +11,6 @@ import PageLoader from '@/components/PageLoader';
 import useResponsive from '@/hooks/useResponsive';
 
 export default function ErpApp() {
-  console.log("Inside ErpApp - Component mounted");
   const { Content } = Layout;
   const { isMobile } = useResponsive();
   const [user, setUser] = useState(null);

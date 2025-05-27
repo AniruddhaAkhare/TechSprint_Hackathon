@@ -25,12 +25,11 @@ const CreateFeeTemplate = ({ onCancel }) => {
         };
         try {
             const docRef = await addDoc(collection(db, 'feeTemplates'), templateData);
-            console.log('Template saved with ID: ', docRef.id);
             alert('Template saved successfully!');
             resetForm();
             onCancel();
         } catch (error) {
-            console.error('Error saving template: ', error);
+            // //console.error('Error saving template: ', error);
             alert('Error saving template. Please try again.');
         }
     };

@@ -36,7 +36,7 @@ const AddBulkCompanies = ({ isOpen, toggleSidebar, fetchCompanies }) => {
       };
       await addDoc(collection(db, "activityLogs"), activityLog);
     } catch (error) {
-      console.error("Error logging activity:", error);
+      //console.error("Error logging activity:", error);
     }
   };
 

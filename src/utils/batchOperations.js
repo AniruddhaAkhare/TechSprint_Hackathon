@@ -6,7 +6,7 @@ export const deleteBatch = async (batchId) => {
         await deleteDoc(doc(db, "Batch", batchId));
         return true;
     } catch (err) {
-        console.error("Error deleting Batch:", err);
+        //console.error("Error deleting Batch:", err);
         throw err;
     }
 };
@@ -17,7 +17,7 @@ export const updateBatch = async (batchId, updatedData) => {
         await updateDoc(batchRef, updatedData);
         return true;
     } catch (err) {
-        console.error("Error updating Batch:", err);
+        //console.error("Error updating Batch:", err);
         throw err;
     }
 };
@@ -31,7 +31,7 @@ export const getBatch = async (batchId) => {
         }
         return null;
     } catch (err) {
-        console.error("Error getting Batch:", err);
+        //console.error("Error getting Batch:", err);
         throw err;
     }
 };

@@ -24,7 +24,6 @@ const EmployeePage = () => {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          console.log("Employee data:", data);
           setEmployeeData(data);
           setError(null);
         } else {
@@ -33,7 +32,7 @@ const EmployeePage = () => {
         setLoading(false);
       },
       (err) => {
-        console.error("Error fetching employee data:", err);
+        // //console.error("Error fetching employee data:", err);
         setError("Failed to fetch employee data: " + err.message);
         setLoading(false);
       }

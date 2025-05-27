@@ -10,8 +10,7 @@ export const logActivity = async (user, action, details) => {
       action,
       details
     });
-    console.log('Activity logged successfully');
   } catch (error) {
-    console.error('Error logging activity:', error);
+    //console.error('Error logging activity:', error);
   }
 };

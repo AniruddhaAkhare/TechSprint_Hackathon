@@ -42,7 +42,7 @@ const ApplicationManagement = ({ jobId }) => {
       };
       await addDoc(collection(db, "activityLogs"), activityLog);
     } catch (error) {
-      console.error("Error logging activity:", error);
+      //console.error("Error logging activity:", error);
     }
   };
 
@@ -57,7 +57,7 @@ const ApplicationManagement = ({ jobId }) => {
         setApplications(appData);
         setFilteredApplications(appData);
       } catch (err) {
-        console.error("Error fetching applications:", err);
+        //console.error("Error fetching applications:", err);
       }
     };
 
@@ -70,7 +70,7 @@ const ApplicationManagement = ({ jobId }) => {
         }));
         setStudents(studentData);
       } catch (err) {
-        console.error("Error fetching students:", err);
+        //console.error("Error fetching students:", err);
       }
     };
 
@@ -87,7 +87,7 @@ const ApplicationManagement = ({ jobId }) => {
           setCenters(centerData);
         }
       } catch (err) {
-        console.error("Error fetching centers:", err);
+        //console.error("Error fetching centers:", err);
       }
     };
 
@@ -100,7 +100,7 @@ const ApplicationManagement = ({ jobId }) => {
         }));
         setCourses(courseData);
       } catch (err) {
-        console.error("Error fetching courses:", err);
+        //console.error("Error fetching courses:", err);
       }
     };
 
@@ -113,7 +113,7 @@ const ApplicationManagement = ({ jobId }) => {
     //     }));
     //     setBatches(batchData);
     //   } catch (err) {
-    //     console.error("Error fetching batches:", err);
+    //     //console.error("Error fetching batches:", err);
     //   }
     // };
 
@@ -126,7 +126,7 @@ const ApplicationManagement = ({ jobId }) => {
         }));
         setEnrollments(enrollmentData);
       } catch (err) {
-        console.error("Error fetching enrollments:", err);
+        //console.error("Error fetching enrollments:", err);
       }
     };
 
@@ -190,7 +190,7 @@ const ApplicationManagement = ({ jobId }) => {
       setSelectedStudents([]);
       toast.success("Applications and placements added successfully!");
     } catch (err) {
-      console.error("Error adding applications or placements:", err);
+      //console.error("Error adding applications or placements:", err);
       toast.error("Failed to add applications or placements.");
     }
   };
@@ -202,7 +202,7 @@ const ApplicationManagement = ({ jobId }) => {
       toast.success("Application updated successfully!");
       logActivity("UPDATE_APPLICATION", { applicationId: id, updates });
     } catch (err) {
-      console.error("Error updating application:", err);
+      //console.error("Error updating application:", err);
       toast.error("Failed to update application.");
     }
   };
@@ -216,7 +216,7 @@ const ApplicationManagement = ({ jobId }) => {
       toast.success("Application deleted successfully!");
       logActivity("DELETE_APPLICATION", { applicationId: id });
     } catch (err) {
-      console.error("Error deleting application:", err);
+      //console.error("Error deleting application:", err);
       toast.error("Failed to delete application.");
     }
   };
@@ -663,7 +663,7 @@ export default ApplicationManagement;
 //       };
 //       await addDoc(collection(db, "activityLogs"), activityLog);
 //     } catch (error) {
-//       console.error("Error logging activity:", error);
+//       //console.error("Error logging activity:", error);
 //     }
 //   };
 
@@ -678,7 +678,7 @@ export default ApplicationManagement;
 //         setApplications(appData);
 //         setFilteredApplications(appData);
 //       } catch (err) {
-//         console.error("Error fetching applications:", err);
+//         //console.error("Error fetching applications:", err);
 //       }
 //     };
 
@@ -691,7 +691,7 @@ export default ApplicationManagement;
 //         }));
 //         setStudents(studentData);
 //       } catch (err) {
-//         console.error("Error fetching students:", err);
+//         //console.error("Error fetching students:", err);
 //       }
 //     };
 
@@ -708,7 +708,7 @@ export default ApplicationManagement;
 //           setCenters(centerData);
 //         }
 //       } catch (err) {
-//         console.error("Error fetching centers:", err);
+//         //console.error("Error fetching centers:", err);
 //       }
 //     };
 
@@ -721,7 +721,7 @@ export default ApplicationManagement;
 //         }));
 //         setCourses(courseData);
 //       } catch (err) {
-//         console.error("Error fetching courses:", err);
+//         //console.error("Error fetching courses:", err);
 //       }
 //     };
 
@@ -734,7 +734,7 @@ export default ApplicationManagement;
 //         }));
 //         setEnrollments(enrollmentData);
 //       } catch (err) {
-//         console.error("Error fetching enrollments:", err);
+//         //console.error("Error fetching enrollments:", err);
 //       }
 //     };
 
@@ -795,7 +795,7 @@ export default ApplicationManagement;
 //       setSelectedStudents([]);
 //       toast.success("Applications and placements added successfully!");
 //     } catch (err) {
-//       console.error("Error adding applications or placements:", err);
+//       //console.error("Error adding applications or placements:", err);
 //       toast.error("Failed to add applications or placements.");
 //     }
 //   };
@@ -807,7 +807,7 @@ export default ApplicationManagement;
 //       toast.success("Application updated successfully!");
 //       logActivity("UPDATE_APPLICATION", { applicationId: id, updates });
 //     } catch (err) {
-//       console.error("Error updating application:", err);
+//       //console.error("Error updating application:", err);
 //       toast.error("Failed to update application.");
 //     }
 //   };
@@ -821,7 +821,7 @@ export default ApplicationManagement;
 //       toast.success("Application deleted successfully!");
 //       logActivity("DELETE_APPLICATION", { applicationId: id });
 //     } catch (err) {
-//       console.error("Error deleting application:", err);
+//       //console.error("Error deleting application:", err);
 //       toast.error("Failed to delete application.");
 //     }
 //   };

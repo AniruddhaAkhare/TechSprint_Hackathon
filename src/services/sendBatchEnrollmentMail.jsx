@@ -81,11 +81,11 @@ const sendBatchEnrollmentEmail = async (toEmail, fullName, batchDetails) => {
     };
 
   } catch (error) {
-    console.error("Failed to send batch enrollment email:", {
-      toEmail,
-      fullName,
-      error: error.message
-    });
+    // console.error("Failed to send batch enrollment email:", {
+    //   toEmail,
+    //   fullName,
+    //   error: error.message
+    // });
     
     throw new Error(
       error.message || 'Failed to send batch enrollment notification. Please try again later.'

@@ -19,7 +19,7 @@ const FeeTemplate = () => {
                 }));
                 setTemplates(templatesData);
             } catch (error) {
-                console.error('Error fetching templates: ', error);
+                // //console.error('Error fetching templates: ', error);
             } finally {
                 setLoading(false);
             }
@@ -34,7 +34,7 @@ const FeeTemplate = () => {
             setOpenDelete(false);
             setDeleteId(null);
         } catch (error) {
-            console.error('Error deleting template: ', error);
+            // //console.error('Error deleting template: ', error);
         }
     };
     const toggleCreateTemplate = () => {

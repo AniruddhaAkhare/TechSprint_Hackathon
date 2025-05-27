@@ -18,7 +18,7 @@
 // //         const data = await s3.listObjectsV2(params).promise();
 // //         setObjects(data.Contents || []);
 // //       } catch (error) {
-// //         console.error('Error listing objects:', error);
+// //         //console.error('Error listing objects:', error);
 // //       }
 // //     };
 
@@ -73,7 +73,7 @@
 //         const data = await s3Client.send(command);
 //         setObjects(data.Contents || []);
 //       } catch (error) {
-//         console.error('Error listing objects:', error);
+//         //console.error('Error listing objects:', error);
 //       }
 //     };
 
@@ -90,7 +90,7 @@
 //       const url = await getSignedUrl(s3Client, command, { expiresIn: 60 });
 //       window.open(url, '_blank');
 //     } catch (error) {
-//       console.error('Error generating download URL:', error);
+//       //console.error('Error generating download URL:', error);
 //     }
 //   };
 
@@ -128,7 +128,7 @@ const ListObjects = () => {
   useEffect(() => {
     const fetchObjects = async () => {
       if (!bucketName) {
-        console.error('S3 bucket name is not configured');
+        //console.error('S3 bucket name is not configured');
         return;
       }
 
@@ -142,7 +142,7 @@ const ListObjects = () => {
         const data = await s3Client.send(command);
         setObjects(data.Contents || []);
       } catch (error) {
-        console.error('Error listing objects:', error);
+        //console.error('Error listing objects:', error);
       }
     };
 
@@ -161,7 +161,7 @@ const ListObjects = () => {
       const url = await getSignedUrl(s3Client, command, { expiresIn: 60 });
       window.open(url, '_blank');
     } catch (error) {
-      console.error('Error generating download URL:', error);
+      //console.error('Error generating download URL:', error);
     }
   };
 

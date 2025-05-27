@@ -68,7 +68,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
           setUserDisplayName(user.email || "Unknown User");
         }
       } catch (error) {
-        console.error("Error fetching user displayName:", error);
+        //console.error("Error fetching user displayName:", error);
         toast.error(`Failed to fetch user data: ${error.message}`);
         setUserDisplayName(user.email || "Unknown User");
       }
@@ -88,7 +88,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
       };
       await addDoc(collection(db, "activityLogs"), activityLog);
     } catch (error) {
-      console.error("Error logging activity:", error);
+      //console.error("Error logging activity:", error);
     }
   };
 
@@ -112,7 +112,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
         }));
         setCompanies(companyData);
       } catch (err) {
-        console.error("Error fetching companies:", err);
+        //console.error("Error fetching companies:", err);
       }
     };
     if (canDisplay) fetchCompanies();
@@ -299,7 +299,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
       resetForm();
       toggleSidebar();
     } catch (error) {
-      console.error("Error saving job opening:", error);
+      //console.error("Error saving job opening:", error);
       toast.error("Failed to save job opening. Please try again.");
     }
   };

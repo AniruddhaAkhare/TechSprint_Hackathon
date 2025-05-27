@@ -97,7 +97,7 @@ export default function EditStaff() {
   // Activity Logging
   const logActivity = async (action, details) => {
     if (!currentUser) {
-      console.error("No current user available for logging");
+      //console.error("No current user available for logging");
       return;
     }
     try {
@@ -109,9 +109,8 @@ export default function EditStaff() {
         details: { staffId, ...details },
       };
       await addDoc(collection(db, "activityLogs"), logData);
-      console.log("Activity logged:", { action, details });
     } catch (error) {
-      console.error("Error logging activity:", error);
+      //console.error("Error logging activity:", error);
     }
   };
 
@@ -181,7 +180,7 @@ export default function EditStaff() {
           navigate("/staff");
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        //console.error("Error fetching data:", error);
         toast.error("Failed to fetch staff or roles data");
       }
     };
@@ -202,11 +201,7 @@ export default function EditStaff() {
       throw new Error(`Invalid file for ${docType}: File object is null or not a File instance`);
     }
 
-    console.log(`Uploading ${docType}:`, {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-    });
+
 
     const fileName = `staff/${staffId}/${docType}_${Date.now()}_${file.name}`;
     const params = {
@@ -234,7 +229,7 @@ export default function EditStaff() {
       const url = `https://${params.Bucket}.s3.${region}.amazonaws.com/${params.Key}`;
       return url;
     } catch (err) {
-      console.error(`Error uploading ${docType}:`, err);
+      //console.error(`Error uploading ${docType}:`, err);
       throw err;
     }
   };
@@ -269,7 +264,6 @@ export default function EditStaff() {
     }
 
     try {
-      console.log(`Starting upload for ${docType}:`, file.name);
       const url = await uploadFileToS3(file, docType, staffId);
       const staffRef = doc(db, "Users", staffId);
       const currentDocs = staff.staff[docType] || [];
@@ -287,7 +281,7 @@ export default function EditStaff() {
       toast.success(`${docType} uploaded successfully`);
       await logActivity("UPLOAD DOCUMENT", { docType, fileName: file.name });
     } catch (error) {
-      console.error(`Error in handleDocumentEdit for ${docType}:`, error);
+      //console.error(`Error in handleDocumentEdit for ${docType}:`, error);
       toast.error(`Failed to upload ${docType}: ${error.message}`);
     }
   };
@@ -448,7 +442,7 @@ export default function EditStaff() {
       await logActivity("UPDATE STAFF SUCCESS", { updatedFields: Object.keys(updateData) });
       navigate("/staff");
     } catch (error) {
-      console.error("Error updating staff:", error);
+      //console.error("Error updating staff:", error);
       toast.error(`Failed to update staff: ${error.message}`);
     }
   };
@@ -467,7 +461,7 @@ export default function EditStaff() {
         await logActivity("DELETE STAFF SUCCESS", {});
         navigate("/staff-and-users");
       } catch (error) {
-        console.error("Error deleting staff:", error);
+        //console.error("Error deleting staff:", error);
         toast.error("Failed to delete staff");
       }
     } else {

@@ -1043,7 +1043,7 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
             })),
         });
       } catch (err) {
-        console.error("Error fetching dynamic options:", err);
+        // //console.error("Error fetching dynamic options:", err);
         setError(`Error fetching options: ${err.message}`);
       }
     };
@@ -1084,7 +1084,6 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
 
   useEffect(() => {
     return () => {
-      console.log(`Droppable unmounted with ID: ${droppableId}`);
     };
   }, [droppableId]);
 

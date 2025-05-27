@@ -67,7 +67,6 @@ export default function EmployeeRegistrationForm() {
       // Create Firebase Authentication User
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log('User created in Auth:', user.uid);
 
       // Prepare user data
       const userData = {
@@ -78,7 +77,6 @@ export default function EmployeeRegistrationForm() {
         role,
         created_at: Timestamp.now(),
         lastLogin: Timestamp.now(),
-        // Initialize staff fields to ensure compatibility
         address: { street: '', area: '', city: '', state: '', zip: '', country: '' },
         emergency_details: { name: '', phone: '', email: '', relation: '', occupation: '' },
         date_of_birth: '',
@@ -107,15 +105,14 @@ export default function EmployeeRegistrationForm() {
       // Write to Firestore
       try {
         await setDoc(doc(db, 'Users', user.uid), userData);
-        console.log('User data written to Firestore:', userData);
         toast.success('Employee registered successfully!');
         navigate('/registration-welcome');
       } catch (firestoreError) {
-        console.error('Firestore write error:', firestoreError);
+        //console.error('Firestore write error:', firestoreError);
         throw new Error('Failed to save user data: ' + firestoreError.message);
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      //console.error('Registration error:', error);
       setError('Failed to register: ' + error.message);
       toast.error('Failed to register: ' + error.message);
     }

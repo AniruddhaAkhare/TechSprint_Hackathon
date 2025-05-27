@@ -192,15 +192,7 @@ const CourseEntryForm = ({
 }) => {
   // Debugging logs
   useEffect(() => {
-    console.log("CourseEntryForm props:", {
-      courseIndex,
-      entry,
-      coursesLength: courses?.length,
-      entryMode: entry?.mode,
-      entrySelectedCourse: entry?.selectedCourse,
-      entryFeeTemplate: entry?.feeTemplate,
-    });
-    console.log("Filtered courses:", getFilteredCourses(entry?.mode || ""));
+    
   }, [entry, courses, getFilteredCourses]);
 
   // Ensure entry is initialized
@@ -219,7 +211,6 @@ const CourseEntryForm = ({
   // Handle course selection to ensure object is passed
   const handleCourseChange = (e) => {
     const selectedCourse = courses.find((course) => course.id === e.target.value.id) || null;
-    console.log("Selected course:", selectedCourse);
     handleChange(courseIndex, "selectedCourse", selectedCourse);
   };
 

@@ -103,7 +103,7 @@ const Fees = ({ studentId }) => {
                     setError("No enrollments found for this student.");
                 }
             } catch (error) {
-                console.error("Error fetching data:", error);
+                //console.error("Error fetching data:", error);
                 setError(error.message || "Failed to fetch data.");
             } finally {
                 setIsLoading(false);
