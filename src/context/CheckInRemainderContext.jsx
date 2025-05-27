@@ -38,7 +38,7 @@ export const CheckInReminderProvider = ({ children }) => {
 
           const querySnapshot = await getDocs(collection(db, "instituteSetup"));
           if (!querySnapshot.empty) {
-            const instituteId = querySnapshot.docs[0].id;
+            const instituteId = 'RDJ9wMXGrIUk221MzDxP';
             const branchesSnapshot = await getDocs(
               collection(db, "instituteSetup", instituteId, "Center")
             );

@@ -96,6 +96,7 @@ const InstallmentReport = () => {
                 transactions: [],
                 totalPaid: 0,
                 remaining: 0,
+                validationError: '',
               };
             }
 
@@ -113,7 +114,21 @@ const InstallmentReport = () => {
               );
               totalFees = regAmount + installmentTotal;
             } else if (course.feeTemplate === 'Finance') {
+              // Use feeAfterDiscount as totalFees, or sum of registration amounts
               totalFees = toNumber(course.financeDetails?.feeAfterDiscount || 0);
+
+              // Validate sum of Loan Amount registrations matches loanAmount
+              const loanRegistrations = (course.financeDetails?.registrations || []).filter(
+                (reg) => reg.amountType === 'Loan Amount'
+              );
+              const totalLoanAmount = loanRegistrations.reduce(
+                (sum, reg) => sum + toNumber(reg.amount || 0),
+                0
+              );
+              const expectedLoanAmount = toNumber(course.financeDetails?.loanAmount || 0);
+              if (totalLoanAmount !== expectedLoanAmount && expectedLoanAmount !== 0) {
+                enrollmentMap[key].validationError = `Formula Error: Sum of Loan Amount registrations (${totalLoanAmount}) does not match Loan Amount (${expectedLoanAmount})`;
+              }
             }
 
             enrollmentMap[key].totalFees = totalFees;
@@ -135,6 +150,8 @@ const InstallmentReport = () => {
                     amount: regAmount,
                     status,
                     date: dateField,
+                    paymentMethod: fullFeesDetails.registration.paymentMethod || 'N/A',
+                    amountType: 'N/A',
                   });
                   if (status === 'Paid') {
                     enrollmentMap[key].totalPaid += regAmount;
@@ -158,6 +175,8 @@ const InstallmentReport = () => {
                     amount: finalAmount,
                     status,
                     date: dateField,
+                    paymentMethod: fullFeesDetails.finalPayment.paymentMethod || 'N/A',
+                    amountType: 'N/A',
                   });
                   if (status === 'Paid') {
                     enrollmentMap[key].totalPaid += finalAmount;
@@ -183,6 +202,8 @@ const InstallmentReport = () => {
                     amount: regAmount,
                     status,
                     date: dateField,
+                    paymentMethod: registration.paymentMethod || 'N/A',
+                    amountType: 'N/A',
                   });
                   if (status === 'Paid') {
                     enrollmentMap[key].totalPaid += regAmount;
@@ -207,6 +228,8 @@ const InstallmentReport = () => {
                     amount: status === 'Paid' ? paidAmount : dueAmount,
                     status,
                     date: dateField,
+                    paymentMethod: installment.paymentMethod || 'N/A',
+                    amountType: 'N/A',
                   });
                   if (status === 'Paid') {
                     enrollmentMap[key].totalPaid += paidAmount;
@@ -218,84 +241,69 @@ const InstallmentReport = () => {
               });
             } else if (course.feeTemplate === 'Finance') {
               const { financeDetails } = course;
-            
-              // Set total fees to Total Loan (TL)
-              const totalFees = toNumber(financeDetails?.totalLoan || financeDetails?.feeAfterDiscount || 89000);
-              enrollmentMap[key].totalFees = totalFees;
-            
-              // Downpayment (DP) - ₹23,018
-              if (financeDetails?.downPayment) {
-                const downPayment = toNumber(financeDetails.downPayment);
-                const status = financeDetails.downPaymentDate ? 'Paid' : 'Pending';
-                const dateField = financeDetails.downPaymentDate || null;
+
+              // Process Registrations
+              (financeDetails?.registrations || []).forEach((registration, regIndex) => {
+                const regAmount = toNumber(registration.amount || 0);
+                const status = registration.status || 'Pending';
+                const dateField = registration.date || null;
                 const inRange = dateField ? isDateInRange(dateField, start, end) : false;
-            
-                if (inRange || (filter === 'all' && dateField)) {
+
+                if ((inRange || (filter === 'all' && dateField)) && regAmount > 0) {
                   enrollmentMap[key].transactions.push({
-                    type: 'Finance (Downpayment)',
-                    amount: downPayment,
+
+                    // type: `Finance ${registration.srNo}`,
+                    type: 'Finance',
+                    amount: regAmount,
                     status,
                     date: dateField,
+                    paymentMethod: registration.paymentMethod || 'N/A',
+                    amountType: registration.amountType || 'Non-Loan Amount',
                   });
                   if (status === 'Paid') {
-                    enrollmentMap[key].totalPaid += downPayment;
-                    totalReceivedAcc += downPayment;
-                    totalPendingAcc += (totalFees - downPayment);
-
+                    enrollmentMap[key].totalPaid += regAmount;
+                    totalReceivedAcc += regAmount;
                   } else {
-                    totalPendingAcc += downPayment;
+                    totalPendingAcc += regAmount;
                   }
                 }
-              }
-            
-              // Disburse Amount (DA) - ₹60,206
-              if (financeDetails?.disburseAmount) {
-                const disburseAmount = toNumber(financeDetails.disburseAmount);
-                const status = financeDetails.disburseDate ? 'Approved' : (financeDetails.loanStatus || 'Pending');
-                const dateField = financeDetails.disburseDate || financeDetails.loanApprovalDate || null;
-                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
-            
-                if (inRange || (filter === 'all' && dateField)) {
-                  enrollmentMap[key].transactions.push({
-                    type: 'Finance (Disburse Amount)',
-                    amount: disburseAmount,
-                    status,
-                    date: dateField,
+
+                // Process Loan Sub-Registrations for Loan Amount registrations
+                if (registration.amountType === 'Loan Amount') {
+                  (registration.loanSubRegistrations || []).forEach((subReg, subIndex) => {
+                    const subRegAmount = toNumber(subReg.amount || 0);
+                    const subStatus = subReg.status || 'Pending';
+                    const subDateField = subReg.date || null;
+                    const subInRange = subDateField ? isDateInRange(subDateField, start, end) : false;
+
+                    // if ((subInRange || (filter === 'all' && subDateField)) && subRegAmount > 0) {
+                    //   enrollmentMap[key].transactions.push({
+                    //     type: `Finance (Loan Sub-Registration ${registration.srNo}.${subReg.srNo})`,
+                    //     amount: subRegAmount,
+                    //     status: subStatus,
+                    //     date: subDateField,
+                    //     paymentMethod: subReg.paymentMethod || 'N/A',
+                    //     amountType: 'Loan Amount',
+                    //   });
+                    //   if (subStatus === 'Paid') {
+                    //     enrollmentMap[key].totalPaid += subRegAmount;
+                    //     totalReceivedAcc += subRegAmount;
+                    //     // totalPendingAcc += (loanAmount - subRegAmount);
+                    //   } else {
+                    //     totalPendingAcc += subRegAmount;
+                    //   }
+                    // }
                   });
-                  if (status === 'Approved') {
-                    enrollmentMap[key].totalPaid += disburseAmount;
-                    totalReceivedAcc += disburseAmount;
-                  } else if (status === 'Pending') {
-                    totalPendingAcc += disburseAmount;
-                  }
                 }
-              }
-            
-              // Subvention Fee (SF) - ₹5,776 (track for reporting, no impact on paid/pending)
-              if (financeDetails?.subventionFee) {
-                const subventionFee = toNumber(financeDetails.subventionFee);
-                const dateField = financeDetails.subventionFeeDate || null;
-                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
-            
-                if (inRange || (filter === 'all' && dateField)) {
-                  enrollmentMap[key].transactions.push({
-                    type: 'Finance (Subvention Fee)',
-                    amount: subventionFee,
-                    status: 'Paid to Partner',
-                    date: dateField,
-                  });
-                  // Subvention fee is an institutional cost, so it doesn't affect totalPaid or totalPending
-                }
-              }
-            
-              // Calculate remaining balance
-              enrollmentMap[key].remaining = totalFees - enrollmentMap[key].totalPaid;
+              });
             } else if (course.feeTemplate === 'Free' && filter === 'all') {
               enrollmentMap[key].transactions.push({
                 type: 'Free',
                 amount: 0,
                 status: 'N/A',
                 date: null,
+                paymentMethod: 'N/A',
+                amountType: 'N/A',
               });
             }
 
@@ -409,6 +417,9 @@ const InstallmentReport = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Remaining
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Validation
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -439,10 +450,13 @@ const InstallmentReport = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
                         ₹{toNumber(row.remaining).toFixed(2)}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                        {row.validationError || 'Valid'}
+                      </td>
                     </tr>
                     {expandedRows[index] && (
                       <tr>
-                        <td colSpan={6} className="px-6 py-4 bg-gray-50">
+                        <td colSpan={7} className="px-6 py-4 bg-gray-50">
                           <div className="overflow-x-auto">
                             <table className="w-full divide-y divide-gray-200">
                               <thead className="bg-gray-100">
@@ -458,6 +472,12 @@ const InstallmentReport = () => {
                                   </th>
                                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Date
+                                  </th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Payment Method
+                                  </th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Amount Type
                                   </th>
                                 </tr>
                               </thead>
@@ -476,6 +496,12 @@ const InstallmentReport = () => {
                                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                                       {txn.date ? new Date(txn.date).toLocaleDateString() : 'N/A'}
                                     </td>
+                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                      {txn.paymentMethod}
+                                    </td>
+                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                      {txn.amountType}
+                                    </td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -488,7 +514,7 @@ const InstallmentReport = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
                     No fee data available.
                   </td>
                 </tr>

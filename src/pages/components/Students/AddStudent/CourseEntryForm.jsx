@@ -157,7 +157,7 @@
 // export default CourseEntryForm;
 
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Select,
   MenuItem,
@@ -190,11 +190,44 @@ const CourseEntryForm = ({
   getFilteredCourses,
   uploadProgress,
 }) => {
+  // Debugging logs
+  useEffect(() => {
+    console.log("CourseEntryForm props:", {
+      courseIndex,
+      entry,
+      coursesLength: courses?.length,
+      entryMode: entry?.mode,
+      entrySelectedCourse: entry?.selectedCourse,
+      entryFeeTemplate: entry?.feeTemplate,
+    });
+    console.log("Filtered courses:", getFilteredCourses(entry?.mode || ""));
+  }, [entry, courses, getFilteredCourses]);
+
+  // Ensure entry is initialized
+  const safeEntry = {
+    mode: "",
+    selectedCourse: null,
+    feeTemplate: "",
+    fullFeesDetails: {},
+    registration: {},
+    installmentDetails: [],
+    financeDetails: {},
+    freeReason: "",
+    ...entry,
+  };
+
+  // Handle course selection to ensure object is passed
+  const handleCourseChange = (e) => {
+    const selectedCourse = courses.find((course) => course.id === e.target.value.id) || null;
+    console.log("Selected course:", selectedCourse);
+    handleChange(courseIndex, "selectedCourse", selectedCourse);
+  };
+
   return (
     <div className="mb-8 bg-white rounded-lg shadow-md p-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <Select
-          value={entry.mode || ""}
+          value={safeEntry.mode || ""}
           onChange={(e) => handleChange(courseIndex, "mode", e.target.value)}
           displayEmpty
           className="w-full bg-gray-100 rounded-lg"
@@ -208,23 +241,27 @@ const CourseEntryForm = ({
           <MenuItem value="Hybrid">Hybrid</MenuItem>
         </Select>
         <Select
-          value={entry.selectedCourse || ""}
-          onChange={(e) => handleChange(courseIndex, "selectedCourse", e.target.value)}
+          value={safeEntry.selectedCourse || ""}
+          onChange={handleCourseChange}
           displayEmpty
           className="w-full bg-gray-100 rounded-lg"
           renderValue={(selected) =>
-            selected ? selected.name : <span className="text-gray-400">Select Course</span>
+            selected?.name ? selected.name : <span className="text-gray-400">Select Course</span>
           }
-          disabled={!entry.mode || !canUpdate}
+          disabled={!safeEntry.mode || !canUpdate}
         >
-          {getFilteredCourses(entry.mode).map((course) => (
-            <MenuItem key={course.id} value={course}>
-              {course.name}
-            </MenuItem>
-          ))}
+          {getFilteredCourses(safeEntry.mode || "").length > 0 ? (
+            getFilteredCourses(safeEntry.mode || "").map((course) => (
+              <MenuItem key={course.id} value={course}>
+                {course.name}
+              </MenuItem>
+            ))
+          ) : (
+            <MenuItem disabled>No courses available</MenuItem>
+          )}
         </Select>
         <Select
-          value={entry.feeTemplate || ""}
+          value={safeEntry.feeTemplate || ""}
           onChange={(e) => handleChange(courseIndex, "feeTemplate", e.target.value)}
           displayEmpty
           className="w-full bg-gray-100 rounded-lg"
@@ -240,10 +277,10 @@ const CourseEntryForm = ({
         </Select>
       </div>
 
-      {entry.feeTemplate === "FullFees" && (
+      {safeEntry.feeTemplate === "FullFees" && (
         <FullFeesForm
           courseIndex={courseIndex}
-          fullFeesDetails={entry.fullFeesDetails}
+          fullFeesDetails={safeEntry.fullFeesDetails}
           handleFullFeesChange={handleFullFeesChange}
           canUpdate={canUpdate}
           user={user}
@@ -251,12 +288,12 @@ const CourseEntryForm = ({
         />
       )}
 
-      {entry.feeTemplate === "Installments" && (
+      {safeEntry.feeTemplate === "Installments" && (
         <InstallmentsForm
           courseIndex={courseIndex}
-          fullFeesDetails={entry.fullFeesDetails}
-          registration={entry.registration}
-          installmentDetails={entry.installmentDetails}
+          fullFeesDetails={safeEntry.fullFeesDetails}
+          registration={safeEntry.registration}
+          installmentDetails={safeEntry.installmentDetails}
           handleFullFeesChange={handleFullFeesChange}
           handleRegistrationChange={handleRegistrationChange}
           handleInstallmentChange={handleInstallmentChange}
@@ -268,14 +305,14 @@ const CourseEntryForm = ({
         />
       )}
 
-      {entry.feeTemplate === "Free" && (
+      {safeEntry.feeTemplate === "Free" && (
         <div className="space-y-4">
           <Typography className="text-gray-600 mt-4">
             This is a free course
           </Typography>
           <TextField
             label="Reason for Free Course"
-            value={entry.freeReason || ""}
+            value={safeEntry.freeReason || ""}
             onChange={(e) => handleChange(courseIndex, "freeReason", e.target.value)}
             variant="outlined"
             size="small"
@@ -285,11 +322,11 @@ const CourseEntryForm = ({
         </div>
       )}
 
-      {entry.feeTemplate === "Finance" && (
+      {safeEntry.feeTemplate === "Finance" && (
         <FinanceForm
           courseIndex={courseIndex}
-          fullFeesDetails={entry.fullFeesDetails}
-          financeDetails={entry.financeDetails}
+          fullFeesDetails={safeEntry.fullFeesDetails}
+          financeDetails={safeEntry.financeDetails}
           handleFinanceChange={handleFinanceChange}
           handleFileChange={handleFileChange}
           financePartners={financePartners}

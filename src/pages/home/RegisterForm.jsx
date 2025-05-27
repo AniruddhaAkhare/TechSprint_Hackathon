@@ -228,7 +228,7 @@ export default function RegisterForm() {
                             <input
                                 id="password"
                                 name="password"
-                                type={showPassword ? 'text' : 'password'} // Toggle type based on showPassword
+                                type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
