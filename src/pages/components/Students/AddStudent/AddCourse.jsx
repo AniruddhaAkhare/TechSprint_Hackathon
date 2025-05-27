@@ -1179,10 +1179,6 @@ const AddCourse = () => {
     }
   };
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 8a09a8db8b4c5844fcd8d803f5c0bed95525e0b2
   const deleteFileFromS3 = async (s3Url, docType, studentId, courseIndex) => {
     const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
     const region = import.meta.env.VITE_AWS_REGION;
