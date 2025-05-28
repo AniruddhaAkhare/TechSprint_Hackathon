@@ -35,7 +35,6 @@ export default function HeaderContent() {
       await signOut(auth);
       navigate('/login');
     } catch (error) {
-      console.error('Logout error:', error);
     }
   };
 

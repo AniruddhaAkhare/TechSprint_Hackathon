@@ -37,9 +37,9 @@ const Sidebar = () => {
     users: false,
     settings: false,
     hr: false,
-    home:false,
-    analytics:false, 
-    learners:false,
+    home: false,
+    analytics: false,
+    learners: false,
   });
 
   // Permission checks
@@ -84,12 +84,12 @@ const Sidebar = () => {
               // initials: `${userData.f_name?.charAt(0) || ""}${userData.l_name?.charAt(0) || ""}`.toUpperCase(),
             });
           } else {
-            setUser({ name: "User"});
+            setUser({ name: "User" });
           }
         } catch (err) {
           //console.error("Error fetching user data:", err);
           setError("Failed to fetch user data: " + err.message);
-          setUser({name: "User"});
+          setUser({ name: "User" });
         }
 
         try {
@@ -229,7 +229,7 @@ const Sidebar = () => {
             <span>&nbsp;&nbsp;Tasks</span>
           </li>
         </Link>
-        
+
 
 
         {/* <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("home")}>
@@ -247,31 +247,31 @@ const Sidebar = () => {
           {accordionState.enquiry ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
         </li>
         {accordionState.enquiry &&
-        <>
-        {canViewEnquiry && (
-          <Link to="/enquiry" className="nav-link" >
-            <li className="nav-item">
-              <i class="fa-solid fa-circle-question"></i>
-              <span>&nbsp;&nbsp;Enquiry Management</span>
-            </li>
-          </Link>
-        )}
-        {canViewEnquiryForms && (
-          <Link to="/addFormForEnquiry" className="nav-link" >
-            <li className="nav-item">
-              <i class="fa-brands fa-wpforms"></i>
-              <span>&nbsp;&nbsp;Enquiry Form</span>
-            </li>
-          </Link>
-        )}
+          <>
+            {canViewEnquiry && (
+              <Link to="/enquiry" className="nav-link" >
+                <li className="nav-item">
+                  <i class="fa-solid fa-circle-question"></i>
+                  <span>&nbsp;&nbsp;Enquiry Management</span>
+                </li>
+              </Link>
+            )}
+            {canViewEnquiryForms && (
+              <Link to="/addFormForEnquiry" className="nav-link" >
+                <li className="nav-item">
+                  <i class="fa-brands fa-wpforms"></i>
+                  <span>&nbsp;&nbsp;Enquiry Form</span>
+                </li>
+              </Link>
+            )}
 
-        </>
+          </>
         }
         <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("academic")}>
           Academics
           {accordionState.academic ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
         </li>
-        {accordionState.academic &&(
+        {accordionState.academic && (
           <>
             {canViewCourses && (
               <Link to="/courses" className="nav-link">
@@ -300,7 +300,7 @@ const Sidebar = () => {
             {canViewSessions && (
               <Link to="/sessions" className="nav-link">
                 <li className="nav-item">
-                 <i class="fa-solid fa-calendar"></i>
+                  <i class="fa-solid fa-calendar"></i>
                   <span>&nbsp;&nbsp;Session Management</span>
                 </li>
               </Link>
@@ -362,7 +362,7 @@ const Sidebar = () => {
                 </li>
               </Link>
             )}
-            
+
           </>
         )}
 
@@ -430,7 +430,7 @@ const Sidebar = () => {
         </li>
         {accordionState.hr && (
           <>
-          {canViewInstructors && (
+            {canViewInstructors && (
               <Link to="/staff" className="nav-link">
                 <li className="nav-item">
                   <i class="fa-solid fa-users"></i>
@@ -466,17 +466,17 @@ const Sidebar = () => {
         )}
 
         <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("analytics")}>
-            Analytics          
+          Analytics
           {accordionState.analytics ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
         </li>
         {accordionState.analytics && (
           <>
             <Link to="/dashboard" className="nav-link" >
-          <li className="nav-item">
-            <i class="fa-solid fa-table-columns"></i>
-            <span>&nbsp;&nbsp;Organisational Dashboard</span>
-          </li>
-        </Link>
+              <li className="nav-item">
+                <i class="fa-solid fa-table-columns"></i>
+                <span>&nbsp;&nbsp;Organisational Dashboard</span>
+              </li>
+            </Link>
           </>
         )}
 

@@ -19,7 +19,6 @@ const contextActions = (dispatch) => {
           }));
           dispatch({ type: actionTypes.SET_ITEMS, payload: items });
         } catch (error) {
-          console.error('Error fetching items:', error);
         }
       },
       // Add item to Firestore
@@ -28,7 +27,6 @@ const contextActions = (dispatch) => {
           const docRef = await addDoc(collection(db, 'items'), itemData);
           dispatch({ type: actionTypes.ADD_ITEM, payload: { id: docRef.id, ...itemData } });
         } catch (error) {
-          console.error('Error adding item:', error);
         }
       },
       // Update item in Firestore
@@ -38,7 +36,6 @@ const contextActions = (dispatch) => {
           await updateDoc(itemRef, updatedData);
           dispatch({ type: actionTypes.UPDATE_ITEM, payload: { id, ...updatedData } });
         } catch (error) {
-          console.error('Error updating item:', error);
         }
       },
       // Delete item from Firestore
@@ -47,7 +44,6 @@ const contextActions = (dispatch) => {
           await deleteDoc(doc(db, 'items', id));
           dispatch({ type: actionTypes.DELETE_ITEM, payload: id });
         } catch (error) {
-          console.error('Error deleting item:', error);
         }
       },
     },

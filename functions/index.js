@@ -69,11 +69,6 @@ exports.sendEmail = functions.region("us-central1").https.onCall(async (data) =>
     };
 
   } catch (error) {
-    console.error("ZeptoMail API Error:", {
-      status: error.response?.status,
-      error: error.response?.data,
-      request: error.config?.data
-    });
 
     throw new functions.https.HttpsError(
       'internal',
