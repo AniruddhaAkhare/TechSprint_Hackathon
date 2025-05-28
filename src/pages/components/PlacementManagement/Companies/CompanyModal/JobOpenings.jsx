@@ -97,7 +97,7 @@ const JobOpenings = ({
           <h4 className="text-sm font-medium mb-2">Add New Job Opening</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700">Job Title</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700">Job Title <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={newJob.title || ""}

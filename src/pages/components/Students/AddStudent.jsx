@@ -17,7 +17,7 @@ export default function AddStudent() {
   const [billingAddress, setBillingAddress] = useState({ name: "", street: "", area: "", city: "", state: "", zip: "", country: "", gstNo: "" });
   const [copyAddress, setCopyAddress] = useState(false);
   const [status, setStatus] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState(null);
   const [guardianDetails, setGuardianDetails] = useState({ name: "", phone: "", email: "", relation: "", occupation: "" });
   const [admissionDate, setAdmissionDate] = useState("");
   const [courseDetails, setCourseDetails] = useState([]);
@@ -548,7 +548,7 @@ export default function AddStudent() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600">Date of Birth</label>
+                <label className="block text-sm font-medium text-gray-600">Date of Birth <span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   value={dateOfBirth}

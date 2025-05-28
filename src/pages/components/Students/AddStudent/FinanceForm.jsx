@@ -270,11 +270,11 @@ const FinanceForm = ({
         <Table>
           <TableHead>
             <TableRow className="bg-blue-50">
-              <TableCell className="text-gray-800 font-medium">Total Fees</TableCell>
-              <TableCell className="text-gray-800 font-medium">Discount Type</TableCell>
-              <TableCell className="text-gray-800 font-medium">Discount Value</TableCell>
-              <TableCell className="text-gray-800 font-medium">Discount Reason</TableCell>
-              <TableCell className="text-gray-800 font-medium">Fee After Discount</TableCell>
+              <TableCell className="text-gray-800 font-medium w-48">Total Fees</TableCell>
+              <TableCell className="text-gray-800 font-medium w-48">Discount Type</TableCell>
+              <TableCell className="text-gray-800 font-medium w-48">Discount Value</TableCell>
+              <TableCell className="text-gray-800 font-medium w-48">Discount Reason</TableCell>
+              <TableCell className="text-gray-800 font-medium w-48">Fee After Discount</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -327,20 +327,20 @@ const FinanceForm = ({
       </TableContainer>
 
       {/* Registrations Table */}
-      <Typography variant="subtitle1" className="text-gray-800 font-medium overflow-y-auto">Fees</Typography>
+      <Typography variant="subtitle1" className="text-gray-800 font-medium overflow-y-auto overflow-x-auto">Fees</Typography>
       <TableContainer>
         <Table>
           <TableHead>
             <TableRow className="bg-blue-50">
-              <TableCell className="text-gray-800 font-medium min-w-[40px]">Sr. No.</TableCell>
-              <TableCell className="text-gray-800 font-medium min-w-[100px]">Amount</TableCell>
-              <TableCell className="text-gray-800 font-medium min-w-[120px]">Date</TableCell>
-              <TableCell className="text-gray-800 font-medium min-w-[150px]">Payment Method</TableCell>
-              <TableCell className="text-gray-800 font-medium min-w-[120px]">Received By</TableCell>
-              <TableCell className="text-gray-800 font-medium min-w-[150px]">Remark</TableCell>
-              <TableCell className="text-gray-800 font-medium min-w-[100px]">Status</TableCell>
-              <TableCell className="text-gray-800 font-medium min-w-[120px]">Amount Type</TableCell>
-              <TableCell className="text-gray-800 font-medium min-w-[100px]">Action</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52 ">Sr. No.</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Amount</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Amount Type</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Date</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Payment Method</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Received By</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Remark</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Status</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -353,9 +353,22 @@ const FinanceForm = ({
                       type="number"
                       value={registration.amount || ""}
                       onChange={(e) => handleRegistrationChange(index, "amount", e.target.value)}
+                      className="w-52"
                       size="small"
                       disabled={!canUpdate}
                     />
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={registration.amountType || "Non-Loan Amount"}
+                      onChange={(e) => handleRegistrationChange(index, "amountType", e.target.value)}
+                      size="small"
+                      fullWidth
+                      disabled={!canUpdate}
+                    >
+                      <MenuItem value="Loan Amount">Loan Amount</MenuItem>
+                      <MenuItem value="Non-Loan Amount">Non-Loan Amount</MenuItem>
+                    </Select>
                   </TableCell>
                   <TableCell>
                     <TextField
@@ -363,7 +376,8 @@ const FinanceForm = ({
                       value={registration.date || ""}
                       onChange={(e) => handleRegistrationChange(index, "date", e.target.value)}
                       size="small"
-                      disabled={!canUpdate}
+                      className="w-52"
+                      disabled={!canUpdate || registration.amountType=="Loan Amount"}
                       InputLabelProps={{ shrink: true }}
                     />
                   </TableCell>
@@ -372,9 +386,10 @@ const FinanceForm = ({
                       value={registration.paymentMethod || ""}
                       onChange={(e) => handleRegistrationChange(index, "paymentMethod", e.target.value)}
                       size="small"
+                      className="w-52"
                       displayEmpty
                       fullWidth
-                      disabled={!canUpdate}
+                      disabled={!canUpdate || registration.amountType=="Loan Amount"}
                     >
                       <MenuItem value="" disabled>Select Payment Method</MenuItem>
                       <MenuItem value="Cash">Cash</MenuItem>
@@ -389,7 +404,8 @@ const FinanceForm = ({
                       value={registration.receivedBy || ""}
                       onChange={(e) => handleRegistrationChange(index, "receivedBy", e.target.value)}
                       size="small"
-                      disabled={!canUpdate}
+                      className="w-52"
+                      disabled={!canUpdate || registration.amountType=="Loan Amount"}
                     />
                   </TableCell>
                   <TableCell>
@@ -397,6 +413,7 @@ const FinanceForm = ({
                       value={registration.remark || ""}
                       onChange={(e) => handleRegistrationChange(index, "remark", e.target.value)}
                       size="small"
+                      className="w-52"
                       disabled={!canUpdate}
                     />
                   </TableCell>
@@ -410,18 +427,6 @@ const FinanceForm = ({
                     >
                       <MenuItem value="Pending">Pending</MenuItem>
                       <MenuItem value="Paid">Paid</MenuItem>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={registration.amountType || "Non-Loan Amount"}
-                      onChange={(e) => handleRegistrationChange(index, "amountType", e.target.value)}
-                      size="small"
-                      fullWidth
-                      disabled={!canUpdate}
-                    >
-                      <MenuItem value="Loan Amount">Loan Amount</MenuItem>
-                      <MenuItem value="Non-Loan Amount">Non-Loan Amount</MenuItem>
                     </Select>
                   </TableCell>
                   <TableCell>
@@ -549,7 +554,7 @@ const FinanceForm = ({
                               disabled={!canUpdate}
                               className="mt-2"
                             >
-                              Add Downpayment
+                              Add Loan Downpayment
                             </Button>
                           </TableContainer>
                         </AccordionDetails>
@@ -573,7 +578,7 @@ const FinanceForm = ({
           onClick={handleAddRegistration}
           disabled={!canUpdate}
         >
-          Add Registration
+          Add Fees
         </Button>
       </div>
 
@@ -733,17 +738,7 @@ const FinanceForm = ({
           fullWidth
           disabled={!canUpdate}
         />
-        <TextField
-          label="Down Payment Date"
-          type="date"
-          value={financeDetails.downPaymentDate || ""}
-          onChange={(e) => handleFinanceChange(courseIndex, "downPaymentDate", "", e.target.value)}
-          variant="outlined"
-          size="small"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          disabled={!canUpdate}
-        />
+        
       </div>
 
       {/* Documents Table */}

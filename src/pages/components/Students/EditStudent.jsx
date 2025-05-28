@@ -720,7 +720,7 @@ export default function EditStudent() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600">Date of Birth</label>
+                                    <label className="block text-sm font-medium text-gray-600">Date of Birth <span className="text-red-500">*</span></label>
                                     <input
                                         type="date"
                                         name="date_of_birth"
