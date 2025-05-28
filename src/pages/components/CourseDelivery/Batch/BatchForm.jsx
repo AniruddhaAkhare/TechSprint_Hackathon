@@ -34,7 +34,7 @@ const BatchForm = ({
 
       <div>
         <label htmlFor="batchName" className="block text-base font-medium text-gray-700 mb-1">
-          Batch Name
+          Batch Name <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -48,7 +48,7 @@ const BatchForm = ({
 
       <div>
         <label htmlFor="startDate" className="block text-base font-medium text-gray-700 mb-1">
-          Start Date
+          Start Date <span className="text-red-500">*</span>
         </label>
         <input
           type="date"
@@ -62,7 +62,7 @@ const BatchForm = ({
 
       <div>
         <label htmlFor="endDate" className="block text-base font-medium text-gray-700 mb-1">
-          End Date
+          End Date <span className="text-red-500">*</span>
         </label>
         <input
           type="date"
@@ -75,7 +75,7 @@ const BatchForm = ({
 
       <div>
         <label htmlFor="status" className="block text-base font-medium text-gray-700 mb-1">
-          Status
+          Status <span className="text-red-500">*</span>
         </label>
         <select
           value={status}
