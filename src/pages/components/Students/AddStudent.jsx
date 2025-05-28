@@ -17,7 +17,7 @@ export default function AddStudent() {
   const [billingAddress, setBillingAddress] = useState({ name: "", street: "", area: "", city: "", state: "", zip: "", country: "", gstNo: "" });
   const [copyAddress, setCopyAddress] = useState(false);
   const [status, setStatus] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState(null);
   const [guardianDetails, setGuardianDetails] = useState({ name: "", phone: "", email: "", relation: "", occupation: "" });
   const [admissionDate, setAdmissionDate] = useState("");
   const [courseDetails, setCourseDetails] = useState([]);
@@ -321,7 +321,7 @@ export default function AddStudent() {
         billing_address: billingAddress,
         goal: goal || "Not specified",
         status: status,
-        date_of_birth: Timestamp.fromDate(new Date(dateOfBirth)),
+        date_of_birth: dateOfBirth ? Timestamp.fromDate(new Date(dateOfBirth)) : null,
         guardian_details: {
           ...guardianDetails,
           phone: fullGuardianPhoneNumber
@@ -570,7 +570,7 @@ export default function AddStudent() {
             <h2 className="text-lg font-medium text-gray-700 mb-4">Personal Details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600">Name</label>
+                <label className="block text-sm font-medium text-gray-600">Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={Name}
@@ -581,7 +581,7 @@ export default function AddStudent() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600">Email</label>
+                <label className="block text-sm font-medium text-gray-600">Email <span className="text-red-500">*</span></label>
                 <input
                   type="email"
                   value={email}
@@ -592,7 +592,7 @@ export default function AddStudent() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600">Phone</label>
+                <label className="block text-sm font-medium text-gray-600">Phone <span className="text-red-500">*</span></label>
                 <div className="flex mt-1">
                   <select
                     value={countryCode}
@@ -616,7 +616,7 @@ export default function AddStudent() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600">Date of Birth</label>
+                <label className="block text-sm font-medium text-gray-600">Date of Birth <span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   value={dateOfBirth}
