@@ -140,6 +140,7 @@ export default function JobOpenings() {
 
   const handleDeleteClick = (jobId) => {
     if (!canDelete) return;
+    console.log("Setting deleteId:", jobId); // Debug
     setDeleteId(jobId);
     setOpenDelete(true);
     logActivity("OPEN_DELETE_JOB", { jobId });
@@ -151,30 +152,24 @@ export default function JobOpenings() {
   };
 
   const deleteJob = async () => {
-    if (!canDelete || !deleteId) return;
+    if (!canDelete || !deleteId) {
+      console.log("Cannot delete: canDelete:", canDelete, "deleteId:", deleteId);
+      toast.error("Cannot delete job: Missing permissions or job ID.");
+      return;
+    }
     try {
-      // Fetch job data to get title and companyId
+      console.log("Attempting to delete job with ID:", deleteId);
       const jobRef = doc(db, "JobOpenings", deleteId);
       const jobDoc = await getDoc(jobRef);
+      console.log("Job exists:", jobDoc.exists());
       if (!jobDoc.exists()) {
         throw new Error("Job not found");
       }
       const jobData = jobDoc.data();
       const jobTitle = jobData.title;
       const companyId = jobData.companyId;
-
-      // Add history entry to job document
-      const jobHistoryEntry = {
-        action: "Deleted",
-        performedBy: userDisplayName,
-        timestamp: new Date().toISOString(),
-        details: `Deleted job "${jobTitle}"`,
-      };
-      await updateDoc(jobRef, {
-        history: arrayUnion(jobHistoryEntry),
-        updatedAt: serverTimestamp(),
-      });
-
+      console.log("Job data:", { title: jobTitle, companyId });
+  
       // Add history entry to company document
       const companyHistoryEntry = {
         action: `Deleted job opening: "${jobTitle}"`,
@@ -183,14 +178,21 @@ export default function JobOpenings() {
       };
       const companyRef = doc(db, "Companies", companyId);
       const companyDoc = await getDoc(companyRef);
-      const currentCompanyHistory = companyDoc.exists() && Array.isArray(companyDoc.data().history) ? companyDoc.data().history : [];
-      await updateDoc(companyRef, {
-        history: [...currentCompanyHistory, companyHistoryEntry],
-        updatedAt: serverTimestamp(),
-      });
-
+      console.log("Company exists:", companyDoc.exists(), "Company ID:", companyId);
+      if (companyDoc.exists()) {
+        const currentCompanyHistory = Array.isArray(companyDoc.data().history) ? companyDoc.data().history : [];
+        await updateDoc(companyRef, {
+          history: [...currentCompanyHistory, companyHistoryEntry],
+          updatedAt: serverTimestamp(),
+        });
+        console.log("Company history updated");
+      } else {
+        console.warn("Company document not found, skipping history update");
+      }
+  
       // Delete the job
       await deleteDoc(jobRef);
+      console.log("Job deleted successfully");
       fetchJobOpenings();
       setSelectedJob(null);
       setOpenDelete(false);
@@ -198,12 +200,13 @@ export default function JobOpenings() {
       toast.success("Job opening deleted successfully!");
       logActivity("DELETE_JOB", { jobId: deleteId, title: jobTitle });
     } catch (err) {
-      //console.error("Error deleting job:", err);
+      console.error("Error deleting job:", err);
       setDeleteMessage("An error occurred while trying to delete the job opening.");
       toast.error(`Failed to delete job opening: ${err.message}`);
     }
   };
 
+  
   const exportToExcel = async (jobId) => {
     try {
       const snapshot = await getDocs(collection(db, `JobOpenings/${jobId}/Applications`));
