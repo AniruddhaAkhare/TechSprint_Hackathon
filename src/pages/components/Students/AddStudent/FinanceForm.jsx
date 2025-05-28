@@ -446,7 +446,7 @@ const FinanceForm = ({
                     <TableCell colSpan={9}>
                       <Accordion>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          <Typography>Loan Sub-Registrations</Typography>
+                          <Typography>Loan Downpayment</Typography>
                         </AccordionSummary>
                         <AccordionDetails>
                           <TableContainer>

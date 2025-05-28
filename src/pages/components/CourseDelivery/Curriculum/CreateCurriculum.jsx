@@ -28,7 +28,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
           // //console.error('No instituteSetup document found');
           return;
         }
-        const instituteId = instituteSnapshot.docs[0].id;
+        const instituteId = "RDJ9wMXGrIUk221MzDxP";
         const centerQuery = query(
           collection(db, 'instituteSetup', instituteId, 'Center'),
           where('isActive', '==', true)
@@ -82,12 +82,12 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name) {
-      alert('Please enter a curriculum name.');
-      return;
-    }
+    // if (!formData.name) {
+    //   // alert('Please enter a curriculum name.');
+    //   return;
+    // }
     if (formData.centers.length === 0) {
-      alert('Please select at least one center.');
+      toast('Please select at least one center.');
       return;
     }
 
@@ -243,6 +243,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
                     placeholder="Enter curriculum name"
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50"
                     maxLength="100"
+                    required
                     disabled={loading}
                   />
                   <span className="text-xs text-gray-500 mt-1 block">
@@ -266,7 +267,8 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
                             checked={formData.centers.includes(center.id)}
                             onChange={() => handleCenterChange(center.id)}
                             className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500 disabled:opacity-50"
-                            disabled={loading}
+                            // disabled={loading}
+                            
                           />
                           <span className="text-sm text-gray-700">{center.name}</span>
                         </label>

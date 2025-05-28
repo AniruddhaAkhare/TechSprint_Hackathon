@@ -22,7 +22,6 @@ export function InstituteProvider({ children }) {
         setSelectedInstitute('RDJ9wMXGrIUk221MzDxP');
       }
     } catch (err) {
-      console.error("Error fetching institutes:", err.message);
     }
   };
 

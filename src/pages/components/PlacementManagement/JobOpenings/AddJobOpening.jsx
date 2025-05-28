@@ -342,7 +342,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-              Job Title
+              Job Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -357,7 +357,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
           </div>
           <div>
             <label htmlFor="company" className="block text-sm font-medium text-gray-700">
-              Company
+              Company <span className="text-red-500">*</span>
             </label>
             <select
               id="company"
@@ -377,7 +377,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
           </div>
           <div>
             <label htmlFor="jobType" className="block text-sm font-medium text-gray-700">
-              Job Type
+              Job Type <span className="text-red-500">*</span>
             </label>
             <select
               id="jobType"

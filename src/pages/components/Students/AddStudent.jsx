@@ -120,7 +120,7 @@ export default function AddStudent() {
     { code: "+269", label: "Comoros (+269)" },
     { code: "+291", label: "Eritrea (+291)" },
     { code: "+297", label: "Aruba (+297)" },
-    { code: "+298", label: "Far deviance (+298)" },
+    { code: "+298", label: "Faroe Islands (+298)" },
     { code: "+299", label: "Greenland (+299)" },
     { code: "+351", label: "Portugal (+351)" },
     { code: "+352", label: "Luxembourg (+352)" },
@@ -277,19 +277,6 @@ export default function AddStudent() {
     }
   };
 
-  // const fetchFeeTemplates = async () => {
-  //   try {
-  //     const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
-  //     if (templateSnapshot.empty) {
-  //       alert("No fee templates found.");
-  //       return;
-  //     }
-  //     setFeeTemplates(templateSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-  //   } catch (error) {
-  //     //console.error("Error in fetching payment type:", error);
-  //   }
-  // };
-
   const handleAddStudent = async (e) => {
     e.preventDefault();
     if (!Name.trim() || !email.trim() || !phone.trim()) {
@@ -338,75 +325,20 @@ export default function AddStudent() {
       });
 
       const studentId = studentDocRef.id;
-      const enrollmentsRef = collection(db, 'enrollments');
-      let paidAmt = 0;
-      const today = new Date().toISOString().split("T")[0];
 
-      let outstanding = 0;
-      let overdue = 0;
-
-      installmentDetails.forEach((installment) => {
-        const amtPaid = Number(installment.paidAmount) || 0;
-        const amtDue = Number(installment.dueAmount) || 0;
-
-        paidAmt += amtPaid;
-
-        const dueDate = new Date(installment.dueDate).toISOString().split("T")[0];
-        if (dueDate > today && !installment.paidAmount) {
-          outstanding += amtDue;
-        } else if (dueDate <= today && !installment.paidAmount) {
-          overdue += amtDue;
-        }
-      });
-
-      const enrollmentData = {
-        student_id: studentId,
-        course_id: courseId,
-        enrollment_date: Timestamp.fromDate(new Date(admissionDate)),
-        fee: {
-          discount: discount || 0,
-          total: total || 0,
-          overdue: overdue,
-          paid: paidAmt,
-          outstanding: outstanding,
-        },
-        installments: installmentDetails,
-      };
-      await addDoc(enrollmentsRef, enrollmentData);
-
-      const installmentsRef = collection(db, 'installments');
-      for (const installmentData of installmentDetails) {
-        await addDoc(installmentsRef, {
-          ...installmentData,
-          student_id: studentId
-        });
-      }
-
-      // Send welcome email after successful student creation
-      // Send welcome email after successful student creation
       try {
-       
-        
-        
         await sendWelcomeEmail({
           toEmail: email,
           fullName: `${capitalizeFirstLetter(Name)}`
         });
         alert("Student added successfully! Welcome email sent.");
       } catch (emailError) {
-        //console.error("Welcome email failed to send:", {
-        //   message: emailError.message,
-        //   code: emailError.code,
-        //   details: emailError.details || emailError,
-        //   stack: emailError.stack,
-        // }); // Enhanced error logging
         alert("Student added successfully, but welcome email failed to send.");
       }
 
-
       navigate("/studentdetails");
     } catch (error) {
-      console.error("");
+      console.error("Error adding student:", error);
       alert("Error adding student. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -621,7 +553,6 @@ export default function AddStudent() {
                   type="date"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
-                  // required
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -1101,7 +1032,6 @@ export default function AddStudent() {
             </div>
           </div>
 
-          
           <div className="flex justify-end">
             <button
               type="submit"

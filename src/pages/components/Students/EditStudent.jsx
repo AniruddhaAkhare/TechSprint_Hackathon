@@ -528,7 +528,7 @@ export default function EditStudent() {
             return;
         }
 
-        if (!student.Name || !student.email || !student.phoneNumber || !student.date_of_birth) {
+        if (!student.Name || !student.email || !student.phoneNumber ) {
             toast.error("Please fill necessary fields: Name, Email, Phone Number, Date of Birth");
             return;
         }
@@ -546,8 +546,8 @@ export default function EditStudent() {
                 goal: student.goal,
                 residential_address: student.address,
                 billing_address: student.billingAddress,
-                date_of_birth: validateDate(student.date_of_birth, "Date of Birth", true),
-                admission_date: validateDate(student.admission_date, "Admission Date", false),
+                date_of_birth: student.date_of_birth,
+                admission_date: student.admission_date,
                 education_details: student.educationDetails,
                 experience_details: student.experienceDetails,
                 preferred_centers: student.preferred_centers,

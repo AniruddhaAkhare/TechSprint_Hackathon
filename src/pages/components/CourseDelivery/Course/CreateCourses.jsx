@@ -48,7 +48,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
         }
 
         // Fetch Instructors/Owners
-        const ownerSnapshot = await getDocs(collection(db, "Instructor"));
+        const ownerSnapshot = await getDocs(collection(db, "Users"));
         const ownersList = ownerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setOwners(ownersList);
         setAvailableOwners(ownersList);
@@ -201,7 +201,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label htmlFor="courseName" className="block text-base font-medium text-gray-700">
-            Course Name
+            Course Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -215,7 +215,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
 
         <div>
           <label htmlFor="courseDescription" className="block text-base font-medium text-gray-700">
-            Course Description
+            Course Description <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -229,7 +229,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
 
         <div>
           <label htmlFor="courseFee" className="block text-base font-medium text-gray-700">
-            Fee
+            Fee <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
@@ -243,7 +243,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
 
         <div>
           <label htmlFor="courseDuration" className="block text-base font-medium text-gray-700">
-            Duration
+            Duration <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -257,7 +257,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
 
         <div>
           <label htmlFor="courseMode" className="block text-base font-medium text-gray-700">
-            Mode
+            Mode <span className="text-red-500">*</span>
           </label>
           <select
             value={courseMode}
@@ -274,7 +274,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
 
         <div>
           <label htmlFor="courseStatus" className="block text-base font-medium text-gray-700">
-            Status
+            Status <span className="text-red-500">*</span>
           </label>
           <select
             value={courseStatus}
@@ -351,7 +351,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
             <option value="">Select an Owner</option>
             {availableOwners.map((owner) => (
               <option key={owner.id} value={owner.id}>
-                {owner.f_name}
+                {owner.displayName}
               </option>
             ))}
           </select>
