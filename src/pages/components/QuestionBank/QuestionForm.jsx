@@ -123,7 +123,7 @@ const QuestionForm = ({ onAddQuestion, initialData, questions }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="overflow-y-auto h-full">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Question</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Question <span className="text-red-500">*</span></label>
         <input
           type="text"
           value={formData.question}
@@ -135,7 +135,7 @@ const QuestionForm = ({ onAddQuestion, initialData, questions }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Type <span className="text-red-500">*</span></label>
         <select
           value={formData.type}
           onChange={(e) => setFormData({ ...formData, type: e.target.value })}
@@ -149,7 +149,7 @@ const QuestionForm = ({ onAddQuestion, initialData, questions }) => {
       </div>
 
       <div className="relative">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Subject <span className="text-red-500">*</span></label>
         <input
           type="text"
           value={formData.subject}

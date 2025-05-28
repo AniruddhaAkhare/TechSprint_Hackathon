@@ -302,7 +302,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
 
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Session Name</label>
+            <label className="block text-sm font-medium text-gray-700">Session Name <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={sessionName}
@@ -449,7 +449,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Date</label>
+              <label className="block text-sm font-medium text-gray-700">Date <span className="text-red-500">*</span></label>
               <input
                 type="date"
                 value={date}
@@ -460,7 +460,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Start Time</label>
+              <label className="block text-sm font-medium text-gray-700">Start Time <span className="text-red-500">*</span></label>
               <input
                 type="time"
                 value={startTime}
@@ -470,7 +470,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">End Time</label>
+              <label className="block text-sm font-medium text-gray-700">End Time <span className="text-red-500">*</span></label>
               <input
                 type="time"
                 value={endTime}
@@ -514,7 +514,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Session Mode</label>
+            <label className="block text-sm font-medium text-gray-700">Session Mode <span className="text-red-500">*</span></label>
             <div className="flex flex-col sm:flex-row gap-4 mt-1">
               <label className="flex items-center">
                 <input
@@ -544,7 +544,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
           {sessionMode === "Online" && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Meeting Platform</label>
+                <label className="block text-sm font-medium text-gray-700">Meeting Platform <span className="text-red-500">*</span></label>
                 <select
                   value={meetingPlatform}
                   onChange={(e) => setMeetingPlatform(e.target.value)}
@@ -558,7 +558,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Session Link</label>
+                <label className="block text-sm font-medium text-gray-700">Session Link <span className="text-red-500">*</span></label>
                 <input
                   type="url"
                   value={sessionLink}
@@ -573,7 +573,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
 
           {sessionMode === "Offline" && (
             <div>
-              <label className="block text-sm font-medium text-gray-700">Venue</label>
+              <label className="block text-sm font-medium text-gray-700">Venue <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={venue}

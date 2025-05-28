@@ -50,7 +50,6 @@ export function AuthProvider({ children }) {
           setRolePermissions({});
         }
       } catch (error) {
-        console.error('Error in auth state change:', error);
         setUser(null);
         setRolePermissions({});
       } finally {

@@ -257,7 +257,7 @@ const CourseAnalyticsDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px] overflow-y-auto">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Course Management Analytics</h1>
 

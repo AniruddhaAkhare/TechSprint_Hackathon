@@ -506,7 +506,7 @@ export default function EditStaff() {
             <h2 className="text-lg font-medium text-gray-700 mb-4">Personal Details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600">Name</label>
+                <label className="block text-sm font-medium text-gray-600">Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="displayName"
@@ -519,7 +519,7 @@ export default function EditStaff() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600">Email</label>
+                <label className="block text-sm font-medium text-gray-600">Email <span className="text-red-500">*</span></label>
                 <input
                   type="email"
                   name="email"
@@ -573,7 +573,7 @@ export default function EditStaff() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600">Role</label>
+                <label className="block text-sm font-medium text-gray-600">Role <span className="text-red-500">*</span></label>
                 <select
                   name="role"
                   value={staff.role}

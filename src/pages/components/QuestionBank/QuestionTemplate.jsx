@@ -226,7 +226,7 @@ const QuestionTemplate = () => {
     }
 
     return (
-        <div className="max-w-6xl mx-auto bg-gray-100 min-h-screen p-4 fixed inset-0 left-[300px]">
+        <div className="bg-gray-100 min-h-screen p-4 fixed inset-0 left-[300px]">
             {/* Header and Buttons */}
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-semibold text-gray-900">Question Templates</h1>
@@ -376,7 +376,7 @@ const QuestionTemplate = () => {
                     {/* Template Form */}
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Template Name</label>
+                            <label className="block text-sm font-medium text-gray-700">Template Name <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="name"
@@ -389,7 +389,7 @@ const QuestionTemplate = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Subject</label>
+                            <label className="block text-sm font-medium text-gray-700">Subject <span className="text-red-500">*</span></label>
                             <select
                                 name="subject"
                                 value={templateData.subject}

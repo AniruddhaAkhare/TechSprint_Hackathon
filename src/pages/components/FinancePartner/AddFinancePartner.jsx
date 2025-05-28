@@ -545,7 +545,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
           {/* Partner Name */}
           <div>
             <label htmlFor="partnerName" className="block text-sm font-medium text-gray-700">
-              Partner Name
+              Partner Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"

@@ -441,7 +441,7 @@ const FinanceForm = ({
                     <TableCell colSpan={9}>
                       <Accordion>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          <Typography>Loan Sub-Registrations</Typography>
+                          <Typography>Loan Downpayment</Typography>
                         </AccordionSummary>
                         <AccordionDetails>
                           <TableContainer>
@@ -549,7 +549,7 @@ const FinanceForm = ({
                               disabled={!canUpdate}
                               className="mt-2"
                             >
-                              Add Sub-Registration
+                              Add Downpayment
                             </Button>
                           </TableContainer>
                         </AccordionDetails>
