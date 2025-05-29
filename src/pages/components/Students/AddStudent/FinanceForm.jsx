@@ -27,14 +27,14 @@
 
 
 // const FinanceForm = ({
-//   courseIndex,
-//   fullFeesDetails,
-//   financeDetails,
-//   handleFinanceChange,
-//   financePartners,
-//   canUpdate,
-//   user,
-//   studentId,
+  // courseIndex,
+  // fullFeesDetails,
+  // financeDetails,
+  // handleFinanceChange,
+  // financePartners,
+  // canUpdate,
+  // user,
+  // studentId,
  
 // }) => {
 //   const { user: authUser } = useAuth();
@@ -49,130 +49,130 @@
 //   }, [canUpdate]);
 
 //   // Initialize registrations array if empty
-//   useEffect(() => {
-//     if (!financeDetails.registrations || financeDetails.registrations.length === 0) {
-//       handleFinanceChange(courseIndex, "registrations", "", [
-//         {
-//           srNo: 1,
-//           amount: 0,
-//           date: "",
-//           paymentMethod: "",
-//           receivedBy: "",
-//           remark: "",
-//           status: "Pending",
-//           amountType: "Non-Loan Amount",
-//           loanSubRegistrations: [],
-//         },
-//       ]);
-//     }
-//   }, [financeDetails.registrations, courseIndex, handleFinanceChange]);
+  // useEffect(() => {
+  //   if (!financeDetails.registrations || financeDetails.registrations.length === 0) {
+  //     handleFinanceChange(courseIndex, "registrations", "", [
+  //       {
+  //         srNo: 1,
+  //         amount: 0,
+  //         date: "",
+  //         paymentMethod: "",
+  //         receivedBy: "",
+  //         remark: "",
+  //         status: "Pending",
+  //         amountType: "Non-Loan Amount",
+  //         loanSubRegistrations: [],
+  //       },
+  //     ]);
+  //   }
+  // }, [financeDetails.registrations, courseIndex, handleFinanceChange]);
 
-//   // Calculate derived values
-//   useEffect(() => {
-//     const totalFees = parseFloat(fullFeesDetails?.totalFees || 0);
-//     let discountValue = parseFloat(financeDetails.discountValue || 0);
-//     let feeAfterDiscount = totalFees;
+  // // Calculate derived values
+  // useEffect(() => {
+  //   const totalFees = parseFloat(fullFeesDetails?.totalFees || 0);
+  //   let discountValue = parseFloat(financeDetails.discountValue || 0);
+  //   let feeAfterDiscount = totalFees;
 
-//     if (financeDetails.discountType === "percentage" && discountValue > 0) {
-//       feeAfterDiscount = totalFees * (1 - discountValue / 100);
-//     } else if (financeDetails.discountType === "value" && discountValue > 0) {
-//       feeAfterDiscount = totalFees - discountValue;
-//     }
+  //   if (financeDetails.discountType === "percentage" && discountValue > 0) {
+  //     feeAfterDiscount = totalFees * (1 - discountValue / 100);
+  //   } else if (financeDetails.discountType === "value" && discountValue > 0) {
+  //     feeAfterDiscount = totalFees - discountValue;
+  //   }
 
-//     let loanAmount = parseFloat(financeDetails.loanAmount || 0);
-//     let downPayment = parseFloat(financeDetails.downPayment || 0);
-//     let subventionFee = parseFloat(financeDetails.subventionFee || 0);
-//     let disburseAmount = loanAmount - downPayment - subventionFee;
+  //   let loanAmount = parseFloat(financeDetails.loanAmount || 0);
+  //   let downPayment = parseFloat(financeDetails.downPayment || 0);
+  //   let subventionFee = parseFloat(financeDetails.subventionFee || 0);
+  //   let disburseAmount = loanAmount - downPayment - subventionFee;
 
-//     handleFinanceChange(courseIndex, "feeAfterDiscount", "", feeAfterDiscount.toFixed(2));
-//     handleFinanceChange(courseIndex, "disburseAmount", "", disburseAmount >= 0 ? disburseAmount.toFixed(2) : 0);
-//   }, [
-//     financeDetails.discountType,
-//     financeDetails.discountValue,
-//     financeDetails.loanAmount,
-//     financeDetails.downPayment,
-//     financeDetails.subventionFee,
-//     fullFeesDetails?.totalFees,
-//     courseIndex,
-//     handleFinanceChange,
-//   ]);
+  //   handleFinanceChange(courseIndex, "feeAfterDiscount", "", feeAfterDiscount.toFixed(2));
+  //   handleFinanceChange(courseIndex, "disburseAmount", "", disburseAmount >= 0 ? disburseAmount.toFixed(2) : 0);
+  // }, [
+  //   financeDetails.discountType,
+  //   financeDetails.discountValue,
+  //   financeDetails.loanAmount,
+  //   financeDetails.downPayment,
+  //   financeDetails.subventionFee,
+  //   fullFeesDetails?.totalFees,
+  //   courseIndex,
+  //   handleFinanceChange,
+  // ]);
 
-//   const handleAddRegistration = () => {
-//     const currentRegistrations = Array.isArray(financeDetails.registrations)
-//       ? financeDetails.registrations
-//       : [];
-//     const newRegistration = {
-//       srNo: currentRegistrations.length + 1,
-//       amount: 0,
-//       date: "",
-//       paymentMethod: "",
-//       receivedBy: "",
-//       remark: "",
-//       status: "Pending",
-//       amountType: "Non-Loan Amount",
-//       loanSubRegistrations: [],
-//     };
-//     const updatedRegistrations = [...currentRegistrations, newRegistration];
-//     handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-//   };
+  // const handleAddRegistration = () => {
+  //   const currentRegistrations = Array.isArray(financeDetails.registrations)
+  //     ? financeDetails.registrations
+  //     : [];
+  //   const newRegistration = {
+  //     srNo: currentRegistrations.length + 1,
+  //     amount: 0,
+  //     date: "",
+  //     paymentMethod: "",
+  //     receivedBy: "",
+  //     remark: "",
+  //     status: "Pending",
+  //     amountType: "Non-Loan Amount",
+  //     loanSubRegistrations: [],
+  //   };
+  //   const updatedRegistrations = [...currentRegistrations, newRegistration];
+  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  // };
 
-//   const handleDeleteRegistration = (index) => {
-//     if (financeDetails.registrations.length <= 1) {
-//       return;
-//     }
-//     const updatedRegistrations = financeDetails.registrations
-//       .filter((_, i) => i !== index)
-//       .map((reg, i) => ({ ...reg, srNo: i + 1 }));
-//     handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-//   };
+  // const handleDeleteRegistration = (index) => {
+  //   if (financeDetails.registrations.length <= 1) {
+  //     return;
+  //   }
+  //   const updatedRegistrations = financeDetails.registrations
+  //     .filter((_, i) => i !== index)
+  //     .map((reg, i) => ({ ...reg, srNo: i + 1 }));
+  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  // };
 
-//   const handleRegistrationChange = (index, field, value) => {
-//     const updatedRegistrations = [...financeDetails.registrations];
-//     updatedRegistrations[index] = {
-//       ...updatedRegistrations[index],
-//       [field]: value,
-//     };
-//     handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-//   };
+  // const handleRegistrationChange = (index, field, value) => {
+  //   const updatedRegistrations = [...financeDetails.registrations];
+  //   updatedRegistrations[index] = {
+  //     ...updatedRegistrations[index],
+  //     [field]: value,
+  //   };
+  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  // };
 
-//   const handleAddLoanSubRegistration = (parentIndex) => {
-//     const updatedRegistrations = [...financeDetails.registrations];
-//     const newSubRegistration = {
-//       srNo: updatedRegistrations[parentIndex].loanSubRegistrations.length + 1,
-//       amount: 0,
-//       date: "",
-//       paymentMethod: "",
-//       receivedBy: "",
-//       remark: "",
-//       status: "Pending",
-//     };
-//     updatedRegistrations[parentIndex].loanSubRegistrations = [
-//       ...updatedRegistrations[parentIndex].loanSubRegistrations,
-//       newSubRegistration,
-//     ];
-//     handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-//   };
+  // const handleAddLoanSubRegistration = (parentIndex) => {
+  //   const updatedRegistrations = [...financeDetails.registrations];
+  //   const newSubRegistration = {
+  //     srNo: updatedRegistrations[parentIndex].loanSubRegistrations.length + 1,
+  //     amount: 0,
+  //     date: "",
+  //     paymentMethod: "",
+  //     receivedBy: "",
+  //     remark: "",
+  //     status: "Pending",
+  //   };
+  //   updatedRegistrations[parentIndex].loanSubRegistrations = [
+  //     ...updatedRegistrations[parentIndex].loanSubRegistrations,
+  //     newSubRegistration,
+  //   ];
+  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  // };
 
-//   const handleDeleteLoanSubRegistration = (parentIndex, subIndex) => {
-//     const updatedRegistrations = [...financeDetails.registrations];
-//     if (updatedRegistrations[parentIndex].loanSubRegistrations.length <= 1) {
-//       return;
-//     }
-//     updatedRegistrations[parentIndex].loanSubRegistrations = updatedRegistrations[parentIndex]
-//       .loanSubRegistrations
-//       .filter((_, i) => i !== subIndex)
-//       .map((subReg, i) => ({ ...subReg, srNo: i + 1 }));
-//     handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-//   };
+  // const handleDeleteLoanSubRegistration = (parentIndex, subIndex) => {
+  //   const updatedRegistrations = [...financeDetails.registrations];
+  //   if (updatedRegistrations[parentIndex].loanSubRegistrations.length <= 1) {
+  //     return;
+  //   }
+  //   updatedRegistrations[parentIndex].loanSubRegistrations = updatedRegistrations[parentIndex]
+  //     .loanSubRegistrations
+  //     .filter((_, i) => i !== subIndex)
+  //     .map((subReg, i) => ({ ...subReg, srNo: i + 1 }));
+  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  // };
 
-//   const handleLoanSubRegistrationChange = (parentIndex, subIndex, field, value) => {
-//     const updatedRegistrations = [...financeDetails.registrations];
-//     updatedRegistrations[parentIndex].loanSubRegistrations[subIndex] = {
-//       ...updatedRegistrations[parentIndex].loanSubRegistrations[subIndex],
-//       [field]: value,
-//     };
-//     handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-//   };
+  // const handleLoanSubRegistrationChange = (parentIndex, subIndex, field, value) => {
+  //   const updatedRegistrations = [...financeDetails.registrations];
+  //   updatedRegistrations[parentIndex].loanSubRegistrations[subIndex] = {
+  //     ...updatedRegistrations[parentIndex].loanSubRegistrations[subIndex],
+  //     [field]: value,
+  //   };
+  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  // };
 
 //   // const handleFileChangeS3 = async (courseIndex, docType, event) => {
 //   //   const file = event.target.files[0];
@@ -908,9 +908,11 @@
 
 
 
-import React, { useState } from "react";
 import {
   Typography,
+  TextField,
+  Select,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -919,18 +921,22 @@ import {
   TableRow,
   FormControl,
   InputLabel,
-  Select,
-  MenuItem,
-  TextField,
   Button,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
+import { toast } from "react-toastify";
+
+import React, { useState, useEffect } from "react";
+
 import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { s3Client } from "../../../../config/aws-config";
 import { useAuth } from "../../../../context/AuthContext";
 import { logActivity } from "./utils";
+import { s3Client } from "../../../../config/aws-config";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Upload } from "@aws-sdk/lib-storage";
-import { toast } from "react-toastify";
 
 const FinanceForm = ({
   courseIndex,
@@ -942,12 +948,142 @@ const FinanceForm = ({
   studentId,
   uploadProgress,
   setUploadProgress,
+  fullFeesDetails,
+
 }) => {
   const { user: authUser } = useAuth();
   const [attachmentError, setAttachmentError] = useState({});
 
   const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
   const region = import.meta.env.VITE_AWS_REGION;
+
+    useEffect(() => {
+  }, [canUpdate]);
+
+    useEffect(() => {
+    if (!financeDetails.registrations || financeDetails.registrations.length === 0) {
+      handleFinanceChange(courseIndex, "registrations", "", [
+        {
+          srNo: 1,
+          amount: 0,
+          date: "",
+          paymentMethod: "",
+          receivedBy: "",
+          remark: "",
+          status: "Pending",
+          amountType: "Non-Loan Amount",
+          loanSubRegistrations: [],
+        },
+      ]);
+    }
+  }, [financeDetails.registrations, courseIndex, handleFinanceChange]);
+
+  // Calculate derived values
+  useEffect(() => {
+    const totalFees = parseFloat(fullFeesDetails?.totalFees || 0);
+    let discountValue = parseFloat(financeDetails.discountValue || 0);
+    let feeAfterDiscount = totalFees;
+
+    if (financeDetails.discountType === "percentage" && discountValue > 0) {
+      feeAfterDiscount = totalFees * (1 - discountValue / 100);
+    } else if (financeDetails.discountType === "value" && discountValue > 0) {
+      feeAfterDiscount = totalFees - discountValue;
+    }
+
+    let loanAmount = parseFloat(financeDetails.loanAmount || 0);
+    let downPayment = parseFloat(financeDetails.downPayment || 0);
+    let subventionFee = parseFloat(financeDetails.subventionFee || 0);
+    let disburseAmount = loanAmount - downPayment - subventionFee;
+
+    handleFinanceChange(courseIndex, "feeAfterDiscount", "", feeAfterDiscount.toFixed(2));
+    handleFinanceChange(courseIndex, "disburseAmount", "", disburseAmount >= 0 ? disburseAmount.toFixed(2) : 0);
+  }, [
+    financeDetails.discountType,
+    financeDetails.discountValue,
+    financeDetails.loanAmount,
+    financeDetails.downPayment,
+    financeDetails.subventionFee,
+    fullFeesDetails?.totalFees,
+    courseIndex,
+    handleFinanceChange,
+  ]);
+
+  const handleAddRegistration = () => {
+    const currentRegistrations = Array.isArray(financeDetails.registrations)
+      ? financeDetails.registrations
+      : [];
+    const newRegistration = {
+      srNo: currentRegistrations.length + 1,
+      amount: 0,
+      date: "",
+      paymentMethod: "",
+      receivedBy: "",
+      remark: "",
+      status: "Pending",
+      amountType: "Non-Loan Amount",
+      loanSubRegistrations: [],
+    };
+    const updatedRegistrations = [...currentRegistrations, newRegistration];
+    handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  };
+
+  const handleDeleteRegistration = (index) => {
+    if (financeDetails.registrations.length <= 1) {
+      return;
+    }
+    const updatedRegistrations = financeDetails.registrations
+      .filter((_, i) => i !== index)
+      .map((reg, i) => ({ ...reg, srNo: i + 1 }));
+    handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  };
+
+  const handleRegistrationChange = (index, field, value) => {
+    const updatedRegistrations = [...financeDetails.registrations];
+    updatedRegistrations[index] = {
+      ...updatedRegistrations[index],
+      [field]: value,
+    };
+    handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  };
+
+  const handleAddLoanSubRegistration = (parentIndex) => {
+    const updatedRegistrations = [...financeDetails.registrations];
+    const newSubRegistration = {
+      srNo: updatedRegistrations[parentIndex].loanSubRegistrations.length + 1,
+      amount: 0,
+      date: "",
+      paymentMethod: "",
+      receivedBy: "",
+      remark: "",
+      status: "Pending",
+    };
+    updatedRegistrations[parentIndex].loanSubRegistrations = [
+      ...updatedRegistrations[parentIndex].loanSubRegistrations,
+      newSubRegistration,
+    ];
+    handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  };
+
+  const handleDeleteLoanSubRegistration = (parentIndex, subIndex) => {
+    const updatedRegistrations = [...financeDetails.registrations];
+    if (updatedRegistrations[parentIndex].loanSubRegistrations.length <= 1) {
+      return;
+    }
+    updatedRegistrations[parentIndex].loanSubRegistrations = updatedRegistrations[parentIndex]
+      .loanSubRegistrations
+      .filter((_, i) => i !== subIndex)
+      .map((subReg, i) => ({ ...subReg, srNo: i + 1 }));
+    handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  };
+
+  const handleLoanSubRegistrationChange = (parentIndex, subIndex, field, value) => {
+    const updatedRegistrations = [...financeDetails.registrations];
+    updatedRegistrations[parentIndex].loanSubRegistrations[subIndex] = {
+      ...updatedRegistrations[parentIndex].loanSubRegistrations[subIndex],
+      [field]: value,
+    };
+    handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+  };
 
   // Handle file upload to S3
   const handleFileChangeS3 = async (courseIndex, docType, event) => {
@@ -1068,6 +1204,324 @@ const FinanceForm = ({
           {Object.values(attachmentError).filter((err) => err).join("; ")}
         </Typography>
       )}
+
+
+             {/* Fees Table */}
+       <TableContainer>
+         <Table>
+           <TableHead>
+             <TableRow className="bg-blue-50">
+               <TableCell className="text-gray-800 font-medium w-48">Total Fees</TableCell>
+               <TableCell className="text-gray-800 font-medium w-48">Discount Type</TableCell>
+               <TableCell className="text-gray-800 font-medium w-48">Discount Value</TableCell>
+               <TableCell className="text-gray-800 font-medium w-48">Discount Reason</TableCell>
+               <TableCell className="text-gray-800 font-medium w-48">Fee After Discount</TableCell>
+             </TableRow>
+           </TableHead>
+           <TableBody>
+             <TableRow>
+               <TableCell>
+                 <Typography>{fullFeesDetails?.totalFees || 0}</Typography>
+               </TableCell>
+               <TableCell>
+                 <Select
+                  value={financeDetails.discountType || ""}
+                  onChange={(e) => handleFinanceChange(courseIndex, "discountType", "", e.target.value)}
+                  displayEmpty
+                  className="w-32 bg-gray-100 rounded-lg"
+                  disabled={!canUpdate}
+                >
+                  <MenuItem value="" disabled>Type</MenuItem>
+                  <MenuItem value="percentage">%</MenuItem>
+                  <MenuItem value="value">₹</MenuItem>
+                </Select>
+              </TableCell>
+              <TableCell>
+                <TextField
+                  label="Discount"
+                  type="number"
+                  value={financeDetails.discountValue || ""}
+                  onChange={(e) => handleFinanceChange(courseIndex, "discountValue", "", e.target.value)}
+                  className="w-32"
+                  variant="outlined"
+                  size="small"
+                  disabled={!canUpdate}
+                />
+              </TableCell>
+              <TableCell>
+                <TextField
+                  label="Discount Reason/Coupon"
+                  value={financeDetails.discountReason || ""}
+                  onChange={(e) => handleFinanceChange(courseIndex, "discountReason", "", e.target.value)}
+                  className="w-48"
+                  variant="outlined"
+                  size="small"
+                  disabled={!canUpdate}
+                />
+              </TableCell>
+              <TableCell>
+                <Typography>{financeDetails.feeAfterDiscount || fullFeesDetails?.totalFees || 0}</Typography>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Registrations Table */}
+      <Typography variant="subtitle1" className="text-gray-800 font-medium overflow-y-auto overflow-x-auto">Fees</Typography>
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow className="bg-blue-50">
+              <TableCell className="text-gray-800 font-medium w-52 ">Sr. No.</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Amount</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Amount Type</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Date</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Payment Method</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Received By</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Remark</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Status</TableCell>
+              <TableCell className="text-gray-800 font-medium w-52">Action</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {(financeDetails.registrations || []).map((registration, index) => (
+              <React.Fragment key={index}>
+                <TableRow>
+                  <TableCell>{registration.srNo}</TableCell>
+                  <TableCell>
+                    <TextField
+                      type="number"
+                      value={registration.amount || ""}
+                      onChange={(e) => handleRegistrationChange(index, "amount", e.target.value)}
+                      className="w-52"
+                      size="small"
+                      disabled={!canUpdate}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={registration.amountType || "Non-Loan Amount"}
+                      onChange={(e) => handleRegistrationChange(index, "amountType", e.target.value)}
+                      size="small"
+                      fullWidth
+                      disabled={!canUpdate}
+                    >
+                      <MenuItem value="Loan Amount">Loan Amount</MenuItem>
+                      <MenuItem value="Non-Loan Amount">Non-Loan Amount</MenuItem>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      type="date"
+                      value={registration.date || ""}
+                      onChange={(e) => handleRegistrationChange(index, "date", e.target.value)}
+                      size="small"
+                      className="w-52"
+                      disabled={!canUpdate || registration.amountType=="Loan Amount"}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={registration.paymentMethod || ""}
+                      onChange={(e) => handleRegistrationChange(index, "paymentMethod", e.target.value)}
+                      size="small"
+                      className="w-52"
+                      displayEmpty
+                      fullWidth
+                      disabled={!canUpdate || registration.amountType=="Loan Amount"}
+                    >
+                      <MenuItem value="" disabled>Select Payment Method</MenuItem>
+                      <MenuItem value="Cash">Cash</MenuItem>
+                      <MenuItem value="Card">Card</MenuItem>
+                      <MenuItem value="UPI">UPI</MenuItem>
+                      <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+                      <MenuItem value="Cheque">Cheque</MenuItem>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      value={registration.receivedBy || ""}
+                      onChange={(e) => handleRegistrationChange(index, "receivedBy", e.target.value)}
+                      size="small"
+                      className="w-52"
+                      disabled={!canUpdate || registration.amountType=="Loan Amount"}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      value={registration.remark || ""}
+                      onChange={(e) => handleRegistrationChange(index, "remark", e.target.value)}
+                      size="small"
+                      className="w-52"
+                      disabled={!canUpdate}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={registration.status || "Pending"}
+                      onChange={(e) => handleRegistrationChange(index, "status", e.target.value)}
+                      size="small"
+                      fullWidth
+                      disabled={!canUpdate}
+                    >
+                      <MenuItem value="Pending">Pending</MenuItem>
+                      <MenuItem value="Paid">Paid</MenuItem>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      size="small"
+                      onClick={() => handleDeleteRegistration(index)}
+                      disabled={!canUpdate || financeDetails.registrations.length <= 1}
+                    >
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                {registration.amountType === "Loan Amount" && (
+                  <TableRow>
+                    <TableCell colSpan={9}>
+                      <Accordion>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                          <Typography>Loan Downpayment</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                          <TableContainer>
+                            <Table>
+                              <TableHead>
+                                <TableRow className="bg-gray-100">
+                                  <TableCell className="text-gray-800 font-medium min-w-[40px]">Sr. No.</TableCell>
+                                  <TableCell className="text-gray-800 font-medium min-w-[100px]">Amount</TableCell>
+                                  <TableCell className="text-gray-800 font-medium min-w-[120px]">Date</TableCell>
+                                  <TableCell className="text-gray-800 font-medium min-w-[150px]">Payment Method</TableCell>
+                                  <TableCell className="text-gray-800 font-medium min-w-[120px]">Received By</TableCell>
+                                  <TableCell className="text-gray-800 font-medium min-w-[150px]">Remark</TableCell>
+                                  <TableCell className="text-gray-800 font-medium min-w-[100px]">Status</TableCell>
+                                  <TableCell className="text-gray-800 font-medium min-w-[100px]">Action</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {(registration.loanSubRegistrations || []).map((subReg, subIndex) => (
+                                  <TableRow key={subIndex}>
+                                    <TableCell>{subReg.srNo}</TableCell>
+                                    <TableCell>
+                                      <TextField
+                                        type="number"
+                                        value={subReg.amount || ""}
+                                        onChange={(e) => handleLoanSubRegistrationChange(index, subIndex, "amount", e.target.value)}
+                                        size="small"
+                                        disabled={!canUpdate}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <TextField
+                                        type="date"
+                                        value={subReg.date || ""}
+                                        onChange={(e) => handleLoanSubRegistrationChange(index, subIndex, "date", e.target.value)}
+                                        size="small"
+                                        disabled={!canUpdate}
+                                        InputLabelProps={{ shrink: true }}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <Select
+                                        value={subReg.paymentMethod || ""}
+                                        onChange={(e) => handleLoanSubRegistrationChange(index, subIndex, "paymentMethod", e.target.value)}
+                                        size="small"
+                                        displayEmpty
+                                        fullWidth
+                                        disabled={!canUpdate}
+                                      >
+                                        <MenuItem value="" disabled>Select Payment Method</MenuItem>
+                                        <MenuItem value="Cash">Cash</MenuItem>
+                                        <MenuItem value="Card">Card</MenuItem>
+                                        <MenuItem value="UPI">UPI</MenuItem>
+                                        <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+                                        <MenuItem value="Cheque">Cheque</MenuItem>
+                                      </Select>
+                                    </TableCell>
+                                    <TableCell>
+                                      <TextField
+                                        value={subReg.receivedBy || ""}
+                                        onChange={(e) => handleLoanSubRegistrationChange(index, subIndex, "receivedBy", e.target.value)}
+                                        size="small"
+                                        disabled={!canUpdate}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <TextField
+                                        value={subReg.remark || ""}
+                                        onChange={(e) => handleLoanSubRegistrationChange(index, subIndex, "remark", e.target.value)}
+                                        size="small"
+                                        disabled={!canUpdate}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <Select
+                                        value={subReg.status || "Pending"}
+                                        onChange={(e) => handleLoanSubRegistrationChange(index, subIndex, "status", e.target.value)}
+                                        size="small"
+                                        fullWidth
+                                        disabled={!canUpdate}
+                                      >
+                                        <MenuItem value="Pending">Pending</MenuItem>
+                                        <MenuItem value="Paid">Paid</MenuItem>
+                                      </Select>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Button
+                                        variant="contained"
+                                        color="error"
+                                        size="small"
+                                        onClick={() => handleDeleteLoanSubRegistration(index, subIndex)}
+                                        disabled={!canUpdate || registration.loanSubRegistrations.length <= 1}
+                                      >
+                                        Delete
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              size="small"
+                              onClick={() => handleAddLoanSubRegistration(index)}
+                              disabled={!canUpdate}
+                              className="mt-2"
+                            >
+                              Add Loan Downpayment
+                            </Button>
+                          </TableContainer>
+                        </AccordionDetails>
+                      </Accordion>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <div className="flex justify-between items-center">
+        <Typography variant="subtitle1" className="text-gray-800 font-medium">
+          Registration
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={handleAddRegistration}
+          disabled={!canUpdate}
+        >
+          Add Fees
+        </Button>
+      </div>
 
       {/* Finance Details */}
       <Typography variant="subtitle1" className="text-gray-800 font-medium">
