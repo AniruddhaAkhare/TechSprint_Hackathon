@@ -4,6 +4,7 @@ import { db } from "../../../config/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 import { FaFilter, FaChevronDown } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 
 const initialColumns = {
   "pre-qualified": { name: "Pre Qualified", items: [], count: 0 },
@@ -15,6 +16,7 @@ const initialColumns = {
 };
 
 const EnquiryAnalyticsPage = () => {
+  const { user } = useAuth();
   const [columns, setColumns] = useState(initialColumns);
   const [courses, setCourses] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -58,7 +60,7 @@ const EnquiryAnalyticsPage = () => {
             const data = userDoc.data();
             setUserData(data);
             
-            const institute = data.instituteId;
+            const institute = 'RDJ9wMXGrIUk221MzDxP';
             if (institute) {
               setInstituteId(institute);
               // localStorage.setItem('instituteId', institute);
@@ -117,7 +119,7 @@ const EnquiryAnalyticsPage = () => {
   // Fetch Instructors
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      collection(db, "Instructor"),
+      collection(db, "Users"),
       (snapshot) => {
         const instructorsData = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -306,7 +308,7 @@ const EnquiryAnalyticsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6">
+    <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px]">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold">Enquiry Analytics</h1>
@@ -401,8 +403,8 @@ const EnquiryAnalyticsPage = () => {
                 >
                   <option value="">All Instructors</option>
                   {instructors.map((instructor) => (
-                    <option key={instructor.id} value={instructor.f_name}>
-                      {instructor.f_name} {instructor.l_name}
+                    <option key={instructor.id} value={instructor.displayName}>
+                      {instructor.displayName}
                     </option>
                   ))}
                 </select>

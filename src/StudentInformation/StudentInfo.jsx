@@ -155,6 +155,7 @@
 //     )
 // }
 
+
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { db } from "../config/firebase";
@@ -237,7 +238,7 @@ export default function StudentInfo() {
                         </button>
                         <div>
                             <h1 className="text-2xl font-semibold text-gray-800 mb-0 p-0 ml-0">
-                                {student.Name}
+                                {student.Name || "NA"}
                             </h1>
                             <p className="text-sm text-gray-600 mt-0 p-0 ml-0">{student.email}</p>
                         </div>

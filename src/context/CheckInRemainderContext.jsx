@@ -54,7 +54,6 @@ export const CheckInReminderProvider = ({ children }) => {
           }
         }
       } catch (error) {
-        console.error("Error fetching data for reminders:", error);
         toast.error("Failed to load check-in data.");
       }
     };
@@ -93,7 +92,6 @@ export const CheckInReminderProvider = ({ children }) => {
           }
         },
         (error) => {
-          console.error("Error checking location for reminder:", error);
         },
         {
           enableHighAccuracy: false,
