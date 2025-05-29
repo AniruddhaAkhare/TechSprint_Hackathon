@@ -283,8 +283,8 @@ export default function EditStudent() {
                     goal: data.goal || "",
                     address: data.residential_address || { street: "", area: "", city: "", state: "", zip: "", country: "" },
                     billingAddress: data.billing_address || { name: "", street: "", area: "", city: "", state: "", zip: "", country: "", gstNo: "" },
-                    date_of_birth: data.date_of_birth ? data.date_of_birth.toDate().toISOString().split("T")[0] : "",
-                    admission_date: data.admission_date ? data.admission_date.toDate().toISOString().split("T")[0] : "",
+                    date_of_birth: data.date_of_birth ? data.date_of_birth.toDate().toISOString().split("T")[0] : null,
+                    admission_date: data.admission_date ? data.admission_date.toDate().toISOString().split("T")[0] : null,
                     courseDetails: data.course_details || [],
                     educationDetails: data.education_details || [],
                     installmentDetails: data.installment_details || [],
@@ -528,7 +528,7 @@ export default function EditStudent() {
             return;
         }
 
-        if (!student.Name || !student.email || !student.phoneNumber || !student.date_of_birth) {
+        if (!student.Name || !student.email || !student.phoneNumber ) {
             toast.error("Please fill necessary fields: Name, Email, Phone Number, Date of Birth");
             return;
         }
@@ -546,8 +546,8 @@ export default function EditStudent() {
                 goal: student.goal,
                 residential_address: student.address,
                 billing_address: student.billingAddress,
-                date_of_birth: validateDate(student.date_of_birth, "Date of Birth", true),
-                admission_date: validateDate(student.admission_date, "Admission Date", false),
+                date_of_birth: student.date_of_birth,
+                admission_date: student.admission_date,
                 education_details: student.educationDetails,
                 experience_details: student.experienceDetails,
                 preferred_centers: student.preferred_centers,
@@ -664,7 +664,7 @@ export default function EditStudent() {
                             <h2 className="text-lg font-medium text-gray-700 mb-4">Personal Details</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600">Name</label>
+                                    <label className="block text-sm font-medium text-gray-600">Name <span className="text-red-500">*</span></label>
                                     <input
                                         type="text"
                                         name="name"
@@ -677,7 +677,7 @@ export default function EditStudent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600">Email</label>
+                                    <label className="block text-sm font-medium text-gray-600">Email <span className="text-red-500">*</span></label>
                                     <input
                                         type="email"
                                         name="email"
@@ -690,7 +690,7 @@ export default function EditStudent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600">Phone</label>
+                                    <label className="block text-sm font-medium text-gray-600">Phone <span className="text-red-500">*</span></label>
                                     <div className="flex mt-1">
                                         <select
                                             value={countryCode}
@@ -720,13 +720,13 @@ export default function EditStudent() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600">Date of Birth</label>
+                                    <label className="block text-sm font-medium text-gray-600">Date of Birth <span className="text-red-500">*</span></label>
                                     <input
                                         type="date"
                                         name="date_of_birth"
                                         value={student.date_of_birth}
                                         onChange={handleChange}
-                                        required
+                                        // required
                                         disabled={!canUpdate}
                                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
