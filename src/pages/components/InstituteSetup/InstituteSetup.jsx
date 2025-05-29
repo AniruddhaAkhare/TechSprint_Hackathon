@@ -167,81 +167,121 @@ const InstituteSetup = () => {
   if (!canDisplay) return null;
 
   return (
-    <div className="institute-setup p-4 fixed inset-0 left-[300px] overflow-auto">
-      <div className="header">
-        <FaBook className="header-icon" />
-        <h1>Institute Setup</h1>
-      </div>
+   <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-100 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
+  <div className="header flex items-center gap-3 mb-8 bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+    <FaBook className="text-blue-600 text-2xl" />
+    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Institute Setup</h1>
+  </div>
 
-      <div className="content">
-        <div className="steps">
-          <h2>Onboarding Steps</h2>
-          <p>Complete these steps to set up your institute</p>
-          <ul>
-            <li className={activeStep === "Basic Information" ? "active" : ""} onClick={() => setActiveStep("Basic Information")}>
-              1 Basic Information
-            </li>
-            <li className={activeStep === "Logo Upload" ? "active" : ""} onClick={() => setActiveStep("Logo Upload")}>
-              2 Logo Upload
-            </li>
-            <li className={activeStep === "Branch Setup" ? "active" : ""} onClick={() => setActiveStep("Branch Setup")}>
-              3 Center Setup
-            </li>
-            <li className={activeStep === "Contact Information" ? "active" : ""} onClick={() => setActiveStep("Contact Information")}>
-              4 Contact Information
-            </li>
-          </ul>
-        </div>
-
-        <div className="form-section">
-          {activeStep === "Basic Information" && (
-            <BasicInformation
-              formData={formData}
-              setFormData={setFormData}
-              canUpdate={canUpdate}
-              editMode={editModes["Basic Information"]}
-              toggleEditMode={() => toggleEditMode("Basic Information")}
-              handleSubmit={handleSubmit}
-            />
-          )}
-          {activeStep === "Logo Upload" && (
-            <LogoUpload
-              formData={formData}
-              setFormData={setFormData}
-              logoFile={logoFile}
-              setLogoFile={setLogoFile}
-              logoError={logoError}
-              setLogoError={setLogoError}
-              canUpdate={canUpdate}
-              editMode={editModes["Logo Upload"]}
-              toggleEditMode={() => toggleEditMode("Logo Upload")}
-              handleSubmit={handleSubmit}
-              setActiveStep={setActiveStep}
-            />
-          )}
-          {activeStep === "Branch Setup" && (
-            <BranchSetup
-              instituteId={instituteId}
-              canCreate={canCreate}
-              canUpdate={canUpdate}
-              canDelete={canDelete}
-              setActiveStep={setActiveStep}
-            />
-          )}
-          {activeStep === "Contact Information" && (
-            <ContactInformation
-              formData={formData}
-              setFormData={setFormData}
-              canUpdate={canUpdate}
-              editMode={editModes["Contact Information"]}
-              toggleEditMode={() => toggleEditMode("Contact Information")}
-              handleSubmit={handleSubmit}
-              setActiveStep={setActiveStep}
-            />
-          )}
-        </div>
-      </div>
+  <div className="content grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className="steps bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <h2 className="text-xl font-semibold text-gray-900 mb-3">Onboarding Steps</h2>
+      <p className="text-sm text-gray-600 mb-4">Complete these steps to set up your institute</p>
+      <ul className="space-y-2">
+        <li
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg cursor-pointer transition duration-200 ${
+            activeStep === "Basic Information"
+              ? "bg-blue-100 text-blue-800 font-medium"
+              : "text-gray-700 hover:bg-gray-50"
+          }`}
+          onClick={() => setActiveStep("Basic Information")}
+        >
+          <span className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600 text-white text-sm">
+            1
+          </span>
+          Basic Information
+        </li>
+        <li
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg cursor-pointer transition duration-200 ${
+            activeStep === "Logo Upload"
+              ? "bg-blue-100 text-blue-800 font-medium"
+              : "text-gray-700 hover:bg-gray-50"
+          }`}
+          onClick={() => setActiveStep("Logo Upload")}
+        >
+          <span className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600 text-white text-sm">
+            2
+          </span>
+          Logo Upload
+        </li>
+        <li
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg cursor-pointer transition duration-200 ${
+            activeStep === "Branch Setup"
+              ? "bg-blue-100 text-blue-800 font-medium"
+              : "text-gray-700 hover:bg-gray-50"
+          }`}
+          onClick={() => setActiveStep("Branch Setup")}
+        >
+          <span className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600 text-white text-sm">
+            3
+          </span>
+          Center Setup
+        </li>
+        <li
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg cursor-pointer transition duration-200 ${
+            activeStep === "Contact Information"
+              ? "bg-blue-100 text-blue-800 font-medium"
+              : "text-gray-700 hover:bg-gray-50"
+          }`}
+          onClick={() => setActiveStep("Contact Information")}
+        >
+          <span className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600 text-white text-sm">
+            4
+          </span>
+          Contact Information
+        </li>
+      </ul>
     </div>
+
+    <div className="form-section lg:col-span-3 bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      {activeStep === "Basic Information" && (
+        <BasicInformation
+          formData={formData}
+          setFormData={setFormData}
+          canUpdate={canUpdate}
+          editMode={editModes["Basic Information"]}
+          toggleEditMode={() => toggleEditMode("Basic Information")}
+          handleSubmit={handleSubmit}
+        />
+      )}
+      {activeStep === "Logo Upload" && (
+        <LogoUpload
+          formData={formData}
+          setFormData={setFormData}
+          logoFile={logoFile}
+          setLogoFile={setLogoFile}
+          logoError={logoError}
+          setLogoError={setLogoError}
+          canUpdate={canUpdate}
+          editMode={editModes["Logo Upload"]}
+          toggleEditMode={() => toggleEditMode("Logo Upload")}
+          handleSubmit={handleSubmit}
+          setActiveStep={setActiveStep}
+        />
+      )}
+      {activeStep === "Branch Setup" && (
+        <BranchSetup
+          instituteId={instituteId}
+          canCreate={canCreate}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          setActiveStep={setActiveStep}
+        />
+      )}
+      {activeStep === "Contact Information" && (
+        <ContactInformation
+          formData={formData}
+          setFormData={setFormData}
+          canUpdate={canUpdate}
+          editMode={editModes["Contact Information"]}
+          toggleEditMode={() => toggleEditMode("Contact Information")}
+          handleSubmit={handleSubmit}
+          setActiveStep={setActiveStep}
+        />
+      )}
+    </div>
+  </div>
+</div>
   );
 };
 

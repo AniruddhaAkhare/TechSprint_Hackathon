@@ -294,306 +294,282 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
           </h1>
           <button
             onClick={toggleSidebar}
-            className="bg-blue-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200"
+            className="bg-indigo-600 text-white px-1 py-1 rounded-md hover:bg-indigo-700 flex items-center gap-2"
           >
             <FaTimes className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Session Name <span className="text-red-500">*</span></label>
+      <form
+  onSubmit={handleSubmit}
+  className="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl p-8 space-y-6"
+>
+  <h2 className="text-2xl font-semibold text-gray-800 border-b pb-2">Create Session</h2>
+
+  {/* Session Name */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700">
+      Session Name <span className="text-red-500">*</span>
+    </label>
+    <input
+      type="text"
+      value={sessionName}
+      onChange={(e) => setSessionName(e.target.value)}
+      required
+      className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+    />
+  </div>
+
+  {/* Center Names */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Center Name(s)</label>
+    {loading ? (
+      <p className="text-gray-500">Loading centers...</p>
+    ) : error ? (
+      <p className="text-red-500">{error}</p>
+    ) : availableCenters.length === 0 ? (
+      <p className="text-gray-500">No active centers found</p>
+    ) : (
+      <div className="border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto">
+        {availableCenters.map((center) => (
+          <label key={center.id} className="flex items-center gap-2 py-1">
             <input
-              type="text"
-              value={sessionName}
-              onChange={(e) => setSessionName(e.target.value)}
-              required
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              type="checkbox"
+              checked={centerNames.includes(center.id)}
+              onChange={() => handleCenterChange(center.id)}
+              className="accent-blue-600 h-4 w-4"
             />
-          </div>
+            <span className="text-gray-700">{center.name || "Unnamed Center"}</span>
+          </label>
+        ))}
+      </div>
+    )}
+  </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Center Name(s)</label>
-            {loading ? (
-              <p className="text-gray-500">Loading centers...</p>
-            ) : error ? (
-              <p className="text-red-500">{error}</p>
-            ) : availableCenters.length === 0 ? (
-              <p className="text-gray-500">No active centers found</p>
-            ) : (
-              <div className="mt-1 max-h-40 overflow-y-auto border border-gray-300 p-2 rounded-md">
-                {availableCenters.map(center => (
-                  <label key={center.id} className="flex items-center space-x-2 py-1">
-                    <input
-                      type="checkbox"
-                      checked={centerNames.includes(center.id)}
-                      onChange={() => handleCenterChange(center.id)}
-                      className="form-checkbox h-4 w-4 text-blue-600 rounded"
-                    />
-                    <span className="text-gray-700">{center.name || "Unnamed Center"}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
+  {/* Session Type */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Session Type</label>
+    <div className="flex gap-6">
+      {["batch", "subject"].map((type) => (
+        <label key={type} className="inline-flex items-center gap-2">
+          <input
+            type="radio"
+            name="sessionType"
+            value={type}
+            checked={sessionType === type}
+            onChange={() => setSessionType(type)}
+            className="accent-blue-600"
+          />
+          <span className="text-gray-700 capitalize">
+            {type === "batch" ? "By Batch" : "By Student"}
+          </span>
+        </label>
+      ))}
+    </div>
+  </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Session Type</label>
-            <div className="flex flex-col sm:flex-row gap-4 mt-1">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="sessionType"
-                  value="batch"
-                  checked={sessionType === "batch"}
-                  onChange={() => setSessionType("batch")}
-                  className="mr-2 h-4 w-4 text-blue-600"
-                />
-                <span className="text-gray-700">By Batch</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="sessionType"
-                  value="subject"
-                  checked={sessionType === "subject"}
-                  onChange={() => setSessionType("subject")}
-                  className="mr-2 h-4 w-4 text-blue-600"
-                />
-                <span className="text-gray-700">By Student</span>
-              </label>
-            </div>
-          </div>
+  {/* Conditional: Batch Selection */}
+  {sessionType === "batch" && (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Select Batches</label>
+      <button
+        type="button"
+        onClick={handleSelectAllBatches}
+        disabled={filteredBatches.length === 0}
+        className={`mb-2 px-4 py-2 rounded-lg font-medium transition-all text-white ${
+          filteredBatches.length === 0
+            ? "bg-gray-400 cursor-not-allowed"
+            : selectedBatches.length === filteredBatches.length
+            ? "bg-red-500 hover:bg-red-600"
+            : "bg-green-500 hover:bg-green-600"
+        }`}
+      >
+        {selectedBatches.length === filteredBatches.length && filteredBatches.length > 0
+          ? "Deselect All Batches"
+          : "Select All Batches"}
+      </button>
 
-          {sessionType === "batch" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Select Batches</label>
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={handleSelectAllBatches}
-                  className={`w-full sm:w-auto px-4 py-2 rounded-md text-white font-medium transition duration-200 ${
-                    filteredBatches.length === 0
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : selectedBatches.length === filteredBatches.length
-                      ? "bg-red-500 hover:bg-red-600"
-                      : "bg-green-500 hover:bg-green-600"
-                  }`}
-                  disabled={filteredBatches.length === 0}
-                >
-                  {selectedBatches.length === filteredBatches.length && filteredBatches.length > 0
-                    ? "Deselect All Batches"
-                    : "Select All Batches"}
-                </button>
-                <div className="mt-1 max-h-40 overflow-y-auto border border-gray-300 p-2 rounded-md">
-                  {filteredBatches.length === 0 ? (
-                    <p className="text-gray-500">No batches available for selected centers</p>
-                  ) : (
-                    filteredBatches.map(batch => (
-                      <label key={batch.id} className="flex items-center space-x-2 py-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedBatches.includes(batch.id)}
-                          onChange={() => handleBatchChange(batch.id)}
-                          className="form-checkbox h-4 w-4 text-blue-600 rounded"
-                        />
-                        <span className="text-gray-700">{batch.batchName || "Unnamed Batch"}</span>
-                      </label>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {sessionType === "subject" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Select Students</label>
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={handleSelectAllStudents}
-                  className={`w-full sm:w-auto px-4 py-2 rounded-md text-white font-medium transition duration-200 ${
-                    filteredStudents.length === 0
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : selectedStudents.length === filteredStudents.length
-                      ? "bg-red-500 hover:bg-red-600"
-                      : "bg-green-500 hover:bg-green-600"
-                  }`}
-                  disabled={filteredStudents.length === 0}
-                >
-                  {selectedStudents.length === filteredStudents.length && filteredStudents.length > 0
-                    ? "Deselect All Students"
-                    : "Select All Students"}
-                </button>
-                <div className="mt-1 max-h-40 overflow-y-auto border border-gray-300 p-2 rounded-md">
-                  {filteredStudents.length === 0 ? (
-                    <p className="text-gray-500">No students available for selected centers</p>
-                  ) : (
-                    filteredStudents.map(student => (
-                      <label key={student.id} className="flex items-center space-x-2 py-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedStudents.includes(student.id)}
-                          onChange={() => handleStudentChange(student.id)}
-                          className="form-checkbox h-4 w-4 text-blue-600 rounded"
-                        />
-                        <span className="text-gray-700">{`${student.Name}`}</span>
-                      </label>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Date <span className="text-red-500">*</span></label>
+      <div className="border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto">
+        {filteredBatches.length === 0 ? (
+          <p className="text-gray-500">No batches available for selected centers</p>
+        ) : (
+          filteredBatches.map((batch) => (
+            <label key={batch.id} className="flex items-center gap-2 py-1">
               <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-                min="2025-04-18"
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                type="checkbox"
+                checked={selectedBatches.includes(batch.id)}
+                onChange={() => handleBatchChange(batch.id)}
+                className="accent-blue-600 h-4 w-4"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Start Time <span className="text-red-500">*</span></label>
+              <span className="text-gray-700">{batch.batchName || "Unnamed Batch"}</span>
+            </label>
+          ))
+        )}
+      </div>
+    </div>
+  )}
+
+  {/* Conditional: Student Selection */}
+  {sessionType === "subject" && (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Select Students</label>
+      <button
+        type="button"
+        onClick={handleSelectAllStudents}
+        disabled={filteredStudents.length === 0}
+        className={`mb-2 px-4 py-2 rounded-lg font-medium transition-all text-white ${
+          filteredStudents.length === 0
+            ? "bg-gray-400 cursor-not-allowed"
+            : selectedStudents.length === filteredStudents.length
+            ? "bg-red-500 hover:bg-red-600"
+            : "bg-green-500 hover:bg-green-600"
+        }`}
+      >
+        {selectedStudents.length === filteredStudents.length && filteredStudents.length > 0
+          ? "Deselect All Students"
+          : "Select All Students"}
+      </button>
+
+      <div className="border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto">
+        {filteredStudents.length === 0 ? (
+          <p className="text-gray-500">No students available for selected centers</p>
+        ) : (
+          filteredStudents.map((student) => (
+            <label key={student.id} className="flex items-center gap-2 py-1">
               <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                required
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                type="checkbox"
+                checked={selectedStudents.includes(student.id)}
+                onChange={() => handleStudentChange(student.id)}
+                className="accent-blue-600 h-4 w-4"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">End Time <span className="text-red-500">*</span></label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                required
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+              <span className="text-gray-700">{student.Name}</span>
+            </label>
+          ))
+        )}
+      </div>
+    </div>
+  )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Pre Feedback Form</label>
-            <select
-              value={preFeedbackForm}
-              onChange={(e) => setPreFeedbackForm(e.target.value)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select a Pre Feedback Form</option>
-              {templates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
-                </option>
-              ))}
-            </select>
-          </div>
+  {/* Date and Time */}
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Date <span className="text-red-500">*</span></label>
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        required
+        min="2025-04-18"
+        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Start Time <span className="text-red-500">*</span></label>
+      <input
+        type="time"
+        value={startTime}
+        onChange={(e) => setStartTime(e.target.value)}
+        required
+        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700">End Time <span className="text-red-500">*</span></label>
+      <input
+        type="time"
+        value={endTime}
+        onChange={(e) => setEndTime(e.target.value)}
+        required
+        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      />
+    </div>
+  </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Post Feedback Form</label>
-            <select
-              value={postFeedbackForm}
-              onChange={(e) => setPostFeedbackForm(e.target.value)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select a Post Feedback Form</option>
-              {templates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
-                </option>
-              ))}
-            </select>
-          </div>
+  {/* Feedback Forms */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700">Pre Feedback Form</label>
+    <select
+      value={preFeedbackForm}
+      onChange={(e) => setPreFeedbackForm(e.target.value)}
+      className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+    >
+      <option value="">Select a Pre Feedback Form</option>
+      {templates.map((template) => (
+        <option key={template.id} value={template.id}>
+          {template.name}
+        </option>
+      ))}
+    </select>
+  </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Session Mode <span className="text-red-500">*</span></label>
-            <div className="flex flex-col sm:flex-row gap-4 mt-1">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="sessionMode"
-                  value="Online"
-                  checked={sessionMode === "Online"}
-                  onChange={() => setSessionMode("Online")}
-                  className="mr-2 h-4 w-4 text-blue-600"
-                />
-                <span className="text-gray-700">Online</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="sessionMode"
-                  value="Offline"
-                  checked={sessionMode === "Offline"}
-                  onChange={() => setSessionMode("Offline")}
-                  className="mr-2 h-4 w-4 text-blue-600"
-                />
-                <span className="text-gray-700">Offline</span>
-              </label>
-            </div>
-          </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-700">Post Feedback Form</label>
+    <select
+      value={postFeedbackForm}
+      onChange={(e) => setPostFeedbackForm(e.target.value)}
+      className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+    >
+      <option value="">Select a Post Feedback Form</option>
+      {templates.map((template) => (
+        <option key={template.id} value={template.id}>
+          {template.name}
+        </option>
+      ))}
+    </select>
+  </div>
 
-          {sessionMode === "Online" && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Meeting Platform <span className="text-red-500">*</span></label>
-                <select
-                  value={meetingPlatform}
-                  onChange={(e) => setMeetingPlatform(e.target.value)}
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required={sessionMode === "Online"}
-                >
-                  <option value="">Select a platform</option>
-                  <option value="Zoom">Zoom</option>
-                  <option value="Google">Google Meet</option>
-                  <option value="Teams">Microsoft Teams</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Session Link <span className="text-red-500">*</span></label>
-                <input
-                  type="url"
-                  value={sessionLink}
-                  onChange={(e) => setSessionLink(e.target.value)}
-                  required={sessionMode === "Online"}
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter session link"
-                />
-              </div>
-            </>
-          )}
+  {/* Session Mode */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Session Mode <span className="text-red-500">*</span></label>
+    <div className="flex gap-6">
+      {["Online", "Offline"].map((mode) => (
+        <label key={mode} className="inline-flex items-center gap-2">
+          <input
+            type="radio"
+            name="sessionMode"
+            value={mode}
+            checked={sessionMode === mode}
+            onChange={() => setSessionMode(mode)}
+            className="accent-blue-600"
+          />
+          <span className="text-gray-700">{mode}</span>
+        </label>
+      ))}
+    </div>
+  </div>
 
-          {sessionMode === "Offline" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Venue <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                value={venue}
-                onChange={(e) => setVenue(e.target.value)}
-                required={sessionMode === "Offline"}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter venue"
-              />
-            </div>
-          )}
+  {/* Meeting Platform if Online */}
+  {sessionMode === "Online" && (
+    <div>
+      <label className="block text-sm font-medium text-gray-700">
+        Meeting Platform <span className="text-red-500">*</span>
+      </label>
+      <select
+        value={meetingPlatform}
+        onChange={(e) => setMeetingPlatform(e.target.value)}
+        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      >
+        <option value="">Select Platform</option>
+        <option value="Zoom">Zoom</option>
+        <option value="Google Meet">Google Meet</option>
+        <option value="Microsoft Teams">Microsoft Teams</option>
+        {/* Add more options if needed */}
+      </select>
+    </div>
+  )}
 
-          <div className="flex justify-end mt-4">
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200 w-full sm:w-auto"
-            >
-              {sessionId ? "Update Session" : "Save Session"}
-            </button>
-          </div>
-        </form>
+  {/* Submit Button */}
+<div className="flex justify-end">
+  <button
+    type="submit"
+    className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2 max-w-max"
+  >
+    Submit Session
+  </button>
+</div>
+
+</form>
+
       </div>
     </>
   );

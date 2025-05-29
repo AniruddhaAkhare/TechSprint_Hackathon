@@ -409,342 +409,370 @@ export default function Companies() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
-            <ToastContainer position="top-right" autoClose={3000} />
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h1 className="text-2xl font-semibold text-gray-800">Companies</h1>
-                </div>
-                {canCreate && (
-                    <div className="flex space-x-4">
-                        <button
-                            type="button"
-                            className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200"
-                            onClick={handleAddCompanyClick}
-                        >
-                            + Add Company
-                        </button>
-                        <button
-                            type="button"
-                            className="bg-green-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-700 transition duration-200"
-                            onClick={() => handleOpenCallSchedule({ id: "" })}
-                        >
-                            Schedule Call
-                        </button>
-                    </div>
+     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-100 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
+  <ToastContainer position="top-right" autoClose={3000} />
+
+  {/* Header */}
+  <div className="flex justify-between items-center mb-8">
+    <div>
+      <h1 className="text-2xl font-bold text-[#333333] font-sans">Companies</h1>
+    </div>
+    {canCreate && (
+      <div className="flex gap-4">
+        <button
+          type="button"
+          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 transition duration-200 font-medium"
+          onClick={handleAddCompanyClick}
+        >
+          + Add Company
+        </button>
+        <button
+          type="button"
+          className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-green-700 hover:to-green-800 transition duration-200 font-medium"
+          onClick={() => handleOpenCallSchedule({ id: "" })}
+        >
+          Schedule Call
+        </button>
+      </div>
+    )}
+  </div>
+
+  {/* Table Container */}
+  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+    <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search companies by name, email, domain, phone, city, type, or URL..."
+        className="w-full sm:w-1/2 max-w-md px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200"
+      />
+      <p className="text-sm text-gray-600">Total Companies: {companies.length}</p>
+    </div>
+
+    <div className="overflow-x-auto h-[65vh] overflow-y-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+          <tr>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-20">
+              Sr No
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-52">
+              Company Name
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-52">
+              Email
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-52">
+              Domain
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-52">
+              Phone
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-52">
+              City
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-52">
+              Company Type
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-52">
+              URL
+            </th>
+            {(canUpdate || canDelete || canCreate) && (
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-60">
+                Action
+              </th>
+            )}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {(searchResults.length > 0 ? searchResults : companies).map((company, index) => (
+            <tr
+              key={company.id}
+              className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+              onClick={() => handleRowClick(company)}
+            >
+              <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
+              <td className="px-6 py-4 text-sm text-gray-900 font-medium">{renderField(company.name)}</td>
+              <td className="px-6 py-4 text-sm text-gray-700">{renderField(company.email)}</td>
+              <td className="px-6 py-4 text-sm text-gray-700">{renderField(company.domain)}</td>
+              <td className="px-6 py-4 text-sm text-gray-700">{renderField(company.phone)}</td>
+              <td className="px-6 py-4 text-sm text-gray-700">{renderField(company.city)}</td>
+              <td className="px-6 py-4 text-sm text-gray-700">{renderField(company.companyType)}</td>
+              <td className="px-6 py-4 text-sm">
+                {company.url ? (
+                  <a
+                    href={company.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 font-medium transition duration-150"
+                  >
+                    Website
+                  </a>
+                ) : (
+                  <span className="text-gray-500">N/A</span>
                 )}
-            </div>
+              </td>
+              {(canUpdate || canDelete || canCreate) && (
+                <td className="px-6 py-4 text-sm" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex gap-3">
+                    {canUpdate && (
+                      <button
+                        onClick={() => handleEditClick(company)}
+                        className="text-blue-600 hover:text-blue-800 font-medium transition duration-150"
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDeleteClick(company.id)}
+                        className="text-red-600 hover:text-red-800 font-medium transition duration-150"
+                      >
+                        Delete
+                      </button>
+                    )}
+                    {canCreate && (
+                      <button
+                        onClick={() => handleOpenCallSchedule(company)}
+                        className="text-green-600 hover:text-green-800 font-medium transition duration-150"
+                      >
+                        Schedule Call
+                      </button>
+                    )}
+                  </div>
+                </td>
+              )}
+            </tr>
+          ))}
+          {(searchResults.length > 0 ? searchResults : companies).length === 0 && (
+            <tr>
+              <td colSpan={(canUpdate || canDelete || canCreate) ? 9 : 8} className="px-6 py-4 text-center text-sm text-gray-500">
+                No companies found
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-            {/* Table Container */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="mb-6 grid grid-cols-2">
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search companies by name, email, domain, phone, city, type, or URL..."
-                        className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <p className="text-gray-600 mt-3 ml-auto">Total Companies: {companies.length}</p>
-                </div>
+  {/* Overlay for sidebars */}
+  {(canCreate || canUpdate) && (isAddSingleOpen || isAddBulkOpen) && (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-40"
+      onClick={isAddSingleOpen ? handleCloseSingle : handleCloseBulk}
+    ></div>
+  )}
 
-                <div className="overflow-x-auto h-[70vh] overflow-y-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Sr No</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 min-w-52">Company Name</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 min-w-52">Email</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 min-w-52">Domain</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 min-w-52">Phone</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 min-w-52">City</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 min-w-52">Company Type</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700 min-w-52">URL</th>
-                                {(canUpdate || canDelete || canCreate) && (
-                                    <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Action</th>
-                                )}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {(searchResults.length > 0 ? searchResults : companies).map((company, index) => (
-                                <tr
-                                    key={company.id}
-                                    className="border-b hover:bg-gray-50 cursor-pointer"
-                                    onClick={() => handleRowClick(company)}
-                                >
-                                    <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                                    <td className="px-4 py-3 text-gray-800">{renderField(company.name)}</td>
-                                    <td className="px-4 py-3 text-gray-800">{renderField(company.email)}</td>
-                                    <td className="px-4 py-3 text-gray-800">{renderField(company.domain)}</td>
-                                    <td className="px-4 py-3 text-gray-800">{renderField(company.phone)}</td>
-                                    <td className="px-4 py-3 text-gray-800">{renderField(company.city)}</td>
-                                    <td className="px-4 py-3 text-gray-800">{renderField(company.companyType)}</td>
-                                    <td className="px-4 py-3 text-gray-800">
-                                        {company.url ? (
-                                            <a
-                                                href={company.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-600 hover:underline"
-                                            >
-                                                Website
-                                            </a>
-                                        ) : (
-                                            "N/A"
-                                        )}
-                                    </td>
-                                    {(canUpdate || canDelete || canCreate) && (
-                                        <td className="px-4 py-3 text-gray-800" onClick={(e) => e.stopPropagation()}>
-                                            {canUpdate && (
-                                                <button
-                                                    onClick={() => handleEditClick(company)}
-                                                    className="text-blue-600 hover:text-blue-800 mr-3"
-                                                >
-                                                    Edit
-                                                </button>
-                                            )}
-                                            {canDelete && (
-                                                <button
-                                                    onClick={() => handleDeleteClick(company.id)}
-                                                    className="text-red-600 hover:text-red-800 mr-3"
-                                                >
-                                                    Delete
-                                                </button>
-                                            )}
-                                            {canCreate && (
-                                                <button
-                                                    onClick={() => handleOpenCallSchedule(company)}
-                                                    className="text-green-600 hover:text-green-800"
-                                                >
-                                                    Schedule Call
-                                                </button>
-                                            )}
-                                        </td>
-                                    )}
-                                </tr>
-                            ))}
-                            {(searchResults.length > 0 ? searchResults : companies).length === 0 && (
-                                <tr>
-                                    <td colSpan={(canUpdate || canDelete || canCreate) ? 9 : 8} className="px-4 py-3 text-center text-gray-500">
-                                        No companies found
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+  {/* Add/Edit Company Sidebar */}
+  {(canCreate || canUpdate) && (
+    <AddCompanies
+      isOpen={isAddSingleOpen}
+      toggleSidebar={handleCloseSingle}
+      company={currentCompany}
+    />
+  )}
 
-            {/* Overlay for sidebars */}
-            {(canCreate || canUpdate) && (isAddSingleOpen || isAddBulkOpen) && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40"
-                    onClick={isAddSingleOpen ? handleCloseSingle : handleCloseBulk}
-                ></div>
-            )}
+  {/* Bulk Upload Sidebar */}
+  {canCreate && (
+    <AddBulkCompanies
+      isOpen={isAddBulkOpen}
+      toggleSidebar={handleCloseBulk}
+      fetchCompanies={fetchCompanies}
+    />
+  )}
 
-            {/* Add/Edit Company Sidebar */}
-            {(canCreate || canUpdate) && (
-                <AddCompanies
-                    isOpen={isAddSingleOpen}
-                    toggleSidebar={handleCloseSingle}
-                    company={currentCompany}
-                />
-            )}
+  {/* Company Modal */}
+  {canDisplay && (
+    <CompanyModal
+      isOpen={isModalOpen}
+      onRequestClose={() => setIsModalOpen(false)}
+      company={selectedCompany}
+      rolePermissions={rolePermissions}
+      callSchedules={callSchedules}
+      handleDeleteSchedule={handleDeleteSchedule}
+    />
+  )}
 
-            {/* Bulk Upload Sidebar */}
-            {canCreate && (
-                <AddBulkCompanies
-                    isOpen={isAddBulkOpen}
-                    toggleSidebar={handleCloseBulk}
-                    fetchCompanies={fetchCompanies}
-                />
-            )}
-
-            {/* Company Modal */}
-            {canDisplay && (
-                <CompanyModal
-                    isOpen={isModalOpen}
-                    onRequestClose={() => setIsModalOpen(false)}
-                    company={selectedCompany}
-                    rolePermissions={rolePermissions}
-                    callSchedules={callSchedules}
-                    handleDeleteSchedule={handleDeleteSchedule}
-                />
-            )}
-
-            {/* Add Options Dialog */}
-            {canCreate && (
-                <Dialog
-                    open={openAddOptions}
-                    handler={() => setOpenAddOptions(false)}
-                    className="rounded-lg shadow-lg"
-                >
-                    <DialogHeader className="text-gray-800 font-semibold">Add Company</DialogHeader>
-                    <DialogBody className="text-gray-600">Choose how you want to add a company:</DialogBody>
-                    <DialogFooter className="space-x-4">
-                        <Button variant="text" color="gray" onClick={() => setOpenAddOptions(false)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="filled"
-                            color="blue"
-                            onClick={() => {
-                                setOpenAddOptions(false);
-                                setIsAddSingleOpen(true);
-                                logActivity("SELECT_ADD_SINGLE", {});
-                            }}
-                        >
-                            Add Single Company
-                        </Button>
-                        <Button
-                            variant="filled"
-                            color="green"
-                            onClick={() => {
-                                setOpenAddOptions(false);
-                                setIsAddBulkOpen(true);
-                                logActivity("SELECT_ADD_BULK", {});
-                            }}
-                        >
-                            Add Bulk Companies
-                        </Button>
-                    </DialogFooter>
-                </Dialog>
-            )}
-
-            {/* Delete Confirmation Dialog */}
-            {canDelete && (
-                <Dialog
-                    open={openDelete}
-                    handler={() => setOpenDelete(false)}
-                    className="rounded-lg shadow-lg"
-                >
-                    <DialogHeader className="text-gray-800 font-semibold">Confirm Deletion</DialogHeader>
-                    <DialogBody className="text-gray-600">{deleteMessage}</DialogBody>
-                    <DialogFooter className="space-x-4">
-                        <Button variant="text" color="gray" onClick={() => setOpenDelete(false)}>
-                            Cancel
-                        </Button>
-                        {deleteMessage === "Are you sure you want to delete this company? This action cannot be undone." && (
-                            <Button variant="filled" color="red" onClick={deleteCompany}>
-                                Delete
-                            </Button>
-                        )}
-                    </DialogFooter>
-                </Dialog>
-            )}
-
-            {/* Call Schedule Dialog */}
-            {canCreate && (
-                <Dialog
-                    open={openCallSchedule}
-                    handler={() => setOpenCallSchedule(false)}
-                    className="rounded-lg shadow-lg max-w-sm max-h-[80vh] overflow-auto"
-                >
-                    <DialogHeader className="text-gray-800 font-semibold">Schedule Call</DialogHeader>
-                    <DialogBody className="text-gray-600 space-y-4">
-                        {callScheduleForm.companyId && (
-                            <Input
-                                label="Company"
-                                value={companies.find((c) => c.id === callScheduleForm.companyId)?.name || ""}
-                                disabled
-                            />
-                        )}
-                        {!callScheduleForm.companyId && (
-                            <Select
-                                label="Select Company"
-                                value={callScheduleForm.companyId}
-                                onChange={(value) =>
-                                    setCallScheduleForm({ ...callScheduleForm, companyId: value })
-                                }
-                            >
-                                {companies.map((company) => (
-                                    <Option key={company.id} value={company.id}>
-                                        {company.name}
-                                    </Option>
-                                ))}
-                            </Select>
-                        )}
-                        <Input
-                            type="date"
-                            label="Call Date"
-                            value={callScheduleForm.callDate}
-                            onChange={(e) =>
-                                setCallScheduleForm({ ...callScheduleForm, callDate: e.target.value })
-                            }
-                        />
-                        <Input
-                            type="time"
-                            label="Call Time"
-                            value={callScheduleForm.callTime}
-                            onChange={(e) =>
-                                setCallScheduleForm({ ...callScheduleForm, callTime: e.target.value })
-                            }
-                        />
-                        <Textarea
-                            label="Purpose"
-                            value={callScheduleForm.purpose}
-                            onChange={(e) =>
-                                setCallScheduleForm({ ...callScheduleForm, purpose: e.target.value })
-                            }
-                        />
-                        <Select
-                            label="Reminder (minutes before)"
-                            value={callScheduleForm.reminderTime}
-                            onChange={(value) =>
-                                setCallScheduleForm({ ...callScheduleForm, reminderTime: value })
-                            }
-                        >
-                            <Option value="5">5 minutes</Option>
-                            <Option value="15">15 minutes</Option>
-                            <Option value="30">30 minutes</Option>
-                            <Option value="60">1 hour</Option>
-                        </Select>
-                    </DialogBody>
-                    <DialogFooter>
-                        <Button
-                            variant="text"
-                            color="gray"
-                            onClick={() => setOpenCallSchedule(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="filled"
-                            color="green"
-                            onClick={handleCallScheduleSubmit}
-                        >
-                            Schedule
-                        </Button>
-                    </DialogFooter>
-                </Dialog>
-            )}
-
-            {/* Call Reminder Dialog */}
-            {openReminderDialog && reminderDetails && (
-                <Dialog
-                    open={openReminderDialog}
-                    handler={() => setOpenReminderDialog(false)}
-                    className="max-w-sm rounded-lg shadow-lg"
-                >
-                    <DialogHeader className="text-gray-800 font-semibold">Call Reminder</DialogHeader>
-                    <DialogBody className="space-y-2 text-gray-600">
-                        <p><strong>Company:</strong> {reminderDetails.companyName}</p>
-                        <p><strong>Call Time:</strong> {reminderDetails.callDate} {reminderDetails.callTime}</p>
-                        <p><strong>Purpose:</strong> {reminderDetails.purpose}</p>
-                    </DialogBody>
-                    <DialogFooter>
-                        <Button
-                            variant="filled"
-                            color="blue"
-                            onClick={() => setOpenReminderDialog(false)}
-                        >
-                            Close
-                        </Button>
-                    </DialogFooter>
-                </Dialog>
-            )}
+  {/* Add Options Dialog */}
+  {canCreate && (
+    <div className={`fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 ${openAddOptions ? '' : 'hidden'}`}>
+      <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md border border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Add Company</h2>
+        <p className="text-sm text-gray-600 mb-6">Choose how you want to add a company:</p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setOpenAddOptions(false)}
+            className="px-5 py-2.5 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition duration-200 font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              setOpenAddOptions(false);
+              setIsAddSingleOpen(true);
+              logActivity("SELECT_ADD_SINGLE", {});
+            }}
+            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 transition duration-200 font-medium"
+          >
+            Add Single Company
+          </button>
+          <button
+            onClick={() => {
+              setOpenAddOptions(false);
+              setIsAddBulkOpen(true);
+              logActivity("SELECT_ADD_BULK", {});
+            }}
+            className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-green-700 hover:to-green-800 transition duration-200 font-medium"
+          >
+            Add Bulk Companies
+          </button>
         </div>
+      </div>
+    </div>
+  )}
+
+  {/* Delete Confirmation Dialog */}
+  {canDelete && (
+    <div className={`fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 ${openDelete ? '' : 'hidden'}`}>
+      <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md border border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Confirm Deletion</h2>
+        <p className="text-sm text-gray-600 mb-6">{deleteMessage}</p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setOpenDelete(false)}
+            className="px-5 py-2.5 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition duration-200 font-medium"
+          >
+            Cancel
+          </button>
+          {deleteMessage === "Are you sure you want to delete this company? This action cannot be undone." && (
+            <button
+              onClick={deleteCompany}
+              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-red-700 hover:to-red-800 transition duration-200 font-medium"
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* Call Schedule Dialog */}
+  {canCreate && (
+    <div className={`fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 ${openCallSchedule ? '' : 'hidden'}`}>
+      <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md max-h-[80vh] overflow-y-auto border border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Schedule Call</h2>
+        <div className="space-y-4 text-sm text-gray-700">
+          {callScheduleForm.companyId && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+              <input
+                type="text"
+                value={companies.find((c) => c.id === callScheduleForm.companyId)?.name || ""}
+                disabled
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
+          )}
+          {!callScheduleForm.companyId && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Select Company</label>
+              <select
+                value={callScheduleForm.companyId}
+                onChange={(e) => setCallScheduleForm({ ...callScheduleForm, companyId: e.target.value })}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200"
+              >
+                <option value="">Select a company</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Call Date</label>
+            <input
+              type="date"
+              value={callScheduleForm.callDate}
+              onChange={(e) => setCallScheduleForm({ ...callScheduleForm, callDate: e.target.value })}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Call Time</label>
+            <input
+              type="time"
+              value={callScheduleForm.callTime}
+              onChange={(e) => setCallScheduleForm({ ...callScheduleForm, callTime: e.target.value })}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
+            <textarea
+              value={callScheduleForm.purpose}
+              onChange={(e) => setCallScheduleForm({ ...callScheduleForm, purpose: e.target.value })}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200"
+              rows="3"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Reminder (minutes before)</label>
+            <select
+              value={callScheduleForm.reminderTime}
+              onChange={(e) => setCallScheduleForm({ ...callScheduleForm, reminderTime: e.target.value })}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200"
+            >
+              <option value="5">5 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="60">1 hour</option>
+            </select>
+          </div>
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={() => setOpenCallSchedule(false)}
+            className="px-5 py-2.5 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition duration-200 font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCallScheduleSubmit}
+            className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-green-700 hover:to-green-800 transition duration-200 font-medium"
+          >
+            Schedule
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* Call Reminder Dialog */}
+  {openReminderDialog && reminderDetails && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm border border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Call Reminder</h2>
+        <div className="space-y-2 text-sm text-gray-700">
+          <p><span className="font-medium text-gray-900">Company:</span> {reminderDetails.companyName}</p>
+          <p><span className="font-medium text-gray-900">Call Time:</span> {reminderDetails.callDate} {reminderDetails.callTime}</p>
+          <p><span className="font-medium text-gray-900">Purpose:</span> {reminderDetails.purpose}</p>
+        </div>
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={() => setOpenReminderDialog(false)}
+            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 transition duration-200 font-medium"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
     );
 }

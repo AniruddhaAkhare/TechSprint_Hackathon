@@ -102,43 +102,61 @@ export default function AttendanceRemarks() {
     }
 
     return (
-        <div className="p-6 bg-gray-100 min-h-screen font-sans">
-            <ToastContainer position="top-right" autoClose={3000} />
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Attendance Remarks</h1>
-            
-            {student ? (
-                <p className="text-gray-700 mb-6">
-                    Attendance remarks for: <strong>{student.first_name}</strong>
-                </p>
-            ) : (
-                <p className="text-red-600 mb-6">⚠ No student selected!</p>
-            )}
+   <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-6 font-sans">
+  <ToastContainer position="top-right" autoClose={3000} />
 
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Remarks History</h2>
-            {attendanceRemarks.length > 0 ? (
-                <ul className="bg-white p-4 rounded-lg shadow-md">
-                    {attendanceRemarks.map((attendance, index) => (
-                        <li key={index} className="border-b py-2 last:border-b-0">
-                            <strong className="text-gray-800">{attendance.subject}</strong> - 
-                            Present session count: {attendance.present} - 
-                            Remarks: {attendance.remarks} - 
-                            Updated by: {attendance.admin} - 
-                            Updated on: {attendance.updatedOn}
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p className="text-gray-600 mb-6">No attendance remarks are added yet.</p>
-            )}
+  <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-8 space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900 mb-1">📋 Attendance Remarks</h1>
+      {student ? (
+        <p className="text-gray-600">
+          Showing remarks for: <span className="font-semibold text-blue-600">{student.first_name}</span>
+        </p>
+      ) : (
+        <p className="text-red-600 font-medium">⚠ No student selected!</p>
+      )}
+    </div>
 
-            {canCreate && student && (
-                <button
-                    onClick={handleCreateAttendanceRemarks}
-                    className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200 mt-4"
-                >
-                    + Create Attendance Remark
-                </button>
-            )}
-        </div>
+    <div>
+      <h2 className="text-xl font-semibold text-gray-800 mb-3">🕒 Remarks History</h2>
+      {attendanceRemarks.length > 0 ? (
+        <ul className="divide-y divide-gray-200">
+          {attendanceRemarks.map((attendance, index) => (
+            <li key={index} className="py-3">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <div className="space-y-1">
+                  <p><strong className="text-indigo-700">{attendance.subject}</strong></p>
+                  <p className="text-sm text-gray-600">Remarks: <span className="italic">{attendance.remarks}</span></p>
+                  <p className="text-sm text-gray-500">Present sessions: {attendance.present}</p>
+                </div>
+                <div className="text-sm text-right text-gray-500">
+                  <p>By: <span className="font-medium">{attendance.admin}</span></p>
+                  <p>{attendance.updatedOn}</p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-gray-500">No attendance remarks available yet.</p>
+      )}
+    </div>
+
+    {canCreate && student && (
+      <div className="text-right">
+        <button
+          onClick={handleCreateAttendanceRemarks}
+          className="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 transition duration-200 shadow-sm"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Create Remark
+        </button>
+      </div>
+    )}
+  </div>
+</div>
+
     );
 }

@@ -105,7 +105,7 @@ export default function EnquiryForms() {
       });
       setEnquiryCounts(counts);
     } catch (err) {
-      // //console.error("Error fetching enquiry counts:", err.message);
+      console.error("Error fetching enquiry counts:", err.message);
     }
   }, []);
 
@@ -125,7 +125,7 @@ export default function EnquiryForms() {
         setSearchResults(formData);
       },
       (err) => {
-        // //console.error("Error fetching forms:", err.message, err.code);
+        console.error("Error fetching forms:", err.message, err.code);
       }
     );
     return unsubscribe;
@@ -193,7 +193,7 @@ export default function EnquiryForms() {
       const snapshot = await getDocs(q);
       return !snapshot.empty;
     } catch (err) {
-      // //console.error("Error checking enquiries in form:", err.message);
+      console.error("Error checking enquiries in form:", err.message);
       return false;
     }
   };
@@ -217,7 +217,7 @@ export default function EnquiryForms() {
       setOpenDelete(false);
       setDeleteMessage("Are you sure you want to delete this form? This action cannot be undone.");
     } catch (err) {
-      // //console.error("Error deleting form:", err.message);
+      console.error("Error deleting form:", err.message);
       setDeleteMessage("An error occurred while trying to delete the form.");
     }
   };

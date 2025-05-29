@@ -251,15 +251,14 @@ export default function StaffAndUsers() {
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-800">Staff and Users</h1>
+            <h1 className="text-2xl font-bold text-[#333333] font-sans">Staff and Users</h1>
             <p className="text-gray-600 mt-2">Total Staff: {users.length}</p>
           </div>
           {canCreate && (
             <div className="flex space-x-4">
               <button
                 onClick={() => navigate("/addstaff")}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
-              >
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"              >
                 + Add Staff
               </button>
             </div>
@@ -282,7 +281,7 @@ export default function StaffAndUsers() {
             />
           </div>
 
-          <div className="w-full h-[50vh] overflow-y-auto">
+          <div className="w-full h-[70vh] overflow-y-auto">
             <table className="w-full table-auto">
               <thead className="bg-gray-100 sticky top-0 z-10">
                 <tr>

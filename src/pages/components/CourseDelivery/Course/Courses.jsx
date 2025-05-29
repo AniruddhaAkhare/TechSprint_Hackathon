@@ -344,39 +344,92 @@ export default function Courses() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Courses</h1>
-        <div className="flex space-x-4">
-          {isAdmin && (
-            <button
-              type="button"
-              className="bg-gray-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-700"
-              onClick={() => setOpenLogsDialog(true)}
-            >
-              View Logs
-            </button>
-          )}
-          {canCreate && (
-            <button
-              type="button"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700"
-              onClick={handleCreateCourseClick}
-            >
-              + Create Course
-            </button>
-          )}
-        </div>
-      </div>
+    <div className="flex justify-between items-center mb-6">
+<h1 className="text-2xl font-bold text-[#333333] font-sans">
+  Courses
+</h1>
+
+
+
+
+
+
+  <div className="flex gap-4">
+    {isAdmin && (
+      <button
+        type="button"
+        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-700 text-white shadow hover:bg-gray-800 transition duration-200"
+        onClick={() => setOpenLogsDialog(true)}
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+        View Logs
+      </button>
+    )}
+
+    {canCreate && (
+      <button
+        type="button"
+        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
+        onClick={handleCreateCourseClick}
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        Create Course
+      </button>
+    )}
+  </div>
+</div>
+
 
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="mb-6 flex items-center space-x-4">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search courses by name..."
-            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          
+          <div className="relative w-full max-w-md">
+  <svg
+    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <circle cx="11" cy="11" r="7" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+  <input
+    type="text"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    placeholder="Search courses by name..."
+    className="w-full px-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+</div>
+
           <FormControl sx={{ minWidth: 200 }} size="small">
             <InputLabel id="status-filter-label">Filter by Status</InputLabel>
             <Select
@@ -527,139 +580,101 @@ export default function Courses() {
           </FormControl> */}
         </div>
 
-        <div className="rounded-lg shadow-md overflow-x-auto max-h-[70vh] overflow-y-auto">
-          <table className="w-full table-auto">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Sr No
-                </th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Course Name
-                </th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Fee (₹)
-                </th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Duration
-                </th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Mode
-                </th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Center
-                </th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {(searchResults.length > 0 || searchTerm.trim() ? searchResults : courses).map(
-                (course, index) => (
-                  <tr key={course.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                    <td className="px-4 py-3 text-gray-800">{course.name || "N/A"}</td>
-                    <td className="px-4 py-3 text-gray-600">{course.fee || "N/A"}</td>
-                    <td className="px-4 py-3 text-gray-600">{course.duration || "N/A"}</td>
-                    <td className="px-4 py-3 text-gray-600">{course.mode || "N/A"}</td>
-                    {/* <td className="px-4 py-3 text-gray-600">
-                      {course.centerIds.length > 0
-                        ? course.centerIds
-                            .map(
-                              (centerId) =>
-                                centers.find((c) => c.id === centerId)?.name || centerId
-                            )
-                            .join(", ")
-                        : "N/A"}
-                    </td> */}
+     <div className="rounded-xl shadow-lg border border-gray-200 overflow-x-auto max-h-[70vh] overflow-y-auto bg-white">
+  <table className="w-full table-auto text-sm">
+    <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+      <tr>
+        <th className="px-3 py-3 font-semibold text-gray-700 uppercase tracking-wide text-center w-[5%]">Sr No</th>
+        <th className="px-3 py-3 font-semibold text-gray-700 uppercase tracking-wide text-center w-[20%]">Course Name</th>
+        <th className="px-3 py-3 font-semibold text-gray-700 uppercase tracking-wide text-center w-[10%]">Fee (₹)</th>
+        <th className="px-3 py-3 font-semibold text-gray-700 uppercase tracking-wide text-center w-[8%]">Duration</th>
+        <th className="px-3 py-3 font-semibold text-gray-700 uppercase tracking-wide text-center w-[8%]">Mode</th>
+        <th className="px-3 py-3 font-semibold text-gray-700 uppercase tracking-wide text-center w-[22%]">Center</th>
+        <th className="px-3 py-3 font-semibold text-gray-700 uppercase tracking-wide text-center w-[7%]">Status</th>
+        <th className="px-3 py-3 font-semibold text-gray-700 uppercase tracking-wide text-center w-[15%]">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {(searchResults.length > 0 || searchTerm.trim() ? searchResults : courses).map(
+        (course, index) => (
+          <tr
+            key={course.id}
+            className="border-b border-gray-200 hover:bg-gray-50 transition duration-200 text-center"
+          >
+            <td className="px-3 py-3">{index + 1}</td>
+            <td className="px-3 py-3">{course.name || "N/A"}</td>
+            <td className="px-3 py-3">{course.fee || "N/A"}</td>
+            <td className="px-3 py-3">{course.duration || "N/A"}</td>
+            <td className="px-3 py-3">{course.mode || "N/A"}</td>
+            <td className="px-3 py-3">
+              {course.centerIds && Array.isArray(course.centerIds) && course.centerIds.length > 0
+                ? course.centerIds
+                    .map((centerId) => {
+                      const center =
+                        centers.find((c) => c.id === centerId || c.centerId === centerId);
+                      return center ? center.name || `Center ${centerId}` : `Unknown (${centerId})`;
+                    })
+                    .join(", ")
+                : "No Centers"}
+            </td>
+            <td className="px-3 py-3">
+              <span
+                className={`inline-block px-2 py-1 text-xs rounded-full font-medium ${
+                  course.status === "Inactive"
+                    ? "bg-red-100 text-red-600"
+                    : "bg-green-100 text-green-600"
+                }`}
+              >
+                {course.status || "Active"}
+              </span>
+            </td>
+            <td className="px-3 py-3">
+              <FormControl size="small">
+                <Select
+                  value=""
+                  onChange={(e) => {
+                    const action = e.target.value;
+                    if (action === "delete" && canDelete) {
+                      setDeleteId(course.id);
+                      setOpenDelete(true);
+                      setDeleteMessage(
+                        "Are you sure you want to delete this course? This action cannot be undone."
+                      );
+                    } else if (action === "update" && canUpdate) {
+                      handleEditClick(course);
+                    } else if (action === "learners") {
+                      handleLearnersClick(course.id);
+                    }
+                  }}
+                  displayEmpty
+                  renderValue={() => "Actions"}
+                  disabled={!canUpdate && !canDelete}
+                  className="bg-white border rounded-md"
+                >
+                  <MenuItem value="" disabled>
+                    Actions
+                  </MenuItem>
+                  {canUpdate && <MenuItem value="update">Update</MenuItem>}
+                  {canDelete && <MenuItem value="delete">Delete</MenuItem>}
+                  <MenuItem value="learners">Learners</MenuItem>
+                </Select>
+              </FormControl>
+            </td>
+          </tr>
+        )
+      )}
+      {!(searchResults.length > 0 || searchTerm.trim() ? searchResults : courses).length && (
+        <tr>
+          <td colSpan="8" className="px-5 py-4 text-center text-gray-500">
+            No courses found.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
 
-<td className="px-4 py-3 text-gray-600">
-  {course.centerIds && Array.isArray(course.centerIds) && course.centerIds.length > 0
-    ? course.centerIds
-        .map((centerId) => {
-          const center = centers.find((c) => c.id === centerId || c.centerId === centerId);
-          const displayName = center ? center.name || `Center ${centerId}` : `Unknown Center (${centerId})`;
-          return displayName;
-        })
-        .join(", ")
-    : "No Centers Assigned"}
-</td>
 
-
-{/* <td className="px-4 py-3 text-gray-600">
-  {course.centerIds && course.centerIds.length > 0
-    ? course.centerIds
-        .map((centerId) => {
-          const center = centers.find((c) => c.id === centerId);
-          const displayName = center ? center.name : centerId;
-          return displayName;
-        })
-        .join(", ")
-    : "N/A"}
-</td> */}
-
-
-                    {/* <td className="px-4 py-3 text-gray-600">
-  {course.centerIds && course.centerIds.length > 0
-    ? course.centerIds
-        .map((centerId) => {
-          const center = centers.find((c) => c.id === centerId);
-          const displayName = center ? center.name : centerId;
-          return displayName;
-        })
-        .join(", ")
-    : "N/A"}
-</td> */}
-                    <td className="px-4 py-3 text-gray-600">{course.status || "Active"}</td>
-                    <td className="px-4 py-3">
-                      <FormControl size="small">
-                        <Select
-                          value=""
-                          onChange={(e) => {
-                            const action = e.target.value;
-                            if (action === "delete" && canDelete) {
-                              setDeleteId(course.id);
-                              setOpenDelete(true);
-                              setDeleteMessage(
-                                "Are you sure you want to delete this course? This action cannot be undone."
-                              );
-                            } else if (action === "update" && canUpdate) {
-                              handleEditClick(course);
-                            } else if (action === "learners") {
-                              handleLearnersClick(course.id);
-                            }
-                          }}
-                          displayEmpty
-                          renderValue={() => "Actions"}
-                          disabled={!canUpdate && !canDelete}
-                        >
-                          <MenuItem value="" disabled>
-                            Actions
-                          </MenuItem>
-                          {canUpdate && <MenuItem value="update">Update</MenuItem>}
-                          {canDelete && <MenuItem value="delete">Delete</MenuItem>}
-                          <MenuItem value="learners">Learners</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </td>
-                  </tr>
-                )
-              )}
-              {!(searchResults.length > 0 || searchTerm.trim() ? searchResults : courses)
-                .length && (
-                <tr>
-                  <td colSpan="8" className="px-4 py-3 text-center text-gray-600">
-                    No courses found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
       </div>
 
       {isOpen && (

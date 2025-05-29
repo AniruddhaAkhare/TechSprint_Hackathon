@@ -378,31 +378,35 @@ const EditCurriculum = () => {
       </div>
       <p className="text-sm text-gray-600 mb-6">{curriculum.name || "Unnamed Curriculum"}</p>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <span className="text-sm text-gray-700 mb-4 sm:mb-0">
-          Sections: {sections.length}, Materials: {curriculum.materials || 0}
-        </span>
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <button
-            onClick={handleCloneSection}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-          >
-            🗂 Clone Section
-          </button>
-          <button
-            onClick={handleRearrangeSections}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-          >
-            ⇅ Rearrange Sections
-          </button>
-          <button
-            onClick={handleAddSection}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
-          >
-            + Add Section
-          </button>
-        </div>
-      </div>
+   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 sm:gap-0">
+  <span className="text-sm text-gray-600 font-medium">
+    Sections: {sections.length}, Materials: {curriculum.materials || 0}
+  </span>
+  <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto">
+    <button
+      onClick={handleCloneSection}
+      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 hover:shadow-sm transition-shadow duration-200"
+      aria-label="Clone Section"
+    >
+      <span role="img" aria-hidden="true">🗂</span> Clone Section
+    </button>
+    <button
+      onClick={handleRearrangeSections}
+      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 hover:shadow-sm transition-shadow duration-200"
+      aria-label="Rearrange Sections"
+    >
+      <span role="img" aria-hidden="true">⇅</span> Rearrange Sections
+    </button>
+    <button
+      onClick={handleAddSection}
+      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 shadow-md transition duration-200"
+      aria-label="Add Section"
+    >
+      + Add Section
+    </button>
+  </div>
+</div>
+
 
       {sections.length > 0 ? (
         <div className="space-y-4">

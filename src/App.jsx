@@ -66,7 +66,7 @@ import AdminLogs from './pages/components/AdminLogs.jsx';
 import CourseAnalyticsDashboard from './pages/components/CourseDelivery/Course/CourseAnalyticsDashboard.jsx';
 import InstallmentDashboard from './pages/components/reports/InstallmentDashboard';
 import AttendanceDashboard from './StudentInformation/AttendanceDashboard.jsx';
-import EnquiryDashboard from './pages/components/EnquiryManagement/EnquiryDashboard.jsx';
+// import EnquiryDashboard from './pages/components/EnquiryManagement/EnquiryDashboard.jsx';
 import EnquiryAnalyticsPage from './pages/components/EnquiryManagement/EnquiryAnalyticsPage.jsx';
 import EnquiryForms from './pages/components/EnquiryForm/EnquiryForm.jsx';
 import SubmitEnquiryForm from './pages/components/EnquiryForm/SubmitEnquiryForm.jsx';

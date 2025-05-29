@@ -154,180 +154,185 @@ export default function FinancePartner() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Finance Partners</h1>
-        {canCreate && (
-          <button
-            type="button"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200"
-            onClick={handleCreatePartnerClick}
-          >
-            + Add Finance Partner
-          </button>
-        )}
-      </div>
+  <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-100 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
+  {/* Header */}
+  <div className="flex justify-between items-center mb-8">
+    <h1 className="text-2xl font-bold text-[#333333] font-sans">Finance Partners</h1>
+    {canCreate && (
+      <button
+        type="button"
+        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2 mr-8"
+        onClick={handleCreatePartnerClick}
+      >
+        + Add Finance Partner
+      </button>
+    )}
+  </div>
 
-      {/* Search Bar and Table Container */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="mb-6">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search partners by name or contact..."
-            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Partners Table */}
-        <div className="rounded-lg shadow-md overflow-x-auto">
-          <table className="w-full table-auto">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Sr No</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Partner Name</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Contact Persons</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Address</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Status</th>
-                {(canUpdate || canDelete) && (
-                  <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Action</th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {(searchResults.length > 0 ? searchResults : partners).map((partner, index) => (
-                <tr key={partner.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                  <td className="px-4 py-3 text-gray-800">{partner.name || "N/A"}</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {partner.contactPersons && partner.contactPersons.length > 0 ? (
-                      <ul className="list-disc pl-4 text-sm">
-                        {partner.contactPersons.map((contact, idx) => (
-                          <li key={idx}>
-                            {contact.name} ({contact.mobile}, {contact.email})
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {partner.address && Object.values(partner.address).some((val) => val) ? (
-                      `${partner.address.street || ""} ${partner.address.area || ""}, 
-                      ${partner.address.city || ""}, ${partner.address.state || ""}, 
-                      ${partner.address.country || ""} ${partner.address.postalCode || ""}`
-                        .replace(/,\s*,/g, ",")
-                        .replace(/^\s*,|\s*$/g, "")
-                        .trim() || "N/A"
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{partner.status || "Active"}</td>
-                  {(canUpdate || canDelete) && (
-                    <td className="px-4 py-3">
-                      <FormControl size="small">
-                        <Select
-                          value=""
-                          onChange={(e) => {
-                            const action = e.target.value;
-                            if (action === "edit" && canUpdate) {
-                              handleEditClick(partner);
-                            } else if (action === "delete" && canDelete) {
-                              setDeleteId(partner.id);
-                              setOpenDelete(true);
-                              setDeleteMessage("Are you sure you want to delete this partner? This action cannot be undone.");
-                              // logActivity('INITIATE_DELETE_PARTNER', { partnerId: partner.id });
-                            }
-                          }}
-                          displayEmpty
-                          renderValue={() => "Actions"}
-                          className="text-sm"
-                        >
-                          <MenuItem value="" disabled>
-                            Actions
-                          </MenuItem>
-                          {canUpdate && <MenuItem value="edit">Edit</MenuItem>}
-                          {canDelete && <MenuItem value="delete">Delete</MenuItem>}
-                        </Select>
-                      </FormControl>
-                    </td>
-                  )}
-                </tr>
-              ))}
-              {(searchResults.length > 0 ? searchResults : partners).length === 0 && (
-                <tr>
-                  <td colSpan={canUpdate || canDelete ? 6 : 5} className="px-4 py-3 text-center text-gray-500">
-                    No finance partners found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Backdrop for Sidebar */}
-      {(canCreate || canUpdate) && isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={handleClose}
-        />
-      )}
-
-      {/* Sidebar (AddFinancePartner) */}
-      {(canCreate || canUpdate) && (
-        <div
-          className={`fixed top-0 right-0 h-full w-full sm:w-3/4 md:w-2/5 bg-white shadow-lg transform transition-transform duration-300 ${
-            isOpen ? "translate-x-0" : "translate-x-full"
-          } z-50 overflow-y-auto`}
-        >
-          <AddFinancePartner
-            isOpen={isOpen}
-            toggleSidebar={handleClose}
-            partner={currentPartner}
-          />
-        </div>
-      )}
-
-      {/* Delete Confirmation Dialog */}
-      {canDelete && openDelete && (
-        <Dialog
-          open={openDelete}
-          handler={() => {
-            setOpenDelete(false);
-            // logActivity('CANCEL_DELETE_PARTNER', { partnerId: deleteId });
-          }}
-          className="rounded-lg shadow-lg"
-        >
-          <DialogHeader className="text-gray-800 font-semibold">Confirm Deletion</DialogHeader>
-          <DialogBody className="text-gray-600">{deleteMessage}</DialogBody>
-          <DialogFooter className="space-x-4">
-            <Button
-              variant="text"
-              color="gray"
-              onClick={() => {
-                setOpenDelete(false);
-                // logActivity('CANCEL_DELETE_PARTNER', { partnerId: deleteId });
-              }}
-            >
-              Cancel
-            </Button>
-            {deleteMessage === "Are you sure you want to delete this partner? This action cannot be undone." && (
-              <Button
-                variant="filled"
-                color="red"
-                onClick={deletePartner}
-              >
-                Yes, Delete
-              </Button>
-            )}
-          </DialogFooter>
-        </Dialog>
-      )}
+  {/* Search Bar and Table Container */}
+  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+    <div className="mb-6">
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search partners by name or contact..."
+        className="w-full max-w-md px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200"
+      />
     </div>
+
+    {/* Partners Table */}
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+          <tr>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-20">
+              Sr No
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[200px]">
+              Partner Name
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[300px]">
+              Contact Persons
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[300px]">
+              Address
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+              Status
+            </th>
+            {(canUpdate || canDelete) && (
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
+                Action
+              </th>
+            )}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {(searchResults.length > 0 ? searchResults : partners).map((partner, index) => (
+            <tr key={partner.id} className="hover:bg-gray-50 transition-colors duration-150">
+              <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
+              <td className="px-6 py-4 text-sm text-gray-900 font-medium">{partner.name || "N/A"}</td>
+              <td className="px-6 py-4 text-sm text-gray-700">
+                {partner.contactPersons && partner.contactPersons.length > 0 ? (
+                  <ul className="list-disc pl-4 text-sm space-y-1">
+                    {partner.contactPersons.map((contact, idx) => (
+                      <li key={idx}>
+                        {contact.name} ({contact.mobile}, {contact.email})
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="text-gray-500">N/A</span>
+                )}
+              </td>
+              <td className="px-6 py-4 text-sm text-gray-700">
+                {partner.address && Object.values(partner.address).some((val) => val) ? (
+                  <span>
+                    {`${partner.address.street || ""} ${partner.address.area || ""}, 
+                    ${partner.address.city || ""}, ${partner.address.state || ""}, 
+                    ${partner.address.country || ""} ${partner.address.postalCode || ""}`
+                      .replace(/,\s*,/g, ",")
+                      .replace(/^\s*,|\s*$/g, "")
+                      .trim() || "N/A"}
+                  </span>
+                ) : (
+                  <span className="text-gray-500">N/A</span>
+                )}
+              </td>
+              <td className="px-6 py-4 text-sm text-gray-700">{partner.status || "Active"}</td>
+              {(canUpdate || canDelete) && (
+                <td className="px-6 py-4 text-sm">
+                  <div className="flex gap-3">
+                    {canUpdate && (
+                      <button
+                        onClick={() => handleEditClick(partner)}
+                        className="text-blue-600 hover:text-blue-800 font-medium transition duration-150"
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => {
+                          setDeleteId(partner.id);
+                          setOpenDelete(true);
+                          setDeleteMessage("Are you sure you want to delete this partner? This action cannot be undone.");
+                          // logActivity('INITIATE_DELETE_PARTNER', { partnerId: partner.id });
+                        }}
+                        className="text-red-600 hover:text-red-800 font-medium transition duration-150"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </td>
+              )}
+            </tr>
+          ))}
+          {(searchResults.length > 0 ? searchResults : partners).length === 0 && (
+            <tr>
+              <td colSpan={canUpdate || canDelete ? 6 : 5} className="px-6 py-4 text-center text-sm text-gray-500">
+                No finance partners found
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {/* Backdrop for Sidebar */}
+  {(canCreate || canUpdate) && isOpen && (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-40"
+      onClick={handleClose}
+    />
+  )}
+
+  {/* Sidebar (AddFinancePartner) */}
+  {(canCreate || canUpdate) && (
+    <div
+      className={`fixed top-0 right-0 h-full w-full sm:w-3/4 md:w-2/5 bg-white shadow-lg transform transition-transform duration-300 ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      } z-50 overflow-y-auto rounded-l-xl border-l border-gray-100`}
+    >
+      <AddFinancePartner
+        isOpen={isOpen}
+        toggleSidebar={handleClose}
+        partner={currentPartner}
+      />
+    </div>
+  )}
+
+  {/* Delete Confirmation Dialog */}
+  {canDelete && openDelete && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md border border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Confirm Deletion</h2>
+        <p className="text-sm text-gray-600 mb-6">{deleteMessage}</p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => {
+              setOpenDelete(false);
+              // logActivity('CANCEL_DELETE_PARTNER', { partnerId: deleteId });
+            }}
+            className="px-5 py-2.5 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition duration-200 font-medium"
+          >
+            Cancel
+          </button>
+          {deleteMessage === "Are you sure you want to delete this partner? This action cannot be undone." && (
+            <button
+              onClick={deletePartner}
+              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-red-700 hover:to-red-800 transition duration-200 font-medium"
+            >
+              Yes, Delete
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )}
+</div>
   );
 }

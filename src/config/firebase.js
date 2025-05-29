@@ -133,12 +133,17 @@ const functions = getFunctions(app);
 if (import.meta.env.MODE === 'development') {
   connectFunctionsEmulator(functions, "localhost", 5001);
 }
-const analytics = getAnalytics(app);
+// const analytics = getAnalytics(app);
+
+let analytics;
+if (typeof window !== 'undefined') {
+  analytics = getAnalytics(app);
+}
 
 
 const db = getFirestore(app);
 const storage = getStorage(app); 
-export { db, storage, auth, functions}; 
+export { db, storage, auth, functions, analytics}; 
 
 // import { initializeApp } from "firebase/app";
 // import {getAuth} from "firebase/auth";

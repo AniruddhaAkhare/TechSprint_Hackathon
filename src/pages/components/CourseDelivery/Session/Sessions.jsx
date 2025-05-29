@@ -325,7 +325,7 @@ export default function Sessions() {
         <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
             <ToastContainer position="top-right" autoClose={3000} />
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <h1 className="text-2xl font-semibold text-gray-800">Sessions</h1>
+                <h1 className="text-2xl font-bold text-[#333333] font-sans">Sessions</h1>
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                     <FormControl size="small" className="w-full sm:w-40">
                         <Select
@@ -341,7 +341,7 @@ export default function Sessions() {
                     {canCreate && (
                         <button
                             onClick={handleCreateSessionClick}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200 w-full sm:w-auto"
+                            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
                         >
                             + Create Session
                         </button>
@@ -349,119 +349,173 @@ export default function Sessions() {
                 </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="mb-6 flex flex-col gap-4">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Start Date</label>
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="w-full sm:w-40 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">End Date</label>
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="w-full sm:w-40 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                        <FormControl size="small" className="w-full sm:w-40">
-                            <Select
-                                value={dateFilter}
-                                onChange={(e) => handleDateFilterChange(e.target.value)}
-                                className="bg-white border border-gray-300 rounded-md"
-                            >
-                                <MenuItem value="All">All Dates</MenuItem>
-                                <MenuItem value="Today">Today</MenuItem>
-                                <MenuItem value="Last Week">Last Week</MenuItem>
-                                <MenuItem value="Last Month">Last Month</MenuItem>
-                                <MenuItem value="Next Week">Next Week</MenuItem>
-                                <MenuItem value="Next Month">Next Month</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </div>
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search sessions by name..."
-                        className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
+         <div className="bg-white p-8 rounded-xl shadow-lg max-w-full">
+  <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+    <div className="flex flex-col sm:flex-row sm:gap-6 w-full sm:w-auto">
+      <div className="flex flex-col">
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Start Date</label>
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="w-full sm:w-44 px-4 py-2 border border-gray-300 rounded-lg shadow-sm transition focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-600"
+        />
+      </div>
+      <div className="flex flex-col">
+        <label className="block text-sm font-semibold text-gray-700 mb-1">End Date</label>
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="w-full sm:w-44 px-4 py-2 border border-gray-300 rounded-lg shadow-sm transition focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-600"
+        />
+      </div>
+     <FormControl size="small" className="w-full sm:w-44 mt-4 sm:mt-0">
+            <Select
+              value={dateFilter}
+              onChange={(e) => handleDateFilterChange(e.target.value)}
+              className="bg-white border border-gray-300 rounded-lg shadow-sm"
+              MenuProps={{
+                PaperProps: {
+                  style: { borderRadius: "0.5rem", boxShadow: "0 10px 15px rgba(0,0,0,0.1)" },
+                },
+              }}
+            >
+              <MenuItem value="All">All Dates</MenuItem>
+              <MenuItem value="Today">Today</MenuItem>
+              <MenuItem value="Last Week">Last Week</MenuItem>
+              <MenuItem value="Last Month">Last Month</MenuItem>
+              <MenuItem value="Next Week">Next Week</MenuItem>
+              <MenuItem value="Next Month">Next Month</MenuItem>
+            </Select>
+          </FormControl>
+    </div>
 
-                <div className="rounded-lg shadow-md overflow-x-auto overflow-y-auto">
-                    <table className="w-full table-auto">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Sr No</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Session Name</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Date</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Start Time</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">End Time</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Mode</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Status</th>
-                                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredSessions.map((s, index) => (
-                                <tr key={s.id} className="border-b hover:bg-gray-50">
-                                    <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                                    <td className="px-4 py-3 text-gray-800">{s.name || 'N/A'}</td>
-                                    <td className="px-4 py-3 text-gray-600">{s.date || 'N/A'}</td>
-                                    <td className="px-4 py-3 text-gray-600">{s.startTime || 'N/A'}</td>
-                                    <td className="px-4 py-3 text-gray-600">{s.endTime || 'N/A'}</td>
-                                    <td className="px-4 py-3 text-gray-600">{s.sessionMode || 'N/A'}</td>
-                                    <td className="px-4 py-3 text-gray-600">
-                                        <span className={`px-2 py-1 rounded-full text-sm ${s.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                            {s.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        {(canUpdate || canDelete) && (
-                                            <FormControl size="small">
-                                                <Select
-                                                    value=""
-                                                    onChange={(e) => {
-                                                        const action = e.target.value;
-                                                        if (action === 'edit' && canUpdate) {
-                                                            handleEditClick(s);
-                                                        } else if (action === 'delete' && canDelete) {
-                                                            setDeleteId(s.id);
-                                                            setOpenDelete(true);
-                                                            setDeleteMessage("Are you sure you want to delete this session? This action cannot be undone.");
-                                                        }
-                                                    }}
-                                                    displayEmpty
-                                                    renderValue={() => "Actions"}
-                                                    className="text-sm"
-                                                    disabled={!canUpdate && !canDelete}
-                                                >
-                                                    <MenuItem value="" disabled>Actions</MenuItem>
-                                                    {canUpdate && <MenuItem value="edit">Edit</MenuItem>}
-                                                    {canDelete && <MenuItem value="delete">Delete</MenuItem>}
-                                                </Select>
-                                            </FormControl>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                            {filteredSessions.length === 0 && (
-                                <tr>
-                                    <td colSpan="8" className="px-4 py-3 text-center text-gray-500">
-                                        No sessions found
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+   <div className="relative w-full max-w-md mt-4">
+  <svg
+    className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <circle cx="11" cy="11" r="7" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+  <input
+    type="text"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    placeholder="Search sessions by name..."
+    className="w-full px-12 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-700 placeholder-gray-400 transition focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-600"
+  />
+</div>
+
+  </div>
+
+  <div className="rounded-xl shadow-md overflow-x-auto max-h-[450px] scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-gray-100">
+    <table className="w-full table-auto min-w-[700px] border-collapse">
+      <thead className="bg-gray-100 sticky top-0 z-10">
+        <tr>
+          {[
+            "Sr No",
+            "Session Name",
+            "Date",
+            "Start Time",
+            "End Time",
+            "Mode",
+            "Status",
+            "Action",
+          ].map((header) => (
+            <th
+              key={header}
+              className="px-6 py-4 text-left text-sm font-semibold text-gray-700 select-none"
+            >
+              {header}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {filteredSessions.length > 0 ? (
+          filteredSessions.map((s, index) => (
+            <tr
+              key={s.id}
+              className="border-b border-gray-200 hover:bg-blue-50 transition-colors"
+            >
+              <td className="px-6 py-3 text-gray-600">{index + 1}</td>
+              <td className="px-6 py-3 font-medium text-gray-900">{s.name || "N/A"}</td>
+              <td className="px-6 py-3 text-gray-600">{s.date || "N/A"}</td>
+              <td className="px-6 py-3 text-gray-600">{s.startTime || "N/A"}</td>
+              <td className="px-6 py-3 text-gray-600">{s.endTime || "N/A"}</td>
+              <td className="px-6 py-3 text-gray-600">{s.sessionMode || "N/A"}</td>
+              <td className="px-6 py-3">
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                    s.status === "Active"
+                      ? "bg-green-200 text-green-800"
+                      : "bg-red-200 text-red-800"
+                  }`}
+                >
+                  {s.status}
+                </span>
+              </td>
+              <td className="px-6 py-3">
+                {(canUpdate || canDelete) && (
+                  <FormControl size="small" className="w-28">
+                    <Select
+                      value=""
+                      onChange={(e) => {
+                        const action = e.target.value;
+                        if (action === "edit" && canUpdate) {
+                          handleEditClick(s);
+                        } else if (action === "delete" && canDelete) {
+                          setDeleteId(s.id);
+                          setOpenDelete(true);
+                          setDeleteMessage(
+                            "Are you sure you want to delete this session? This action cannot be undone."
+                          );
+                        }
+                      }}
+                      displayEmpty
+                      renderValue={() => "Actions"}
+                      className="text-sm"
+                      disabled={!canUpdate && !canDelete}
+                      MenuProps={{
+                        PaperProps: {
+                          style: { borderRadius: "0.5rem", boxShadow: "0 8px 12px rgba(0,0,0,0.1)" },
+                        },
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        Actions
+                      </MenuItem>
+                      {canUpdate && <MenuItem value="edit">Edit</MenuItem>}
+                      {canDelete && <MenuItem value="delete">Delete</MenuItem>}
+                    </Select>
+                  </FormControl>
+                )}
+              </td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td
+              colSpan="8"
+              className="px-6 py-6 text-center text-gray-500 italic select-none"
+            >
+              No sessions found
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
+
 
             {isOpen && (
                 <div

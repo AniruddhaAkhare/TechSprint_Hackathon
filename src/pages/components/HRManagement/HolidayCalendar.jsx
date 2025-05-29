@@ -487,89 +487,94 @@ const HolidayCalendar = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px]">
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-2xl font-semibold text-gray-800 mb-6">Holiday Calendar</h3>
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-md">
-              {error}
-            </div>
-          )}
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
-            </div>
-          ) : (
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Calendar */}
-              <div className="w-full lg:w-2/3">
-                <div className="bg-white rounded-lg shadow-md p-4">
-                  <style>{customStyles}</style>
-                  <Calendar
-                    onClickDay={canCreate || canUpdate ? handleDateClick : undefined}
-                    tileContent={tileContent}
-                    tileClassName={tileClassName}
-                    className="w-full"
-                  />
-                </div>
-              </div>
-              {/* Holiday Form */}
-              <div className="w-full lg:w-1/3">
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                    {selectedDate
-                      ? `Manage Holiday for ${new Date(selectedDate).toLocaleDateString()}`
-                      : "Select a Date"}
-                  </h4>
-                  {selectedDate && (canCreate || canUpdate || canDelete) && (
-                    <div className="space-y-6">
-                      <div>
-                        <label htmlFor="holidayName" className="block text-sm font-medium text-gray-700">
-                          Holiday Name
-                        </label>
-                        <input
-                          type="text"
-                          id="holidayName"
-                          value={holidayName}
-                          onChange={(e) => setHolidayName(e.target.value)}
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="e.g., Christmas Day"
-                          disabled={!(canCreate || canUpdate)}
-                        />
-                      </div>
-                      <div className="flex gap-3">
-                        {(canCreate || canUpdate) && (
-                          <button
-                            onClick={handleAddHoliday}
-                            className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors duration-200"
-                            disabled={!(canCreate || canUpdate)}
-                          >
-                            <PlusCircleIcon className="w-5 h-5 mr-2" />
-                            {holidayName && holidays.some((h) => h.date === selectedDate)
-                              ? "Update Holiday"
-                              : "Add Holiday"}
-                          </button>
-                        )}
-                        {canDelete && holidays.some((h) => h.date === selectedDate) && (
-                          <button
-                            onClick={handleRemoveHoliday}
-                            className="flex items-center bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors duration-200"
-                          >
-                            <TrashIcon className="w-5 h-5 mr-2" />
-                            Remove Holiday
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+  <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-100 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
+  <div className="max-w-7xl mx-auto">
+    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+      <h1 className="text-2xl font-bold text-[#333333] font-sans mb-8">
+        Holiday Calendar
+      </h1>
+
+      {error && (
+        <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-6 text-sm text-red-600 font-medium">
+          {error}
         </div>
-      </div>
+      )}
+
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid"></div>
+        </div>
+      ) : (
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Calendar */}
+          <div className="w-full lg:w-2/3">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <style>{customStyles}</style>
+              <Calendar
+                onClickDay={canCreate || canUpdate ? handleDateClick : undefined}
+                tileContent={tileContent}
+                tileClassName={tileClassName}
+                className="w-full border-0 text-gray-700"
+              />
+            </div>
+          </div>
+
+          {/* Holiday Form */}
+          <div className="w-full lg:w-1/3">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                {selectedDate
+                  ? `Manage Holiday for ${new Date(selectedDate).toLocaleDateString()}`
+                  : "Select a Date"}
+              </h2>
+              {selectedDate && (canCreate || canUpdate || canDelete) && (
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="holidayName" className="block text-sm font-medium text-gray-700">
+                      Holiday Name
+                    </label>
+                    <input
+                      type="text"
+                      id="holidayName"
+                      value={holidayName}
+                      onChange={(e) => setHolidayName(e.target.value)}
+                      className="mt-1 block w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      placeholder="Enter holiday name"
+                      disabled={!(canCreate || canUpdate)}
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    {(canCreate || canUpdate) && (
+                      <button
+                        onClick={handleAddHoliday}
+                        className="flex items-center bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 transition duration-200 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={!(canCreate || canUpdate)}
+                      >
+                        <PlusCircleIcon className="w-5 h-5 mr-2" />
+                        {holidayName && holidays.some((h) => h.date === selectedDate)
+                          ? "Update Holiday"
+                          : "Add Holiday"}
+                      </button>
+                    )}
+                    {canDelete && holidays.some((h) => h.date === selectedDate) && (
+                      <button
+                        onClick={handleRemoveHoliday}
+                        className="flex items-center bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-red-700 hover:to-red-800 transition duration-200 font-medium"
+                      >
+                        <TrashIcon className="w-5 h-5 mr-2" />
+                        Remove Holiday
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  </div>
+</div>
   );
 };
 

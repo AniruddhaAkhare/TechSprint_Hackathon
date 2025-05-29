@@ -210,109 +210,165 @@ const Curriculum = () => {
   return (
     <div className=" bg-gray-100 min-h-screen font-sans p-4 fixed inset-0 left-[300px]">
       <ToastContainer position="top-right" autoClose={3000} />
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">Curriculum</h2>
+      <h2 className="text-2xl font-bold text-[#333333] font-sans">Curriculum</h2>
       <p className="text-sm text-gray-600 mb-6">Manage all your course curriculum in one place.</p>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <div className="flex items-center mb-4 sm:mb-0">
-          <select className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-            <option>All Curriculum</option>
-          </select>
-          <span className="ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs">
-            {curriculums.length.toString().padStart(2, '0')}
-          </span>
-        </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          />
-          {canCreate && (
-            <button
-              onClick={handleAddCurriculum}
-              className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-              </svg>
-              Add Curriculum
-            </button>
-          )}
-        </div>
-      </div>
+   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 sm:gap-0">
+  {/* Filter + Count */}
+  <div className="flex items-center space-x-3 bg-white shadow-md rounded-lg px-4 py-2">
+  <select
+    className="w-56 h-8 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer transition"
+    aria-label="Filter Curriculum"
+  >
+    <option>All Curriculum</option>
+  </select>
+  <span className="inline-flex items-center h-8 bg-indigo-100 text-indigo-700 px-4 rounded-full text-sm font-semibold select-none">
+    {curriculums.length.toString().padStart(2, '0')}
+  </span>
+</div>
 
-      <div className="bg-white rounded-lg shadow-md">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="p-3 text-left text-sm font-semibold text-gray-700">Sr.</th>
-              <th className="p-3 text-left text-sm font-semibold text-gray-700">Curriculum Name</th>
-              <th className="p-3 text-left text-sm font-semibold text-gray-700">Content</th>
-              <th className="p-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedCurriculums.length > 0 ? (
-              paginatedCurriculums.map((curriculum, index) => (
-                <tr
-                  key={curriculum.id}
-                  className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
-                  
+
+  {/* Search + Add button */}
+  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+   <div className="relative w-full sm:w-64">
+  <svg
+    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <circle cx="11" cy="11" r="7" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+  <input
+    type="text"
+    placeholder="Search"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="h-10 w-full pl-10 pr-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition"
+    aria-label="Search Curriculums"
+  />
+</div>
+
+    {canCreate && (
+      <button
+        onClick={handleAddCurriculum}
+        className="h-10 w-full sm:w-auto bg-indigo-600 text-white px-5 rounded-md hover:bg-indigo-700 transition-colors shadow-md flex items-center justify-center gap-2 font-semibold"
+        aria-label="Add Curriculum"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path d="M12 4v16m8-8H4" />
+        </svg>
+        Add Curriculum
+      </button>
+    )}
+  </div>
+</div>
+
+     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+  <table className="w-full table-fixed border-collapse">
+    <thead className="bg-gray-100">
+      <tr>
+        <th className="w-1/12 p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wide">Sr.</th>
+        <th className="w-5/12 p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wide">Curriculum Name</th>
+        <th className="w-3/12 p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wide">Content</th>
+        <th className="w-3/12 p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wide">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {paginatedCurriculums.length > 0 ? (
+        paginatedCurriculums.map((curriculum, index) => (
+          <tr
+            key={curriculum.id}
+            className={`border-b border-gray-200 transition duration-200 hover:bg-indigo-50 cursor-pointer`}
+            onClick={() => canUpdate && handleRowClick(curriculum.id)}
+          >
+            <td className="w-1/12 p-4 text-gray-700 font-medium">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+            <td className="w-5/12 p-4 text-gray-800 font-semibold">{curriculum.name}</td>
+            <td className="w-3/12 p-4 text-gray-600">
+              <span className="inline-flex items-center space-x-1">
+                <svg
+                  className="w-5 h-5 text-indigo-400"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <td className="p-3 text-gray-700" onClick={() => canUpdate && handleRowClick(curriculum.id)}>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                  <td className="p-3 text-gray-700" onClick={() => canUpdate && handleRowClick(curriculum.id)}>{curriculum.name}</td>
-                  <td className="p-3 text-gray-700" onClick={() => canUpdate && handleRowClick(curriculum.id)}>
-                    <span className="inline-flex items-center">
-                      ≡ {curriculum.sections || 0} Sections
-                    </span>
-                  </td>
-                  <td className="p-3" onClick={(e) => e.stopPropagation()}>
-                    {(canUpdate || canDelete) && (
-                      <div className="relative">
-                        <button
-                          className="text-gray-600 hover:text-gray-800 text-lg font-bold"
-                          onClick={() => toggleDropdown(curriculum.id)}
-                        >
-                          ⋮
-                        </button>
-                        {dropdownOpen === curriculum.id && (
-                          <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-20">
-                            {canUpdate && (
-                              <button
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                onClick={() => handleEditClick(curriculum.id)}
-                              >
-                                Edit
-                              </button>
-                            )}
-                            {canDelete && (
-                              <button
-                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                                onClick={() => handleDeleteClick(curriculum.id)}
-                              >
-                                Delete
-                              </button>
-                            )}
-                          </div>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+                <span>{curriculum.sections || 0} Sections</span>
+              </span>
+            </td>
+            <td className="w-3/12 p-4" onClick={(e) => e.stopPropagation()}>
+              {(canUpdate || canDelete) && (
+                <div className="relative inline-block text-left">
+                  <button
+                    className="inline-flex justify-center items-center w-8 h-8 text-gray-600 hover:text-indigo-600 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    onClick={() => toggleDropdown(curriculum.id)}
+                    aria-haspopup="true"
+                    aria-expanded={dropdownOpen === curriculum.id}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zm6-2a2 2 0 100 4 2 2 0 000-4zm6 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </button>
+                  {dropdownOpen === curriculum.id && (
+                    <div className="origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-30">
+                      <div className="py-1">
+                        {canUpdate && (
+                          <button
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 transition"
+                            onClick={() => handleEditClick(curriculum.id)}
+                          >
+                            Edit
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 hover:text-red-800 transition"
+                            onClick={() => handleDeleteClick(curriculum.id)}
+                          >
+                            Delete
+                          </button>
                         )}
                       </div>
-                    )}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="4" className="p-6 text-center text-gray-500">
-                  No curriculums found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="4" className="p-6 text-center text-gray-400 italic">
+            No curriculums found.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
 
       <div className="flex justify-end items-center mt-6 gap-4">
         <button

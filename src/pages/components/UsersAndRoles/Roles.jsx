@@ -282,208 +282,217 @@ export default function Roles() {
   const permissionSections = Object.keys(newRolePermissions);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px] overflow-y-scroll">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h1 className="text-2xl font-semibold text-gray-800">Role Management</h1>
-        {canCreate && (
-          <button
-            onClick={() => setNewRoleName('')} // Reset form
-            className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200 w-full sm:w-auto"
-          >
-            + Create Role
-          </button>
-        )}
-      </div>
+   <div className="flex flex-col min-h-screen bg-gray-100 p-6 fixed inset-0 left-[300px] overflow-y-auto">
+  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+    <h1 className="text-2xl font-bold text-[#333333] font-sans">Role Management</h1>
+    {canCreate && (
+      <button
+        onClick={() => setNewRoleName('')}
+        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
+      >
+        + Create Role
+      </button>
+    )}
+  </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="rounded-lg shadow-md overflow-x-auto">
-          <table className="w-full table-auto">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Sr No</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Role Name</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Default</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {roles.map((role, index) => (
-                <tr key={role.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                  <td className="px-4 py-3 text-gray-800">{role.name}</td>
-                  <td className="px-4 py-3 text-gray-800">{role.isDefault ? 'Yes' : 'No'}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      {canUpdate && !role.isDefault && (
-                        <button
-                          onClick={() => startEditing(role)}
-                          className="text-blue-600 hover:underline"
-                        >
-                          Edit
-                        </button>
-                      )}
-                      {canDelete && !role.isDefault && (
-                        <button
-                          onClick={() => {
-                            setDeleteId(role.id);
-                            setOpenDelete(true);
-                          }}
-                          className="text-red-600 hover:underline"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {roles.length === 0 && (
-                <tr>
-                  <td colSpan="4" className="px-4 py-3 text-center text-gray-500">
-                    No roles found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {canCreate && newRoleName !== null && (
-        <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Create New Role</h2>
-          <input
-            type="text"
-            value={newRoleName}
-            onChange={(e) => setNewRoleName(e.target.value)}
-            placeholder="Enter role name"
-            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-          />
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {permissionSections.map(section => (
-              <div key={section} className="border-b pb-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-base font-semibold text-gray-700 capitalize">{section}</h3>
-                  <button
-                    onClick={() => handleSelectAll(section, newRolePermissions)}
-                    className="text-blue-600 hover:underline text-sm"
-                  >
-                    {Object.values(newRolePermissions[section]).every(val => val) ? 'Deselect All' : 'Select All'}
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-4 mt-2">
-                  {['create', 'update', 'display', 'delete'].map(action => (
-                    <label key={action} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={newRolePermissions[section][action]}
-                        onChange={() => handlePermissionChange(section, action, newRolePermissions)}
-                        className="h-4 w-4 text-blue-600 rounded"
-                      />
-                      <span className="text-gray-600 capitalize">{action}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={handleCreateRole}
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200"
-          >
-            Create Role
-          </button>
-        </div>
-      )}
-
-      {canUpdate && (
-        <Dialog
-          open={isEditModalOpen}
-          handler={() => setIsEditModalOpen(false)}
-          className="rounded-lg shadow-lg max-w-2xl"
-        >
-          <DialogHeader className="text-gray-800 font-semibold">
-            Edit Role: {editingRole?.name || 'N/A'}
-          </DialogHeader>
-          <DialogBody className="space-y-4 max-h-96 overflow-y-auto">
-            {editingRole ? (
-              permissionSections.map(section => (
-                <div key={section} className="border-b pb-2">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-base font-semibold text-gray-700 capitalize">{section}</h3>
+  <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+    <div className="rounded-lg overflow-x-auto">
+      <table className="w-full table-auto">
+        <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+          <tr>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Sr No</th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role Name</th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Default</th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {roles.map((role, index) => (
+            <tr key={role.id} className="border-b hover:bg-gray-50 transition-colors duration-150">
+              <td className="px-6 py-4 text-sm text-gray-700">{index + 1}</td>
+              <td className="px-6 py-4 text-sm text-gray-900 font-medium">{role.name}</td>
+              <td className="px-6 py-4 text-sm text-gray-900">{role.isDefault ? 'Yes' : 'No'}</td>
+              <td className="px-6 py-4">
+                <div className="flex gap-3">
+                  {canUpdate && !role.isDefault && (
                     <button
-                      onClick={() => handleSelectAll(section, editingRole.permissions)}
-                      className="text-blue-600 hover:underline text-sm"
+                      onClick={() => startEditing(role)}
+                      className="text-blue-600 hover:text-blue-800 font-medium transition duration-150"
                     >
-                      {Object.values(editingRole.permissions[section]).every(val => val) ? 'Deselect All' : 'Select All'}
+                      Edit
                     </button>
-                  </div>
-                  <div className="flex flex-wrap gap-4 mt-2">
-                    {['create', 'update', 'display', 'delete'].map(action => (
-                      <label key={action} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={editingRole.permissions[section][action] || false}
-                          onChange={() => handlePermissionChange(section, action, editingRole.permissions)}
-                          className="h-4 w-4 text-blue-600 rounded"
-                        />
-                        <span className="text-gray-600 capitalize">{action}</span>
-                      </label>
-                    ))}
-                  </div>
+                  )}
+                  {canDelete && !role.isDefault && (
+                    <button
+                      onClick={() => {
+                        setDeleteId(role.id);
+                        setOpenDelete(true);
+                      }}
+                      className="text-red-600 hover:text-red-800 font-medium transition duration-150"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
-              ))
-            ) : (
-              <p className="text-gray-600">No role selected</p>
-            )}
-          </DialogBody>
-          <DialogFooter className="space-x-4">
-            <Button
-              variant="text"
-              color="gray"
-              onClick={() => setIsEditModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="filled"
-              color="blue"
-              onClick={handleUpdateRole}
-            >
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </Dialog>
-      )}
-
-      {canDelete && (
-        <Dialog
-          open={openDelete}
-          handler={() => setOpenDelete(false)}
-          className="rounded-lg shadow-lg"
-        >
-          <DialogHeader className="text-gray-800 font-semibold">Confirm Deletion</DialogHeader>
-          <DialogBody className="text-gray-600">
-            Are you sure you want to delete this role? This action cannot be undone.
-          </DialogBody>
-          <DialogFooter className="space-x-4">
-            <Button
-              variant="text"
-              color="gray"
-              onClick={() => setOpenDelete(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="filled"
-              color="red"
-              onClick={handleDeleteRole}
-            >
-              Yes, Delete
-            </Button>
-          </DialogFooter>
-        </Dialog>
-      )}
+              </td>
+            </tr>
+          ))}
+          {roles.length === 0 && (
+            <tr>
+              <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
+                No roles found
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
+  </div>
+
+  {canCreate && newRoleName !== null && (
+    <div className="mt-8 bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <h2 className="text-xl font-semibold text-gray-900 mb-5">Create New Role</h2>
+      <input
+        type="text"
+        value={newRoleName}
+        onChange={(e) => setNewRoleName(e.target.value)}
+        placeholder="Enter role name"
+        className="w-full max-w-md px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 text-gray-700"
+      />
+      <div className="space-y-5 max-h-96 overflow-y-auto mt-4">
+        {permissionSections.map(section => (
+          <div key={section} className="border-b border-gray-200 pb-3">
+            <div className="flex justify-between items-center">
+              <h3 className="text-base font-semibold text-gray-800 capitalize">{section}</h3>
+              <button
+                onClick={() => handleSelectAll(section, newRolePermissions)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition duration-150"
+              >
+                {Object.values(newRolePermissions[section]).every(val => val) ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-4 mt-3">
+              {['create', 'update', 'display', 'delete'].map(action => (
+                <label key={action} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={newRolePermissions[section][action]}
+                    onChange={() => handlePermissionChange(section, action, newRolePermissions)}
+                    className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700 capitalize">{action}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+     <div className="flex justify-end mt-2">
+  <button
+    onClick={handleCreateRole}
+    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
+  >
+    Create Role
+  </button>
+</div>
+
+    </div>
+  )}
+
+  {canUpdate && (
+    <Dialog
+      open={isEditModalOpen}
+      handler={() => setIsEditModalOpen(false)}
+      className="rounded-xl shadow-xl max-w-2xl bg-white"
+    >
+      <DialogHeader className="text-gray-900 font-semibold text-lg px-6 py-4 border-b border-gray-200">
+        Edit Role: {editingRole?.name || 'N/A'}
+      </DialogHeader>
+      <DialogBody className="space-y-5 max-h-96 overflow-y-auto px-6 py-4">
+        {editingRole ? (
+          permissionSections.map(section => (
+            <div key={section} className="border-b border-gray-200 pb-3">
+              <div className="flex justify-between items-center">
+                <h3 className="text-base font-semibold text-gray-800 capitalize">{section}</h3>
+                <button
+                  onClick={() => handleSelectAll(section, editingRole.permissions)}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium transition duration-150"
+                >
+                  {Object.values(editingRole.permissions[section]).every(val => val) ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-4 mt-3">
+                {['create', 'update', 'display', 'delete'].map(action => (
+                  <label key={action} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={editingRole.permissions[section][action] || false}
+                      onChange={() => handlePermissionChange(section, action, editingRole.permissions)}
+                      className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700 capitalize">{action}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-gray-600">No role selected</p>
+        )}
+      </DialogBody>
+      <DialogFooter className="space-x-4 px-6 py-4 border-t border-gray-200">
+        <Button
+          variant="text"
+          color="gray"
+          onClick={() => setIsEditModalOpen(false)}
+          className="text-gray-600 hover:text-gray-800 font-medium"
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="filled"
+          color="blue"
+          onClick={handleUpdateRole}
+          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800"
+        >
+          Save Changes
+        </Button>
+      </DialogFooter>
+    </Dialog>
+  )}
+
+  {canDelete && (
+    <Dialog
+      open={openDelete}
+      handler={() => setOpenDelete(false)}
+      className="rounded-xl shadow-xl bg-white"
+    >
+      <DialogHeader className="text-gray-900 font-semibold text-lg px-6 py-4 border-b border-gray-200">
+        Confirm Deletion
+      </DialogHeader>
+      <DialogBody className="text-sm text-gray-600 px-6 py-4">
+        Are you sure you want to delete this role? This action cannot be undone.
+      </DialogBody>
+      <DialogFooter className="space-x-4 px-6 py-4 border-t border-gray-200">
+        <Button
+          variant="text"
+          color="gray"
+          onClick={() => setOpenDelete(false)}
+          className="text-gray-600 hover:text-gray-800 font-medium"
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="filled"
+          color="red"
+          onClick={handleDeleteRole}
+          className="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-lg hover:from-red-700 hover:to-red-800"
+        >
+          Yes, Delete
+        </Button>
+      </DialogFooter>
+    </Dialog>
+  )}
+</div>
   );
 }

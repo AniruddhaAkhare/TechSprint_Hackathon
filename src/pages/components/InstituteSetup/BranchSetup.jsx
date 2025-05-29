@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect } from "react";
 import { db } from "../../../config/firebase";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
@@ -21,7 +22,7 @@ const BranchSetup = ({ instituteId, canCreate, canUpdate, canDelete, setActiveSt
           branchList.sort((a, b) => a.name.localeCompare(b.name));
           setBranches(branchList);
         } catch (error) {
-          // //console.error("Error fetching branches:", error);
+          console.error("Error fetching branches:", error);
         }
       };
       fetchBranches();
@@ -45,7 +46,7 @@ const BranchSetup = ({ instituteId, canCreate, canUpdate, canDelete, setActiveSt
         setBranches(branches.filter((branch) => branch.id !== branchId));
         alert("Branch deleted successfully!");
       } catch (error) {
-        // //console.error("Error deleting branch: ", error);
+        console.error("Error deleting branch: ", error);
         alert("Error deleting branch");
       }
     }
