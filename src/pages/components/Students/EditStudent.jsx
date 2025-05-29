@@ -283,8 +283,8 @@ export default function EditStudent() {
                     goal: data.goal || "",
                     address: data.residential_address || { street: "", area: "", city: "", state: "", zip: "", country: "" },
                     billingAddress: data.billing_address || { name: "", street: "", area: "", city: "", state: "", zip: "", country: "", gstNo: "" },
-                    date_of_birth: data.date_of_birth ? data.date_of_birth.toDate().toISOString().split("T")[0] : null,
-                    admission_date: data.admission_date ? data.admission_date.toDate().toISOString().split("T")[0] : null,
+                    date_of_birth: data.date_of_birth || null,
+                    admission_date: data.admission_date || null,
                     courseDetails: data.course_details || [],
                     educationDetails: data.education_details || [],
                     installmentDetails: data.installment_details || [],
@@ -367,7 +367,7 @@ export default function EditStudent() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if (name.includes("billingAddress")) {
+       if (name.includes("billingAddress")) {
             const field = name.split(".")[1];
             setStudent(prev => ({ ...prev, billingAddress: { ...prev.billingAddress, [field]: value } }));
         } else if (name.includes("address")) {
@@ -667,7 +667,7 @@ export default function EditStudent() {
                                     <label className="block text-sm font-medium text-gray-600">Name <span className="text-red-500">*</span></label>
                                     <input
                                         type="text"
-                                        name="name"
+                                        name="Name"
                                         value={student.Name}
                                         onChange={handleChange}
                                         placeholder="Name"
@@ -1320,3 +1320,4 @@ export default function EditStudent() {
         </>
     );
 }
+
