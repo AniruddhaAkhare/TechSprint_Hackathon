@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { db, auth } from '../../../../config/firebase';
-import { doc, getDoc, collection, addDoc, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, getDocs, updateDoc } from 'firebase/firestore';
 import { serverTimestamp } from 'firebase/firestore';
 import { s3Client, debugS3Config } from '../../../../config/aws-config';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { useAuth } from '../../../../context/AuthContext';
 
-const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId, allowedMaterialTypes }) => {
+const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId, allowedMaterialTypes, materialToEdit, logActivity }) => {
   const [view, setView] = useState('typeSelection');
   const [selectedType, setSelectedType] = useState(null);
   const [file, setFile] = useState(null);
@@ -70,6 +70,35 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
     hasUnsavedChangesRef.current = false;
   }, []);
 
+  // Initialize form with materialToEdit data
+  useEffect(() => {
+    if (materialToEdit) {
+      setSelectedType(materialToEdit.type);
+      setView(
+        materialToEdit.type === 'YouTube' || materialToEdit.type === 'Feedback' || materialToEdit.type === 'Form'
+          ? 'textConfig'
+          : 'fileConfig'
+      );
+      setMaterialData({
+        name: materialToEdit.name || '',
+        description: materialToEdit.description || '',
+        url: materialToEdit.url || '',
+        templateId: materialToEdit.templateId || '',
+        maxViews: materialToEdit.maxViews ? materialToEdit.maxViews.toString() : 'Unlimited',
+        isPrerequisite: materialToEdit.isPrerequisite || false,
+        allowDownload: materialToEdit.allowDownload || false,
+        accessOn: materialToEdit.accessOn || 'Both',
+        state: materialToEdit.state || 'draft',
+        scheduledAt: materialToEdit.scheduledAt
+          ? new Date(materialToEdit.scheduledAt).toISOString().slice(0, 16)
+          : '',
+      });
+      hasUnsavedChangesRef.current = false;
+    } else {
+      resetForm();
+    }
+  }, [materialToEdit, resetForm]);
+
   // Fetch user role
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -79,17 +108,12 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
           const userDoc = await getDoc(userDocRef);
           setUserRole(userDoc.exists() ? userDoc.data().role || 'student' : 'student');
         } catch (err) {
-          //console.error('Error fetching user role:', err);
           setError('Failed to verify permissions.');
           setUserRole('student');
         }
       } else {
         setUserRole(null);
       }
-      setLoading(false);
-    }, (err) => {
-      //console.error('Auth state error:', err);
-      setError('Authentication error.');
       setLoading(false);
     });
     return () => unsubscribe();
@@ -109,7 +133,6 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
           }));
           setFormTemplates(templatesList);
         } catch (err) {
-          //console.error('Error fetching form templates:', err);
           setError('Failed to load form templates.');
         } finally {
           setFormTemplatesLoading(false);
@@ -125,7 +148,6 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
   // Handle modal open/close and keyboard events
   useEffect(() => {
     if (isOpen) {
-      resetForm(); // Reset form when modal opens
       const handleKeyDown = (e) => {
         if (e.key === 'Escape' && !uploading) {
           handleClose();
@@ -134,7 +156,7 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen, uploading, resetForm]);
+  }, [isOpen, uploading]);
 
   // Handle click outside to close modal
   const handleClickOutside = useCallback(
@@ -152,25 +174,6 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isOpen, handleClickOutside]);
-
-  // Log activity to Firestore
-  const logActivity = async (action, details) => {
-    if (!user) return;
-    try {
-      await addDoc(collection(db, 'activityLogs'), {
-        userId: user.uid,
-        email: user.email,
-        action,
-        details,
-        timestamp: serverTimestamp(),
-        curriculumId,
-        sectionId,
-        sessionId: sessionId || null,
-      });
-    } catch (err) {
-      //console.error('Error logging activity:', err);
-    }
-  };
 
   // Permission check
   const hasPermission = useCallback(() => canView, [canView]);
@@ -310,16 +313,18 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
       setUploadProgress(100);
 
       const fileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`;
-      await logActivity('file_upload', `Uploaded ${selectedType} file: ${file.name} to S3`);
+      await logActivity({
+        action: 'file_upload',
+        details: `Uploaded ${selectedType} file: ${file.name} to S3`,
+      });
 
       return fileUrl;
     } catch (error) {
-      //console.error('S3 Upload Error:', error);
       setError(`Failed to upload file: ${error.message}`);
       setUploadProgress(0);
       throw error;
     }
-  }, [file, curriculumId, sectionId, sessionId, selectedType]);
+  }, [file, curriculumId, sectionId, sessionId, selectedType, logActivity]);
 
   const handleAddMaterial = useCallback(async () => {
     if (!hasPermission()) {
@@ -331,17 +336,17 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
       return;
     }
     if (selectedType === 'Form' && !materialData.templateId) {
-      setError('Please select a form template.');
+      setError('Please select a template.');
       return;
     }
-    if (selectedType !== 'YouTube' && selectedType !== 'Feedback' && selectedType !== 'Form' && !file) {
-      setError('Please upload a file.');
+    if (selectedType !== 'YouTube' && selectedType !== 'Feedback' && selectedType !== 'Form' && !file && !materialData.url) {
+      setError('Please upload a file or provide a URL.');
       return;
     }
     if (
       selectedType === 'YouTube' &&
       materialData.url &&
-      !materialData.url.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//)
+      !materialData.url.match(/^(https?:\/\/)?((www\.)?youtube\.com|youtu\.be)\//)
     ) {
       setError('Please enter a valid YouTube URL.');
       return;
@@ -359,19 +364,17 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
     setError(null);
 
     try {
-      let fileUrl = null;
-      if (selectedType !== 'YouTube' && selectedType !== 'Feedback' && selectedType !== 'Form') {
+      let fileUrl = materialData.url;
+      if (selectedType !== 'YouTube' && selectedType !== 'Feedback' && selectedType !== 'Form' && file) {
         fileUrl = await handleFileUpload();
         if (!fileUrl) throw new Error('File upload failed.');
-      } else if (selectedType === 'YouTube' || selectedType === 'Feedback') {
-        fileUrl = materialData.url;
       }
 
       const collectionPath = sessionId
         ? `curriculums/${curriculumId}/sections/${sectionId}/sessions/${sessionId}/materials`
         : `curriculums/${curriculumId}/sections/${sectionId}/materials`;
 
-      await addDoc(collection(db, collectionPath), {
+      const materialPayload = {
         type: selectedType,
         name: materialData.name,
         description: materialData.description || null,
@@ -383,14 +386,27 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
         accessOn: materialData.accessOn,
         state: materialData.state,
         scheduledAt: materialData.state === 'scheduled' ? new Date(materialData.scheduledAt).toISOString() : null,
-        createdAt: serverTimestamp(),
-      });
+        createdAt: materialToEdit ? materialToEdit.createdAt : serverTimestamp(),
+      };
 
-      await logActivity('Material Added', `Added ${selectedType} material: ${materialData.name}`);
+      if (materialToEdit) {
+        const materialRef = doc(db, collectionPath, materialToEdit.id);
+        await updateDoc(materialRef, materialPayload);
+        await logActivity({
+          action: 'Material Updated',
+          details: `Updated ${selectedType} material: ${materialData.name}`,
+        });
+      } else {
+        await addDoc(collection(db, collectionPath), materialPayload);
+        await logActivity({
+          action: 'Material Added',
+          details: `Added ${selectedType} material: ${materialData.name}`,
+        });
+      }
+
       resetForm();
       onClose();
     } catch (err) {
-      //console.error('Error saving material:', err);
       setError('Failed to save material: ' + err.message);
     } finally {
       setUploading(false);
@@ -407,6 +423,8 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
     handleFileUpload,
     resetForm,
     onClose,
+    materialToEdit,
+    logActivity,
   ]);
 
   if (!isOpen) return null;
@@ -430,7 +448,7 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
           <>
             <div className="flex justify-between items-center mb-6">
               <h3 id="add-material-modal-title" className="text-lg font-semibold text-gray-900">
-                Add Material
+                {materialToEdit ? 'Edit Material' : 'Add Material'}
               </h3>
               <button
                 onClick={handleClose}
@@ -443,6 +461,21 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
             </div>
 
             <div className="flex-1 space-y-6">
+              {uploading && selectedType === 'Video' && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+                  <div className="text-center text-white">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 mx-auto"></div>
+                    <p className="mt-4 text-lg">Uploading video...</p>
+                    <div className="mt-2 w-64 h-4 bg-gray-200 rounded-full">
+                      <div
+                        className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-sm">{Math.round(uploadProgress)}%</p>
+                  </div>
+                </div>
+              )}
               {view === 'typeSelection' && (
                 <>
                   <p className="text-sm text-gray-600">Select material type</p>
@@ -457,7 +490,7 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
                             : 'bg-white border-gray-200'
                         } hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed`}
                         onClick={() => handleTypeSelect(material.type)}
-                        disabled={uploading}
+                        disabled={uploading || materialToEdit}
                       >
                         <span className="text-2xl mb-2">{material.icon}</span>
                         <span className="text-xs text-center">{material.type}</span>
@@ -472,14 +505,16 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
                 <>
                   <p className="text-sm text-gray-600">
                     Type: {selectedType}
-                    <button
-                      type="button"
-                      className="ml-2 text-indigo-600 hover:underline focus:outline-none disabled:cursor-not-allowed"
-                      onClick={handleBack}
-                      disabled={uploading}
-                    >
-                      Change
-                    </button>
+                    {!materialToEdit && (
+                      <button
+                        type="button"
+                        className="ml-2 text-indigo-600 hover:underline focus:outline-none disabled:cursor-not-allowed"
+                        onClick={handleBack}
+                        disabled={uploading}
+                      >
+                        Change
+                      </button>
+                    )}
                   </p>
                   <div className="space-y-4">
                     <div>
@@ -525,6 +560,8 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
                         <div className="mt-1 p-4 border-2 border-dashed border-gray-300 rounded-md text-center relative">
                           {file ? (
                             <p className="text-sm text-gray-600">Selected: {file.name}</p>
+                          ) : materialData.url ? (
+                            <p className="text-sm text-gray-600">Current file: {materialData.url.split('/').pop()}</p>
                           ) : (
                             <>
                               <span className="text-2xl text-gray-400">☁️</span>
@@ -712,7 +749,7 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
                       />
                     </div>
                     {error && <p className="text-red-600 text-sm" role="alert">{error}</p>}
-                    {uploading && (
+                    {uploading && selectedType !== 'Video' && (
                       <div className="relative w-full h-5 bg-gray-200 rounded-md">
                         <div
                           className="absolute h-full bg-indigo-600 rounded-md transition-all"
@@ -754,7 +791,7 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
                     type="button"
                     onClick={handleBack}
                     className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    disabled={uploading}
+                    disabled={uploading || materialToEdit}
                   >
                     Back
                   </button>
@@ -764,7 +801,7 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
                     className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     disabled={uploading}
                   >
-                    {uploading ? 'Saving...' : 'Save'}
+                    {uploading ? 'Saving...' : materialToEdit ? 'Update' : 'Save'}
                   </button>
                 </>
               )}
