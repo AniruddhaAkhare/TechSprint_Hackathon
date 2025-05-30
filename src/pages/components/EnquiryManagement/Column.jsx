@@ -20,7 +20,7 @@ const Column = ({ columnId, column, filteredEnquiries, canUpdate, handleViewEnqu
               </p>
             </div>
           </div>
-          <div className="p-4 h-[calc(100%-4rem)] overflow-y-auto">
+          <div className="p-4 h-[calc(100%-6rem)] overflow-y-auto">
             {column.items.length === 0 ? (
               <p className="text-gray-500 text-center">No enquiries in this stage</p>
             ) : (
