@@ -54,7 +54,57 @@ const FormViewer = ({ form, onClose }) => {
           </div>
         )}
         <div className="space-y-4">
-          {form.fields?.length > 0 ? (
+        {form.fields?.length > 0 ? (
+  form.fields.map((field) => {
+    const fieldConfig = allEnquiryFields
+      .flatMap((category) => category.fields)
+      .find((f) => f.id === field.id);
+    if (!fieldConfig) {
+      console.warn(`Field with ID ${field.id} not found`);
+      return null;
+    }
+    const hasDefaultValue = field.defaultValue && field.defaultValue.trim() !== "";
+    // Determine options based on useDynamicOptions and customOptions
+    const options = field.useDynamicOptions === false && field.customOptions?.length > 0
+      ? field.customOptions
+      : fieldConfig.options || [];
+    return (
+      <div key={field.id} className="mb-4">
+        <label className="block text-gray-700 text-sm font-medium mb-2">
+          {fieldConfig.label}
+        </label>
+        {hasDefaultValue ? (
+          <p className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+            {field.defaultValue}
+          </p>
+        ) : fieldConfig.type === "select" ? (
+          <select
+            className="w-full px-3 py-2 border rounded-md"
+            defaultValue=""
+            disabled
+          >
+            <option value="">Select {fieldConfig.label}</option>
+            {options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type={fieldConfig.type || "text"}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder={fieldConfig.label}
+            readOnly
+          />
+        )}
+      </div>
+    );
+  })
+) : (
+  <p className="text-gray-600">No fields available for this form.</p>
+)}
+          {/* {form.fields?.length > 0 ? (
             form.fields.map((field) => {
               const fieldConfig = allEnquiryFields
                 .flatMap((category) => category.fields)
@@ -99,7 +149,7 @@ const FormViewer = ({ form, onClose }) => {
             })
           ) : (
             <p className="text-gray-600">No fields available for this form.</p>
-          )}
+          )} */}
         </div>
       </div>
     </div>
