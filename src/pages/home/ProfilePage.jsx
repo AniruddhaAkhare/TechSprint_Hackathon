@@ -1284,14 +1284,14 @@ const ProfilePage = () => {
             <CheckInOut />
           </div>
         </div>
-        {/* Additional Content */}
+        {/* Additional Content
         <div className="bg-white p-6 rounded-lg shadow-lg w-full lg:w-2/3">
           <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Additional Content</h2>
           <p className="text-gray-600 text-sm sm:text-base">
             Add your new content here (e.g., forms, charts, or other components).
           </p>
-          {/* Add your components here */}
-        </div>
+          {/* Add your components here
+        </div> */}
       </div>
     </div>
   );
