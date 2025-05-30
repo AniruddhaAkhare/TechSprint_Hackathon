@@ -27,15 +27,15 @@
 
 
 // const FinanceForm = ({
-  // courseIndex,
-  // fullFeesDetails,
-  // financeDetails,
-  // handleFinanceChange,
-  // financePartners,
-  // canUpdate,
-  // user,
-  // studentId,
- 
+// courseIndex,
+// fullFeesDetails,
+// financeDetails,
+// handleFinanceChange,
+// financePartners,
+// canUpdate,
+// user,
+// studentId,
+
 // }) => {
 //   const { user: authUser } = useAuth();
 //   const [attachmentError, setAttachmentError] = useState({});
@@ -49,130 +49,130 @@
 //   }, [canUpdate]);
 
 //   // Initialize registrations array if empty
-  // useEffect(() => {
-  //   if (!financeDetails.registrations || financeDetails.registrations.length === 0) {
-  //     handleFinanceChange(courseIndex, "registrations", "", [
-  //       {
-  //         srNo: 1,
-  //         amount: 0,
-  //         date: "",
-  //         paymentMethod: "",
-  //         receivedBy: "",
-  //         remark: "",
-  //         status: "Pending",
-  //         amountType: "Non-Loan Amount",
-  //         loanSubRegistrations: [],
-  //       },
-  //     ]);
-  //   }
-  // }, [financeDetails.registrations, courseIndex, handleFinanceChange]);
+// useEffect(() => {
+//   if (!financeDetails.registrations || financeDetails.registrations.length === 0) {
+//     handleFinanceChange(courseIndex, "registrations", "", [
+//       {
+//         srNo: 1,
+//         amount: 0,
+//         date: "",
+//         paymentMethod: "",
+//         receivedBy: "",
+//         remark: "",
+//         status: "Pending",
+//         amountType: "Non-Loan Amount",
+//         loanSubRegistrations: [],
+//       },
+//     ]);
+//   }
+// }, [financeDetails.registrations, courseIndex, handleFinanceChange]);
 
-  // // Calculate derived values
-  // useEffect(() => {
-  //   const totalFees = parseFloat(fullFeesDetails?.totalFees || 0);
-  //   let discountValue = parseFloat(financeDetails.discountValue || 0);
-  //   let feeAfterDiscount = totalFees;
+// // Calculate derived values
+// useEffect(() => {
+//   const totalFees = parseFloat(fullFeesDetails?.totalFees || 0);
+//   let discountValue = parseFloat(financeDetails.discountValue || 0);
+//   let feeAfterDiscount = totalFees;
 
-  //   if (financeDetails.discountType === "percentage" && discountValue > 0) {
-  //     feeAfterDiscount = totalFees * (1 - discountValue / 100);
-  //   } else if (financeDetails.discountType === "value" && discountValue > 0) {
-  //     feeAfterDiscount = totalFees - discountValue;
-  //   }
+//   if (financeDetails.discountType === "percentage" && discountValue > 0) {
+//     feeAfterDiscount = totalFees * (1 - discountValue / 100);
+//   } else if (financeDetails.discountType === "value" && discountValue > 0) {
+//     feeAfterDiscount = totalFees - discountValue;
+//   }
 
-  //   let loanAmount = parseFloat(financeDetails.loanAmount || 0);
-  //   let downPayment = parseFloat(financeDetails.downPayment || 0);
-  //   let subventionFee = parseFloat(financeDetails.subventionFee || 0);
-  //   let disburseAmount = loanAmount - downPayment - subventionFee;
+//   let loanAmount = parseFloat(financeDetails.loanAmount || 0);
+//   let downPayment = parseFloat(financeDetails.downPayment || 0);
+//   let subventionFee = parseFloat(financeDetails.subventionFee || 0);
+//   let disburseAmount = loanAmount - downPayment - subventionFee;
 
-  //   handleFinanceChange(courseIndex, "feeAfterDiscount", "", feeAfterDiscount.toFixed(2));
-  //   handleFinanceChange(courseIndex, "disburseAmount", "", disburseAmount >= 0 ? disburseAmount.toFixed(2) : 0);
-  // }, [
-  //   financeDetails.discountType,
-  //   financeDetails.discountValue,
-  //   financeDetails.loanAmount,
-  //   financeDetails.downPayment,
-  //   financeDetails.subventionFee,
-  //   fullFeesDetails?.totalFees,
-  //   courseIndex,
-  //   handleFinanceChange,
-  // ]);
+//   handleFinanceChange(courseIndex, "feeAfterDiscount", "", feeAfterDiscount.toFixed(2));
+//   handleFinanceChange(courseIndex, "disburseAmount", "", disburseAmount >= 0 ? disburseAmount.toFixed(2) : 0);
+// }, [
+//   financeDetails.discountType,
+//   financeDetails.discountValue,
+//   financeDetails.loanAmount,
+//   financeDetails.downPayment,
+//   financeDetails.subventionFee,
+//   fullFeesDetails?.totalFees,
+//   courseIndex,
+//   handleFinanceChange,
+// ]);
 
-  // const handleAddRegistration = () => {
-  //   const currentRegistrations = Array.isArray(financeDetails.registrations)
-  //     ? financeDetails.registrations
-  //     : [];
-  //   const newRegistration = {
-  //     srNo: currentRegistrations.length + 1,
-  //     amount: 0,
-  //     date: "",
-  //     paymentMethod: "",
-  //     receivedBy: "",
-  //     remark: "",
-  //     status: "Pending",
-  //     amountType: "Non-Loan Amount",
-  //     loanSubRegistrations: [],
-  //   };
-  //   const updatedRegistrations = [...currentRegistrations, newRegistration];
-  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-  // };
+// const handleAddRegistration = () => {
+//   const currentRegistrations = Array.isArray(financeDetails.registrations)
+//     ? financeDetails.registrations
+//     : [];
+//   const newRegistration = {
+//     srNo: currentRegistrations.length + 1,
+//     amount: 0,
+//     date: "",
+//     paymentMethod: "",
+//     receivedBy: "",
+//     remark: "",
+//     status: "Pending",
+//     amountType: "Non-Loan Amount",
+//     loanSubRegistrations: [],
+//   };
+//   const updatedRegistrations = [...currentRegistrations, newRegistration];
+//   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+// };
 
-  // const handleDeleteRegistration = (index) => {
-  //   if (financeDetails.registrations.length <= 1) {
-  //     return;
-  //   }
-  //   const updatedRegistrations = financeDetails.registrations
-  //     .filter((_, i) => i !== index)
-  //     .map((reg, i) => ({ ...reg, srNo: i + 1 }));
-  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-  // };
+// const handleDeleteRegistration = (index) => {
+//   if (financeDetails.registrations.length <= 1) {
+//     return;
+//   }
+//   const updatedRegistrations = financeDetails.registrations
+//     .filter((_, i) => i !== index)
+//     .map((reg, i) => ({ ...reg, srNo: i + 1 }));
+//   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+// };
 
-  // const handleRegistrationChange = (index, field, value) => {
-  //   const updatedRegistrations = [...financeDetails.registrations];
-  //   updatedRegistrations[index] = {
-  //     ...updatedRegistrations[index],
-  //     [field]: value,
-  //   };
-  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-  // };
+// const handleRegistrationChange = (index, field, value) => {
+//   const updatedRegistrations = [...financeDetails.registrations];
+//   updatedRegistrations[index] = {
+//     ...updatedRegistrations[index],
+//     [field]: value,
+//   };
+//   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+// };
 
-  // const handleAddLoanSubRegistration = (parentIndex) => {
-  //   const updatedRegistrations = [...financeDetails.registrations];
-  //   const newSubRegistration = {
-  //     srNo: updatedRegistrations[parentIndex].loanSubRegistrations.length + 1,
-  //     amount: 0,
-  //     date: "",
-  //     paymentMethod: "",
-  //     receivedBy: "",
-  //     remark: "",
-  //     status: "Pending",
-  //   };
-  //   updatedRegistrations[parentIndex].loanSubRegistrations = [
-  //     ...updatedRegistrations[parentIndex].loanSubRegistrations,
-  //     newSubRegistration,
-  //   ];
-  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-  // };
+// const handleAddLoanSubRegistration = (parentIndex) => {
+//   const updatedRegistrations = [...financeDetails.registrations];
+//   const newSubRegistration = {
+//     srNo: updatedRegistrations[parentIndex].loanSubRegistrations.length + 1,
+//     amount: 0,
+//     date: "",
+//     paymentMethod: "",
+//     receivedBy: "",
+//     remark: "",
+//     status: "Pending",
+//   };
+//   updatedRegistrations[parentIndex].loanSubRegistrations = [
+//     ...updatedRegistrations[parentIndex].loanSubRegistrations,
+//     newSubRegistration,
+//   ];
+//   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+// };
 
-  // const handleDeleteLoanSubRegistration = (parentIndex, subIndex) => {
-  //   const updatedRegistrations = [...financeDetails.registrations];
-  //   if (updatedRegistrations[parentIndex].loanSubRegistrations.length <= 1) {
-  //     return;
-  //   }
-  //   updatedRegistrations[parentIndex].loanSubRegistrations = updatedRegistrations[parentIndex]
-  //     .loanSubRegistrations
-  //     .filter((_, i) => i !== subIndex)
-  //     .map((subReg, i) => ({ ...subReg, srNo: i + 1 }));
-  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-  // };
+// const handleDeleteLoanSubRegistration = (parentIndex, subIndex) => {
+//   const updatedRegistrations = [...financeDetails.registrations];
+//   if (updatedRegistrations[parentIndex].loanSubRegistrations.length <= 1) {
+//     return;
+//   }
+//   updatedRegistrations[parentIndex].loanSubRegistrations = updatedRegistrations[parentIndex]
+//     .loanSubRegistrations
+//     .filter((_, i) => i !== subIndex)
+//     .map((subReg, i) => ({ ...subReg, srNo: i + 1 }));
+//   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+// };
 
-  // const handleLoanSubRegistrationChange = (parentIndex, subIndex, field, value) => {
-  //   const updatedRegistrations = [...financeDetails.registrations];
-  //   updatedRegistrations[parentIndex].loanSubRegistrations[subIndex] = {
-  //     ...updatedRegistrations[parentIndex].loanSubRegistrations[subIndex],
-  //     [field]: value,
-  //   };
-  //   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
-  // };
+// const handleLoanSubRegistrationChange = (parentIndex, subIndex, field, value) => {
+//   const updatedRegistrations = [...financeDetails.registrations];
+//   updatedRegistrations[parentIndex].loanSubRegistrations[subIndex] = {
+//     ...updatedRegistrations[parentIndex].loanSubRegistrations[subIndex],
+//     [field]: value,
+//   };
+//   handleFinanceChange(courseIndex, "registrations", "", updatedRegistrations);
+// };
 
 //   // const handleFileChangeS3 = async (courseIndex, docType, event) => {
 //   //   const file = event.target.files[0];
@@ -809,7 +809,7 @@
 //           fullWidth
 //           disabled={!canUpdate}
 //         />
-        
+
 //       </div>
 
 //       {/* Documents Table */}
@@ -957,10 +957,10 @@ const FinanceForm = ({
   const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
   const region = import.meta.env.VITE_AWS_REGION;
 
-    useEffect(() => {
+  useEffect(() => {
   }, [canUpdate]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (!financeDetails.registrations || financeDetails.registrations.length === 0) {
       handleFinanceChange(courseIndex, "registrations", "", [
         {
@@ -1088,15 +1088,18 @@ const FinanceForm = ({
   // Handle file upload to S3
   const handleFileChangeS3 = async (courseIndex, docType, event) => {
     const file = event.target.files[0];
+    console.log("File selected:", file);
     setAttachmentError((prev) => ({ ...prev, [docType]: null }));
 
     if (!file) {
+      console.log("No file selected");
       setAttachmentError((prev) => ({ ...prev, [docType]: "No file selected." }));
       toast.error("No file selected.");
       return;
     }
 
     try {
+      console.log("S3 Config:", { bucketName, region, credentials: !!s3Client.config.credentials });
       if (!bucketName || !region || !s3Client.config.credentials) {
         throw new Error("Missing S3 configuration or credentials");
       }
@@ -1118,6 +1121,7 @@ const FinanceForm = ({
         Body: file,
         ContentType: file.type,
       };
+      console.log("Upload params:", params);
 
       const upload = new Upload({
         client: s3Client,
@@ -1128,6 +1132,7 @@ const FinanceForm = ({
 
       upload.on("httpUploadProgress", (progress) => {
         const percent = Math.round((progress.loaded / progress.total) * 100);
+        console.log("Upload progress:", percent);
         setUploadProgress((prev) => ({
           ...prev,
           [`${courseIndex}_${docType}`]: percent,
@@ -1136,6 +1141,7 @@ const FinanceForm = ({
 
       await upload.done();
       const s3Url = `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
+      console.log("Upload successful, S3 URL:", s3Url);
 
       handleFinanceChange(courseIndex, docType, "", s3Url);
       handleFinanceChange(courseIndex, `${docType}Name`, "", file.name);
@@ -1143,6 +1149,7 @@ const FinanceForm = ({
       toast.success(`${docType} uploaded successfully!`);
       logActivity("UPLOAD_DOCUMENT_SUCCESS", { studentId, courseIndex, docType, fileName: file.name, url: s3Url }, user);
     } catch (err) {
+      console.error("Upload error:", err);
       setAttachmentError((prev) => ({ ...prev, [docType]: `Failed to upload ${docType}: ${err.message}` }));
       setUploadProgress((prev) => ({ ...prev, [`${courseIndex}_${docType}`]: -1 }));
       toast.error(`Failed to upload ${docType}: ${err.message}`);
@@ -1175,6 +1182,7 @@ const FinanceForm = ({
     }
   };
 
+
   // Remove document from S3 and clear from state
   const removeDocument = async (courseIndex, docType, s3Url) => {
     try {
@@ -1206,25 +1214,25 @@ const FinanceForm = ({
       )}
 
 
-             {/* Fees Table */}
-       <TableContainer>
-         <Table>
-           <TableHead>
-             <TableRow className="bg-blue-50">
-               <TableCell className="text-gray-800 font-medium w-48">Total Fees</TableCell>
-               <TableCell className="text-gray-800 font-medium w-48">Discount Type</TableCell>
-               <TableCell className="text-gray-800 font-medium w-48">Discount Value</TableCell>
-               <TableCell className="text-gray-800 font-medium w-48">Discount Reason</TableCell>
-               <TableCell className="text-gray-800 font-medium w-48">Fee After Discount</TableCell>
-             </TableRow>
-           </TableHead>
-           <TableBody>
-             <TableRow>
-               <TableCell>
-                 <Typography>{fullFeesDetails?.totalFees || 0}</Typography>
-               </TableCell>
-               <TableCell>
-                 <Select
+      {/* Fees Table */}
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow className="bg-blue-50">
+              <TableCell className="text-gray-800 font-medium w-48">Total Fees</TableCell>
+              <TableCell className="text-gray-800 font-medium w-48">Discount Type</TableCell>
+              <TableCell className="text-gray-800 font-medium w-48">Discount Value</TableCell>
+              <TableCell className="text-gray-800 font-medium w-48">Discount Reason</TableCell>
+              <TableCell className="text-gray-800 font-medium w-48">Fee After Discount</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>
+                <Typography>{fullFeesDetails?.totalFees || 0}</Typography>
+              </TableCell>
+              <TableCell>
+                <Select
                   value={financeDetails.discountType || ""}
                   onChange={(e) => handleFinanceChange(courseIndex, "discountType", "", e.target.value)}
                   displayEmpty
@@ -1318,7 +1326,7 @@ const FinanceForm = ({
                       onChange={(e) => handleRegistrationChange(index, "date", e.target.value)}
                       size="small"
                       className="w-52"
-                      disabled={!canUpdate || registration.amountType=="Loan Amount"}
+                      disabled={!canUpdate || registration.amountType == "Loan Amount"}
                       InputLabelProps={{ shrink: true }}
                     />
                   </TableCell>
@@ -1330,7 +1338,7 @@ const FinanceForm = ({
                       className="w-52"
                       displayEmpty
                       fullWidth
-                      disabled={!canUpdate || registration.amountType=="Loan Amount"}
+                      disabled={!canUpdate || registration.amountType == "Loan Amount"}
                     >
                       <MenuItem value="" disabled>Select Payment Method</MenuItem>
                       <MenuItem value="Cash">Cash</MenuItem>
@@ -1346,7 +1354,7 @@ const FinanceForm = ({
                       onChange={(e) => handleRegistrationChange(index, "receivedBy", e.target.value)}
                       size="small"
                       className="w-52"
-                      disabled={!canUpdate || registration.amountType=="Loan Amount"}
+                      disabled={!canUpdate || registration.amountType == "Loan Amount"}
                     />
                   </TableCell>
                   <TableCell>
