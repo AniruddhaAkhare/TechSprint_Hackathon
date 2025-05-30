@@ -449,7 +449,7 @@ export default function AttendanceDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8" ref={dashboardRef}>
+    <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px] overflow-y-auto" ref={dashboardRef}>
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Attendance Analytics Dashboard</h2>
 
       {/* Filters */}
