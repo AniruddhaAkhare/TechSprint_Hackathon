@@ -348,8 +348,9 @@ const CheckInOut = () => {
 
   return (
     <div className="check-in-out p-4">
-      <h3 className="text-xl font-bold mb-4">Check-In/Check-Out</h3>
-      {error && <p className="error text-red-500 mb-4">{error}</p>}
+    <h3 className="text-2xl font-semibold mb-4 whitespace-nowrap">
+ Check-In/Check-Out</h3>
+      {error && <p className="error text-red-500 mb-2">{error}</p>}
       <div className="status mb-4">
         <p>
           Status:{" "}
@@ -370,7 +371,7 @@ const CheckInOut = () => {
       <div className="actions">
         {!userStatus.checkedIn ? (
           <button
-            className={`bg-blue-500 text-white px-4 py-2 rounded ${
+            className={`bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2 ${
               isFetchingLocation
                 ? "opacity-50 cursor-not-allowed"
                 : "hover:bg-blue-600"
@@ -382,7 +383,7 @@ const CheckInOut = () => {
           </button>
         ) : (
           <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
             onClick={handleCheckOut}
           >
             Check Out

@@ -426,7 +426,7 @@ export default function Attendance() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+     
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-4 bg-white rounded-lg shadow-md">
   <div>
     <label htmlFor="centerSelect" className="block text-sm font-semibold text-gray-800 mb-2">
@@ -492,7 +492,7 @@ export default function Attendance() {
   </div>
 </div>
 
-      </div>
+  
 
       {/* Batch List */}
       <div className="bg-white rounded-lg shadow-md p-4">

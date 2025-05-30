@@ -231,151 +231,172 @@ export default function EnquiryForms() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Enquiries Form</h1>
-        {canCreate && (
-          <button
-            type="button"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700"
-            onClick={handleCreateFormClick}
-          >
-            + Create Enquiry Form
-          </button>
-        )}
+<div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 fixed inset-0 left-[300px]">
+  {/* Header */}
+  <div className="flex justify-between items-center mb-10">
+    <h1 className="text-2xl font-bold text-[#333333] font-sans">Enquiries Form</h1>
+    {canCreate && (
+      <button
+        type="button"
+        className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-5 py-2.5 rounded-lg hover:from-indigo-700 hover:to-indigo-800 transform hover:scale-105 transition-all duration-200 flex items-center gap-2 shadow-md"
+        onClick={handleCreateFormClick}
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Create Enquiry Form
+      </button>
+    )}
+  </div>
+
+  {/* Search Bar and Table Container */}
+  <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100/50 backdrop-blur-sm">
+    <div className="mb-8 flex items-center space-x-4">
+      <div className="relative max-w-md w-full">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search forms by name, user, or role..."
+          className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 placeholder-gray-400 shadow-inner"
+        />
+        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
       </div>
-
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="mb-6 flex items-center space-x-4">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search forms by name, user, or role..."
-            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="rounded-lg shadow-md max-h-[70vh] overflow-x-auto overflow-y-auto">
-          <table className="w-full border-collapse">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Sr No</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Form Name</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Enquiries Count</th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(searchResults.length > 0 || searchTerm.trim() ? searchResults : forms).map((form, index) => (
-                <tr key={form.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                  <td className="px-4 py-3 text-gray-800">{form.name || "N/A"}</td>
-                  <td className="px-4 py-3 text-gray-600">{enquiryCounts[form.id] || 0}</td>
-                  <td className="px-4 py-3">
-                    <FormControl size="small">
-                      <Select
-                        value=""
-                        onChange={(e) => {
-                          const action = e.target.value;
-                          if (action === "delete" && canDelete) {
-                            setDeleteId(form.id);
-                            setOpenDelete(true);
-                            setDeleteMessage(
-                              "Are you sure you want to delete this form? This action cannot be undone."
-                            );
-                          } else if (action === "update" && canUpdate) {
-                            handleEditClick(form);
-                          } else if (action === "view") {
-                            handleViewForm(form);
-                          } else if (action === "viewEnquiries" && canViewEnquiries) {
-                            handleViewEnquiries(form.id);
-                          }
-                        }}
-                        displayEmpty
-                        renderValue={() => "Actions"}
-                        disabled={!canUpdate && !canDelete && !canViewEnquiries}
-                      >
-                        <MenuItem value="" disabled>
-                          Actions
-                        </MenuItem>
-                        {canUpdate && <MenuItem value="update">Update</MenuItem>}
-                        <MenuItem value="view">View Form</MenuItem>
-                        {canDelete && <MenuItem value="delete">Delete</MenuItem>}
-                        {canViewEnquiries && <MenuItem value="viewEnquiries">View Enquiries</MenuItem>}
-                      </Select>
-                    </FormControl>
-                  </td>
-                </tr>
-              ))}
-              {!(searchResults.length > 0 || searchTerm.trim() ? searchResults : forms).length && (
-                <tr>
-                  <td colSpan="5" className="px-4 py-3 text-center text-gray-600">
-                    No enquiry forms found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={handleClose} />
-      )}
-
-      {isOpen && (
-        <div
-          className={`fixed top-0 right-0 h-full w-1/3 bg-white shadow-lg transform transition-transform duration-300 ${
-            isOpen ? "translate-x-0" : "translate-x-full"
-          } z-50 overflow-y-auto`}
-        >
-          <CreateEnquiryForm
-            isOpen={isOpen}
-            toggleSidebar={handleClose}
-            form={currentForm}
-            logActivity={logActivity}
-          />
-        </div>
-      )}
-
-      {selectedForm && (
-        <FormViewer form={selectedForm} onClose={handleCloseViewer} />
-      )}
-
-      {canDelete && (
-        <Dialog
-          open={openDelete}
-          handler={() => setOpenDelete(false)}
-          className="rounded-lg shadow-lg w-96 max-w-[90%] mx-auto"
-        >
-          <DialogHeader className="text-gray-800 font-semibold text-lg p-4">
-            Confirm Deletion
-          </DialogHeader>
-          <DialogBody className="text-gray-600 text-base p-4">{deleteMessage}</DialogBody>
-          <DialogFooter className="space-x-4 p-4">
-            <Button
-              variant="text"
-              color="gray"
-              onClick={() => setOpenDelete(false)}
-              className="text-sm"
-            >
-              Cancel
-            </Button>
-            {deleteMessage ===
-              "Are you sure you want to delete this form? This action cannot be undone." && (
-              <Button
-                variant="filled"
-                color="red"
-                onClick={deleteForm}
-                className="text-sm"
-              >
-                Yes, Delete
-              </Button>
-            )}
-          </DialogFooter>
-        </Dialog>
-      )}
     </div>
+
+    {/* Forms Table */}
+    <div className="rounded-2xl shadow-md max-h-[65vh] overflow-x-auto overflow-y-auto">
+      <table className="w-full border-collapse">
+        <thead className="bg-gradient-to-r from-indigo-50 to-gray-50">
+          <tr>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sr No</th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Form Name</th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Enquiries Count</th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {(searchResults.length > 0 || searchTerm.trim() ? searchResults : forms).map((form, index) => (
+            <tr key={form.id} className="border-b hover:bg-indigo-50/50 transition-all duration-200">
+              <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
+              <td className="px-6 py-4 text-sm text-gray-900 font-semibold">{form.name || "N/A"}</td>
+              <td className="px-6 py-4 text-sm text-gray-600">{enquiryCounts[form.id] || 0}</td>
+              <td className="px-6 py-4">
+                <div className="relative">
+                  <button
+                    className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 flex items-center gap-2"
+                    onClick={(e) => e.currentTarget.nextElementSibling.focus()}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                    Actions
+                  </button>
+                  <FormControl size="small" className="absolute top-0 left-0 opacity-0">
+                    <Select
+                      value=""
+                      onChange={(e) => {
+                        const action = e.target.value;
+                        if (action === "delete" && canDelete) {
+                          setDeleteId(form.id);
+                          setOpenDelete(true);
+                          setDeleteMessage(
+                            "Are you sure you want to delete this form? This action cannot be undone."
+                          );
+                        } else if (action === "update" && canUpdate) {
+                          handleEditClick(form);
+                        } else if (action === "view") {
+                          handleViewForm(form);
+                        } else if (action === "viewEnquiries" && canViewEnquiries) {
+                          handleViewEnquiries(form.id);
+                        }
+                      }}
+                      displayEmpty
+                      renderValue={() => "Actions"}
+                      disabled={!canUpdate && !canDelete && !canViewEnquiries}
+                    >
+                      <MenuItem value="" disabled>
+                        Actions
+                      </MenuItem>
+                      {canUpdate && <MenuItem value="update">Update</MenuItem>}
+                      <MenuItem value="view">View Form</MenuItem>
+                      {canDelete && <MenuItem value="delete">Delete</MenuItem>}
+                      {canViewEnquiries && <MenuItem value="viewEnquiries">View Enquiries</MenuItem>}
+                    </Select>
+                  </FormControl>
+                </div>
+              </td>
+            </tr>
+          ))}
+          {!(searchResults.length > 0 || searchTerm.trim() ? searchResults : forms).length && (
+            <tr>
+              <td colSpan="4" className="px-6 py-8 text-center text-sm text-gray-400">
+                No enquiry forms found.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {/* Backdrop for Sidebar */}
+  {isOpen && (
+    <div
+      className="fixed inset-0 bg-black/60 z-40 transition-opacity duration-300"
+      onClick={handleClose}
+    />
+  )}
+
+  {/* Sidebar (CreateEnquiryForm) */}
+  {isOpen && (
+    <div
+      className={`fixed top-0 right-0 h-full w-full sm:w-3/4 md:w-2/5 bg-white shadow-2xl transform transition-transform duration-500 ease-in-out ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      } z-50 overflow-y-auto rounded-l-2xl border-l border-gray-100/50 backdrop-blur-sm`}
+    >
+      <CreateEnquiryForm
+        isOpen={isOpen}
+        toggleSidebar={handleClose}
+        form={currentForm}
+        logActivity={logActivity}
+      />
+    </div>
+  )}
+
+  {/* Form Viewer */}
+  {selectedForm && (
+    <FormViewer form={selectedForm} onClose={handleCloseViewer} />
+  )}
+
+  {/* Delete Confirmation Dialog */}
+  {canDelete && (
+    <div className={`${openDelete ? 'fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity duration-300' : 'hidden'}`}>
+      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100/50 backdrop-blur-sm">
+        <h2 className="text-xl font-semibold text-gray-800 mb-5 tracking-tight">Confirm Deletion</h2>
+        <p className="text-sm text-gray-600 mb-6 leading-relaxed">{deleteMessage}</p>
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={() => setOpenDelete(false)}
+            className="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-200 font-medium shadow-sm"
+          >
+            Cancel
+          </button>
+          {deleteMessage ===
+            "Are you sure you want to delete this form? This action cannot be undone." && (
+            <button
+              onClick={deleteForm}
+              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-2.5 rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 font-medium shadow-sm"
+            >
+              Yes, Delete
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )}
+</div>
   );
 }

@@ -77,22 +77,38 @@ const ProfilePage = () => {
             {userData?.displayName || 'N/A'}
           </h1>
           <p className="text-center text-gray-600 mt-2">{userData?.email || 'N/A'}</p>
-          <div className="mt-6">
-            <p className="text-gray-700">
-              <span className="font-semibold">Branch:</span> {userData?.branchName || 'N/A'}
-            </p>
-            <p className="text-gray-700">
-              <span className="font-semibold">Status:</span> {userData?.active ? 'Active' : 'Inactive'}
-            </p>
-            <p className="text-gray-700">
-              <span className="font-semibold">Checked In:</span> {userData?.checkedIn ? 'Yes' : 'No'}
-            </p>
-            <p className="text-gray-700">
-              <span className="font-semibold">Last Login:</span>{' '}
-              {userData?.lastLogin ? new Date(userData.lastLogin).toLocaleString() : 'N/A'}
-            </p>
-            <CheckInOut />
-          </div>
+      <div className="mt-6 p-6 bg-white shadow-md rounded-2xl border border-gray-200 max-w-md">
+  <h2 className="text-xl font-bold text-gray-800 mb-4">User Info</h2>
+  <div className="space-y-3 text-gray-700 text-sm">
+    <div className="flex justify-between items-center">
+      <span className="font-medium">Branch:</span>
+      <span>{userData?.branchName || 'N/A'}</span>
+    </div>
+    <div className="flex justify-between items-center">
+      <span className="font-medium">Status:</span>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          userData?.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}
+      >
+        {userData?.active ? 'Active' : 'Inactive'}
+      </span>
+    </div>
+    <div className="flex justify-between items-center">
+      <span className="font-medium">Checked In:</span>
+      <span>{userData?.checkedIn ? 'Yes' : 'No'}</span>
+    </div>
+    <div className="flex justify-between items-center">
+      <span className="font-medium">Last Login:</span>
+      <span>{userData?.lastLogin ? new Date(userData.lastLogin).toLocaleString() : 'N/A'}</span>
+    </div>
+  </div>
+
+  <div className="mt-4">
+    <CheckInOut />
+  </div>
+</div>
+
         </div>
         {/* Placeholder for Additional Content (Right Side) */}
         <div className="bg-white p-8 rounded-lg shadow-lg w-full md:w-2/3">

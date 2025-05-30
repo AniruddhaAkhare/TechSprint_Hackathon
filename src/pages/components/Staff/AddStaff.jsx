@@ -341,7 +341,7 @@ export default function AddStaff() {
         onClick={toggleSidebar}
       />
       <div
-        className={`fixed top-0 right-0 h-full bg-white w-full sm:w-3/4 shadow-lg transform transition-transform duration-300 ${
+        className={`fixed top-0 right-0 h-full bg-white sm:w-3/4 shadow-lg transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         } p-6 overflow-y-auto z-50 overflow-x-auto`}
       >
@@ -349,7 +349,7 @@ export default function AddStaff() {
           <h1 className="text-2xl font-semibold text-gray-800">Add Staff</h1>
           <button
             onClick={toggleSidebar}
-            className="text-gray-500 hover:text-gray-700 transition duration-200"
+            className="bg-indigo-600 text-white px-2 py-2 rounded-md hover:bg-indigo-700 flex items-center"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -358,536 +358,547 @@ export default function AddStaff() {
         </div>
 
         <form onSubmit={handleAddStaff} className="space-y-8">
-          <div>
-            <h2 className="text-lg font-medium text-gray-700 mb-4">Personal Details</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Name <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Name"
-                  required
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Email <span className="text-red-500">*</span></label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  required
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Password <span className="text-red-500">*</span></label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password (min 6 characters)"
-                  required
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Phone</label>
-                <div className="flex mt-1">
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-1/3 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {countryCodes.map((country) => (
-                      <option key={country.key} value={country.code}>
-                        {country.label}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Phone Number"
-                    disabled={isSubmitting}
-                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Domain</label>
-                <input
-                  type="text"
-                  value={domain}
-                  onChange={(e) => setDomain(e.target.value)}
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Role <span className="text-red-500">*</span></label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Role</option>
-                  {roles.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Date of Birth</label>
-                <input
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-medium text-gray-700 mb-4">Emergency Contact</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Name</label>
-                <input
-                  type="text"
-                  value={emergencyDetails.name}
-                  onChange={(e) => handleEmergencyChange("name", e.target.value)}
-                  placeholder="Person Name"
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Phone</label>
-                <div className="flex mt-1">
-                  <select
-                    value={emergencyCountryCode}
-                    onChange={(e) => setEmergencyCountryCode(e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-1/3 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {countryCodes.map((country) => (
-                      <option key={country.key} value={country.code}>
-                        {country.label}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    value={emergencyDetails.phone}
-                    onChange={(e) => handleEmergencyChange("phone", e.target.value)}
-                    placeholder="Phone"
-                    disabled={isSubmitting}
-                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Email</label>
-                <input
-                  type="email"
-                  value={emergencyDetails.email}
-                  onChange={(e) => handleEmergencyChange("email", e.target.value)}
-                  placeholder="Email"
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Relation</label>
-                <input
-                  type="text"
-                  value={emergencyDetails.relation}
-                  onChange={(e) => handleEmergencyChange("relation", e.target.value)}
-                  placeholder="Relation"
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Occupation</label>
-                <input
-                  type="text"
-                  value={emergencyDetails.occupation}
-                  onChange={(e) => handleEmergencyChange("occupation", e.target.value)}
-                  placeholder="Occupation"
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-medium text-gray-700 mb-4">Address Details</h2>
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  value={address.street}
-                  onChange={(e) => setAddress({ ...address, street: e.target.value })}
-                  placeholder="Street"
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  value={address.area}
-                  onChange={(e) => setAddress({ ...address, area: e.target.value })}
-                  placeholder="Area"
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  value={address.city}
-                  onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                  placeholder="City"
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  value={address.state}
-                  onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                  placeholder="State"
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  value={address.zip}
-                  onChange={(e) => setAddress({ ...address, zip: e.target.value })}
-                  placeholder="Zip Code"
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  value={address.country}
-                  onChange={(e) => setAddress({ ...address, country: e.target.value })}
-                  placeholder="Country"
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-medium text-gray-700 mb-4">Document Uploads</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { key: "aadharCard", label: "Aadhar Card" },
-                { key: "panCard", label: "PAN Card" },
-                { key: "addressProof", label: "Address Proof" },
-                { key: "tenthMarksheet", label: "10th Marksheet" },
-                { key: "twelfthMarksheet", label: "12th Marksheet" },
-                { key: "graduationMarksheet", label: "Graduation Marksheet" },
-                { key: "pgMarksheet", label: "PG Marksheet" },
-                { key: "offerLetter1", label: "Last Offer Letter 1" },
-                { key: "offerLetter2", label: "Last Offer Letter 2" },
-                { key: "experienceLetter1", label: "Last Experience Letter 1" },
-                { key: "experienceLetter2", label: "Last Experience Letter 2" },
-                { key: "salaryProof", label: "Salary Proof" },
-                { key: "parentSpouseAadhar", label: "Parent/Spouse Aadhar Card" },
-                { key: "passportPhoto", label: "Passport Size Photo" },
-              ].map((doc) => (
-                <div key={doc.key}>
-                  <label className="block text-sm font-medium text-gray-600">{doc.label}</label>
-                  <input
-                    type="file"
-                    onChange={(e) => handleFileChange(e, doc.key)}
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    disabled={isSubmitting}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {documents[doc.key] && (
-                    <span className="text-sm text-gray-600">{documents[doc.key].name}</span>
-                  )}
-                  {uploadProgress[doc.key] > 0 && (
-                    <div className="mt-2">
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div
-                          className="bg-blue-600 h-2.5 rounded-full"
-                          style={{ width: `${uploadProgress[doc.key]}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm text-gray-600">{uploadProgress[doc.key]}%</span>
-                    </div>
-                  )}
-                </div>
+          <div className="max-w-4xl mx-auto p-6 bg-white rounded-2xl shadow-lg">
+  <div className="space-y-10">
+    {/* Personal Details Section */}
+    <div>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Personal Details</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Name <span className="text-red-500">*</span></label>
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Enter Name"
+            required
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Email <span className="text-red-500">*</span></label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter Email"
+            required
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Password <span className="text-red-500">*</span></label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password (min 6 characters)"
+            required
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+          <div className="flex">
+            <select
+              value={countryCode}
+              onChange={(e) => setCountryCode(e.target.value)}
+              disabled={isSubmitting}
+              className="w-1/3 px-4 py-3 border border-gray-200 rounded-l-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+            >
+              {countryCodes.map((country) => (
+                <option key={country.key} value={country.code}>
+                  {country.label}
+                </option>
               ))}
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-medium text-gray-700 mb-4">Educational Details</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="p-3 text-sm font-medium text-gray-600">Level</th>
-                    <th className="p-3 text-sm font-medium text-gray-600">Institute</th>
-                    <th className="p-3 text-sm font-medium text-gray-600">Degree</th>
-                    <th className="p-3 text-sm font-medium text-gray-600">Specialization</th>
-                    <th className="p-3 text-sm font-medium text-gray-600">Grade</th>
-                    <th className="p-3 text-sm font-medium text-gray-600">Passing Year</th>
-                    <th className="p-3 text-sm font-medium text-gray-600">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {educationDetails.map((edu, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="p-3">
-                        <select
-                          value={edu.level}
-                          onChange={(e) => handleEducationChange(index, "level", e.target.value)}
-                          disabled={isSubmitting}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="" disabled>
-                            Select Level
-                          </option>
-                          <option value="School">School</option>
-                          <option value="UG">UG</option>
-                          <option value="PG">PG</option>
-                        </select>
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="text"
-                          value={edu.institute}
-                          onChange={(e) => handleEducationChange(index, "institute", e.target.value)}
-                          placeholder="Institute Name"
-                          disabled={isSubmitting}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="text"
-                          value={edu.degree}
-                          onChange={(e) => handleEducationChange(index, "degree", e.target.value)}
-                          placeholder="Degree"
-                          disabled={isSubmitting}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="text"
-                          value={edu.specialization}
-                          onChange={(e) => handleEducationChange(index, "specialization", e.target.value)}
-                          placeholder="Specialization"
-                          disabled={isSubmitting}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="text"
-                          value={edu.grade}
-                          onChange={(e) => handleEducationChange(index, "grade", e.target.value)}
-                          placeholder="Grade"
-                          disabled={isSubmitting}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="number"
-                          value={edu.passingyr}
-                          onChange={(e) => handleEducationChange(index, "passingyr", e.target.value)}
-                          placeholder="Year"
-                          disabled={isSubmitting}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <button
-                          type="button"
-                          onClick={() => deleteEducation(index)}
-                          disabled={isSubmitting}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <FontAwesomeIcon icon={faXmark} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <button
-                type="button"
-                onClick={addEducation}
-                disabled={isSubmitting}
-                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 disabled:bg-gray-400"
-              >
-                Add Education
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-medium text-gray-700 mb-4">Experience Details</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="p-3 text-sm font-medium text-gray-600">Company Name</th>
-                    <th className="p-3 text-sm font-medium text-gray-600">Designation</th>
-                    <th className="p-3 text-sm font-medium text-gray-600">Salary</th>
-                    <th className="p-3 text-sm font-medium text-gray-600">Years</th>
-                    <th className="p-3 text-sm font-medium text-gray-600">Description</th>
-                    <th className="p-3 text-sm font-medium text-gray-600">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {experienceDetails.map((exp, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="p-3">
-                        <input
-                          type="text"
-                          value={exp.companyName}
-                          onChange={(e) => handleExperienceChange(index, "companyName", e.target.value)}
-                          placeholder="Company Name"
-                          disabled={isSubmitting}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="text"
-                          value={exp.designation}
-                          onChange={(e) => handleExperienceChange(index, "designation", e.target.value)}
-                          placeholder="Designation"
-                          disabled={isSubmitting}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="text"
-                          value={exp.salary}
-                          onChange={(e) => handleExperienceChange(index, "salary", e.target.value)}
-                          placeholder="Salary"
-                          disabled={isSubmitting}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="number"
-                          value={exp.years}
-                          onChange={(e) => handleExperienceChange(index, "years", e.target.value)}
-                          placeholder="Years"
-                          disabled={isSubmitting}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="text"
-                          value={exp.description}
-                          onChange={(e) => handleExperienceChange(index, "description", e.target.value)}
-                          placeholder="Description"
-                          disabled={isSubmitting}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <button
-                          type="button"
-                          onClick={() => deleteExperience(index)}
-                          disabled={isSubmitting}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <FontAwesomeIcon icon={faXmark} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <button
-                type="button"
-                onClick={addExperience}
-                disabled={isSubmitting}
-                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 disabled:bg-gray-400"
-              >
-                Add Experience
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-medium text-gray-700 mb-4">Additional Details</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Date of Joining</label>
-                <input
-                  type="date"
-                  value={joiningDate}
-                  onChange={(e) => setJoiningDate(e.target.value)}
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Exit Date</label>
-                <input
-                  type="date"
-                  value={exitDate}
-                  onChange={(e) => setExitDate(e.target.value)}
-                  disabled={isSubmitting}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={toggleSidebar}
+            </select>
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Phone Number"
               disabled={isSubmitting}
-              className="bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition duration-200 disabled:bg-gray-400"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`px-6 py-2 rounded-md text-white ${
-                isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-              } transition duration-200`}
-            >
-              {isSubmitting ? "Processing..." : "Add Staff"}
-            </button>
+              className="w-2/3 px-4 py-3 border border-gray-200 rounded-r-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+            />
           </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Domain</label>
+          <input
+            type="text"
+            value={domain}
+            onChange={(e) => setDomain(e.target.value)}
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Role <span className="text-red-500">*</span></label>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          >
+            <option value="">Select Role</option>
+            {roles.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+          <input
+            type="date"
+            value={dateOfBirth}
+            onChange={(e) => setDateOfBirth(e.target.value)}
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Emergency Contact Section */}
+    <div>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Emergency Contact</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+          <input
+            type="text"
+            value={emergencyDetails.name}
+            onChange={(e) => handleEmergencyChange("name", e.target.value)}
+            placeholder="Person Name"
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+          <div className="flex">
+            <select
+              value={emergencyCountryCode}
+              onChange={(e) => setEmergencyCountryCode(e.target.value)}
+              disabled={isSubmitting}
+              className="w-1/3 px-4 py-3 border border-gray-200 rounded-l-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+            >
+              {countryCodes.map((country) => (
+                <option key={country.key} value={country.code}>
+                  {country.label}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              value={emergencyDetails.phone}
+              onChange={(e) => handleEmergencyChange("phone", e.target.value)}
+              placeholder="Phone"
+              disabled={isSubmitting}
+              className="w-2/3 px-4 py-3 border border-gray-200 rounded-r-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <input
+            type="email"
+            value={emergencyDetails.email}
+            onChange={(e) => handleEmergencyChange("email", e.target.value)}
+            placeholder="Email"
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Relation</label>
+          <input
+            type="text"
+            value={emergencyDetails.relation}
+            onChange={(e) => handleEmergencyChange("relation", e.target.value)}
+            placeholder="Relation"
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Occupation</label>
+          <input
+            type="text"
+            value={emergencyDetails.occupation}
+            onChange={(e) => handleEmergencyChange("occupation", e.target.value)}
+            placeholder="Occupation"
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Address Details Section */}
+    <div>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Address Details</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <input
+          type="text"
+          value={address.street}
+          onChange={(e) => setAddress({ ...address, street: e.target.value })}
+          placeholder="Street"
+          disabled={isSubmitting}
+          className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+        />
+        <input
+          type="text"
+          value={address.area}
+          onChange={(e) => setAddress({ ...address, area: e.target.value })}
+          placeholder="Area"
+          disabled={isSubmitting}
+          className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+        />
+        <input
+          type="text"
+          value={address.city}
+          onChange={(e) => setAddress({ ...address, city: e.target.value })}
+          placeholder="City"
+          disabled={isSubmitting}
+          className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+        />
+        <input
+          type="text"
+          value={address.state}
+          onChange={(e) => setAddress({ ...address, state: e.target.value })}
+          placeholder="State"
+          disabled={isSubmitting}
+          className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+        />
+        <input
+          type="text"
+          value={address.zip}
+          onChange={(e) => setAddress({ ...address, zip: e.target.value })}
+          placeholder="Zip Code"
+          disabled={isSubmitting}
+          className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+        />
+        <input
+          type="text"
+          value={address.country}
+          onChange={(e) => setAddress({ ...address, country: e.target.value })}
+          placeholder="Country"
+          disabled={isSubmitting}
+          className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+        />
+      </div>
+    </div>
+
+    {/* Document Uploads Section */}
+    <div>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Document Uploads</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[
+          { key: "aadharCard", label: "Aadhar Card" },
+          { key: "panCard", label: "PAN Card" },
+          { key: "addressProof", label: "Address Proof" },
+          { key: "tenthMarksheet", label: "10th Marksheet" },
+          { key: "twelfthMarksheet", label: "12th Marksheet" },
+          { key: "graduationMarksheet", label: "Graduation Marksheet" },
+          { key: "pgMarksheet", label: "PG Marksheet" },
+          { key: "offerLetter1", label: "Last Offer Letter 1" },
+          { key: "offerLetter2", label: "Last Offer Letter 2" },
+          { key: "experienceLetter1", label: "Last Experience Letter 1" },
+          { key: "experienceLetter2", label: "Last Experience Letter 2" },
+          { key: "salaryProof", label: "Salary Proof" },
+          { key: "parentSpouseAadhar", label: "Parent/Spouse Aadhar Card" },
+          { key: "passportPhoto", label: "Passport Size Photo" },
+        ].map((doc) => (
+          <div key={doc.key}>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{doc.label}</label>
+            <input
+              type="file"
+              onChange={(e) => handleFileChange(e, doc.key)}
+              accept=".pdf,.jpg,.jpeg,.png"
+              disabled={isSubmitting}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+            />
+            {documents[doc.key] && (
+              <span className="block mt-2 text-sm text-gray-600">{documents[doc.key].name}</span>
+            )}
+            {uploadProgress[doc.key] > 0 && (
+              <div className="mt-2">
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress[doc.key]}%` }}
+                  ></div>
+                </div>
+                <span className="text-sm text-gray-600">{uploadProgress[doc.key]}%</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Educational Details Section */}
+    <div>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Educational Details</h2>
+      <div className="overflow-x-auto rounded-lg shadow">
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr className="bg-indigo-50">
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Level</th>
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Institute</th>
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Degree</th>
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Specialization</th>
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Grade</th>
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Passing Year</th>
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {educationDetails.map((edu, index) => (
+              <tr key={index} className="border-b hover:bg-gray-50 transition duration-200">
+                <td className="p-4">
+                  <select
+                    value={edu.level}
+                    onChange={(e) => handleEducationChange(index, "level", e.target.value)}
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                  >
+                    <option value="" disabled>
+                      Select Level
+                    </option>
+                    <option value="School">School</option>
+                    <option value="UG">UG</option>
+                    <option value="PG">PG</option>
+                  </select>
+                </td>
+                <td className="p-4">
+                  <input
+                    type="text"
+                    value={edu.institute}
+                    onChange={(e) => handleEducationChange(index, "institute", e.target.value)}
+                    placeholder="Institute Name"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                  />
+                </td>
+                <td className="p-4">
+                  <input
+                    type="text"
+                    value={edu.degree}
+                    onChange={(e) => handleEducationChange(index, "degree", e.target.value)}
+                    placeholder="Degree"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                  />
+                </td>
+                <td className="p-4">
+                  <input
+                    type="text"
+                    value={edu.specialization}
+                    onChange={(e) => handleEducationChange(index, "specialization", e.target.value)}
+                    placeholder="Specialization"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                  />
+                </td>
+                <td className="p-4">
+                  <input
+                    type="text"
+                    value={edu.grade}
+                    onChange={(e) => handleEducationChange(index, "grade", e.target.value)}
+                    placeholder="Grade"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                  />
+                </td>
+                <td className="p-4">
+                  <input
+                    type="number"
+                    value={edu.passingyr}
+                    onChange={(e) => handleEducationChange(index, "passingyr", e.target.value)}
+                    placeholder="Year"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                  />
+                </td>
+                <td className="p-4">
+                  <button
+                    type="button"
+                    onClick={() => deleteEducation(index)}
+                    disabled={isSubmitting}
+                    className="text-red-500 hover:text-red-700 transition duration-200"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button
+          type="button"
+          onClick={addEducation}
+          disabled={isSubmitting}
+          className="mt-6 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition duration-200 disabled:bg-gray-400"
+        >
+          Add Education
+        </button>
+      </div>
+    </div>
+
+    {/* Experience Details Section */}
+    <div>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Experience Details</h2>
+      <div className="overflow-x-auto rounded-lg shadow">
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr className="bg-indigo-50">
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Company Name</th>
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Designation</th>
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Salary</th>
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Years</th>
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Description</th>
+              <th className="p-4 text-sm font-medium text-gray-700 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {experienceDetails.map((exp, index) => (
+              <tr key={index} className="border-b hover:bg-gray-50 transition duration-200">
+                <td className="p-4">
+                  <input
+                    type="text"
+                    value={exp.companyName}
+                    onChange={(e) => handleExperienceChange(index, "companyName", e.target.value)}
+                    placeholder="Company Name"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                  />
+                </td>
+                <td className="p-4">
+                  <input
+                    type="text"
+                    value={exp.designation}
+                    onChange={(e) => handleExperienceChange(index, "designation", e.target.value)}
+                    placeholder="Designation"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                  />
+                </td>
+                <td className="p-4">
+                  <input
+                    type="text"
+                    value={exp.salary}
+                    onChange={(e) => handleExperienceChange(index, "salary", e.target.value)}
+                    placeholder="Salary"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                  />
+                </td>
+                <td className="p-4">
+                  <input
+                    type="number"
+                    value={exp.years}
+                    onChange={(e) => handleExperienceChange(index, "years", e.target.value)}
+                    placeholder="Years"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                  />
+                </td>
+                <td className="p-4">
+                  <input
+                    type="text"
+                    value={exp.description}
+                    onChange={(e) => handleExperienceChange(index, "description", e.target.value)}
+                    placeholder="Description"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                  />
+                </td>
+                <td className="p-4">
+                  <button
+                    type="button"
+                    onClick={() => deleteExperience(index)}
+                    disabled={isSubmitting}
+                    className="text-red-500 hover:text-red-700 transition duration-200"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button
+          type="button"
+          onClick={addExperience}
+          disabled={isSubmitting}
+          className="mt-6 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition duration-200 disabled:bg-gray-400"
+        >
+          Add Experience
+        </button>
+      </div>
+    </div>
+
+    {/* Additional Details Section */}
+    <div>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Additional Details</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Date of Joining</label>
+          <input
+            type="date"
+            value={joiningDate}
+            onChange={(e) => setJoiningDate(e.target.value)}
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Exit Date</label>
+          <input
+            type="date"
+            value={exitDate}
+            onChange={(e) => setExitDate(e.target.value)}
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Form Actions */}
+    <div className="flex justify-end space-x-4">
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        disabled={isSubmitting}
+        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200 disabled:bg-gray-400"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        onClick={handleAddStaff}
+        disabled={isSubmitting}
+        className={`px-6 py-3 rounded-lg text-white font-medium ${
+          isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"
+        } transition duration-200`}
+      >
+        {isSubmitting ? "Processing..." : "Add Staff"}
+      </button>
+    </div>
+  </div>
+</div>
         </form>
       </div>
     </>

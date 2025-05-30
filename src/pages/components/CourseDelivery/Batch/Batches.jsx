@@ -392,17 +392,18 @@ export default function Batches() {
 
 
   {/* Table Section */}
- <div className="rounded-lg shadow-lg overflow-auto border border-gray-300">
+ <div className="rounded-xl shadow-lg border border-gray-200 overflow-x-auto max-h-[70vh] overflow-y-auto bg-white">
   <table className="w-full min-w-[600px] table-auto text-left text-sm md:text-base">
-    <thead className="bg-gray-100 border-b border-gray-300">
-      <tr>
-        <th className="px-6 py-3 font-semibold text-gray-700 uppercase tracking-wide w-14">Sr No</th>
-        <th className="px-6 py-3 font-semibold text-gray-700 uppercase tracking-wide">Batch Name</th>
-        <th className="px-6 py-3 font-semibold text-gray-700 uppercase tracking-wide w-28">Status</th>
-        <th className="px-6 py-3 font-semibold text-gray-700 uppercase tracking-wide">Centers</th>
-        <th className="px-6 py-3 font-semibold text-gray-700 uppercase tracking-wide w-36">Action</th>
-      </tr>
-    </thead>
+   <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+  <tr>
+    <th className="px-3 py-1 font-semibold text-gray-700 uppercase tracking-wide w-14">Sr No</th>
+    <th className="px-3 py-1 font-semibold text-gray-700 uppercase tracking-wide">Batch Name</th>
+    <th className="px-3 py-1 font-semibold text-gray-700 uppercase tracking-wide w-28">Status</th>
+    <th className="px-3 py-1 font-semibold text-gray-700 uppercase tracking-wide">Centers</th>
+    <th className="px-3 py-1 font-semibold text-gray-700 uppercase tracking-wide w-36">Action</th>
+  </tr>
+</thead>
+
     <tbody>
       {searchResults.length > 0 ? (
         searchResults.map((batch, index) => (

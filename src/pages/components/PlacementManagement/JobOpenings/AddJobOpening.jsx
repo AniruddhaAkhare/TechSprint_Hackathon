@@ -325,7 +325,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
           </h1>
           <button
             onClick={handleClose}
-            className="bg-blue-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200"
+            className="bg-indigo-600 text-white px-2 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -340,339 +340,376 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-              Job Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter job title"
-              required
-              disabled={(!canUpdate && job) || (!canCreate && !job)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
-          </div>
-          <div>
-            <label htmlFor="company" className="block text-sm font-medium text-gray-700">
-              Company <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="company"
-              value={companyId}
-              onChange={(e) => setCompanyId(e.target.value)}
-              required
-              disabled={(!canUpdate && job) || (!canCreate && !job)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            >
-              <option value="">Select Company</option>
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="jobType" className="block text-sm font-medium text-gray-700">
-              Job Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="jobType"
-              value={jobType}
-              onChange={(e) => setJobType(e.target.value)}
-              required
-              disabled={(!canUpdate && job) || (!canCreate && !job)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            >
-              <option value="">Select Job Type</option>
-              {jobTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="department" className="block text-sm font-medium text-gray-700">
-              Department
-            </label>
-            <input
-              type="text"
-              id="department"
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              placeholder="Enter department"
-              disabled={(!canUpdate && job) || (!canCreate && !job)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
-          </div>
-          <div className="flex gap-4">
-            <div>
-              <label htmlFor="experienceMin" className="block text-sm font-medium text-gray-700">
-                Min Experience (Years)
-              </label>
-              <input
-                type="number"
-                id="experienceMin"
-                value={experienceMin}
-                onChange={(e) => setExperienceMin(e.target.value)}
-                placeholder="0"
-                disabled={(!canUpdate && job) || (!canCreate && !job)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              />
-            </div>
-            <div>
-              <label htmlFor="experienceMax" className="block text-sm font-medium text-gray-700">
-                Max Experience (Years)
-              </label>
-              <input
-                type="number"
-                id="experienceMax"
-                value={experienceMax}
-                onChange={(e) => setExperienceMax(e.target.value)}
-                placeholder="2"
-                disabled={(!canUpdate && job) || (!canCreate && !job)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              />
-            </div>
-          </div>
-          <div className="flex gap-4">
-            <div>
-              <label htmlFor="salary" className="block text-sm font-medium text-gray-700">
-                Salary/Stipend
-              </label>
-              <input
-                type="text"
-                id="salary"
-                value={salary}
-                onChange={(e) => setSalary(e.target.value)}
-                placeholder="e.g., 50000-70000"
-                disabled={(!canUpdate && job) || (!canCreate && !job)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              />
-            </div>
-            <div>
-              <label htmlFor="currency" className="block text-sm font-medium text-gray-700">
-                Currency
-              </label>
-              <select
-                id="currency"
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                disabled={(!canUpdate && job) || (!canCreate && !job)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              >
-                {currencies.map((curr) => (
-                  <option key={curr} value={curr}>
-                    {curr}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          {(jobType === "Internship" || jobType === "Contract") && (
-            <div>
-              <label htmlFor="duration" className="block text-sm font-medium text-gray-700">
-                Duration
-              </label>
-              <select
-                id="duration"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                disabled={(!canUpdate && job) || (!canCreate && !job)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              >
-                <option value="">Select Duration</option>
-                {durations.map((dur) => (
-                  <option key={dur} value={dur}>
-                    {dur}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          <div>
-            <label htmlFor="postingDate" className="block text-sm font-medium text-gray-700">
-              Posting Date
-            </label>
-            <input
-              type="date"
-              id="postingDate"
-              value={postingDate}
-              onChange={(e) => setPostingDate(e.target.value)}
-              disabled={(!canUpdate && job) || (!canCreate && !job)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
-          </div>
-          <div>
-            <label htmlFor="closingDate" className="block text-sm font-medium text-gray-700">
-              Closing Date
-            </label>
-            <input
-              type="date"
-              id="closingDate"
-              value={closingDate}
-              onChange={(e) => setClosingDate(e.target.value)}
-              disabled={(!canUpdate && job) || (!canCreate && !job)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
-          </div>
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-              Status
-            </label>
-            <select
-              id="status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              disabled={(!canUpdate && job) || (!canCreate && !job)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            >
-              <option value="Open">Open</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Closed">Closed</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="locationType" className="block text-sm font-medium text-gray-700">
-              Location Type
-            </label>
-            <select
-              id="locationType"
-              value={locationType}
-              onChange={(e) => setLocationType(e.target.value)}
-              disabled={(!canUpdate && job) || (!canCreate && !job)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            >
-              <option value="">Select Location Type</option>
-              {locationTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-          {locationType !== "Remote" && (
-            <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                City
-              </label>
-              <input
-                type="text"
-                id="city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="Enter city"
-                disabled={(!canUpdate && job) || (!canCreate && !job)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              />
-            </div>
-          )}
-          <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-              Location
-            </label>
-            <input
-              type="text"
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter location"
-              disabled={(!canUpdate && job) || (!canCreate && !job)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
-          </div>
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-              Job Description
-            </label>
-            <ReactQuill
-              id="description"
-              value={description}
-              onChange={setDescription}
-              className="mt-1"
-              readOnly={(!canUpdate && job) || (!canCreate && !job)}
-              modules={{
-                toolbar: [
-                  [{ header: [1, 2, false] }],
-                  ["bold", "italic", "underline"],
-                  [{ list: "ordered" }, { list: "bullet" }],
-                  ["link"],
-                  ["clean"],
-                ],
-              }}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Skills Required</label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                placeholder="Enter skill"
-                disabled={(!canUpdate && job) || (!canCreate && !job)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              />
-              <button
-                type="button"
-                onClick={handleAddSkill}
-                disabled={(!canUpdate && job) || (!canCreate && !job)}
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Add
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {skills.map((skill) => (
-                <span
-                  key={skill}
-                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md flex items-center"
-                >
-                  {skill}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSkill(skill)}
-                    disabled={(!canUpdate && job) || (!canCreate && !job)}
-                    className="ml-2 text-red-600 hover:text-red-800"
-                  >
-                    ✕
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label htmlFor="poc" className="block text-sm font-medium text-gray-700">
-              Point of Contact
-            </label>
-            <select
-              id="poc"
-              value={poc ? JSON.stringify(poc) : ""}
-              onChange={(e) => setPoc(e.target.value ? JSON.parse(e.target.value) : "")}
-              disabled={(!canUpdate && job) || (!canCreate && !job) || !companyId}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            >
-              <option value="">Select POC</option>
-              {pocs.map((contact, index) => (
-                <option key={index} value={JSON.stringify(contact)}>
-                  {contact.name} ({contact.email})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex justify-end mt-4">
+      
+  <div className="space-y-8">
+    {/* Job Title */}
+    <div>
+      <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+        Job Title <span className="text-red-500">*</span>
+      </label>
+      <input
+        type="text"
+        id="title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Enter job title"
+        required
+        disabled={(!canUpdate && job) || (!canCreate && !job)}
+        className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+      />
+    </div>
+
+    {/* Company */}
+    <div>
+      <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
+        Company <span className="text-red-500">*</span>
+      </label>
+      <select
+        id="company"
+        value={companyId}
+        onChange={(e) => setCompanyId(e.target.value)}
+        required
+        disabled={(!canUpdate && job) || (!canCreate && !job)}
+        className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+      >
+        <option value="">Select Company</option>
+        {companies.map((company) => (
+          <option key={company.id} value={company.id}>
+            {company.name}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Job Type */}
+    <div>
+      <label htmlFor="jobType" className="block text-sm font-medium text-gray-700 mb-2">
+        Job Type <span className="text-red-500">*</span>
+      </label>
+      <select
+        id="jobType"
+        value={jobType}
+        onChange={(e) => setJobType(e.target.value)}
+        required
+        disabled={(!canUpdate && job) || (!canCreate && !job)}
+        className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+      >
+        <option value="">Select Job Type</option>
+        {jobTypes.map((type) => (
+          <option key={type} value={type}>
+            {type}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Department */}
+    <div>
+      <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-2">
+        Department
+      </label>
+      <input
+        type="text"
+        id="department"
+        value={department}
+        onChange={(e) => setDepartment(e.target.value)}
+        placeholder="Enter department"
+        disabled={(!canUpdate && job) || (!canCreate && !job)}
+        className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+      />
+    </div>
+
+    {/* Experience Range */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label htmlFor="experienceMin" className="block text-sm font-medium text-gray-700 mb-2">
+          Min Experience (Years)
+        </label>
+        <input
+          type="number"
+          id="experienceMin"
+          value={experienceMin}
+          onChange={(e) => setExperienceMin(e.target.value)}
+          placeholder="0"
+          disabled={(!canUpdate && job) || (!canCreate && !job)}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      </div>
+      <div>
+        <label htmlFor="experienceMax" className="block text-sm font-medium text-gray-700 mb-2">
+          Max Experience (Years)
+        </label>
+        <input
+          type="number"
+          id="experienceMax"
+          value={experienceMax}
+          onChange={(e) => setExperienceMax(e.target.value)}
+          placeholder="2"
+          disabled={(!canUpdate && job) || (!canCreate && !job)}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      </div>
+    </div>
+
+    {/* Salary and Currency */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label htmlFor="salary" className="block text-sm font-medium text-gray-700 mb-2">
+          Salary/Stipend
+        </label>
+        <input
+          type="text"
+          id="salary"
+          value={salary}
+          onChange={(e) => setSalary(e.target.value)}
+          placeholder="e.g., 50000-70000"
+          disabled={(!canUpdate && job) || (!canCreate && !job)}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      </div>
+      <div>
+        <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-2">
+          Currency
+        </label>
+        <select
+          id="currency"
+          value={currency}
+          onChange={(e) => setCurrency(e.target.value)}
+          disabled={(!canUpdate && job) || (!canCreate && !job)}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        >
+          {currencies.map((curr) => (
+            <option key={curr} value={curr}>
+              {curr}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    {/* Duration (Conditional) */}
+    {(jobType === "Internship" || jobType === "Contract") && (
+      <div>
+        <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
+          Duration
+        </label>
+        <select
+          id="duration"
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+          disabled={(!canUpdate && job) || (!canCreate && !job)}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        >
+          <option value="">Select Duration</option>
+          {durations.map((dur) => (
+            <option key={dur} value={dur}>
+              {dur}
+            </option>
+          ))}
+        </select>
+      </div>
+    )}
+
+    {/* Posting and Closing Dates */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label htmlFor="postingDate" className="block text-sm font-medium text-gray-700 mb-2">
+          Posting Date
+        </label>
+        <input
+          type="date"
+          id="postingDate"
+          value={postingDate}
+          onChange={(e) => setPostingDate(e.target.value)}
+          disabled={(!canUpdate && job) || (!canCreate && !job)}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      </div>
+      <div>
+        <label htmlFor="closingDate" className="block text-sm font-medium text-gray-700 mb-2">
+          Closing Date
+        </label>
+        <input
+          type="date"
+          id="closingDate"
+          value={closingDate}
+          onChange={(e) => setClosingDate(e.target.value)}
+          disabled={(!canUpdate && job) || (!canCreate && !job)}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      </div>
+    </div>
+
+    {/* Status */}
+    <div>
+      <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+        Status
+      </label>
+      <select
+        id="status"
+        value={status}
+        onChange={(e) => setStatus(e.target.value)}
+        disabled={(!canUpdate && job) || (!canCreate && !job)}
+        className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+      >
+        <option value="Open">Open</option>
+        <option value="Inactive">Inactive</option>
+        <option value="Closed">Closed</option>
+      </select>
+    </div>
+
+    {/* Location Type */}
+    <div>
+      <label htmlFor="locationType" className="block text-sm font-medium text-gray-700 mb-2">
+        Location Type
+      </label>
+      <select
+        id="locationType"
+        value={locationType}
+        onChange={(e) => setLocationType(e.target.value)}
+        disabled={(!canUpdate && job) || (!canCreate && !job)}
+        className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+      >
+        <option value="">Select Location Type</option>
+        {locationTypes.map((type) => (
+          <option key={type} value={type}>
+            {type}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* City (Conditional) */}
+    {locationType !== "Remote" && (
+      <div>
+        <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+          City
+        </label>
+        <input
+          type="text"
+          id="city"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          placeholder="Enter city"
+          disabled={(!canUpdate && job) || (!canCreate && !job)}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      </div>
+    )}
+
+    {/* Location */}
+    <div>
+      <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+        Location
+      </label>
+      <input
+        type="text"
+        id="location"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        placeholder="Enter location"
+        disabled={(!canUpdate && job) || (!canCreate && !job)}
+        className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+      />
+    </div>
+
+    {/* Job Description */}
+    <div>
+      <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+        Job Description
+      </label>
+      <ReactQuill
+        id="description"
+        value={description}
+        onChange={setDescription}
+        className="mt-1 bg-gray-50 rounded-lg"
+        readOnly={(!canUpdate && job) || (!canCreate && !job)}
+        modules={{
+          toolbar: [
+            [{ header: [1, 2, false] }],
+            ["bold", "italic", "underline"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link"],
+            ["clean"],
+          ],
+        }}
+      />
+    </div>
+
+    {/* Skills Required */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Skills Required</label>
+      <div className="flex gap-4 mb-4">
+        <input
+          type="text"
+          value={newSkill}
+          onChange={(e) => setNewSkill(e.target.value)}
+          placeholder="Enter skill"
+          disabled={(!canUpdate && job) || (!canCreate && !job)}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+        <button
+          type="button"
+          onClick={handleAddSkill}
+          disabled={(!canUpdate && job) || (!canCreate && !job)}
+          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          Add
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {skills.map((skill) => (
+          <span
+            key={skill}
+            className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full flex items-center text-sm"
+          >
+            {skill}
             <button
-              type="submit"
+              type="button"
+              onClick={() => handleRemoveSkill(skill)}
               disabled={(!canUpdate && job) || (!canCreate && !job)}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="ml-2 text-red-600 hover:text-red-800 transition duration-200"
             >
-              {job ? "Update Job" : "Save Job"}
+              ✕
             </button>
-          </div>
+          </span>
+        ))}
+      </div>
+    </div>
+
+    {/* Point of Contact */}
+    <div>
+      <label htmlFor="poc" className="block text-sm font-medium text-gray-700 mb-2">
+        Point of Contact
+      </label>
+      <select
+        id="poc"
+        value={poc ? JSON.stringify(poc) : ""}
+        onChange={(e) => setPoc(e.target.value ? JSON.parse(e.target.value) : "")}
+        disabled={(!canUpdate && job) || (!canCreate && !job) || !companyId}
+        className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+      >
+        <option value="">Select POC</option>
+        {pocs.map((contact, index) => (
+          <option key={index} value={JSON.stringify(contact)}>
+            {contact.name} ({contact.email})
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Form Actions */}
+    <div className="flex justify-end">
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={(!canUpdate && job) || (!canCreate && !job)}
+        className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+      >
+        {job ? "Update Job" : "Save Job"}
+      </button>
+    </div>
+  </div>
         </form>
       </div>
     </>

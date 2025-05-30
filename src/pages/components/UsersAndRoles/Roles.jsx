@@ -306,45 +306,46 @@ export default function Roles() {
             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
-        <tbody>
-          {roles.map((role, index) => (
-            <tr key={role.id} className="border-b hover:bg-gray-50 transition-colors duration-150">
-              <td className="px-6 py-4 text-sm text-gray-700">{index + 1}</td>
-              <td className="px-6 py-4 text-sm text-gray-900 font-medium">{role.name}</td>
-              <td className="px-6 py-4 text-sm text-gray-900">{role.isDefault ? 'Yes' : 'No'}</td>
-              <td className="px-6 py-4">
-                <div className="flex gap-3">
-                  {canUpdate && !role.isDefault && (
-                    <button
-                      onClick={() => startEditing(role)}
-                      className="text-blue-600 hover:text-blue-800 font-medium transition duration-150"
-                    >
-                      Edit
-                    </button>
-                  )}
-                  {canDelete && !role.isDefault && (
-                    <button
-                      onClick={() => {
-                        setDeleteId(role.id);
-                        setOpenDelete(true);
-                      }}
-                      className="text-red-600 hover:text-red-800 font-medium transition duration-150"
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
-          {roles.length === 0 && (
-            <tr>
-              <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
-                No roles found
-              </td>
-            </tr>
+       <tbody>
+  {roles.map((role, index) => (
+    <tr key={role.id} className="border-b hover:bg-gray-50 transition-colors duration-150">
+      <td className="px-6 py-4 text-sm text-gray-700">{index + 1}</td>
+      <td className="px-6 py-4 text-sm font-medium text-gray-900">{role.name}</td>
+      <td className="px-6 py-4 text-sm text-gray-900">{role.isDefault ? 'Yes' : 'No'}</td>
+      <td className="px-6 py-4">
+        <div className="flex gap-3">
+          {canUpdate && !role.isDefault && (
+            <button
+              onClick={() => startEditing(role)}
+              className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-md hover:bg-blue-200 transition duration-150"
+            >
+              ✏️ Edit
+            </button>
           )}
-        </tbody>
+          {canDelete && !role.isDefault && (
+            <button
+              onClick={() => {
+                setDeleteId(role.id);
+                setOpenDelete(true);
+              }}
+              className="inline-flex items-center px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-md hover:bg-red-200 transition duration-150"
+            >
+              🗑️ Delete
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  ))}
+  {roles.length === 0 && (
+    <tr>
+      <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
+        No roles found
+      </td>
+    </tr>
+  )}
+</tbody>
+
       </table>
     </div>
   </div>

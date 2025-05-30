@@ -170,7 +170,7 @@ const InstituteSetup = () => {
    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-100 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
   <div className="header flex items-center gap-3 mb-8 bg-white p-6 rounded-xl shadow-lg border border-gray-100">
     <FaBook className="text-blue-600 text-2xl" />
-    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Institute Setup</h1>
+    <h1 className="text-2xl font-bold text-[#333333] font-sans">Institute Setup</h1>
   </div>
 
   <div className="content grid grid-cols-1 lg:grid-cols-4 gap-6">
