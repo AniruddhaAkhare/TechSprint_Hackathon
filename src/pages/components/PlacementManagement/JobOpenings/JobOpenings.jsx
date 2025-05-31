@@ -208,68 +208,74 @@ export default function JobOpenings() {
 
   
   const exportToExcel = async (jobId) => {
-    try {
-      const snapshot = await getDocs(collection(db, `JobOpenings/${jobId}/Applications`));
-      const applications = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      const ws = XLSX.utils.json_to_sheet(
-        applications.map((app) => ({
-          "Student Name": app.studentName,
-          Course: app.course,
-          Status: app.status,
-          Rating: app.rating || "N/A",
-          Skills: app.skills.join(", "),
-          Remarks: app.remarks || "N/A",
-        }))
-      );
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Applications");
-      XLSX.writeFile(wb, `Applications_${jobId}.xlsx`);
-      logActivity("EXPORT_EXCEL", { jobId });
-    } catch (err) {
-      //console.error("Error exporting to Excel:", err);
-      toast.error("Failed to export applications.");
+  try {
+    const snapshot = await getDocs(collection(db, `JobOpenings/${jobId}/Applications`));
+    const applications = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    if (applications.length === 0) {
+      toast.info("No applications found to export.");
+      return;
     }
-  };
 
-  const exportToPDF = async (jobId) => {
-    try {
-      const snapshot = await getDocs(collection(db, `JobOpenings/${jobId}/Applications`));
-      const applications = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      const doc = new jsPDF();
-      doc.text("Job Applications", 20, 10);
-      doc.autoTable({
-        startY: 20,
-        head: [["Student Name", "Course", "Status", "Rating", "Skills", "Remarks"]],
-        body: applications.map((app) => [
-          app.studentName,
-          app.course,
-          app.status,
-          app.rating || "N/A",
-          app.skills.join(", "),
-          app.remarks || "N/A",
-        ]),
-      });
-      doc.save(`Applications_${jobId}.pdf`);
-      logActivity("EXPORT_PDF", { jobId });
-    } catch (err) {
-      //console.error("Error exporting to PDF:", err);
-      toast.error("Failed to export applications.");
-    }
-  };
-
-  if (!canDisplay) return null;
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen text-gray-500">Loading...</div>
+    const ws = XLSX.utils.json_to_sheet(
+      applications.map((app) => ({
+        "Student Name": app.studentName || "N/A",
+        Email: app.studentEmail || "N/A",
+        Status: app.status || "N/A",
+        // Rating: app.rating || "N/A",
+        // Skills: Array.isArray(app.skills) ? app.skills.join(", ") : "N/A",
+        Remarks: app.remarks || "N/A",
+      }))
     );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Applications");
+    XLSX.writeFile(wb, `Applications_${jobId}.xlsx`);
+    
+    logActivity("EXPORT_EXCEL", { jobId });
+    toast.success("Applications exported to Excel!");
+  } catch (error) {
+    console.error("Error exporting to Excel:", error);
+    toast.error("Failed to export applications to Excel: " + error.message);
   }
+};
+
+const exportToPDF = async (jobId) => {
+  try {
+    const snapshot = await getDocs(collection(db, `JobOpenings/${jobId}/Applications`));
+    const applications = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    if (applications.length === 0) {
+      toast.info("No applications found to export.");
+      return;
+    }
+
+    const doc = new jsPDF();
+    doc.text("Job Applications", 20, 10);
+    doc.autoTable({
+      startY: 20,
+      head: [["Student Name", "Email", "Status", "Remarks"]],
+      body: applications.map((app) => [
+        app.studentName || "N/A",
+        app.studentEmail || "N/A",
+        app.status || "N/A",
+        app.remarks || "N/A",
+      ]),
+    });
+    doc.save(`Applications_${jobId}.pdf`);
+    
+    logActivity("EXPORT_PDF", { jobId });
+    toast.success("Applications exported to PDF!");
+  } catch (error) {
+    console.error("Error exporting to PDF:", error);
+    toast.error("Failed to export applications to PDF: " + error.message);
+  }
+};
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">

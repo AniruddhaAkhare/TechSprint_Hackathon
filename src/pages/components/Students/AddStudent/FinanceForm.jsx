@@ -12,6 +12,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 export default function FinanceForm({
   courseId,
   courseIndex,
+  courseId,
   financeDetails,
   handleFinanceChange,
   financePartners,
@@ -42,6 +43,7 @@ export default function FinanceForm({
   const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
   const region = import.meta.env.VITE_AWS_REGION;
 
+<<<<<<< HEAD
   // Modified: Only reset file input fields, not document state
   const resetDocuments = useCallback(() => {
     // Clear file input values
@@ -58,6 +60,24 @@ export default function FinanceForm({
   // Initialize registrations if empty
   useEffect(() => {
     if (!financeDetails.registrations || financeDetails.registrations.length === 0) {
+=======
+  // Utility to validate S3 URLs
+  const isValidS3Url = (url) => {
+    if (!url) return false;
+    const regex = new RegExp(`^https://${bucketName}\\.s3\\.${region}\\.amazonaws\\.com/.*$`);
+    return regex.test(url);
+  };
+
+  // Debug props on mount and update
+  useEffect(() => {
+    console.log("FinanceForm Props:", { financeDetails, canUpdate, studentId, courseId, user });
+  }, [financeDetails, canUpdate, studentId, courseId, user]);
+
+  // Initialize registrations if empty
+  useEffect(() => {
+    if (!financeDetails.registrations || financeDetails.registrations.length === 0) {
+      console.log("Initializing registrations");
+>>>>>>> 2fe9b47275169575ed69417c5ae3287b4490b0a4
       handleFinanceChange({
         courseIndex,
         field: "registrations",
@@ -79,7 +99,10 @@ export default function FinanceForm({
     }
   }, [courseIndex, handleFinanceChange, financeDetails.registrations]);
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2fe9b47275169575ed69417c5ae3287b4490b0a4
   // Calculate derived values
   const calculateFees = useCallback(() => {
     const totalFees = parseFloat(fullFeesDetails?.totalFees || 0);
@@ -97,6 +120,10 @@ export default function FinanceForm({
     let subventionFee = parseFloat(financeDetails.subventionFee || 0);
     let disburseAmount = loanAmount - downPayment - subventionFee;
 
+<<<<<<< HEAD
+=======
+    // Only update state if values have changed to prevent infinite loops
+>>>>>>> 2fe9b47275169575ed69417c5ae3287b4490b0a4
     const newFeeAfterDiscount = feeAfterDiscount.toFixed(2);
     const newDisburseAmount = disburseAmount >= 0 ? disburseAmount.toFixed(2) : "0";
 
@@ -130,6 +157,7 @@ export default function FinanceForm({
     handleFinanceChange,
   ]);
 
+  // Run calculateFees when dependencies change
   useEffect(() => {
     calculateFees();
   }, [
@@ -140,6 +168,14 @@ export default function FinanceForm({
     financeDetails.downPayment,
     financeDetails.subventionFee,
   ]);
+<<<<<<< HEAD
+=======
+
+  // Sync local progress to parent
+  useEffect(() => {
+    setUploadProgress(localProgress);
+  }, [localProgress, setUploadProgress]);
+>>>>>>> 2fe9b47275169575ed69417c5ae3287b4490b0a4
 
   // Generate pre-signed URLs for photo previews
   useEffect(() => {
@@ -452,6 +488,7 @@ export default function FinanceForm({
 
   // Registration handling functions (unchanged)
   const handleAddRegistration = () => {
+    console.log("Adding new registration");
     const currentRegistrations = Array.isArray(financeDetails.registrations)
       ? financeDetails.registrations
       : [];
@@ -466,11 +503,19 @@ export default function FinanceForm({
       amountType: "Non-Loan Amount",
       loanSubRegistrations: [],
     };
+<<<<<<< HEAD
+=======
+    const updatedRegistrations = [...currentRegistrations, newRegistration];
+>>>>>>> 2fe9b47275169575ed69417c5ae3287b4490b0a4
     handleFinanceChange({
       courseIndex,
       field: "registrations",
       subField: "",
+<<<<<<< HEAD
       value: [...currentRegistrations, newRegistration],
+=======
+      value: updatedRegistrations,
+>>>>>>> 2fe9b47275169575ed69417c5ae3287b4490b0a4
     });
   };
 
@@ -479,6 +524,7 @@ export default function FinanceForm({
       toast.warn("At least one registration is required.");
       return;
     }
+    console.log(`Deleting registration at index ${index}`);
     const updatedRegistrations = financeDetails.registrations
       .filter((_, i) => i !== index)
       .map((reg, i) => ({ ...reg, srNo: i + 1 }));
@@ -491,6 +537,7 @@ export default function FinanceForm({
   };
 
   const handleRegistrationChange = (index, field, value) => {
+    console.log(`Updating registration at index ${index}, field: ${field}, value: ${value}`);
     const updatedRegistrations = [...financeDetails.registrations];
     updatedRegistrations[index] = {
       ...updatedRegistrations[index],
@@ -505,6 +552,7 @@ export default function FinanceForm({
   };
 
   const handleAddLoanSubRegistration = (parentIndex) => {
+    console.log(`Adding loan sub-registration for parent index ${parentIndex}`);
     const updatedRegistrations = [...financeDetails.registrations];
     const newSubRegistration = {
       srNo: updatedRegistrations[parentIndex].loanSubRegistrations.length + 1,
@@ -528,6 +576,7 @@ export default function FinanceForm({
   };
 
   const handleDeleteLoanSubRegistration = (parentIndex, subIndex) => {
+    console.log(`Deleting loan sub-registration at parent index ${parentIndex}, subIndex ${subIndex}`);
     const updatedRegistrations = [...financeDetails.registrations];
     updatedRegistrations[parentIndex].loanSubRegistrations = updatedRegistrations[
       parentIndex
@@ -543,6 +592,7 @@ export default function FinanceForm({
   };
 
   const handleLoanSubRegistrationChange = (parentIndex, subIndex, field, value) => {
+    console.log(`Updating loan sub-registration at parent index ${parentIndex}, subIndex ${subIndex}, field: ${field}, value: ${value}`);
     const updatedRegistrations = [...financeDetails.registrations];
     updatedRegistrations[parentIndex].loanSubRegistrations[subIndex] = {
       ...updatedRegistrations[parentIndex].loanSubRegistrations[subIndex],
@@ -554,6 +604,206 @@ export default function FinanceForm({
       subField: "",
       value: updatedRegistrations,
     });
+<<<<<<< HEAD
+=======
+  };
+
+  // File Handling
+  const handleFileChange = (e, docType) => {
+    const file = e.target.files[0];
+    console.log(`File selected for ${docType}:`, file);
+    if (file) {
+      // Restrict photo to images only
+      const allowedTypes = docType === "photo" 
+        ? ["image/jpeg", "image/png"]
+        : ["application/pdf", "image/jpeg", "image/png"];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`Invalid file type for ${file.name}. Allowed types: ${docType === "photo" ? "JPEG, PNG" : "PDF, JPEG, PNG"}.`);
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`File ${file.name} is too large. Maximum size is 5MB.`);
+        return;
+      }
+
+      setDocuments((prev) => ({ ...prev, [docType]: file }));
+      setLocalProgress((prev) => ({ ...prev, [docType]: 0 }));
+    } else {
+      console.warn(`No file selected for ${docType}`);
+    }
+  };
+
+  const deleteS3File = async (s3Url) => {
+    if (!s3Url) return;
+    if (!isValidS3Url(s3Url)) {
+      console.error(`Invalid S3 URL: ${s3Url}`);
+      throw new Error("Invalid S3 URL format.");
+    }
+    try {
+      const key = decodeURIComponent(s3Url.split(`https://${bucketName}.s3.${region}.amazonaws.com/`)[1]);
+      console.log(`Deleting S3 file with key: ${key}`);
+      const params = {
+        Bucket: bucketName,
+        Key: key,
+      };
+      await s3Client.send(new DeleteObjectCommand(params));
+      logActivity("DELETE_S3_FILE_SUCCESS", { s3Url, studentId, courseId }, user);
+    } catch (err) {
+      console.error(`Error deleting S3 file:`, err);
+      throw new Error(`Failed to delete file from S3: ${err.message}`);
+    }
+  };
+
+  const uploadFileToS3 = async (file, docType, studentId, courseId) => {
+    if (!bucketName || !region) {
+      throw new Error("Missing S3 configuration: VITE_S3_BUCKET_NAME or VITE_AWS_REGION");
+    }
+
+    if (!file || !(file instanceof File)) {
+      throw new Error(`Invalid file for ${docType}`);
+    }
+
+    const fileName = `students/${studentId}/${courseId}/documents/${docType}_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+    const fileBuffer = await file.arrayBuffer();
+    const params = {
+      Bucket: bucketName,
+      Key: fileName,
+      Body: new Uint8Array(fileBuffer),
+      ContentType: file.type,
+    };
+
+    try {
+      // Simulate progress (TODO: Integrate real S3 upload progress if supported by AWS SDK)
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setLocalProgress((prev) => ({ ...prev, [docType]: Math.min(progress, 90) }));
+        if (progress >= 90) clearInterval(interval);
+      }, 200);
+
+      console.log(`Uploading ${docType} to S3:`, fileName);
+      await s3Client.send(new PutObjectCommand(params));
+      clearInterval(interval);
+      setLocalProgress((prev) => ({ ...prev, [docType]: 100 }));
+
+      const url = `https://${params.Bucket}.s3.${region}.amazonaws.com/${params.Key}`;
+      console.log(`Uploaded ${docType} to: ${url}`);
+      return url;
+    } catch (err) {
+      console.error(`Error uploading ${docType}:`, err);
+      throw new Error(`Failed to upload ${docType}: ${err.message}`);
+    }
+  };
+
+  const handleUploadDocuments = async () => {
+    if (!canUpdate) {
+      toast.error("You do not have permission to upload documents.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      for (const [docType, file] of Object.entries(documents)) {
+        if (file) {
+          console.log(`Processing upload for ${docType}: ${file.name}`);
+          // Delete existing file if it exists
+          if (financeDetails[docType] && isValidS3Url(financeDetails[docType])) {
+            await deleteS3File(financeDetails[docType]);
+          }
+          const url = await uploadFileToS3(file, docType, studentId, courseId);
+          handleFinanceChange({
+            courseIndex,
+            field: docType,
+            subField: "",
+            value: url,
+          });
+          handleFinanceChange({
+            courseIndex,
+            field: `${docType}Name`,
+            subField: "",
+            value: file.name,
+          });
+          logActivity("UPLOAD_DOCUMENT_SUCCESS", { studentId, courseId, docType, fileName: file.name, url }, user);
+          // Clear file input
+          if (fileInputRefs.current[docType]) {
+            fileInputRefs.current[docType].value = null;
+          }
+        }
+      }
+      toast.success("Documents uploaded successfully!");
+      setDocuments({
+        photo: null,
+        bankStatement: null,
+        paymentSlip: null,
+        aadharCard: null,
+        panCard: null,
+        invoice: null,
+        loanAgreement: null,
+        loanDelivery: null,
+      });
+    } catch (error) {
+      console.error("Error uploading documents:", error);
+      toast.error(`Error uploading documents: ${error.message}`);
+      logActivity("UPLOAD_DOCUMENT_ERROR", { studentId, courseId, error: error.message }, user);
+    } finally {
+      setIsSubmitting(false);
+    }
+>>>>>>> 2fe9b47275169575ed69417c5ae3287b4490b0a4
+  };
+
+  const handleEditDocument = (docType) => {
+    if (!canUpdate) {
+      toast.error("You do not have permission to edit documents.");
+      return;
+    }
+    console.log(`Opening file input for ${docType}`);
+    fileInputRefs.current[docType]?.click();
+  };
+
+  const handleDeleteDocument = async (docType) => {
+    if (!canUpdate) {
+      toast.error("You do not have permission to delete documents.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (financeDetails[docType] && isValidS3Url(financeDetails[docType])) {
+        console.log(`Deleting document: ${docType}`);
+        await deleteS3File(financeDetails[docType]);
+        handleFinanceChange({
+          courseIndex,
+          field: docType,
+          subField: "",
+          value: null,
+        });
+        handleFinanceChange({
+          courseIndex,
+          field: `${docType}Name`,
+          subField: "",
+          value: "",
+        });
+        logActivity("DELETE_DOCUMENT_SUCCESS", { studentId, courseId, docType }, user);
+        toast.success(`${docType} deleted successfully!`);
+      } else {
+        toast.warn(`No valid document found for ${docType} to delete.`);
+      }
+    } catch (error) {
+      console.error(`Error deleting ${docType}:`, error);
+      toast.error(`Error deleting ${docType}: ${error.message}`);
+      logActivity("DELETE_DOCUMENT_ERROR", { studentId, courseId, docType, error: error.message }, user);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFileNameClick = (url, docType) => {
+    console.log(`File name clicked for ${docType}: ${url}`);
+    if (!isValidS3Url(url)) {
+      toast.error("Invalid document URL. Please try uploading the document again.");
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -1303,7 +1553,6 @@ export default function FinanceForm({
           </div>
           <div className="flex justify-end space-x-4 mt-4">
             <button
-              type="button"
               onClick={handleUploadDocuments}
               disabled={!canUpdate || isSubmitting || !Object.values(documents).some((doc) => doc instanceof File)}
               className={`px-6 py-2 rounded-md text-white ${

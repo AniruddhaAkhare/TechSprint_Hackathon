@@ -246,7 +246,7 @@ export default function StaffAndUsers() {
   if (!canDisplay) return null;
 
   return (
-    <div className="bg-gray-50 min-h-screen p-4 fixed inset-0 left-[300px] overflow-auto overflow-x-auto">
+    <div className="bg-gray-50 min-h-screen p-4 fixed inset-0 left-[300px]">
       <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -282,7 +282,7 @@ export default function StaffAndUsers() {
             />
           </div>
 
-          <div className="w-full h-[50vh] overflow-y-auto">
+          <div className="w-full h-[60vh] overflow-y-auto">
             <table className="w-full table-auto">
               <thead className="bg-gray-100 sticky top-0 z-10">
                 <tr>
