@@ -109,8 +109,6 @@ import { getStorage } from "firebase/storage";
 import { getFirestore, connectFirestoreEmulator, enableIndexedDbPersistence } from "firebase/firestore";
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
 import { getAnalytics } from "firebase/analytics";
-
-
 const firebaseConfig = {
   apiKey: "AIzaSyCr7lMF1rd-VeEArjy0dklqR08hzoqxFZI",
   authDomain: "fireblaze-ignite.firebaseapp.com",
@@ -118,9 +116,20 @@ const firebaseConfig = {
   projectId: "fireblaze-ignite",
   storageBucket: "fireblaze-ignite.firebasestorage.app",
   messagingSenderId: "848780069457",
-  appId: "1:848780069457:web:33eede2d3e487c45cf4670",
-  measurementId: "G-14J96V5WD0"
+  appId: "1:848780069457:web:19f8674117355c57cf4670",
+  measurementId: "G-TB5YHTH2SB"
 };
+
+// const firebaseConfig = {
+//   apiKey: "AIzaSyCr7lMF1rd-VeEArjy0dklqR08hzoqxFZI",
+//   authDomain: "fireblaze-ignite.firebaseapp.com",
+//   databaseURL: "https://fireblaze-ignite-default-rtdb.firebaseio.com",
+//   projectId: "fireblaze-ignite",
+//   storageBucket: "fireblaze-ignite.firebasestorage.app",
+//   messagingSenderId: "848780069457",
+//   appId: "1:848780069457:web:33eede2d3e487c45cf4670",
+//   measurementId: "G-14J96V5WD0"
+// };
 
 
 
