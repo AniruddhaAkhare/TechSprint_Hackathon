@@ -995,10 +995,10 @@ const KanbanBoard = () => {
           </div>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6">
         {view === "kanban" && canView && (
           <DragDropContext onDragEnd={onDragEnd}>
-            <div className="flex overflow-x-auto gap-4 h-full">
+            <div className="flex overflow-x-auto gap-4 h-full overflow-y-hidden">
               {Object.entries(columns)
                 .filter(([columnId]) => stageVisibility[columnId])
                 .map(([columnId, column]) => (
