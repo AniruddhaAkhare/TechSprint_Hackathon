@@ -92,6 +92,8 @@ import { ToastContainer } from 'react-toastify';
 import AddStaff from './pages/components/Staff/AddStaff.jsx'
 import EditStaff from './pages/components/Staff/EditStaff.jsx';
 import StaffAndUsers from './pages/components/Staff/StaffAndUsers.jsx';
+import EmployeeDashboard from './pages/home/EmployeeDashboard.jsx';
+import Operation from './pages/components/HRManagement/Operation.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -261,8 +263,12 @@ export default function App() {
                 <Route path="/employee-attendance/:email" element={<EmployeePage />} />
                 <Route path="/leave-management" element={<HRLeaveApproval />} />
                 <Route path="/leave-application" element={<LeaveApplication />} />
+                <Route path="/operation" element={<Operation />} />
                 <Route path="/employee-profile/:employeeId" element={<EmployeeProfile />} />
                 {/* <Route path="/add-employee" element={<AddEmployee/>}/> */}
+
+                 {/* Employee Dashboard  */}
+                   {/* <Route path="/employeeDashbard" element={<EmployeeDashboard />} /> */}
 
                 {/* Placement */}
                 <Route path="/companies" element={<Companies />} />

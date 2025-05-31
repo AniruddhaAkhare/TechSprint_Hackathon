@@ -462,6 +462,15 @@ const Sidebar = () => {
                 </li>
               </Link>
             )}
+            {canViewLeaves && (
+              <Link to="/operation" className="nav-link">
+                <li className="nav-item">
+                  <i class="fa-solid fa-gears"></i>
+                  <span>&nbsp;&nbsp;Operation</span>
+                </li>
+              </Link>
+            )}
+
           </>
         )}
 

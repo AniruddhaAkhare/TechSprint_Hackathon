@@ -347,50 +347,58 @@ const CheckInOut = () => {
   };
 
   return (
-    <div className="check-in-out p-4">
-    <h3 className="text-2xl font-semibold mb-4 whitespace-nowrap">
- Check-In/Check-Out</h3>
-      {error && <p className="error text-red-500 mb-2">{error}</p>}
-      <div className="status mb-4">
-        <p>
-          Status:{" "}
-          <span className={userStatus.active ? "text-green-500" : "text-red-500"}>
-            {userStatus.active ? "Active" : "Inactive"}
-          </span>
-        </p>
-        {userStatus.checkedIn && (
-          <>
-            <p>Checked in at: {userStatus.branchName}</p>
-            {liveDuration && <p>Time elapsed: {liveDuration}</p>}
-          </>
+  <div className="check-in-out p-6 flex flex-col items-center">
+ <h3 className="text-2xl font-medium font-sans mb-3 whitespace-nowrap">Check-In / Check-Out</h3> 
+
+  {error && <p className="text-red-500 mb-2">{error}</p>}
+
+  <div className="status text-center mb-1"> {/* Changed mb-2 to mb-1 */}
+    <p className="text-lg">
+      <strong>Status:</strong>{" "}
+      <span className={userStatus.active ? "text-green-500" : "text-red-500"}>
+        {userStatus.active ? "Active" : "Inactive"}
+      </span>
+    </p>
+
+    {userStatus.checkedIn && (
+      <>
+        <p className="text-base mt-1"><strong>Checked in at:</strong> {userStatus.branchName}</p>
+        {liveDuration && (
+          <p className="text-base"><strong>Time elapsed:</strong> {liveDuration}</p>
         )}
-        {currentDuration && !userStatus.checkedIn && (
-          <p>Last session duration: {currentDuration} hours</p>
-        )}
-      </div>
-      <div className="actions">
-        {!userStatus.checkedIn ? (
-          <button
-            className={`bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2 ${
-              isFetchingLocation
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-blue-600"
-            }`}
-            onClick={handleCheckIn}
-            disabled={isFetchingLocation}
-          >
-            {isFetchingLocation ? "Checking In..." : "Check In"}
-          </button>
-        ) : (
-          <button
-            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
-            onClick={handleCheckOut}
-          >
-            Check Out
-          </button>
-        )}
-      </div>
-    </div>
+      </>
+    )}
+
+    {currentDuration && !userStatus.checkedIn && (
+      <p className="text-base mt-1"><strong>Last session duration:</strong> {currentDuration} hours</p>
+    )}
+  </div>
+
+  <div className="actions">
+    {!userStatus.checkedIn ? (
+      <button
+        className={`bg-green-500 text-white px-6 py-2 rounded font-medium transition-all duration-200 ${
+          isFetchingLocation
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:bg-green-600"
+        }`}
+        onClick={handleCheckIn}
+        disabled={isFetchingLocation}
+      >
+        {isFetchingLocation ? "Checking In..." : "Check In"}
+      </button>
+    ) : (
+      <button
+        className="bg-green-500 text-white px-6 py-2 rounded font-medium hover:bg-green-600 transition-all duration-200"
+        onClick={handleCheckOut}
+      >
+        Check Out
+      </button>
+    )}
+  </div>
+</div>
+
+
   );
 };
 
