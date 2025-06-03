@@ -411,7 +411,7 @@ export default function Attendance() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 sm:p-6 md:p-8 p-4 fixed inset-0 left-[300px]">
+    <div className="min-h-screen bg-gray-50 sm:p-6 md:p-8 p-4 fixed inset-0 left-[300px] overflow-y-auto">
       {/* Header with Analytics Button */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Attendance Management</h2>
