@@ -62,7 +62,7 @@ const EnquiryAnalyticsPage = () => {
             
             const institute = 'RDJ9wMXGrIUk221MzDxP';
             if (institute) {
-              setInstituteId(institute);
+              setInstituteId('RDJ9wMXGrIUk221MzDxP');
               // localStorage.setItem('instituteId', institute);
             } else {
               // setError('Institute ID not found in user document');
@@ -101,7 +101,7 @@ const EnquiryAnalyticsPage = () => {
   // Fetch Branches
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      collection(db, "instituteSetup", instituteId, "Center"),
+      collection(db, "instituteSetup", 'RDJ9wMXGrIUk221MzDxP', "Center"),
       (snapshot) => {
         const branchesData = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -308,7 +308,7 @@ const EnquiryAnalyticsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px]">
+    <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px] overflow-y-auto">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold">Enquiry Analytics</h1>

@@ -172,7 +172,7 @@ const QuestionBank = () => {
   });
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4 fixed inset-0 left-[300px]">
+    <div className="bg-gray-100 min-h-screen p-4 fixed inset-0 left-[300px] overflow-y-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-[#333333] font-sans">Question Bank</h1>
         <div className="flex gap-4">

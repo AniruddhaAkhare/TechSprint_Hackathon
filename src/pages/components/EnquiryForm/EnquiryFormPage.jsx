@@ -103,13 +103,23 @@ const EnquiryFormPage = () => {
           const fieldConfig = allEnquiryFields
             .flatMap((category) => category.fields)
             .find((f) => f.id === field.id);
-          let options = field.options || fieldConfig?.options || [];
-          if (field.id === "course") {
-            options = courseOptions;
-          } else if (field.id === "branch") {
-            options = branchOptions;
-          } else if (field.id === "assignTo") {
-            options = assignToOptions;
+          let options = [];
+          if (field.useDynamicOptions === false && field.customOptions?.length > 0) {
+            // Use custom options if useDynamicOptions is false
+            options = field.customOptions.map((opt) => ({
+              value: opt,
+              label: opt,
+            }));
+          } else {
+            // Use dynamic or default options
+            options = field.options || fieldConfig?.options || [];
+            if (field.id === "course") {
+              options = courseOptions;
+            } else if (field.id === "branch") {
+              options = branchOptions;
+            } else if (field.id === "assignTo") {
+              options = assignToOptions;
+            }
           }
           return {
             ...field,
@@ -120,6 +130,27 @@ const EnquiryFormPage = () => {
             required: fieldConfig?.required || false,
           };
         });
+        // const enrichedFields = fields.map((field) => {
+        //   const fieldConfig = allEnquiryFields
+        //     .flatMap((category) => category.fields)
+        //     .find((f) => f.id === field.id);
+        //   let options = field.options || fieldConfig?.options || [];
+        //   if (field.id === "course") {
+        //     options = courseOptions;
+        //   } else if (field.id === "branch") {
+        //     options = branchOptions;
+        //   } else if (field.id === "assignTo") {
+        //     options = assignToOptions;
+        //   }
+        //   return {
+        //     ...field,
+        //     name: field.id,
+        //     type: fieldConfig?.type || "text",
+        //     label: fieldConfig?.label || field.id,
+        //     options,
+        //     required: fieldConfig?.required || false,
+        //   };
+        // });
   
         setFormFields(enrichedFields);
   

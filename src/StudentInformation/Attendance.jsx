@@ -138,8 +138,8 @@ export default function Attendance() {
                 const studentData = studentDoc.data();
                 studentsByBatchMap[batchId].push({
                   id: studentId,
-                  first_name: studentData.first_name || 'Unknown',
-                  last_name: studentData.last_name || '',
+                  first_name: studentData.Name|| 'Unknown',
+                  
                 });
               } else {
                 console.warn(`Student ${studentId} not found in student collection for batch ${batchId}`);
@@ -382,7 +382,7 @@ export default function Attendance() {
     }
 
     const dates = generateDateRange(batch.startDate, batch.endDate);
-    const studentNames = students.map((s) => `${s.first_name} ${s.last_name}`.trim());
+    const studentNames = students.map((s) => `${s.first_name}`.trim());
     const attendanceMap = {};
 
     batchAttendance.forEach((record) => {
@@ -411,7 +411,7 @@ export default function Attendance() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 sm:p-6 md:p-8 p-4 fixed inset-0 left-[300px]">
+    <div className="min-h-screen bg-gray-50 sm:p-6 md:p-8 p-4 fixed inset-0 left-[300px] overflow-y-auto">
       {/* Header with Analytics Button */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Attendance Management</h2>

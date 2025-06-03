@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-
 import { db } from "../../../config/firebase";
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
+import { useAuth } from "../../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -27,13 +28,7 @@ ChartJS.register(
   Legend
 );
 
-// Utility function to ensure a value is a number
-const toNumber = (value) => {
-  const num = Number(value);
-  return isNaN(num) ? 0 : num;
-};
-
-// Utility function to get date ranges for filtering
+// Utility functions
 const getDateRange = (filter) => {
   const today = new Date();
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -42,15 +37,15 @@ const getDateRange = (filter) => {
   switch (filter) {
     case "thisMonth":
       return { start: startOfMonth, end: endOfMonth };
-    case "lastMonth":
-      return {
-        start: new Date(today.getFullYear(), today.getMonth() - 1, 1),
-        end: new Date(today.getFullYear(), today.getMonth(), 0),
-      };
     case "nextMonth":
       return {
         start: new Date(today.getFullYear(), today.getMonth() + 1, 1),
         end: new Date(today.getFullYear(), today.getMonth() + 2, 0),
+      };
+    case "lastMonth":
+      return {
+        start: new Date(today.getFullYear(), today.getMonth() - 1, 1),
+        end: new Date(today.getFullYear(), today.getMonth(), 0),
       };
     case "thisYear":
       return {
@@ -68,324 +63,358 @@ const getDateRange = (filter) => {
   }
 };
 
-// Utility function to check if a date is within a range
 const isDateInRange = (dateStr, start, end) => {
   if (!dateStr || (!start && !end)) return true;
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return false;
   return (!start || date >= start) && (!end || date <= end);
 };
 
-// Utility function to calculate days difference
-const getDaysDifference = (startDate, endDate) => {
-  if (!startDate || !endDate) return 0;
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  return Math.round((end - start) / (1000 * 60 * 60 * 24));
+const toNumber = (value) => {
+  const num = Number(value);
+  return isNaN(num) ? 0 : num;
 };
 
 export default function InstallmentDashboard() {
+  const { rolePermissions } = useAuth();
+  const navigate = useNavigate();
   const [feeData, setFeeData] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("thisMonth");
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [totalReceived, setTotalReceived] = useState(0);
+  const [totalPending, setTotalPending] = useState(0);
+  const [expandedRows, setExpandedRows] = useState({});
+
+  const canDisplayReports = rolePermissions?.enrollments?.display || false;
 
   useEffect(() => {
     const fetchFeeData = async () => {
+      if (!canDisplayReports) return;
       try {
         setLoading(true);
+        setFeeData([]);
+        setTotalReceived(0);
+        setTotalPending(0);
 
         const studentSnapshot = await getDocs(collection(db, "student"));
         const studentMap = {};
         studentSnapshot.forEach((doc) => {
-          studentMap[doc.id] = `${doc.data().first_name} ${doc.data().last_name}` || "Unknown";
+          studentMap[doc.id] = doc.data().Name || "Unknown";
         });
 
         const enrollmentSnapshot = await getDocs(collection(db, "enrollments"));
         const data = [];
-        const seenIds = new Set();
+        let totalReceivedAcc = 0;
+        let totalPendingAcc = 0;
+
+        const { start, end } = startDate || endDate ? { start: startDate ? new Date(startDate) : null, end: endDate ? new Date(endDate) : null } : getDateRange(filter);
+
+        const enrollmentMap = {};
 
         for (const enrollmentDoc of enrollmentSnapshot.docs) {
           const studentId = enrollmentDoc.id;
           const studentName = studentMap[studentId] || "Unknown";
           const courses = enrollmentDoc.data().courses || [];
 
-          courses.forEach((course, courseIndex) => {
-            const courseName = course.selectedCourse?.name || "Unknown";
-            const totalFees =
-              course.feeTemplate === "Free"
-                ? 0
-                : toNumber(
-                    course.fullFeesDetails?.feeAfterDiscount ||
-                      course.fullFeesDetails?.totalFees ||
-                      course.financeDetails?.feeAfterDiscount ||
-                      0
-                  );
+          for (const course of courses) {
+            const courseName = course.selectedCourse?.name || "Unknown Course";
+            const key = `${studentId}-${courseName}`;
+
+            if (!enrollmentMap[key]) {
+              enrollmentMap[key] = {
+                studentId,
+                studentName,
+                courseName,
+                totalFees: 0,
+                transactions: [],
+                totalPaid: 0,
+                remaining: 0,
+                validationError: "",
+              };
+            }
+
+            let totalFees = 0;
+            if (course.feeTemplate === "Free") {
+              totalFees = 0;
+            } else if (course.feeTemplate === "FullFees") {
+              totalFees = toNumber(course.fullFeesDetails?.feeAfterDiscount || course.fullFeesDetails?.totalFees || 0);
+            } else if (course.feeTemplate === "Installments") {
+              const regAmount = toNumber(course.registration?.amount || 0);
+              const installmentTotal = (course.installmentDetails || []).reduce(
+                (sum, inst) => sum + toNumber(inst.dueAmount || 0),
+                0
+              );
+              totalFees = regAmount + installmentTotal;
+            } else if (course.feeTemplate === "Finance") {
+              totalFees = toNumber(course.financeDetails?.feeAfterDiscount || 0);
+              const loanRegistrations = (course.financeDetails?.registrations || []).filter(
+                (reg) => reg.amountType === "Loan Amount"
+              );
+              const totalLoanAmount = loanRegistrations.reduce(
+                (sum, reg) => sum + toNumber(reg.amount || 0),
+                0
+              );
+              const totalLoanSubAmount = loanRegistrations.reduce(
+                (sum, reg) => sum + (reg.loanSubRegistrations || []).reduce(
+                  (subSum, subReg) => subSum + toNumber(subReg.amount || 0),
+                  0
+                ),
+                0
+              );
+              const expectedLoanAmount = toNumber(course.financeDetails?.loanAmount || 0);
+              if (totalLoanAmount !== expectedLoanAmount && expectedLoanAmount !== 0) {
+                enrollmentMap[key].validationError = `Formula Error: Sum of Loan Amount registrations (${totalLoanAmount}) does not match Loan Amount (${expectedLoanAmount})`;
+              }
+              if (totalLoanSubAmount !== totalLoanAmount && totalLoanAmount !== 0) {
+                enrollmentMap[key].validationError += `; Sub-registration sum (${totalLoanSubAmount}) does not match registration amount (${totalLoanAmount})`;
+              }
+            }
+
+            enrollmentMap[key].totalFees = totalFees;
 
             if (course.feeTemplate === "FullFees") {
               const { fullFeesDetails } = course;
+
               if (fullFeesDetails?.registration?.amount) {
-                const regId = `${studentId}-${courseIndex}-reg`;
-                if (!seenIds.has(regId)) {
-                  seenIds.add(regId);
-                  const regAmount = toNumber(fullFeesDetails.registration.amount);
-                  const status = fullFeesDetails.registration.status || "Pending";
-                  data.push({
-                    id: regId,
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: "FullFees (Registration)",
-                    totalFees,
+                const regAmount = toNumber(fullFeesDetails.registration.amount);
+                const status = fullFeesDetails.registration.status || "Pending";
+                const dateField = fullFeesDetails.registration.date || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
+
+                if (inRange || (filter === "all" && !startDate && !endDate && dateField)) {
+                  enrollmentMap[key].transactions.push({
+                    type: "FullFees (Registration)",
                     amount: regAmount,
-                    dueDate: fullFeesDetails.registration.date || "",
-                    paidDate: status === "Paid" ? fullFeesDetails.registration.date : "",
                     status,
-                    receivedBy: fullFeesDetails.registration.receivedBy || "",
-                    remark: fullFeesDetails.registration.remark || "",
-                    paymentMethod: fullFeesDetails.registration.paymentMethod || "",
+                    date: dateField,
+                    paymentMethod: fullFeesDetails.registration.paymentMethod || "N/A",
+                    amountType: "N/A",
                   });
+                  if (status === "Paid") {
+                    enrollmentMap[key].totalPaid += regAmount;
+                    totalReceivedAcc += regAmount;
+                  } else {
+                    totalPendingAcc += regAmount;
+                  }
                 }
               }
+
               if (fullFeesDetails?.finalPayment?.amount) {
-                const finalId = `${studentId}-${courseIndex}-final`;
-                if (!seenIds.has(finalId)) {
-                  seenIds.add(finalId);
-                  const finalAmount = toNumber(fullFeesDetails.finalPayment.amount);
-                  const status = fullFeesDetails.finalPayment.status || "Pending";
-                  data.push({
-                    id: finalId,
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: "FullFees (Final Payment)",
-                    totalFees,
+                const finalAmount = toNumber(fullFeesDetails.finalPayment.amount);
+                const status = fullFeesDetails.finalPayment.status || "Pending";
+                const dateField = fullFeesDetails.finalPayment.date || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
+
+                if (inRange || (filter === "all" && !startDate && !endDate && dateField)) {
+                  enrollmentMap[key].transactions.push({
+                    type: "FullFees (Final Payment)",
                     amount: finalAmount,
-                    dueDate: fullFeesDetails.finalPayment.date || "",
-                    paidDate: status === "Paid" ? fullFeesDetails.finalPayment.date : "",
                     status,
-                    receivedBy: fullFeesDetails.finalPayment.receivedBy || "",
-                    remark: fullFeesDetails.finalPayment.remark || "",
-                    paymentMethod: fullFeesDetails.finalPayment.paymentMethod || "",
+                    date: dateField,
+                    paymentMethod: fullFeesDetails.finalPayment.paymentMethod || "N/A",
+                    amountType: "N/A",
                   });
+                  if (status === "Paid") {
+                    enrollmentMap[key].totalPaid += finalAmount;
+                    totalReceivedAcc += finalAmount;
+                  } else {
+                    totalPendingAcc += finalAmount;
+                  }
                 }
               }
             } else if (course.feeTemplate === "Installments") {
               const { installmentDetails, registration } = course;
+
               if (registration?.amount) {
-                const regId = `${studentId}-${courseIndex}-reg`;
-                if (!seenIds.has(regId)) {
-                  seenIds.add(regId);
-                  const regAmount = toNumber(registration.amount);
-                  const status = registration.status || "Pending";
-                  data.push({
-                    id: regId,
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: "Installments (Registration)",
-                    totalFees,
+                const regAmount = toNumber(registration.amount);
+                const status = registration.status || "Pending";
+                const dateField = registration.date || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
+
+                if (inRange || (filter === "all" && !startDate && !endDate && dateField)) {
+                  enrollmentMap[key].transactions.push({
+                    type: "Installments (Registration)",
                     amount: regAmount,
-                    dueDate: registration.date || "",
-                    paidDate: status === "Paid" ? registration.date : "",
                     status,
-                    receivedBy: registration.receivedBy || "",
-                    remark: registration.remark || "",
-                    paymentMethod: registration.paymentMethod || "",
+                    date: dateField,
+                    paymentMethod: registration.paymentMethod || "N/A",
+                    amountType: "N/A",
                   });
+                  if (status === "Paid") {
+                    enrollmentMap[key].totalPaid += regAmount;
+                    totalReceivedAcc += regAmount;
+                  } else {
+                    totalPendingAcc += regAmount;
+                  }
                 }
               }
+
               (installmentDetails || []).forEach((installment, idx) => {
-                const instId = `${studentId}-${courseIndex}-inst-${idx}`;
-                if (!seenIds.has(instId)) {
-                  seenIds.add(instId);
-                  const dueAmount = toNumber(installment.dueAmount);
-                  const paidAmount = toNumber(installment.paidAmount);
-                  const status = installment.status || "Pending";
-                  data.push({
-                    id: instId,
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: `Installments (No. ${installment.number || idx + 1})`,
-                    totalFees,
-                    amount: status === "Paid" ? (paidAmount || dueAmount) : dueAmount,
-                    dueDate: installment.dueDate || "",
-                    paidDate: status === "Paid" ? installment.paidDate : "",
+                const dueAmount = toNumber(installment.dueAmount || 0);
+                const paidAmount = toNumber(installment.paidAmount || 0);
+                const status = installment.status || "Pending";
+                const dateField = status === "Paid" ? installment.paidDate : installment.dueDate || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
+
+                if ((inRange || (filter === "all" && !startDate && !endDate && dateField)) && (dueAmount > 0 || paidAmount > 0)) {
+                  enrollmentMap[key].transactions.push({
+                    type: `Installments (No. ${installment.number || idx + 1})`,
+                    amount: status === "Paid" ? paidAmount : dueAmount,
                     status,
-                    receivedBy: installment.receivedBy || "",
-                    remark: installment.remark || "",
-                    paymentMethod: installment.paymentMode || "",
+                    date: dateField,
+                    paymentMethod: installment.paymentMethod || "N/A",
+                    amountType: "N/A",
                   });
+                  if (status === "Paid") {
+                    enrollmentMap[key].totalPaid += paidAmount;
+                    totalReceivedAcc += paidAmount;
+                  } else {
+                    totalPendingAcc += dueAmount;
+                  }
                 }
               });
             } else if (course.feeTemplate === "Finance") {
               const { financeDetails } = course;
+
               if (financeDetails?.registration?.amount) {
-                const regId = `${studentId}-${courseIndex}-reg`;
-                if (!seenIds.has(regId)) {
-                  seenIds.add(regId);
-                  const regAmount = toNumber(financeDetails.registration.amount);
-                  const status = financeDetails.registration.status || "Pending";
-                  data.push({
-                    id: regId,
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: "Finance (Registration)",
-                    totalFees,
+                const regAmount = toNumber(financeDetails.registration.amount);
+                const status = financeDetails.registration.status || "Pending";
+                const dateField = financeDetails.registration.date || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
+
+                if ((inRange || (filter === "all" && !startDate && !endDate && dateField)) && regAmount > 0) {
+                  enrollmentMap[key].transactions.push({
+                    type: "Finance (Registration)",
                     amount: regAmount,
-                    dueDate: financeDetails.registration.date || "",
-                    paidDate: status === "Paid" ? financeDetails.registration.date : "",
                     status,
-                    receivedBy: financeDetails.registration.receivedBy || "",
-                    remark: financeDetails.registration.remark || "",
-                    paymentMethod: financeDetails.registration.paymentMethod || "",
+                    date: dateField,
+                    paymentMethod: financeDetails.registration.paymentMethod || "N/A",
+                    amountType: "Non-Loan Amount",
                   });
+                  if (status === "Paid") {
+                    enrollmentMap[key].totalPaid += regAmount;
+                    totalReceivedAcc += regAmount;
+                  } else {
+                    totalPendingAcc += regAmount;
+                  }
                 }
               }
+
               if (financeDetails?.downPayment) {
-                const dpId = `${studentId}-${courseIndex}-dp`;
-                if (!seenIds.has(dpId)) {
-                  seenIds.add(dpId);
-                  const downPayment = toNumber(financeDetails.downPayment);
-                  const status = financeDetails.downPaymentDate ? "Paid" : "Pending";
-                  data.push({
-                    id: dpId,
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: "Finance (Down Payment)",
-                    totalFees,
+                const downPayment = toNumber(financeDetails.downPayment);
+                const status = financeDetails.downPaymentDate ? "Paid" : "Pending";
+                const dateField = financeDetails.downPaymentDate || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
+
+                if ((inRange || (filter === "all" && !startDate && !endDate && dateField)) && downPayment > 0) {
+                  enrollmentMap[key].transactions.push({
+                    type: "Finance (Down Payment)",
                     amount: downPayment,
-                    dueDate: financeDetails.downPaymentDate || "",
-                    paidDate: status === "Paid" ? financeDetails.downPaymentDate : "",
                     status,
-                    receivedBy: "",
-                    remark: "",
-                    paymentMethod: "",
+                    date: dateField,
+                    paymentMethod: "N/A",
+                    amountType: "Non-Loan Amount",
                   });
+                  if (status === "Paid") {
+                    enrollmentMap[key].totalPaid += downPayment;
+                    totalReceivedAcc += downPayment;
+                  } else {
+                    totalPendingAcc += downPayment;
+                  }
                 }
               }
-              if (financeDetails?.loanAmount) {
-                const loanId = `${studentId}-${courseIndex}-loan`;
-                if (!seenIds.has(loanId)) {
-                  seenIds.add(loanId);
-                  const loanAmount = toNumber(financeDetails.loanAmount);
-                  const status = financeDetails.loanStatus === "Disbursed" ? "Paid" : "Pending";
-                  data.push({
-                    id: loanId,
-                    studentId,
-                    studentName,
-                    courseName,
-                    feeTemplate: "Finance (Loan)",
-                    totalFees,
-                    amount: loanAmount,
-                    dueDate: financeDetails.downPaymentDate || "",
-                    paidDate: status === "Paid" ? financeDetails.downPaymentDate : "",
+
+              (financeDetails?.registrations || []).forEach((registration, regIndex) => {
+                const regAmount = toNumber(registration.amount || 0);
+                const status = registration.status || "Pending";
+                const dateField = registration.date || null;
+                const inRange = dateField ? isDateInRange(dateField, start, end) : false;
+
+                if ((inRange || (filter === "all" && !startDate && !endDate && dateField)) && regAmount > 0) {
+                  enrollmentMap[key].transactions.push({
+                    type: `Finance (Registration ${registration.srNo})`,
+                    amount: regAmount,
                     status,
-                    receivedBy: "",
-                    remark: "",
-                    paymentMethod: "",
+                    date: dateField,
+                    paymentMethod: registration.paymentMethod || "N/A",
+                    amountType: registration.amountType || "Non-Loan Amount",
+                  });
+                  if (status === "Paid") {
+                    enrollmentMap[key].totalPaid += regAmount;
+                    totalReceivedAcc += regAmount;
+                  } else {
+                    totalPendingAcc += regAmount;
+                  }
+                }
+
+                if (registration.amountType === "Loan Amount") {
+                  (registration.loanSubRegistrations || []).forEach((subReg, subIndex) => {
+                    const subRegAmount = toNumber(subReg.amount || 0);
+                    const subStatus = subReg.status || "Pending";
+                    const subDateField = subReg.date || null;
+                    const subInRange = subDateField ? isDateInRange(subDateField, start, end) : false;
+
+                    if ((subInRange || (filter === "all" && !startDate && !endDate && subDateField)) && subRegAmount > 0) {
+                      enrollmentMap[key].transactions.push({
+                        type: `Finance (Loan Sub-Registration ${registration.srNo}.${subReg.srNo})`,
+                        amount: subRegAmount,
+                        status: subStatus,
+                        date: subDateField,
+                        paymentMethod: subReg.paymentMethod || "N/A",
+                        amountType: "Loan Amount",
+                      });
+                      if (subStatus === "Paid") {
+                        enrollmentMap[key].totalPaid += subRegAmount;
+                        totalReceivedAcc += subRegAmount;
+                      } else {
+                        totalPendingAcc += subRegAmount;
+                      }
+                    }
                   });
                 }
-              }
-            } else if (course.feeTemplate === "Free") {
-              const freeId = `${studentId}-${courseIndex}-free`;
-              if (!seenIds.has(freeId)) {
-                seenIds.add(freeId);
-                data.push({
-                  id: freeId,
-                  studentId,
-                  studentName,
-                  courseName,
-                  feeTemplate: "Free",
-                  totalFees: 0,
-                  amount: 0,
-                  dueDate: "",
-                  paidDate: "",
-                  status: "Paid",
-                  receivedBy: "",
-                  remark: course.freeReason || "",
-                  paymentMethod: "",
-                });
-              }
+              });
+            } else if (course.feeTemplate === "Free" && (filter === "all" || (startDate && endDate))) {
+              enrollmentMap[key].transactions.push({
+                type: "Free",
+                amount: 0,
+                status: "N/A",
+                date: null,
+                paymentMethod: "N/A",
+                amountType: "N/A",
+              });
             }
-          });
+
+            enrollmentMap[key].remaining = totalFees - enrollmentMap[key].totalPaid;
+          }
         }
 
+        Object.values(enrollmentMap).forEach((enrollment) => {
+          if (enrollment.transactions.length > 0) {
+            data.push(enrollment);
+          }
+        });
+
         setFeeData(data);
-        setLoading(false);
+        setTotalReceived(totalReceivedAcc);
+        setTotalPending(totalPendingAcc);
       } catch (error) {
-        //console.error("Error fetching fee data:", error);
+        console.error("Error fetching fee data:", error);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchFeeData();
-  }, []);
+  }, [filter, startDate, endDate, canDisplayReports]);
 
-  const handleUpdate = async (item, field, value) => {
-    try {
-      const [studentId, courseIndex, type, idx] = item.id.split("-");
-      const enrollmentRef = doc(db, "enrollments", studentId);
-      let updatePath = "";
-      let updateValue = value;
-
-      if (type === "reg") {
-        if (item.feeTemplate.includes("FullFees")) {
-          updatePath = `courses.${courseIndex}.fullFeesDetails.registration.${field}`;
-        } else if (item.feeTemplate.includes("Installments")) {
-          updatePath = `courses.${courseIndex}.registration.${field}`;
-        } else if (item.feeTemplate.includes("Finance")) {
-          updatePath = `courses.${courseIndex}.financeDetails.registration.${field}`;
-        }
-      } else if (type === "final") {
-        updatePath = `courses.${courseIndex}.fullFeesDetails.finalPayment.${field}`;
-      } else if (type === "inst") {
-        updatePath = `courses.${courseIndex}.installmentDetails.${idx}.${field}`;
-      } else if (type === "dp") {
-        updatePath = `courses.${courseIndex}.financeDetails.downPayment${field === "paidDate" ? "Date" : ""}`;
-        updateValue = field === "status" ? (value === "Paid" ? new Date().toISOString().split("T")[0] : "") : value;
-      } else if (type === "loan") {
-        updatePath = `courses.${courseIndex}.financeDetails.loanStatus`;
-        updateValue = value === "Paid" ? "Disbursed" : "Pending";
-      }
-
-      if (field === "status" && type !== "loan" && type !== "dp") {
-        updatePath = updatePath.replace("status", "status");
-        updateValue = value;
-        if (value === "Paid" && !item.paidDate) {
-          await updateDoc(enrollmentRef, {
-            [updatePath]: value,
-            [`${updatePath.replace("status", "date")}`]: new Date().toISOString().split("T")[0],
-          });
-        } else {
-          await updateDoc(enrollmentRef, { [updatePath]: updateValue });
-        }
-      } else {
-        await updateDoc(enrollmentRef, { [updatePath]: updateValue });
-      }
-
-      setFeeData((prev) =>
-        prev.map((dataItem) =>
-          dataItem.id === item.id
-            ? {
-                ...dataItem,
-                [field]: value,
-                ...(field === "status" && value === "Paid" && !dataItem.paidDate
-                  ? { paidDate: new Date().toISOString().split("T")[0] }
-                  : {}),
-                ...(field === "status" && type === "dp"
-                  ? { paidDate: value === "Paid" ? new Date().toISOString().split("T")[0] : "" }
-                  : {}),
-              }
-            : dataItem
-        )
-      );
-    } catch (error) {
-      //console.error("Error updating fee data:", error);
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value);
+    if (e.target.value !== "all") {
+      setStartDate("");
+      setEndDate("");
     }
   };
 
@@ -396,29 +425,16 @@ export default function InstallmentDashboard() {
     setEndDate("");
   };
 
+  const toggleRow = (index) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
   const filterFeeData = () => {
     let filtered = feeData;
 
-    // Apply custom date range if startDate or endDate is set
-    if (startDate || endDate) {
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-      filtered = filtered.filter((item) => {
-        const date = item.status === "Paid" ? item.paidDate : item.dueDate;
-        return isDateInRange(date, start, end);
-      });
-    } else {
-      // Apply predefined date range if no custom date range is set
-      const { start, end } = getDateRange(filter);
-      if (start && end) {
-        filtered = filtered.filter((item) => {
-          const date = item.status === "Paid" ? item.paidDate : item.dueDate;
-          return isDateInRange(date, start, end);
-        });
-      }
-    }
-
-    // Apply search query
     if (searchQuery) {
       filtered = filtered.filter((item) =>
         item.studentName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -430,31 +446,24 @@ export default function InstallmentDashboard() {
 
   const calculateAnalytics = (data) => {
     const totalDue = data.reduce(
-      (acc, item) => acc + (item.status === "Pending" ? toNumber(item.amount) : 0),
+      (acc, item) => acc + toNumber(item.remaining),
       0
     );
     const totalPaid = data.reduce(
-      (acc, item) => acc + (item.status === "Paid" ? toNumber(item.amount) : 0),
+      (acc, item) => acc + toNumber(item.totalPaid),
       0
     );
-    const pendingCount = data.filter((item) => item.status === "Pending").length;
-    const paidCount = data.filter((item) => item.status === "Paid").length;
-
-    const paidItemsWithDates = data.filter(
-      (item) => item.status === "Paid" && item.dueDate && item.paidDate
+    const pendingCount = data.reduce(
+      (acc, item) => acc + item.transactions.filter((txn) => txn.status === "Pending").length,
+      0
     );
-    const avgDelay =
-      paidItemsWithDates.length > 0
-        ? paidItemsWithDates.reduce(
-            (acc, item) => acc + getDaysDifference(item.dueDate, item.paidDate),
-            0
-          ) / paidItemsWithDates.length
-        : 0;
+    const paidCount = data.reduce(
+      (acc, item) => acc + item.transactions.filter((txn) => txn.status === "Paid").length,
+      0
+    );
 
     const studentPending = data.reduce((acc, item) => {
-      if (item.status === "Pending") {
-        acc[item.studentName] = (acc[item.studentName] || 0) + toNumber(item.amount);
-      }
+      acc[item.studentName] = (acc[item.studentName] || 0) + toNumber(item.remaining);
       return acc;
     }, {});
     const topPendingStudents = Object.entries(studentPending)
@@ -462,9 +471,11 @@ export default function InstallmentDashboard() {
       .slice(0, 5);
 
     const paymentMethods = data.reduce((acc, item) => {
-      if (item.status === "Paid" && item.paymentMethod) {
-        acc[item.paymentMethod] = (acc[item.paymentMethod] || 0) + toNumber(item.amount);
-      }
+      item.transactions.forEach((txn) => {
+        if (txn.status === "Paid" && txn.paymentMethod && txn.paymentMethod !== "N/A") {
+          acc[txn.paymentMethod] = (acc[txn.paymentMethod] || 0) + toNumber(txn.amount);
+        }
+      });
       return acc;
     }, {});
 
@@ -473,7 +484,6 @@ export default function InstallmentDashboard() {
       totalPaid,
       pendingCount,
       paidCount,
-      avgDelay,
       topPendingStudents,
       paymentMethods,
     };
@@ -488,8 +498,8 @@ export default function InstallmentDashboard() {
       datasets: [
         {
           data: [
-            data.filter((item) => item.status === "Paid").length,
-            data.filter((item) => item.status === "Pending").length,
+            data.reduce((acc, item) => acc + item.transactions.filter((txn) => txn.status === "Paid").length, 0),
+            data.reduce((acc, item) => acc + item.transactions.filter((txn) => txn.status === "Pending").length, 0),
           ],
           backgroundColor: [colors[0], colors[1]],
           hoverBackgroundColor: [hoverColors[0], hoverColors[1]],
@@ -502,10 +512,10 @@ export default function InstallmentDashboard() {
       datasets: [
         {
           data: [
-            data.filter((item) => item.feeTemplate.includes("FullFees")).length,
-            data.filter((item) => item.feeTemplate.includes("Installments")).length,
-            data.filter((item) => item.feeTemplate.includes("Finance")).length,
-            data.filter((item) => item.feeTemplate === "Free").length,
+            data.reduce((acc, item) => acc + item.transactions.filter((txn) => txn.type.includes("FullFees")).length, 0),
+            data.reduce((acc, item) => acc + item.transactions.filter((txn) => txn.type.includes("Installments")).length, 0),
+            data.reduce((acc, item) => acc + item.transactions.filter((txn) => txn.type.includes("Finance")).length, 0),
+            data.reduce((acc, item) => acc + item.transactions.filter((txn) => txn.type === "Free").length, 0),
           ],
           backgroundColor: colors,
           hoverBackgroundColor: hoverColors,
@@ -515,18 +525,20 @@ export default function InstallmentDashboard() {
 
     const monthlyData = {};
     data.forEach((item) => {
-      const date = item.status === "Paid" ? item.paidDate : item.dueDate;
-      if (!date) return;
-      const dueDate = new Date(date);
-      const monthYear = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}`;
-      if (!monthlyData[monthYear]) {
-        monthlyData[monthYear] = { due: 0, paid: 0 };
-      }
-      if (item.status === "Pending") {
-        monthlyData[monthYear].due += toNumber(item.amount);
-      } else {
-        monthlyData[monthYear].paid += toNumber(item.amount);
-      }
+      item.transactions.forEach((txn) => {
+        const date = txn.date;
+        if (!date) return;
+        const dueDate = new Date(date);
+        const monthYear = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}`;
+        if (!monthlyData[monthYear]) {
+          monthlyData[monthYear] = { due: 0, paid: 0 };
+        }
+        if (txn.status === "Pending") {
+          monthlyData[monthYear].due += toNumber(txn.amount);
+        } else if (txn.status === "Paid") {
+          monthlyData[monthYear].paid += toNumber(txn.amount);
+        }
+      });
     });
 
     const barData = {
@@ -553,18 +565,18 @@ export default function InstallmentDashboard() {
         {
           label: "Paid",
           data: [
-            data
-              .filter((item) => item.feeTemplate.includes("FullFees") && item.status === "Paid")
-              .reduce((acc, item) => acc + toNumber(item.amount), 0),
-            data
-              .filter((item) => item.feeTemplate.includes("Installments") && item.status === "Paid")
-              .reduce((acc, item) => acc + toNumber(item.amount), 0),
-            data
-              .filter((item) => item.feeTemplate.includes("Finance") && item.status === "Paid")
-              .reduce((acc, item) => acc + toNumber(item.amount), 0),
-            data
-              .filter((item) => item.feeTemplate === "Free" && item.status === "Paid")
-              .reduce((acc, item) => acc + toNumber(item.amount), 0),
+            data.reduce((acc, item) => acc + item.transactions
+              .filter((txn) => txn.type.includes("FullFees") && txn.status === "Paid")
+              .reduce((sum, txn) => sum + toNumber(txn.amount), 0), 0),
+            data.reduce((acc, item) => acc + item.transactions
+              .filter((txn) => txn.type.includes("Installments") && txn.status === "Paid")
+              .reduce((sum, txn) => sum + toNumber(txn.amount), 0), 0),
+            data.reduce((acc, item) => acc + item.transactions
+              .filter((txn) => txn.type.includes("Finance") && txn.status === "Paid")
+              .reduce((sum, txn) => sum + toNumber(txn.amount), 0), 0),
+            data.reduce((acc, item) => acc + item.transactions
+              .filter((txn) => txn.type === "Free" && txn.status === "Paid")
+              .reduce((sum, txn) => sum + toNumber(txn.amount), 0), 0),
           ],
           backgroundColor: colors[0],
           hoverBackgroundColor: hoverColors[0],
@@ -572,18 +584,18 @@ export default function InstallmentDashboard() {
         {
           label: "Pending",
           data: [
-            data
-              .filter((item) => item.feeTemplate.includes("FullFees") && item.status === "Pending")
-              .reduce((acc, item) => acc + toNumber(item.amount), 0),
-            data
-              .filter((item) => item.feeTemplate.includes("Installments") && item.status === "Pending")
-              .reduce((acc, item) => acc + toNumber(item.amount), 0),
-            data
-              .filter((item) => item.feeTemplate.includes("Finance") && item.status === "Pending")
-              .reduce((acc, item) => acc + toNumber(item.amount), 0),
-            data
-              .filter((item) => item.feeTemplate === "Free" && item.status === "Pending")
-              .reduce((acc, item) => acc + toNumber(item.amount), 0),
+            data.reduce((acc, item) => acc + item.transactions
+              .filter((txn) => txn.type.includes("FullFees") && txn.status === "Pending")
+              .reduce((sum, txn) => sum + toNumber(txn.amount), 0), 0),
+            data.reduce((acc, item) => acc + item.transactions
+              .filter((txn) => txn.type.includes("Installments") && txn.status === "Pending")
+              .reduce((sum, txn) => sum + toNumber(txn.amount), 0), 0),
+            data.reduce((acc, item) => acc + item.transactions
+              .filter((txn) => txn.type.includes("Finance") && txn.status === "Pending")
+              .reduce((sum, txn) => sum + toNumber(txn.amount), 0), 0),
+            data.reduce((acc, item) => acc + item.transactions
+              .filter((txn) => txn.type === "Free" && txn.status === "Pending")
+              .reduce((sum, txn) => sum + toNumber(txn.amount), 0), 0),
           ],
           backgroundColor: colors[1],
           hoverBackgroundColor: hoverColors[1],
@@ -609,18 +621,16 @@ export default function InstallmentDashboard() {
     return { statusData, feeTypeData, barData, stackedBarData, lineData };
   };
 
-  if (loading) {
+  if (!canDisplayReports) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg font-semibold text-gray-600 animate-pulse">
-          Loading dashboard...
-        </div>
+      <div className="p-6 text-red-600 text-center">
+        Access Denied: You do not have permission to view fee reports.
       </div>
     );
   }
 
   const filteredFeeData = filterFeeData();
-  const { totalDue, totalPaid, pendingCount, paidCount, avgDelay, topPendingStudents, paymentMethods } =
+  const { totalDue, totalPaid, pendingCount, paidCount, topPendingStudents, paymentMethods } =
     calculateAnalytics(filteredFeeData);
   const { statusData, feeTypeData, barData, stackedBarData, lineData } = prepareChartData(filteredFeeData);
 

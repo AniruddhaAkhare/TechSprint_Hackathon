@@ -10,6 +10,7 @@ const Placement = ({ studentId }) => {
   useEffect(() => {
     const fetchPlacements = async () => {
       try {
+        // Fetch placements for the student
         const placementsQuery = query(
           collection(db, "Placements"),
           where("studentId", "==", studentId)
@@ -20,6 +21,7 @@ const Placement = ({ studentId }) => {
           snapshot.docs.map(async (placementDoc) => {
             const placement = { id: placementDoc.id, ...placementDoc.data() };
 
+            // Fetch job details
             let jobData = {};
             try {
               const jobDoc = await getDoc(doc(db, "JobOpenings", placement.jobId));
@@ -29,7 +31,25 @@ const Placement = ({ studentId }) => {
                 console.warn(`Job with ID ${placement.jobId} not found`);
               }
             } catch (err) {
-              //console.error(`Error fetching job ${placement.jobId}:`, err);
+              console.error(`Error fetching job ${placement.jobId}:`, err);
+            }
+
+            // Fetch application details for createdAt
+            let applicationData = {};
+            try {
+              const applicationQuery = query(
+                collection(db, "Applications"),
+                where("studentId", "==", studentId),
+                where("jobId", "==", placement.jobId)
+              );
+              const applicationSnapshot = await getDocs(applicationQuery);
+              if (!applicationSnapshot.empty) {
+                applicationData = applicationSnapshot.docs[0].data();
+              } else {
+                console.warn(`Application for student ${studentId} and job ${placement.jobId} not found`);
+              }
+            } catch (err) {
+              console.error(`Error fetching application for job ${placement.jobId}:`, err);
             }
 
             return {
@@ -39,15 +59,16 @@ const Placement = ({ studentId }) => {
               skills: Array.isArray(jobData.skills) ? jobData.skills.join(", ") : "N/A",
               city: jobData.city || "N/A",
               jobType: jobData.jobType || "N/A",
-              deadline: jobData.deadline.toDate || "N/A",
+              deadline: jobData.deadline?.toDate() || "N/A",
               salary: jobData.salary || "N/A",
+              createdAt: applicationData.createdAt || placement.createdAt || null,
             };
           })
         );
 
         setPlacements(placementData);
       } catch (err) {
-        //console.error("Error fetching placements:", err);
+        console.error("Error fetching placements:", err);
         toast.error("Failed to fetch placements.");
       }
     };
@@ -84,7 +105,11 @@ const Placement = ({ studentId }) => {
                   <td className="px-4 py-3 text-gray-800">{placement.skills}</td>
                   <td className="px-4 py-3 text-gray-800">{placement.salary}</td>
                   <td className="px-4 py-3 text-gray-800">{placement.jobType}</td>
-                  <td className="px-4 py-3 text-gray-800">{placement.createdAt.toDate().toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-gray-800">
+                    {placement.deadline instanceof Date
+                      ? placement.deadline.toLocaleDateString()
+                      : "N/A"}
+                  </td>
                   <td className="px-4 py-3 text-gray-800">{placement.city}</td>
                   <td className="px-4 py-3 text-gray-800">{placement.status}</td>
                   <td className="px-4 py-3 text-gray-800">

@@ -5,7 +5,7 @@ import { useAuth } from './context/AuthContext.jsx';
 // Home Pages
 import Sidebar from './pages/home/Sidebar.jsx';
 import LoginForm from './pages/home/LoginForm.jsx';
-import RegisterForm from './pages/home/RegisterForm.jsx';
+// import RegisterForm from './pages/home/RegisterForm.jsx';
 import Welcome from './pages/home/Welcome.jsx';
 import ForgetPasswordForm from './pages/home/ForgetPasswordForm.jsx';
 import InstituteSetup from './pages/components/InstituteSetup/InstituteSetup.jsx';
@@ -142,7 +142,6 @@ export default function App() {
                 {/* Public Routes */}
                 <Route path="/" element={user ? <Navigate to="/my-profile" /> : <LandingPage />} />
                 <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/my-profile" />} />
-                <Route path="/register" element={!user ? <RegisterForm /> : <Navigate to="/my-profile" />} />
                 <Route path="/registration-welcome" element={<AfterEmployeeRegistration/>} />
                 <Route path="/employee-registration" element={!user ? <EmployeeRegistrationForm /> : <Navigate to="/my-profile" />} />
 

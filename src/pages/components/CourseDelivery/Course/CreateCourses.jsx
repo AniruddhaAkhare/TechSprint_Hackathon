@@ -381,7 +381,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
               return (
                 <tr key={ownerId}>
                   <td className="px-4 py-2">{index + 1}</td>
-                  <td className="px-4 py-2">{owner?.f_name}</td>
+                  <td className="px-4 py-2">{owner?.displayName}</td>
                   <td className="px-4 py-2">
                     <button onClick={() => handleRemoveOwner(ownerId)} className="text-red-500 hover:text-red-700">✕</button>
                   </td>

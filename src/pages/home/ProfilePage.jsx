@@ -1,8 +1,10 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
-import { getDoc, doc } from 'firebase/firestore';
+import { getDoc, doc, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../../config/firebase';
+import { s3Client, debugS3Config } from '../../config/aws-config';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import CheckInOut from './CheckInOut';
 import EmployeeDashboard from './EmployeeDashboard';
 
@@ -10,8 +12,12 @@ const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const auth = getAuth();
   const user = auth.currentUser;
+  const placeholderImage = 'https://placehold.co/150x150'; 
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -40,18 +46,90 @@ const ProfilePage = () => {
     fetchUserData();
   }, [user]);
 
+  const handlePhotoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      setUploadError('Please select a file to upload.');
+      return;
+    }
+
+    // Validate file type (only images)
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+      setUploadError('Please select a valid image file (JPEG, PNG, GIF, WebP).');
+      return;
+    }
+
+    // Validate file size (e.g., max 5MB)
+    const maxSizeInMB = 5;
+    if (file.size > maxSizeInMB * 1024 * 1024) {
+      setUploadError(`File size exceeds ${maxSizeInMB}MB limit.`);
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+    setUploadProgress(0);
+
+    try {
+      debugS3Config();
+      const bucketName = import.meta.env.VITE_S3_BUCKET_NAME;
+      const region = import.meta.env.VITE_AWS_REGION;
+      if (!bucketName || !region) {
+        throw new Error('Missing AWS config: Check VITE_S3_BUCKET_NAME and VITE_AWS_REGION');
+      }
+
+      const photoKey = `profile-photos/${user.uid}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+      const fileBuffer = await file.arrayBuffer();
+      const params = {
+        Bucket: bucketName,
+        Key: photoKey,
+        Body: new Uint8Array(fileBuffer),
+        ContentType: file.type,
+      };
+
+      // Simulate upload progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setUploadProgress(Math.min(progress, 90));
+        if (progress >= 90) clearInterval(interval);
+      }, 200);
+
+      await s3Client.send(new PutObjectCommand(params));
+      clearInterval(interval);
+      setUploadProgress(100);
+
+      const photoURL = `https://${bucketName}.s3.${region}.amazonaws.com/${photoKey}`;
+      console.log('Generated photoURL:', photoURL); // Debug log
+
+      // Update Firestore with new photoURL
+      const userDocRef = doc(db, 'Users', user.uid);
+      await updateDoc(userDocRef, { photoURL });
+
+      // Update local state with cache-busting query
+      setUserData((prev) => ({ ...prev, photoURL: `${photoURL}?t=${Date.now()}` }));
+      alert('Photo uploaded successfully!');
+    } catch (err) {
+      setUploadError(`Failed to upload photo: ${err.message}`);
+      setUploadProgress(0);
+      console.error('Upload error:', err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+        <p className="text-gray-600 text-lg">Loading...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-red-600">{error}</p>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+        <p className="text-red-600 text-lg">{error}</p>
       </div>
     );
   }
@@ -119,6 +197,36 @@ const ProfilePage = () => {
     </div>
   </div>
 </div>
+
+<div className="mt-4">
+              <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                Upload Profile Photo
+              </label>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handlePhotoUpload}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  disabled={uploading}
+                />
+                {uploading && (
+                  <div className="mt-2 w-full h-5 bg-gray-200 rounded-md relative">
+                    <div
+                      className="absolute h-full bg-indigo-600 rounded-md transition-all"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                    <span className="absolute inset-0 text-xs text-white text-center leading-5">
+                      {Math.round(uploadProgress)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+              {uploadError && (
+                <p className="text-red-600 text-sm mt-2">{uploadError}</p>
+              )}
+            </div>
+            
 
   <div className="mt-4">
     <CheckInOut />

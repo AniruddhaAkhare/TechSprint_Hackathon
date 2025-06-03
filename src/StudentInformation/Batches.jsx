@@ -22,8 +22,6 @@ const Batches = () => {
     useEffect(() => {
         const fetchData = async () => {
             if (!user) {
-                // setError('No user is signed in');
-                // setLoading(false);
                 return;
             }
 
@@ -34,33 +32,24 @@ const Batches = () => {
 
                 if (userDoc.exists()) {
                     const data = userDoc.data();
-                    setUserData(data);
-
-                    const institute = data.instituteId;
+                    const institute = "RDJ9wMXGrIUk221MzDxP";
                     if (institute) {
                         setInstituteId(institute);
-                        // localStorage.setItem('instituteId', institute);
                     } else {
-                        // setError('Institute ID not found in user document');
+                        toast.error("Institute ID not found in user document", { toastId: "institute-error" });
                     }
                 } else {
-                    // setError('User data not found');
+                    toast.error("User data not found", { toastId: "user-error" });
                 }
             } catch (err) {
-                // setError('Failed to fetch data: ' + err.message);
-            } finally {
-                // setLoading(false);
+                toast.error(`Failed to fetch data: ${err.message}`, { toastId: "data-error" });
             }
         };
 
         fetchData();
     }, [user]);
 
-
-
     useEffect(() => {
-
-
         if (!user) {
             toast.error("Please log in to view batches", { toastId: "auth-error" });
             setLoading(false);
@@ -76,7 +65,6 @@ const Batches = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-
                 if (!instituteId) {
                     throw new Error("No institute ID found for the user");
                 }
@@ -88,7 +76,6 @@ const Batches = () => {
                     fetchCurriculum(),
                 ]);
             } catch (error) {
-                //console.error("Error fetching data:", error);
                 toast.error(`Failed to load data: ${error.message}`, { toastId: "data-error" });
             } finally {
                 setLoading(false);
@@ -99,7 +86,6 @@ const Batches = () => {
 
     const getInstituteId = async () => {
         if (!user || !user.uid) {
-            //console.error("No user or user UID available");
             toast.error("User not authenticated", { toastId: "user-auth-error" });
             return null;
         }
@@ -108,14 +94,11 @@ const Batches = () => {
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists()) {
                 const instituteId = userDoc.data().instituteId;
-
                 return instituteId || null;
             }
-            //console.error("User document does not exist");
             toast.error("User profile not found", { toastId: "user-profile-error" });
             return null;
         } catch (error) {
-            //console.error("Error fetching instituteId:", error);
             toast.error("Failed to fetch institute information", { toastId: "institute-error" });
             return null;
         }
@@ -123,34 +106,15 @@ const Batches = () => {
 
     const fetchBatches = async (instituteId) => {
         try {
-            // Step 1: Query enrollments to get the student's enrolled courses
-            const enrollmentsQuery = query(
-                collection(db, "enrollments"),
-                where("studentId", "==", studentId) // Assuming enrollments has a studentId field
-            );
-            const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
-            const enrolledCourseIds = [];
-            enrollmentsSnapshot.forEach(doc => {
-                const enrollment = doc.data();
-                if (enrollment.courses && Array.isArray(enrollment.courses)) {
-                    enrollment.courses.forEach(course => {
-                        if (course.selectedCourse && course.selectedCourse.id) {
-                            enrolledCourseIds.push(course.selectedCourse.id);
-                        }
-                    });
-                }
-            });
-
-            // Step 2: Fetch batches that include any of the enrolled courses or have the student in the students array
+            // Fetch batches where the studentId is in the students array
             const batchSnapshot = await getDocs(collection(db, "Batch"));
             const batchList = batchSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const studentBatches = batchList.filter(batch =>
-                (batch.students && batch.students.includes(studentId)) ||
-                (batch.courses && batch.courses.some(courseId => enrolledCourseIds.includes(courseId)))
+                batch.students && batch.students.includes(studentId)
             );
             setBatches(studentBatches);
 
-            // Step 3: Fetch assessments for each student batch
+            // Fetch assessments for each student batch
             const assessmentsData = {};
             for (const batch of studentBatches) {
                 const assessmentsQuery = query(
@@ -165,7 +129,6 @@ const Batches = () => {
             }
             setAssessments(assessmentsData);
         } catch (error) {
-            //console.error("Error fetching batches or assessments:", error);
             toast.error(`Failed to fetch batches or assessments: ${error.message}`, { toastId: "batches-error" });
         }
     };
@@ -173,12 +136,11 @@ const Batches = () => {
     const fetchCenters = async (instituteId) => {
         try {
             const snapshot = await getDocs(
-                collection(db, `instituteSetup/${instituteId}/Center`) // Fixed to match CreateBatch.jsx
+                collection(db, `instituteSetup/${instituteId}/Center`)
             );
             const centersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setCenters(centersList);
         } catch (error) {
-            //console.error("Error fetching centers:", error);
             toast.error("Failed to fetch centers", { toastId: "centers-error" });
         }
     };
@@ -189,18 +151,16 @@ const Batches = () => {
             const coursesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setCourses(coursesList);
         } catch (error) {
-            //console.error("Error fetching courses:", error);
             toast.error("Failed to fetch courses", { toastId: "courses-error" });
         }
     };
 
     const fetchInstructors = async () => {
         try {
-            const snapshot = await getDocs(collection(db, "Instructor"));
+            const snapshot = await getDocs(collection(db, "Users"));
             const instructorsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setInstructors(instructorsList);
         } catch (error) {
-            //console.error("Error fetching instructors:", error);
             toast.error("Failed to fetch instructors", { toastId: "instructors-error" });
         }
     };
@@ -211,7 +171,6 @@ const Batches = () => {
             const curriculumList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setCurriculum(curriculumList);
         } catch (error) {
-            //console.error("Error fetching curriculum:", error);
             toast.error("Failed to fetch curriculum", { toastId: "curriculum-error" });
         }
     };
@@ -271,8 +230,6 @@ const Batches = () => {
     return (
         <div className="p-4">
             <ToastContainer position="top-right" autoClose={3000} limit={3} />
-            {/* <h2 className="text-2xl font-semibold text-gray-800 mb-6">My Batches</h2> */}
-
             {batches.length === 0 ? (
                 <div className="bg-white rounded-lg shadow-md p-4 text-center">
                     <p className="text-gray-600">You are not enrolled in any batches. (Student ID: {studentId})</p>

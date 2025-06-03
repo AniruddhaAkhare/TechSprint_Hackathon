@@ -17,7 +17,7 @@ export default function AddStudent() {
   const [billingAddress, setBillingAddress] = useState({ name: "", street: "", area: "", city: "", state: "", zip: "", country: "", gstNo: "" });
   const [copyAddress, setCopyAddress] = useState(false);
   const [status, setStatus] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState(null);
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [guardianDetails, setGuardianDetails] = useState({ name: "", phone: "", email: "", relation: "", occupation: "" });
   const [admissionDate, setAdmissionDate] = useState("");
   const [courseDetails, setCourseDetails] = useState([]);
@@ -224,9 +224,15 @@ export default function AddStudent() {
   ];
 
   // Utility function to capitalize the first letter
-  const capitalizeFirstLetter = (str) => {
-    if (!str || typeof str !== "string") return str;
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  const capitalizeEachWord = (str) => {
+  if (!str || typeof str !== "string") return str;
+  return str
+    .split(" ") // Split the string into an array of words
+    .map((word) => {
+      if (!word) return word; // Handle empty strings or multiple spaces
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(" "); // Join the words back into a string
   };
 
   useEffect(() => {
@@ -301,19 +307,19 @@ export default function AddStudent() {
 
     try {
       const studentDocRef = await addDoc(collection(db, 'student'), {
-        Name: capitalizeFirstLetter(Name),
+        Name: capitalizeEachWord(Name),
         email,
         phone: fullPhoneNumber,
         residential_address: address,
         billing_address: billingAddress,
         goal: goal || "Not specified",
         status: status,
-        date_of_birth: dateOfBirth ? Timestamp.fromDate(new Date(dateOfBirth)) : null,
+        date_of_birth: dateOfBirth ? dateOfBirth : null,
         guardian_details: {
           ...guardianDetails,
           phone: fullGuardianPhoneNumber
         },
-        admission_date: Timestamp.fromDate(new Date(admissionDate)),
+        admission_date: admissionDate ? admissionDate : null,
         course_details: courseDetails,
         course_id: courseId,
         education_details: educationDetails,
@@ -329,7 +335,7 @@ export default function AddStudent() {
       try {
         await sendWelcomeEmail({
           toEmail: email,
-          fullName: `${capitalizeFirstLetter(Name)}`
+          fullName: `${capitalizeEachWord(Name)}`
         });
         alert("Student added successfully! Welcome email sent.");
       } catch (emailError) {

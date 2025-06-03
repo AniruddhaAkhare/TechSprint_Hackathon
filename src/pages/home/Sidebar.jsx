@@ -44,6 +44,7 @@ const Sidebar = () => {
 
   // Permission checks
   const canViewCourses = rolePermissions?.Course?.display || false;
+  const canViewEnrollment = rolePermissions?.enrollments?.display || false;
   const canViewInstitute = rolePermissions?.instituteSetup?.display || false;
   const canViewCurriculum = rolePermissions?.curriculums?.display || false;
   const canViewBatches = rolePermissions?.Batch?.display || false;
@@ -457,6 +458,38 @@ const Sidebar = () => {
                 <span>&nbsp;&nbsp;Organisational Dashboard</span>
               </li>
             </Link>
+            {canViewCourses && (
+              <Link to="/course-analytics-dashboard" className="nav-link">
+                <li className="nav-item">
+                  <i className="fa-solid fa-building-columns"></i>
+                  <span>&nbsp;&nbsp;Course Dashboard</span>
+                </li>
+              </Link>
+            )}
+            {canViewEnquiry && (
+              <Link to="/enquiry-analytics" className="nav-link">
+                <li className="nav-item">
+                  <i className="fa-solid fa-building-columns"></i>
+                  <span>&nbsp;&nbsp;Enquiry Dashboard</span>
+                </li>
+              </Link>
+            )}
+            {canViewAttendance && (
+              <Link to="/attendance-dashboard" className="nav-link">
+                <li className="nav-item">
+                  <i className="fa-solid fa-building-columns"></i>
+                  <span>&nbsp;&nbsp;Attendance Dashboard</span>
+                </li>
+              </Link>
+            )}
+            {canViewEnrollment && (
+              <Link to="/reports-dashboard" className="nav-link">
+                <li className="nav-item">
+                  <i className="fa-solid fa-building-columns"></i>
+                  <span>&nbsp;&nbsp;Fees Dashboard</span>
+                </li>
+              </Link>
+            )}
           </>
         )}
 
