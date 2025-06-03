@@ -437,6 +437,7 @@ const EditCurriculum = () => {
   }
 
   return (
+<<<<<<< HEAD
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="bg-gray-100 min-h-screen p-4 fixed inset-0 left-[300px] overflow-auto">
         <div className="flex items-center mb-4">
@@ -450,6 +451,50 @@ const EditCurriculum = () => {
           <h2 className="text-2xl font-bold text-gray-900">Create and Edit Your Curriculum</h2>
         </div>
         <p className="text-sm text-gray-600 mb-6">{curriculum.name || "Unnamed Curriculum"}</p>
+=======
+    <div className="bg-gray-100 min-h-screen p-4 fixed inset-0 left-[300px] overflow-auto">
+      <div className="flex items-center mb-4">
+        <button
+          onClick={handleBack}
+          className="text-gray-600 hover:text-gray-800 text-2xl mr-4"
+          aria-label="Back to curriculum list"
+        >
+          ←
+        </button>
+        <h2 className="text-2xl font-bold text-gray-900">Create and Edit Your Curriculum</h2>
+      </div>
+      <p className="text-sm text-gray-600 mb-6">{curriculum.name || "Unnamed Curriculum"}</p>
+
+   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 sm:gap-0">
+  <span className="text-sm text-gray-600 font-medium">
+    Sections: {sections.length}, Materials: {curriculum.materials || 0}
+  </span>
+  <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto">
+    <button
+      onClick={handleCloneSection}
+      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 hover:shadow-sm transition-shadow duration-200"
+      aria-label="Clone Section"
+    >
+      <span role="img" aria-hidden="true">🗂</span> Clone Section
+    </button>
+    <button
+      onClick={handleRearrangeSections}
+      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 hover:shadow-sm transition-shadow duration-200"
+      aria-label="Rearrange Sections"
+    >
+      <span role="img" aria-hidden="true">⇅</span> Rearrange Sections
+    </button>
+    <button
+      onClick={handleAddSection}
+      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 shadow-md transition duration-200"
+      aria-label="Add Section"
+    >
+      + Add Section
+    </button>
+  </div>
+</div>
+
+>>>>>>> origin/feature/ignite-update
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
           <span className="text-sm text-gray-700 mb-4 sm:mb-0">

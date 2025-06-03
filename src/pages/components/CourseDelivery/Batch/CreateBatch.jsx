@@ -965,7 +965,7 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user
           <button
             type="button"
             onClick={handleSubmit}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200 text-base font-medium"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
           >
             {batch ? "Update Batch" : "Create Batch"}
           </button>

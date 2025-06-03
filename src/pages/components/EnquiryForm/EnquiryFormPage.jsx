@@ -371,103 +371,106 @@ const EnquiryFormPage = () => {
   }
 
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">{formTitle}</h2>
-      <form onSubmit={handleSubmit}>
-        {formFields.map((field, index) => {
-          const hasDefaultValue = field.defaultValue && field.defaultValue.trim() !== "";
-          return (
-            <div key={index} className="mb-4">
-              <label className="block font-medium">
-                {field.label}
-                {field.required && <span className="text-red-500">*</span>}
-              </label>
-              {hasDefaultValue ? (
-                <p className="border p-2 w-full bg-gray-100 text-gray-600 rounded">
-                  {field.defaultValue}
-                </p>
-              ) : field.type === "select" ? (
-                <select
-                  value={formData[field.name] || ""}
-                  onChange={(e) => handleChange(e, field.name)}
-                  className="border p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required={field.required}
-                >
-                  <option value="">Select {field.label}</option>
-                  {field.options?.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              ) : field.type === "textarea" ? (
-                <textarea
-                  value={formData[field.name] || ""}
-                  onChange={(e) => handleChange(e, field.name)}
-                  placeholder={field.placeholder || field.label}
-                  className="border p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required={field.required}
-                  rows={4}
-                />
-              ) : (
-                <input
-                  type={field.type || "text"}
-                  placeholder={field.placeholder || field.label}
-                  value={formData[field.name] || ""}
-                  onChange={(e) => handleChange(e, field.name)}
-                  className="border p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required={field.required}
-                />
-              )}
+<div className="p-6 max-w-xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-xl border border-gray-100/50 backdrop-blur-sm">
+  <h2 className="text-3xl font-bold text-gray-800 font-sans tracking-tight mb-6">{formTitle}</h2>
+  <form onSubmit={handleSubmit}>
+    {formFields.map((field, index) => {
+      const hasDefaultValue = field.defaultValue && field.defaultValue.trim() !== "";
+      return (
+        <div key={index} className="mb-6">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            {field.label}
+            {field.required && <span className="text-red-500">*</span>}
+          </label>
+          {hasDefaultValue ? (
+            <p className="border border-gray-200 p-3 w-full bg-gray-50 text-gray-600 rounded-lg shadow-inner">
+              {field.defaultValue}
+            </p>
+          ) : field.type === "select" ? (
+            <div className="relative">
+              <select
+                value={formData[field.name] || ""}
+                onChange={(e) => handleChange(e, field.name)}
+                className="appearance-none border border-gray-200 p-3 w-full rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 shadow-inner"
+                required={field.required}
+              >
+                <option value="">Select {field.label}</option>
+                {field.options?.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
-          );
-        })}
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Submit
-        </button>
+          ) : field.type === "textarea" ? (
+            <textarea
+              value={formData[field.name] || ""}
+              onChange={(e) => handleChange(e, field.name)}
+              placeholder={field.placeholder || field.label}
+              className="border border-gray-200 p-3 w-full rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 shadow-inner"
+              required={field.required}
+              rows={4}
+            />
+          ) : (
+            <input
+              type={field.type || "text"}
+              placeholder={field.placeholder || field.label}
+              value={formData[field.name] || ""}
+              onChange={(e) => handleChange(e, field.name)}
+              className="border border-gray-200 p-3 w-full rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 shadow-inner"
+              required={field.required}
+            />
+          )}
+        </div>
+      );
+    })}
+    {error && <p className="text-red-500 text-sm mb-6 font-medium">{error}</p>}
+    <button
+      type="submit"
+      className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-6 py-3 rounded-lg hover:from-indigo-700 hover:to-indigo-800 transform hover:scale-105 transition-all duration-200 font-medium shadow-md w-full"
+    >
+      Submit
+    </button>
 
-
-        {showPrompt && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full">
-              <h3 className="text-lg font-semibold mb-4">Duplicate Enquiry Detected</h3>
-              <p className="text-gray-600 mb-4">
-                An enquiry with the {formData.email ? "email" : "phone"} "{formData.email || formData.phone}" already exists:
-              </p>
-              <div className="mb-4 p-4 bg-gray-100 rounded-md">
-                <p><strong>Name:</strong> {existingEnquiry?.name || "N/A"}</p>
-                <p><strong>Email:</strong> {existingEnquiry?.email || "N/A"}</p>
-                <p><strong>Phone:</strong> {existingEnquiry?.phone || "N/A"}</p>
-                <p><strong>Stage:</strong> {existingEnquiry?.stage || "N/A"}</p>
-                <p><strong>Created At:</strong> {existingEnquiry?.createdAt || "N/A"}</p>
-              </div>
-              <p className="text-gray-600 mb-4">
-                Do you want to keep the previous enquiry or update it with this new one?
-              </p>
-              <div className="flex justify-end space-x-2">
-                <Button
-                  color="gray"
-                  onClick={() => handlePromptResponse(true)}
-                >
-                  Keep Previous
-                </Button>
-                <Button
-                  color="blue"
-                  onClick={() => handlePromptResponse(false)}
-                >
-                  Update
-                </Button>
-              </div>
-            </div>
+    {showPrompt && (
+      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center transition-opacity duration-300">
+        <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full border border-gray-100/50 backdrop-blur-sm">
+          <h3 className="text-xl font-semibold text-gray-800 mb-5 tracking-tight">Duplicate Enquiry Detected</h3>
+          <p className="text-sm text-gray-600 mb-5 leading-relaxed">
+            An enquiry with the {formData.email ? "email" : "phone"} "{formData.email || formData.phone}" already exists:
+          </p>
+          <div className="mb-5 p-4 bg-gray-50 rounded-lg shadow-inner border border-gray-200">
+            <p className="text-sm"><strong className="text-gray-700">Name:</strong> {existingEnquiry?.name || "N/A"}</p>
+            <p className="text-sm"><strong className="text-gray-700">Email:</strong> {existingEnquiry?.email || "N/A"}</p>
+            <p className="text-sm"><strong className="text-gray-700">Phone:</strong> {existingEnquiry?.phone || "N/A"}</p>
+            <p className="text-sm"><strong className="text-gray-700">Stage:</strong> {existingEnquiry?.stage || "N/A"}</p>
+            <p className="text-sm"><strong className="text-gray-700">Created At:</strong> {existingEnquiry?.createdAt || "N/A"}</p>
           </div>
-        )}
-
-      </form>
-    </div>
+          <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+            Do you want to keep the previous enquiry or update it with this new one?
+          </p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => handlePromptResponse(true)}
+              className="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-200 font-medium shadow-sm"
+            >
+              Keep Previous
+            </button>
+            <button
+              onClick={() => handlePromptResponse(false)}
+              className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-6 py-2.5 rounded-lg hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 font-medium shadow-sm"
+            >
+              Update
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </form>
+</div>
   );
 };
 

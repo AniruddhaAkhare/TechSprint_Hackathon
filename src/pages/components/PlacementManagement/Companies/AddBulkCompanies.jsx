@@ -337,68 +337,78 @@ const AddBulkCompanies = ({ isOpen, toggleSidebar, fetchCompanies }) => {
   return (
     <>
       <ToastContainer position="top-right" autoClose={3500} />
-      <div
-        className={`fixed inset-y-0 right-0 z-50 bg-white w-full sm:w-3/4 md:w-2/5 shadow-lg transform transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        } p-4 sm:p-6 overflow-y-auto`}
+ <div
+  className={`fixed inset-y-0 right-0 z-50 bg-white w-full sm:w-3/4 md:w-2/5 shadow-2xl transform transition-transform duration-300 ${
+    isOpen ? "translate-x-0" : "translate-x-full"
+  } p-6 sm:p-8 overflow-y-auto rounded-l-2xl`}
+>
+  {/* Header */}
+  <div className="flex justify-between items-center mb-6">
+    <h1 className="text-2xl font-semibold text-gray-800">Add Bulk Companies</h1>
+    <button
+      type="button"
+      onClick={handleClose}
+      className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition duration-200"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5 text-gray-700"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
       >
-        <div className="flex justify-between items-center mb-4 sm:mb-6">
-          <h1 className="text-lg sm:text-xl font-bold text-gray-800">Add Bulk Companies</h1>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="bg-blue-500 text-white p-4 rounded-md hover:bg-blue-600 transition duration-200"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
 
-        <div className="space-y-4 sm:space-y-6">
-          <div>
-            <h2 className="text-lg font-medium text-gray-700">Step 1: Download Template</h2>
-            <p className="text-gray-600 text-sm mb-2">
-              Download the XLSX template and fill in the company details. All fields are optional except for proper formatting when provided.
-            </p>
-            <button
-              type="button"
-              onClick={downloadTemplate}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200"
-            >
-              Download Template
-            </button>
-          </div>
+  {/* Content */}
+  <div className="space-y-8">
+    {/* Step 1: Download */}
+    <div className="bg-gray-50 p-5 rounded-xl shadow-sm">
+      <h2 className="text-lg font-medium text-gray-700 mb-2">Step 1: Download Template</h2>
+      <p className="text-sm text-gray-600 mb-4">
+        Download the XLSX template and fill in the company details. All fields are optional except for proper formatting when provided.
+      </p>
+      <button
+        type="button"
+        onClick={downloadTemplate}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition"
+      >
+        Download Template
+      </button>
+    </div>
 
-          <div>
-            <h2 className="text-lg font-medium text-gray-700">Step 2: Upload Filled Template</h2>
-            <input
-              type="file"
-              accept=".xlsx"
-              onChange={handleFileChange}
-              disabled={!canCreate}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
-          </div>
+    {/* Step 2: Upload */}
+    <div className="bg-gray-50 p-5 rounded-xl shadow-sm">
+      <h2 className="text-lg font-medium text-gray-700 mb-2">Step 2: Upload Filled Template</h2>
+      <input
+        type="file"
+        accept=".xlsx"
+        onChange={handleFileChange}
+        disabled={!canCreate}
+        className="block w-full text-sm border border-gray-300 rounded-md p-2 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+      />
+    </div>
 
-          <div className="flex justify-end mt-4">
-            <button
-              type="button"
-              onClick={handleUpload}
-              disabled={!file || uploading || !canCreate}
-              className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {uploading ? "Uploading..." : "Upload Companies"}
-            </button>
-          </div>
-        </div>
-      </div>
+    {/* Upload Button */}
+    <div className="flex justify-end">
+      <button
+        type="button"
+        onClick={handleUpload}
+        disabled={!file || uploading || !canCreate}
+        className={`px-6 py-2 text-white font-medium rounded-lg transition shadow-md ${
+          uploading || !file || !canCreate
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700"
+        }`}
+      >
+        {uploading ? "Uploading..." : "Upload Companies"}
+      </button>
+    </div>
+  </div>
+</div>
+
     </>
   );
 };

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { getDoc, doc, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
@@ -5,6 +6,7 @@ import { db } from '../../config/firebase';
 import { s3Client, debugS3Config } from '../../config/aws-config';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import CheckInOut from './CheckInOut';
+import EmployeeDashboard from './EmployeeDashboard';
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
@@ -133,87 +135,81 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="bg-gray-100 flex flex-col items-center sm:px-6 lg:px-8 p-4 fixed inset-0 left-[300px] min-h-screen overflow-scroll">
-      <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6">
-        {/* Profile Card */}
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full lg:w-1/3">
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <img
-                src={userData?.photoURL || placeholderImage}
-                alt="Profile"
-                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-gray-200"
-                onError={(e) => {
-                  console.error('Image load error:', e.target.src); // Debug log
-                  e.target.src = placeholderImage;
-                }}
-              />
-              <span
-                className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-                  userData?.active ? 'bg-green-500' : 'bg-red-500'
-                }`}
-              />
-            </div>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-center text-gray-800">
-            {userData?.displayName || 'N/A'}
-          </h1>
-          <p className="text-center text-gray-600 mt-2 text-sm sm:text-base">
-            {userData?.email || 'N/A'}
-          </p>
-          <div className="mt-6 space-y-2">
-            <p className="text-gray-700 text-sm sm:text-base">
-              <span className="font-semibold">Branch:</span> {userData?.branchName || 'N/A'}
-            </p>
-            <p className="text-gray-700 text-sm sm:text-base">
-              <span className="font-semibold">Status:</span> {userData?.active ? 'Active' : 'Inactive'}
-            </p>
-            <p className="text-gray-700 text-sm sm:text-base">
-              <span className="font-semibold">Checked In:</span> {userData?.checkedIn ? 'Yes' : 'No'}
-            </p>
-            <p className="text-gray-700 text-sm sm:text-base">
-              <span className="font-semibold">Last Login:</span>{' '}
-              {userData?.lastLogin ? new Date(userData.lastLogin).toLocaleString() : 'N/A'}
-            </p>
-            <div className="mt-4">
-              <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                Upload Profile Photo
-              </label>
-              <div className="relative">
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  onChange={handlePhotoUpload}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  disabled={uploading}
-                />
-                {uploading && (
-                  <div className="mt-2 w-full h-5 bg-gray-200 rounded-md relative">
-                    <div
-                      className="absolute h-full bg-indigo-600 rounded-md transition-all"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                    <span className="absolute inset-0 text-xs text-white text-center leading-5">
-                      {Math.round(uploadProgress)}%
-                    </span>
-                  </div>
-                )}
-              </div>
-              {uploadError && (
-                <p className="text-red-600 text-sm mt-2">{uploadError}</p>
-              )}
-            </div>
-            <CheckInOut />
-          </div>
-        </div>
-        {/* Additional Content
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full lg:w-2/3">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Additional Content</h2>
-          <p className="text-gray-600 text-sm sm:text-base">
-            Add your new content here (e.g., forms, charts, or other components).
-          </p>
-          {/* Add your components here
-        </div> */}
+    <div className="min-h-screen bg-gray-100 flex p-4">
+      <div className="flex flex-col md:flex-row w-screen max-w-6xl mx-auto gap-4">
+        {/* Profile Card (Left Side) */}
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full md:w-1/3 ml-36">
+  <div className="flex justify-center mb-4">
+    <div className="relative">
+      <img
+        src={userData?.photoURL || 'https://via.placeholder.com/150'}
+        alt="Profile"
+        className="w-32 h-32 object-cover border-4 border-gray-200" // Removed 'rounded-full' for square
+      />
+      <span
+        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+          userData?.active ? 'bg-green-500' : 'bg-red-500'
+        }`}
+      />
+    </div>
+  </div>
+
+  {/* Name centered below photo */}
+  <h1 className="text-2xl font-bold text-center text-gray-800 mb-2">
+    {userData?.displayName || 'N/A'}
+  </h1>
+
+  {/* Email */}
+  <p className="text-center text-gray-600 mb-4">{userData?.email || 'N/A'}</p>
+
+  {/* Info section */}
+  <div className="mb-6 bg-white rounded-xl shadow-sm p-4 max-w-md">
+  {/* Header */}
+
+  {/* Two-column grid layout */}
+  <div className="grid grid-cols-2 gap-4">
+    {/* Labels Column */}
+    <div className="space-y-3 text-gray-600 font-medium">
+      <p>Branch:</p>
+      <p>Status:</p>
+      <p>Checked In:</p>
+      <p>Last Login:</p>
+    </div>
+
+    {/* Values Column */}
+    <div className="space-y-3 text-gray-800 font-medium">
+      <p>{userData?.branchName || 'N/A'}</p>
+      <p>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          userData?.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {userData?.active ? 'Active' : 'Inactive'}
+        </span>
+      </p>
+      <p>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          userData?.checkedIn ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+        }`}>
+          {userData?.checkedIn ? 'Yes' : 'No'}
+        </span>
+      </p>
+      <p>{userData?.lastLogin ? new Date(userData.lastLogin).toLocaleString() : 'N/A'}</p>
+    </div>
+  </div>
+</div>
+
+  <div className="mt-4">
+    <CheckInOut />
+  </div>
+</div>
+
+     
+<div className="bg-white p-8 rounded-lg shadow-lg w-full md:w-2/3">
+  
+  {/* Render EmployeeDashboard here */}
+  <EmployeeDashboard />
+</div>
+
       </div>
     </div>
   );

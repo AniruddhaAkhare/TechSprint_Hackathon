@@ -12,9 +12,6 @@ export default function EmployeeProfile() {
         Name: "",
         email: "",
         phone: "",
-        // residential_address: [],
-        // experience: [],
-        // date_of_birth: "",
         joining_date: "",
     });
 

@@ -189,217 +189,222 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
         <h1 className="text-2xl font-bold text-gray-800">
           {course ? "Edit Course" : "Create Course"}
         </h1>
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-200"
-        >
-          Back
-        </button>
+      <button
+  type="button"
+  onClick={toggleSidebar}
+  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
+>
+ 
+  Back
+</button>
+
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="courseName" className="block text-base font-medium text-gray-700">
-            Course Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={courseName}
-            placeholder="Course Name"
-            onChange={(e) => setCourseName(e.target.value)}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
-          />
-        </div>
+   <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-xl shadow-lg">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {/* Course Name */}
+    <div>
+      <label htmlFor="courseName" className="block text-sm font-medium text-gray-700 mb-1">
+        Course Name <span className="text-blue-500">*</span>
+      </label>
+      <input
+        type="text"
+        id="courseName"
+        value={courseName}
+        placeholder="e.g., Full Stack Web Development"
+        onChange={(e) => setCourseName(e.target.value)}
+        required
+        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+      />
+    </div>
 
-        <div>
-          <label htmlFor="courseDescription" className="block text-base font-medium text-gray-700">
-            Course Description <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={courseDescription}
-            placeholder="Course Description"
-            onChange={(e) => setCourseDescription(e.target.value)}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
-          />
-        </div>
+    {/* Course Description */}
+    <div>
+      <label htmlFor="courseDescription" className="block text-sm font-medium text-gray-700 mb-1">
+        Course Description <span className="text-red-500">*</span>
+      </label>
+      <input
+        type="text"
+        id="courseDescription"
+        value={courseDescription}
+        placeholder="e.g., Learn MERN stack from scratch"
+        onChange={(e) => setCourseDescription(e.target.value)}
+        required
+        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+      />
+    </div>
 
-        <div>
-          <label htmlFor="courseFee" className="block text-base font-medium text-gray-700">
-            Fee <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="number"
-            value={courseFee}
-            placeholder="Enter Course Fee"
-            onChange={(e) => setCourseFee(e.target.value)}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
-          />
-        </div>
+    {/* Course Fee */}
+    <div>
+      <label htmlFor="courseFee" className="block text-sm font-medium text-gray-700 mb-1">
+        Fee <span className="text-red-500">*</span>
+      </label>
+      <input
+        type="number"
+        id="courseFee"
+        value={courseFee}
+        placeholder="e.g., 10000"
+        onChange={(e) => setCourseFee(e.target.value)}
+        required
+        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+      />
+    </div>
 
-        <div>
-          <label htmlFor="courseDuration" className="block text-base font-medium text-gray-700">
-            Duration <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={courseDuration}
-            placeholder="Enter Course Duration"
-            onChange={(e) => setCourseDuration(e.target.value)}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
-          />
-        </div>
+    {/* Course Duration */}
+    <div>
+      <label htmlFor="courseDuration" className="block text-sm font-medium text-gray-700 mb-1">
+        Duration <span className="text-red-500">*</span>
+      </label>
+      <input
+        type="text"
+        id="courseDuration"
+        value={courseDuration}
+        placeholder="e.g., 6 Months"
+        onChange={(e) => setCourseDuration(e.target.value)}
+        required
+        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+      />
+    </div>
 
-        <div>
-          <label htmlFor="courseMode" className="block text-base font-medium text-gray-700">
-            Mode <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={courseMode}
-            onChange={(e) => setCourseMode(e.target.value)}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
-          >
-            <option value="">Select Mode</option>
-            <option value="Online">Online</option>
-            <option value="Offline">Offline</option>
-            <option value="Hybrid">Hybrid</option>
-          </select>
-        </div>
+    {/* Course Mode */}
+    <div>
+      <label htmlFor="courseMode" className="block text-sm font-medium text-gray-700 mb-1">
+        Mode <span className="text-red-500">*</span>
+      </label>
+      <select
+        id="courseMode"
+        value={courseMode}
+        onChange={(e) => setCourseMode(e.target.value)}
+        required
+        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+      >
+        <option value="">Select Mode</option>
+        <option value="Online">Online</option>
+        <option value="Offline">Offline</option>
+        <option value="Hybrid">Hybrid</option>
+      </select>
+    </div>
 
-        <div>
-          <label htmlFor="courseStatus" className="block text-base font-medium text-gray-700">
-            Status <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={courseStatus}
-            onChange={(e) => setCourseStatus(e.target.value)}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
-          >
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-        </div>
+    {/* Course Status */}
+    <div>
+      <label htmlFor="courseStatus" className="block text-sm font-medium text-gray-700 mb-1">
+        Status <span className="text-red-500">*</span>
+      </label>
+      <select
+        id="courseStatus"
+        value={courseStatus}
+        onChange={(e) => setCourseStatus(e.target.value)}
+        required
+        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+      >
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+    </div>
+  </div>
 
-        <h3 className="text-lg font-semibold text-gray-800">Total Students: {totalStudentCount}</h3>
+  {/* Total Students */}
+  <div>
+    <h3 className="text-base font-semibold text-gray-700">Total Students: {totalStudentCount}</h3>
+  </div>
 
-        <div>
-          <label htmlFor="centers" className="block text-base font-medium text-gray-700">
-            Centers
-          </label>
-          <select
-            onChange={(e) => handleAddCenter(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
-          >
-            <option value="">Select a Center</option>
-            {availableCenters.map((center) => (
-              <option key={center.id} value={center.id}>
-                {center.name}
-              </option>
-            ))}
-          </select>
+  {/* Centers Section */}
+  <div>
+    <label htmlFor="centers" className="block text-sm font-medium text-gray-700 mb-1">Centers</label>
+    <select
+      id="centers"
+      onChange={(e) => handleAddCenter(e.target.value)}
+      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+    >
+      <option value="">Select a Center</option>
+      {availableCenters.map((center) => (
+        <option key={center.id} value={center.id}>{center.name}</option>
+      ))}
+    </select>
 
-          {centerIds.length > 0 && (
-            <div className="mt-4 overflow-x-auto max-w-[calc(100vw-350px)]">
-              <table className="divide-y divide-gray-200 overflow-x-auto">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr No</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Center Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {centerIds.map((centerId, index) => {
-                    const center = centers.find((c) => c.id === centerId);
-                    return (
-                      <tr key={centerId}>
-                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">{index + 1}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900">{center?.name || `Center ${centerId}`}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveCenter(centerId)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            ✕
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+    {centerIds.length > 0 && (
+      <div className="mt-4 overflow-x-auto">
+        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Sr No</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Center Name</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {centerIds.map((centerId, index) => {
+              const center = centers.find((c) => c.id === centerId);
+              return (
+                <tr key={centerId}>
+                  <td className="px-4 py-2">{index + 1}</td>
+                  <td className="px-4 py-2">{center?.name || `Center ${centerId}`}</td>
+                  <td className="px-4 py-2">
+                    <button onClick={() => handleRemoveCenter(centerId)} className="text-red-500 hover:text-red-700">✕</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
 
-        <div>
-          <label htmlFor="owners" className="block text-base font-medium text-gray-700">
-            Owners
-          </label>
-          <select
-            onChange={(e) => handleAddOwner(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 base:text-base"
-          >
-            <option value="">Select an Owner</option>
-            {availableOwners.map((owner) => (
-              <option key={owner.id} value={owner.id}>
-                {owner.displayName}
-              </option>
-            ))}
-          </select>
+  {/* Owners Section */}
+  <div>
+    <label htmlFor="owners" className="block text-sm font-medium text-gray-700 mb-1">Owners</label>
+    <select
+      id="owners"
+      onChange={(e) => handleAddOwner(e.target.value)}
+      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+    >
+      <option value="">Select an Owner</option>
+      {availableOwners.map((owner) => (
+        <option key={owner.id} value={owner.id}>{owner.displayName}</option>
+      ))}
+    </select>
 
-          {selectedOwners.length > 0 && (
-            <div className="mt-4">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr No</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {selectedOwners.map((ownerId, index) => {
-                    const owner = owners.find((o) => o.id === ownerId);
-                    return (
-                      <tr key={ownerId}>
-                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">{index + 1}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900">{owner?.f_name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveOwner(ownerId)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            ✕
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+    {selectedOwners.length > 0 && (
+      <div className="mt-4 overflow-x-auto">
+        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Sr No</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Owner Name</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {selectedOwners.map((ownerId, index) => {
+              const owner = owners.find((o) => o.id === ownerId);
+              return (
+                <tr key={ownerId}>
+                  <td className="px-4 py-2">{index + 1}</td>
+                  <td className="px-4 py-2">{owner?.f_name}</td>
+                  <td className="px-4 py-2">
+                    <button onClick={() => handleRemoveOwner(ownerId)} className="text-red-500 hover:text-red-700">✕</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
 
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200"
-          >
-            {course ? "Update Course" : "Create Course"}
-          </button>
-        </div>
-      </form>
+  {/* Submit Button */}
+  <div className="flex justify-end pt-4">
+    <button
+      type="submit"
+      className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
+    >
+      {course ? "Update Course" : "Create Course"}
+    </button>
+  </div>
+</form>
+
     </div>
   );
 };

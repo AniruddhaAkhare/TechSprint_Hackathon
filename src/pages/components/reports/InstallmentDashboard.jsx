@@ -635,293 +635,295 @@ export default function InstallmentDashboard() {
   const { statusData, feeTypeData, barData, stackedBarData, lineData } = prepareChartData(filteredFeeData);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px] overflow-y-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Fee Analytics Dashboard</h1>
-        <button
-          onClick={() => navigate("/reports")}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
-        >
-          Back to Reports
-        </button>
-      </div>
+   <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 w-[calc(100vw-360px)] bg-gray-50 min-h-screen">
+  <h1 className="text-4xl font-extrabold text-gray-900 mb-8 tracking-tight">Fee Analytics Dashboard</h1>
 
-      {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6 items-center">
-        <select
-          value={filter}
-          onChange={handleFilterChange}
-          className="w-full sm:w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="all">All</option>
-          <option value="thisMonth">This Month</option>
-          <option value="nextMonth">Next Month</option>
-          <option value="lastMonth">Last Month</option>
-          <option value="thisYear">This Year</option>
-          <option value="lastYear">Last Year</option>
-        </select>
-        <input
-          type="text"
-          placeholder="Search by student name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full sm:w-64 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
-        <div className="flex gap-2">
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full sm:w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="w-full sm:w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-        <button
-          onClick={resetFilters}
-          className="px-4 py-2 bg-gray-500 text-white rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-        >
-          Reset Filters
-        </button>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700">Total Due</h2>
-          <p className="text-2xl font-bold text-blue-600">₹{totalDue.toFixed(2)}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700">Total Paid</h2>
-          <p className="text-2xl font-bold text-green-600">₹{totalPaid.toFixed(2)}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700">Pending Transactions</h2>
-          <p className="text-2xl font-bold text-red-600">{pendingCount}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700">Paid Transactions</h2>
-          <p className="text-2xl font-bold text-green-600">{paidCount}</p>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Payment Status Breakdown</h2>
-          <div className="h-64">
-            <Pie
-              data={statusData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: "top" } },
-              }}
-            />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Fee Type Distribution</h2>
-          <div className="h-64">
-            <Pie
-              data={feeTypeData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: "top" } },
-              }}
-            />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Monthly Due vs Paid</h2>
-          <div className="h-64">
-            <Bar
-              data={barData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: "top" } },
-                scales: {
-                  y: { beginAtZero: true, title: { display: true, text: "Amount (₹)" } },
-                  x: { title: { display: true, text: "Month" } },
-                },
-              }}
-            />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Status by Fee Type</h2>
-          <div className="h-64">
-            <Bar
-              data={stackedBarData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: "top" } },
-                scales: {
-                  x: { stacked: true, title: { display: true, text: "Fee Type" } },
-                  y: { stacked: true, beginAtZero: true, title: { display: true, text: "Amount (₹)" } },
-                },
-              }}
-            />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md col-span-1 lg:col-span-2">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Payment Trend Over Time</h2>
-          <div className="h-64">
-            <Line
-              data={lineData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: "top" } },
-                scales: {
-                  y: { beginAtZero: true, title: { display: true, text: "Amount (₹)" } },
-                  x: { title: { display: true, text: "Month" } },
-                },
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Insights */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Top 5 Students by Pending Amount</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-blue-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending Amount</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {topPendingStudents.map(([name, amount], index) => (
-                  <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">₹{amount.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Payment Method Breakdown</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-blue-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {Object.entries(paymentMethods).map(([method, amount], index) => (
-                  <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{method}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">₹{amount.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {/* Fee Data Table */}
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="w-full divide-y divide-gray-200">
-            <thead className="bg-blue-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Fees</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Paid</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remaining</th>
-                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Validation</th> */}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredFeeData.length > 0 ? (
-                filteredFeeData.map((row, index) => (
-                  <React.Fragment key={index}>
-                    <tr className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <button
-                          onClick={() => toggleRow(index)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          {expandedRows[index] ? "▼" : "▶"}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.studentName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.courseName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹{toNumber(row.totalFees).toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">₹{toNumber(row.totalPaid).toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">₹{toNumber(row.remaining).toFixed(2)}</td>
-                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">{row.validationError || "Valid"}</td> */}
-                    </tr>
-                    {expandedRows[index] && (
-                      <tr>
-                        <td colSpan={7} className="px-6 py-4 bg-gray-50">
-                          <div className="overflow-x-auto">
-                            <table className="w-full divide-y divide-gray-200">
-                              <thead className="bg-gray-100">
-                                <tr>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Type</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Type</th>
-                                </tr>
-                              </thead>
-                              <tbody className="bg-white divide-y divide-gray-200">
-                                {row.transactions.map((txn, txnIndex) => (
-                                  <tr key={txnIndex}>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{txn.type}</td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">₹{toNumber(txn.amount).toFixed(2)}</td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{txn.status}</td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                                      {txn.date ? new Date(txn.date).toLocaleDateString() : "N/A"}
-                                    </td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{txn.paymentMethod}</td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{txn.amountType}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                    No fee data available.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+  {/* Summary Cards */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
+    <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-600">Total Due</h2>
+      <p className="text-2xl font-bold text-blue-700">₹{totalDue.toFixed(2)}</p>
     </div>
+    <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-600">Total Paid</h2>
+      <p className="text-2xl font-bold text-green-700">₹{totalPaid.toFixed(2)}</p>
+    </div>
+    <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-600">Pending</h2>
+      <p className="text-2xl font-bold text-red-700">{pendingCount}</p>
+    </div>
+    <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-600">Paid</h2>
+      <p className="text-2xl font-bold text-green-700">{paidCount}</p>
+    </div>
+    <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-600">Avg. Delay (Days)</h2>
+      <p className="text-2xl font-bold text-purple-700">{avgDelay.toFixed(1)}</p>
+    </div>
+  </div>
+
+  {/* Filters and Search */}
+  <div className="flex flex-col sm:flex-row gap-4 mb-8 items-center bg-white p-6 rounded-xl shadow-lg">
+    <select
+      value={filter}
+      onChange={(e) => setFilter(e.target.value)}
+      className="w-full sm:w-48 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 ease-in-out text-gray-700"
+    >
+      <option value="thisMonth">This Month</option>
+      <option value="lastMonth">Last Month</option>
+      <option value="nextMonth">Next Month</option>
+      <option value="thisYear">This Year</option>
+      <option value="lastYear">Last Year</option>
+      <option value="all">All</option>
+    </select>
+    <input
+      type="text"
+      placeholder="Search by student name..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      className="w-full sm:w-64 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 ease-in-out text-gray-700"
+    />
+    <div className="flex gap-2">
+      <input
+        type="date"
+        value={startDate}
+        onChange={(e) => setStartDate(e.target.value)}
+        placeholder="Start Date"
+        className="w-full sm:w-48 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 ease-in-out text-gray-700"
+      />
+      <input
+        type="date"
+        value={endDate}
+        onChange={(e) => setEndDate(e.target.value)}
+        placeholder="End Date"
+        className="w-full sm:w-48 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 ease-in-out text-gray-700"
+      />
+    </div>
+    <button
+      onClick={resetFilters}
+      className="px-4 py-2.5 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg shadow-sm hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 transition duration-200 ease-in-out"
+    >
+      Reset Filters
+    </button>
+  </div>
+
+  {/* Charts */}
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Payment Status Breakdown</h2>
+      <div className="h-64">
+        <Pie
+          data={statusData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "top" } },
+          }}
+        />
+      </div>
+    </div>
+    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Fee Type Distribution</h2>
+      <div className="h-64">
+        <Pie
+          data={feeTypeData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "top" } },
+          }}
+        />
+      </div>
+    </div>
+    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Monthly Due vs Paid</h2>
+      <div className="h-64">
+        <Bar
+          data={barData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "top" } },
+            scales: {
+              y: { beginAtZero: true, title: { display: true, text: "Amount (₹)" } },
+              x: { title: { display: true, text: "Month" } },
+            },
+          }}
+        />
+      </div>
+    </div>
+    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Status by Fee Type</h2>
+      <div className="h-64">
+        <Bar
+          data={stackedBarData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "top" } },
+            scales: {
+              x: { stacked: true, title: { display: true, text: "Fee Type" } },
+              y: { stacked: true, beginAtZero: true, title: { display: true, text: "Amount (₹)" } },
+            },
+          }}
+        />
+      </div>
+    </div>
+    <div className="bg-white p-6 rounded-xl shadow-lg col-span-1 lg:col-span-2 border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Payment Trend Over Time</h2>
+      <div className="h-64">
+        <Line
+          data={lineData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "top" } },
+            scales: {
+              y: { beginAtZero: true, title: { display: true, text: "Amount (₹)" } },
+              x: { title: { display: true, text: "Month" } },
+            },
+          }}
+        />
+      </div>
+    </div>
+  </div>
+
+  {/* Additional Insights */}
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Top 5 Students by Pending Amount</h2>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-blue-100">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Student Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Pending Amount</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {topPendingStudents.map(([name, amount], index) => (
+              <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-red-700">₹{amount.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Payment Method Breakdown</h2>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-blue-100">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Method</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Amount</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {Object.entries(paymentMethods).map(([method, amount], index) => (
+              <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{method}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-green-700">₹{amount.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {/* Table */}
+  <div className="bg-white shadow-lg rounded-xl border border-gray-100">
+    <div className="overflow-x-auto max-w-full">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-blue-100">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-48">Student Name</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-48">Course</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-48">Fee Type</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-48">Total Fees</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-48">Amount</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-48">Due Date</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-48">Status</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-48">Paid Date</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-48">Received By</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-48">Remarks</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-48">Payment Method</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {filteredFeeData.map((item, index) => {
+            const dueDate = item.dueDate ? new Date(item.dueDate) : null;
+            const paidDate = item.paidDate ? new Date(item.paidDate) : null;
+
+            return (
+              <tr
+                key={item.id}
+                className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
+              >
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.studentName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.courseName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.feeTemplate}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹{toNumber(item.totalFees).toFixed(2)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹{toNumber(item.amount).toFixed(2)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {dueDate ? dueDate.toLocaleDateString() : "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <select
+                    value={item.status}
+                    onChange={(e) => handleUpdate(item, "status", e.target.value)}
+                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 ease-in-out text-gray-700 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Paid">Paid</option>
+                  </select>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <input
+                    type="date"
+                    value={paidDate ? paidDate.toISOString().split("T")[0] : ""}
+                    onChange={(e) => handleUpdate(item, "paidDate", e.target.value)}
+                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 ease-in-out text-gray-700 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    disabled={item.status !== "Paid"}
+                  />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <input
+                    type="text"
+                    value={item.receivedBy || ""}
+                    onChange={(e) => handleUpdate(item, "receivedBy", e.target.value)}
+                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 ease-in-out text-gray-700 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    disabled={item.status !== "Paid"}
+                  />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <input
+                    type="text"
+                    value={item.remark || ""}
+                    onChange={(e) => handleUpdate(item, "remark", e.target.value)}
+                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 ease-in-out text-gray-700"
+                  />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.paymentMethod || "N/A"}</td>
+              </tr>
+            );
+          })}
+          <tr className="bg-gray-100">
+            <td colSpan="4" className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
+              Total:
+            </td>
+            <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+              ₹{filteredFeeData.reduce((acc, item) => acc + toNumber(item.amount), 0).toFixed(2)}
+            </td>
+            <td colSpan="6" className="px-6 py-4"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
   );
 }

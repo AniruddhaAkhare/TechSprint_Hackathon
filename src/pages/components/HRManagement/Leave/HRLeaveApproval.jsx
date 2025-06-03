@@ -152,144 +152,141 @@ const HRLeaveApproval = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen p-4 fixed inset-0 left-[300px]">
-      <h3 className="text-3xl font-semibold text-gray-800 mb-6">
-        Leave Approval Dashboard
-      </h3>
-      {error && (
-        <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6">
-          {error}
-        </div>
-      )}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
-          <label className="text-gray-700 font-medium">Filter by Status:</label>
-          <select
-            className="border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={filter}
-            onChange={handleFilterChange}
-            disabled={!canView}
-          >
-            <option value="All">All</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-        </div>
-      </div>
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Employee Email
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Leave Type
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Start Date
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  End Date
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Reason
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Attachment
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredLeaves.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan="8"
-                    className="px-6 py-4 text-center text-gray-500"
-                  >
-                    No leave applications found.
-                  </td>
-                </tr>
-              ) : (
-                filteredLeaves.map((leave) => (
-                  <tr key={leave.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-gray-600">{leave.email}</td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {leave.leaveType}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {new Date(leave.startDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {new Date(leave.endDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">{leave.reason}</td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {leave.attachmentUrl ? (
-                        <a
-                          href={leave.attachmentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                          aria-label={`View attachment for ${leave.leaveType} leave request by ${leave.email}`}
-                        >
-                          View Attachment
-                        </a>
-                      ) : (
-                        <span className="text-gray-400">No Attachment</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          leave.status === "Approved"
-                            ? "bg-green-100 text-green-800"
-                            : leave.status === "Rejected"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {leave.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {leave.status === "Pending" && canUpdate && (
-                        <div className="flex space-x-3">
-                          <button
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                            onClick={() =>
-                              handleStatusUpdate(leave.id, "Approved")
-                            }
-                          >
-                            Approve
-                          </button>
-                          <button
-                            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
-                            onClick={() =>
-                              handleStatusUpdate(leave.id, "Rejected")
-                            }
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+  <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-100 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
+  <h1 className="text-2xl font-bold text-[#333333] font-sans mb-4">
+    Leave Approval Dashboard
+  </h1>
+
+  {error && (
+    <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-6 text-sm text-red-600 font-medium">
+      {error}
     </div>
+  )}
+
+  <div className="flex justify-between items-center mb-8">
+    <div className="flex items-center gap-4">
+      <label className="text-sm font-semibold text-gray-700">Filter by Status</label>
+      <select
+        value={filter}
+        onChange={handleFilterChange}
+        disabled={!canView}
+        className="w-full sm:w-48 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+      >
+        <option value="">All</option>
+        <option value="Pending">Pending</option>
+        <option value="Approved">Approved</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+    </div>
+  </div>
+
+  <div className="rounded-xl shadow-lg border border-gray-200 overflow-x-auto max-h-[70vh] overflow-y-auto bg-white">
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+          <tr>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Employee Email
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Leave Type
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Start Date
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              End Date
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Reason
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Attachment
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Status
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {filteredLeaves.length === 0 ? (
+            <tr>
+              <td
+                colSpan="8"
+                className="px-6 py-4 text-center text-sm text-gray-500"
+              >
+                No leave applications found.
+              </td>
+            </tr>
+          ) : (
+            filteredLeaves.map((leave) => (
+              <tr key={leave.id} className="hover:bg-gray-50 transition-colors duration-150">
+                <td className="px-6 py-4 text-sm text-gray-700">{leave.email}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{leave.leaveType}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">
+                  {new Date(leave.startDate).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-700">
+                  {new Date(leave.endDate).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-700">{leave.reason}</td>
+                <td className="px-6 py-4 text-sm">
+                  {leave.attachmentUrl ? (
+                    <a
+                      href={leave.attachmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 font-medium transition duration-150"
+                      aria-label={`View attachment for ${leave.leaveType} leave request by ${leave.email}`}
+                    >
+                      View Attachment
+                    </a>
+                  ) : (
+                    <span className="text-gray-400">No Attachment</span>
+                  )}
+                </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                      leave.status === "Approved"
+                        ? "bg-green-100 text-green-800"
+                        : leave.status === "Rejected"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {leave.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  {leave.status === "Pending" && canUpdate && (
+                    <div className="flex space-x-3">
+                      <button
+                        className="bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-2 rounded-lg shadow-sm hover:from-green-700 hover:to-green-800 transition duration-200 font-medium"
+                        onClick={() => handleStatusUpdate(leave.id, "Approved")}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        className="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-lg shadow-sm hover:from-red-700 hover:to-red-800 transition duration-200 font-medium"
+                        onClick={() => handleStatusUpdate(leave.id, "Rejected")}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
   );
 };
 

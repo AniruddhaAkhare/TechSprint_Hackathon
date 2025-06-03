@@ -214,13 +214,14 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
             <h3 className="text-lg font-semibold text-gray-900">
               {curriculumToEdit ? 'Edit Curriculum' : 'Add Curriculum'}
             </h3>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-xl"
-              disabled={loading}
-            >
-              ✕
-            </button>
+           <button
+  onClick={onClose}
+  className="bg-indigo-600 text-white px-2 py-1 rounded-md hover:bg-indigo-700 flex items-center justify-center gap-2"
+  disabled={loading}
+>
+  ✕
+</button>
+
           </div>
 
           {((!curriculumToEdit && !canCreate) || (curriculumToEdit && !canUpdate)) ? (

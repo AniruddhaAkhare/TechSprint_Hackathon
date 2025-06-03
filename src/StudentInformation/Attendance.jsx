@@ -418,7 +418,7 @@ export default function Attendance() {
         {/* {canViewAnalytics && ( */}
           <button
             onClick={handleAnalyticsClick}
-            className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
           >
             Analytics
           </button>
@@ -426,66 +426,73 @@ export default function Attendance() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label htmlFor="centerSelect" className="block text-sm font-medium text-gray-700">
-              Select Center
-            </label>
-            <select
-              id="centerSelect"
-              value={selectedCenter}
-              onChange={handleCenterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-              disabled={!canView}
-            >
-              <option value="">All Centers</option>
-              {centers.map((center) => (
-                <option key={center.id} value={center.id}>
-                  {center.name || 'Unnamed Center'}
-                </option>
-              ))}
-            </select>
-          </div>
+     
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-4 bg-white rounded-lg shadow-md">
+  <div>
+    <label htmlFor="centerSelect" className="block text-sm font-semibold text-gray-800 mb-2">
+      Select Center
+    </label>
+    <select
+      id="centerSelect"
+      value={selectedCenter}
+      onChange={handleCenterChange}
+      className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm 
+                 transition duration-200 ease-in-out
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+      disabled={!canView}
+    >
+      <option value="">All Centers</option>
+      {centers.map((center) => (
+        <option key={center.id} value={center.id}>
+          {center.name || 'Unnamed Center'}
+        </option>
+      ))}
+    </select>
+  </div>
 
-          <div>
-            <label htmlFor="statusFilter" className="block text-sm font-medium text-gray-700">
-              Batch Status
-            </label>
-            <select
-              id="statusFilter"
-              value={batchStatusFilter}
-              onChange={(e) => {
-                setBatchStatusFilter(e.target.value);
-                logActivity('Change Batch Status Filter', { status: e.target.value });
-              }}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-              disabled={!canView}
-            >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="All">All</option>
-            </select>
-          </div>
+  <div>
+    <label htmlFor="statusFilter" className="block text-sm font-semibold text-gray-800 mb-2">
+      Batch Status
+    </label>
+    <select
+      id="statusFilter"
+      value={batchStatusFilter}
+      onChange={(e) => {
+        setBatchStatusFilter(e.target.value);
+        logActivity('Change Batch Status Filter', { status: e.target.value });
+      }}
+      className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm 
+                 transition duration-200 ease-in-out
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+      disabled={!canView}
+    >
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+      <option value="All">All</option>
+    </select>
+  </div>
 
-          <div>
-            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-              Start Date From
-            </label>
-            <input
-              type="date"
-              id="startDate"
-              value={startDateFilter}
-              onChange={(e) => {
-                setStartDateFilter(e.target.value);
-                logActivity('Change Start Date Filter', { startDate: e.target.value });
-              }}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-              disabled={!canView}
-            />
-          </div>
-        </div>
-      </div>
+  <div>
+    <label htmlFor="startDate" className="block text-sm font-semibold text-gray-800 mb-2">
+      Start Date From
+    </label>
+    <input
+      type="date"
+      id="startDate"
+      value={startDateFilter}
+      onChange={(e) => {
+        setStartDateFilter(e.target.value);
+        logActivity('Change Start Date Filter', { startDate: e.target.value });
+      }}
+      className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm 
+                 transition duration-200 ease-in-out
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+      disabled={!canView}
+    />
+  </div>
+</div>
+
+  
 
       {/* Batch List */}
       <div className="bg-white rounded-lg shadow-md p-4">

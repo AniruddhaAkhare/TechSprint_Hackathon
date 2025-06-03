@@ -278,167 +278,165 @@ const exportToPDF = async (jobId) => {
 };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
-      <ToastContainer position="top-right" autoClose={3000} />
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-800">Job Openings</h1>
-          <p className="text-gray-600 mt-1">Total Job Openings: {jobOpenings.length}</p>
-        </div>
-        {canCreate && (
-          <button
-            type="button"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700 transition duration-200"
-            onClick={handleCreateJobClick}
-          >
-            + Add Job Opening
-          </button>
-        )}
+  <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-100 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
+  <ToastContainer position="top-right" autoClose={3000} />
+
+  {/* Header */}
+  <div className="flex justify-between items-center mb-8">
+    <div>
+      <h1 className="text-2xl font-bold text-[#333333] font-sans">Job Openings</h1>
+      <p className="text-sm text-gray-600 mt-2">Total Job Openings: {jobOpenings.length}</p>
+    </div>
+    {canCreate && (
+      <button
+        type="button"
+        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2 mr-6"
+        onClick={handleCreateJobClick}
+      >
+        + Add Job Opening
+      </button>
+    )}
+  </div>
+
+  <div className="flex flex-col md:flex-row gap-6">
+    {/* Left Panel: Job Openings List */}
+    <div className="md:w-1/3 bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <div className="mb-6">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search jobs by title, company, or skills..."
+          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200"
+        />
       </div>
+      <div className="max-h-[70vh] overflow-y-auto">
+        {(searchResults.length > 0 ? searchResults : jobOpenings).map((job) => (
+          <div
+            key={job.id}
+            onClick={() => setSelectedJob(job)}
+            className={`p-4 mb-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-150 ${
+              selectedJob?.id === job.id ? "bg-blue-50" : "bg-white"
+            } border border-gray-200 shadow-sm`}
+          >
+            <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+            <p className="text-sm text-gray-600">{job.companyName}</p>
+            <p className="text-sm text-gray-500">{job.locationType} | {job.jobType}</p>
+            <p className="text-sm text-gray-500">{job.status}</p>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Left Panel: Job Openings List */}
-        <div className="md:w-1/3 bg-white p-6 rounded-lg shadow-md">
-          <div className="mb-6">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search jobs by title, company, or skills..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="max-h-[70vh] overflow-y-auto">
-            {(searchResults.length > 0 ? searchResults : jobOpenings).map((job) => (
-              <div
-                key={job.id}
-                onClick={() => setSelectedJob(job)}
-                className={`p-4 mb-2 rounded-md cursor-pointer hover:bg-gray-100 ${
-                  selectedJob?.id === job.id ? "bg-blue-100" : ""
-                }`}
-              >
-                <h3 className="text-lg font-semibold text-gray-800">{job.title}</h3>
-                <p className="text-gray-600">{job.companyName}</p>
-                <p className="text-gray-500">{job.locationType} | {job.jobType}</p>
-                <p className="text-gray-500">{job.status}</p>
+            {(canUpdate || canDelete) && (
+            <div className="mt-2 flex gap-3">
+  {canUpdate && (
+    <button
+      onClick={() => handleEditClick(job)}
+      className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition duration-150"
+    >
+      Edit
+    </button>
+  )}
+  {canDelete && (
+    <button
+      onClick={() => handleDeleteClick(job.id)}
+      className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition duration-150"
+    >
+      Delete
+    </button>
+  )}
+</div>
 
-                {(canUpdate || canDelete) && (
-                  <div className="mt-2">
-                    {canUpdate && (
-                      <button
-                        onClick={() => handleEditClick(job)}
-                        className="text-blue-600 hover:text-blue-800 mr-3"
-                      >
-                        Edit
-                      </button>
-                    )}
-                    {canDelete && (
-                      <button
-                        onClick={() => handleDeleteClick(job.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-            {(searchResults.length > 0 ? searchResults : jobOpenings).length === 0 && (
-              <p className="text-gray-500 text-center">No job openings found</p>
             )}
           </div>
-        </div>
+        ))}
+        {(searchResults.length > 0 ? searchResults : jobOpenings).length === 0 && (
+          <p className="text-sm text-gray-500 text-center">No job openings found</p>
+        )}
+      </div>
+    </div>
 
-        {/* Right Panel: Job Details and Applications */}
-        <div className="md:w-2/3 bg-white p-6 rounded-lg shadow-md max-h-[85vh] overflow-y-auto">
-          {selectedJob ? (
-            <>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">{selectedJob.title}</h2>
-              <div className="mb-6">
-                <p><strong>Company:</strong> {selectedJob.companyName}</p>
-                <p><strong>Job Type:</strong> {selectedJob.jobType}</p>
-                <p><strong>Status:</strong> {selectedJob.status}</p>
-                <p><strong>Experience:</strong> {selectedJob.experience}</p>
-                <p><strong>Salary/Stipend:</strong> {selectedJob.salary} {selectedJob.currency}</p>
-                {selectedJob.duration && <p><strong>Duration:</strong> {selectedJob.duration}</p>}
-                <p><strong>Location:</strong> {selectedJob.locationType} {selectedJob.city ? `(${selectedJob.city})` : ""}</p>
-                <p><strong>Skills:</strong> {selectedJob.skills.join(", ")}</p>
-                <p><strong>POC:</strong> {selectedJob.poc.name} ({selectedJob.poc.email})</p>
-                <div className="mt-4">
-                  <strong>Job Description:</strong>
-                  <div dangerouslySetInnerHTML={{ __html: selectedJob.description }} className="prose" />
-                </div>
-              </div>
-              <div className="flex gap-4 mb-4">
-                <button
-                  onClick={() => exportToExcel(selectedJob.id)}
-                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-                >
-                  Export to Excel
-                </button>
-                <button
-                  onClick={() => exportToPDF(selectedJob.id)}
-                  className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
-                >
-                  Export to PDF
-                </button>
-              </div>
-              <ApplicationManagement jobId={selectedJob.id} jobSkills={selectedJob.skills} />
-            </>
-          ) : (
-            <p className="text-gray-500">Select a job opening to view details and applications</p>
+    {/* Right Panel: Job Details and Applications */}
+    <div className="md:w-2/3 bg-white p-6 rounded-xl shadow-lg border border-gray-100 max-h-[85vh] overflow-y-auto">
+      {selectedJob ? (
+        <>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">{selectedJob.title}</h2>
+          <div className="mb-6 space-y-2 text-sm text-gray-700">
+            <p><span className="font-medium text-gray-900">Company:</span> {selectedJob.companyName}</p>
+            <p><span className="font-medium text-gray-900">Job Type:</span> {selectedJob.jobType}</p>
+            <p><span className="font-medium text-gray-900">Status:</span> {selectedJob.status}</p>
+            <p><span className="font-medium text-gray-900">Experience:</span> {selectedJob.experience}</p>
+            <p><span className="font-medium text-gray-900">Salary/Stipend:</span> {selectedJob.salary} {selectedJob.currency}</p>
+            {selectedJob.duration && <p><span className="font-medium text-gray-900">Duration:</span> {selectedJob.duration}</p>}
+            <p><span className="font-medium text-gray-900">Location:</span> {selectedJob.locationType} {selectedJob.city ? `(${selectedJob.city})` : ""}</p>
+            <p><span className="font-medium text-gray-900">Skills:</span> {selectedJob.skills.join(", ")}</p>
+            <p><span className="font-medium text-gray-900">POC:</span> {selectedJob.poc.name} ({selectedJob.poc.email})</p>
+            <div className="mt-4">
+              <p className="font-medium text-gray-900">Job Description:</p>
+              <div dangerouslySetInnerHTML={{ __html: selectedJob.description }} className="prose prose-sm text-gray-700" />
+            </div>
+          </div>
+          <div className="flex gap-4 mb-4">
+            <button
+              onClick={() => exportToExcel(selectedJob.id)}
+              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-green-700 hover:to-green-800 transition duration-200 font-medium"
+            >
+              Export to Excel
+            </button>
+            <button
+              onClick={() => exportToPDF(selectedJob.id)}
+              className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-purple-700 hover:to-purple-800 transition duration-200 font-medium"
+            >
+              Export to PDF
+            </button>
+          </div>
+          <ApplicationManagement jobId={selectedJob.id} jobSkills={selectedJob.skills} />
+        </>
+      ) : (
+        <p className="text-sm text-gray-500">Select a job opening to view details and applications</p>
+      )}
+    </div>
+  </div>
+
+  {/* Backdrop for Sidebar */}
+  {(canCreate || canUpdate) && isAddOpen && (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-40"
+      onClick={handleClose}
+    />
+  )}
+
+  {/* Sidebar (AddJobOpening) */}
+  {(canCreate || canUpdate) && (
+    <AddJobOpening
+      isOpen={isAddOpen}
+      toggleSidebar={handleClose}
+      job={selectedJob}
+    />
+  )}
+
+  {/* Delete Confirmation Dialog */}
+  {canDelete && openDelete && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md border border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Confirm Deletion</h2>
+        <p className="text-sm text-gray-600 mb-6">{deleteMessage}</p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setOpenDelete(false)}
+            className="px-5 py-2.5 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition duration-200 font-medium"
+          >
+            Cancel
+          </button>
+          {deleteMessage === "Are you sure you want to delete this job opening? This action cannot be undone." && (
+            <button
+              onClick={deleteJob}
+              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-red-700 hover:to-red-800 transition duration-200 font-medium"
+            >
+              Yes, Delete
+            </button>
           )}
         </div>
       </div>
-
-      {/* Backdrop for Sidebar */}
-      {(canCreate || canUpdate) && isAddOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={handleClose}
-        />
-      )}
-
-      {/* Sidebar (AddJobOpening) */}
-      {(canCreate || canUpdate) && (
-        <AddJobOpening
-          isOpen={isAddOpen}
-          toggleSidebar={handleClose}
-          job={selectedJob}
-        />
-      )}
-
-      {/* Delete Confirmation Dialog */}
-      {canDelete && openDelete && (
-        <Dialog
-          open={openDelete}
-          handler={() => setOpenDelete(false)}
-          className="rounded-lg shadow-lg"
-        >
-          <DialogHeader className="text-gray-800 font-semibold">Confirm Deletion</DialogHeader>
-          <DialogBody className="text-gray-600">{deleteMessage}</DialogBody>
-          <DialogFooter className="space-x-4">
-            <Button
-              variant="text"
-              color="gray"
-              onClick={() => setOpenDelete(false)}
-            >
-              Cancel
-            </Button>
-            {deleteMessage === "Are you sure you want to delete this job opening? This action cannot be undone." && (
-              <Button
-                variant="filled"
-                color="red"
-                onClick={deleteJob}
-              >
-                Yes, Delete
-              </Button>
-            )}
-          </DialogFooter>
-        </Dialog>
-      )}
     </div>
+  )}
+</div>
   );
 }
