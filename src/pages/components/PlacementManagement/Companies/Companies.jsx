@@ -1158,13 +1158,7 @@ export default function Companies() {
   const [openCallSchedule, setOpenCallSchedule] = useState(false);
   const [openReminderDialog, setOpenReminderDialog] = useState(false);
   const [reminderDetails, setReminderDetails] = useState(null);
-  const [callScheduleForm, setCallScheduleForm] = useState({
-    companyId: "",
-    callDate: getTodayDate(), // Initialize with today's date
-    callTime: "",
-    purpose: "",
-    reminderTime: "15",
-  });
+  
   const [callSchedules, setCallSchedules] = useState([]);
 
   const CompanyCollectionRef = collection(db, "Companies");
@@ -1174,6 +1168,19 @@ export default function Companies() {
     const today = new Date();
     return today.toISOString().split("T")[0]; // Returns YYYY-MM-DD
   };
+  //     const getTodayDate = () => {
+//         const today = new Date();
+//         return today.toISOString().split("T")[0]; // Returns YYYY-MM-DD
+//       };
+
+
+const [callScheduleForm, setCallScheduleForm] = useState({
+    companyId: "",
+    callDate: getTodayDate(), // Initialize with today's date
+    callTime: "",
+    purpose: "",
+    reminderTime: "15",
+  });
 
   const canCreate = rolePermissions?.Companies?.create || false;
   const canUpdate = rolePermissions?.Companies?.update || false;
@@ -1181,6 +1188,9 @@ export default function Companies() {
   const canDisplay = rolePermissions?.Companies?.display || false;
 
   const renderField = (value) => value || "N/A";
+
+
+
 
   // Fetch call schedules and trigger due reminders
   useEffect(() => {
@@ -1513,6 +1523,35 @@ export default function Companies() {
     }
   };
 
+      const handleDeleteSchedule = async (noteId) => {
+        if (!canDelete || !selectedCompany?.id) return;
+        try {
+            const noteRef = doc(db, "Companies", selectedCompany.id, "notes", noteId);
+            const noteDoc = await getDoc(noteRef);
+            if (!noteDoc.exists()) throw new Error("Note not found");
+            const noteData = noteDoc.data();
+
+            const historyEntry = {
+                action: "Deleted Call Schedule",
+                performedBy: userDisplayName,
+                timestamp: new Date().toISOString(),
+                details: `Deleted call schedule for ${noteData.callDate} ${noteData.callTime}`,
+            };
+            await updateDoc(doc(db, "Companies", selectedCompany.id), {
+                history: arrayUnion(historyEntry),
+                updatedAt: serverTimestamp(),
+            });
+
+            await deleteDoc(noteRef);
+            setCallSchedules(callSchedules.filter((s) => s.id !== noteId));
+            toast.success("Call schedule deleted successfully!");
+            logActivity("DELETE_CALL_SCHEDULE", { companyId: selectedCompany.id, noteId });
+        } catch (error) {
+            console.error("Error deleting call schedule:", error);
+            toast.error(`Failed to delete call schedule: ${error.message}`);
+        }
+    };
+
     return (
      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-100 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
   <ToastContainer position="top-right" autoClose={3000} />
@@ -1575,7 +1614,7 @@ export default function Companies() {
               Phone
             </th>
             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-52">
-              City
+              Recent Note
             </th>
             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-52">
               Company Type
@@ -1602,7 +1641,7 @@ export default function Companies() {
               <td className="px-6 py-4 text-sm text-gray-700">{renderField(company.email)}</td>
               <td className="px-6 py-4 text-sm text-gray-700">{renderField(company.domain)}</td>
               <td className="px-6 py-4 text-sm text-gray-700">{renderField(company.phone)}</td>
-              <td className="px-6 py-4 text-sm text-gray-700">{renderField(company.city)}</td>
+              <td className="px-6 py-4 text-sm text-gray-700">{renderField(company.noteData)}</td>
               <td className="px-6 py-4 text-sm text-gray-700">{renderField(company.companyType)}</td>
               <td className="px-6 py-4 text-sm">
                 {company.url ? (

@@ -634,7 +634,6 @@ const Notes = ({
   canUpdate,
   userDisplayName,
 }) => {
-  const [callDate, setCallDate] = useState(getTodayDate()); // Initialize with today's date
   const [callTime, setCallTime] = useState(''); // Changed from callScheduledTime to setCallTime
   const [reminderTime, setReminderTime] = useState('15');
   const reminderAudio = new Audio('https://www.soundjay.com/buttons/beep-01.mp3');
@@ -643,6 +642,9 @@ const Notes = ({
     const today = new Date();
     return today.toISOString().split('T')[0]; // Returns YYYY-MM-DD
   };
+
+    const [callDate, setCallDate] = useState(getTodayDate()); // Initialize with today's date
+
 
   const handleAddNoteWithSchedule = async () => {
     if (!canUpdate) {

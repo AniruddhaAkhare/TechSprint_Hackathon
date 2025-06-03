@@ -198,6 +198,36 @@ const ProfilePage = () => {
   </div>
 </div>
 
+<div className="mt-4">
+              <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                Upload Profile Photo
+              </label>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handlePhotoUpload}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  disabled={uploading}
+                />
+                {uploading && (
+                  <div className="mt-2 w-full h-5 bg-gray-200 rounded-md relative">
+                    <div
+                      className="absolute h-full bg-indigo-600 rounded-md transition-all"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                    <span className="absolute inset-0 text-xs text-white text-center leading-5">
+                      {Math.round(uploadProgress)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+              {uploadError && (
+                <p className="text-red-600 text-sm mt-2">{uploadError}</p>
+              )}
+            </div>
+            
+
   <div className="mt-4">
     <CheckInOut />
   </div>
