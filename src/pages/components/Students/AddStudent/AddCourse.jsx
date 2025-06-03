@@ -1574,7 +1574,6 @@ const AddCourse = () => {
           {courseEntries.map((entry, courseIndex) => (
             <CourseEntryForm
               key={courseIndex}
-              courseIndex={courseIndex}
               entry={entry}
               courses={courses}
               preferredCenters={preferredCenters}

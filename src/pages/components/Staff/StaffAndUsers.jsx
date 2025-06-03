@@ -281,11 +281,7 @@ export default function StaffAndUsers() {
             />
           </div>
 
-<<<<<<< HEAD
-          <div className="w-full h-[60vh] overflow-y-auto">
-=======
           <div className="w-full h-[70vh] overflow-y-auto">
->>>>>>> origin/feature/ignite-update
             <table className="w-full table-auto">
               <thead className="bg-gray-100 sticky top-0 z-10">
                 <tr>
