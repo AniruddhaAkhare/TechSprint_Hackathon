@@ -32,10 +32,10 @@ export default function CreateExaminationRemarks() {
                 const data = studentSnap.data();
                 setExaminationRemarks(data.examinationRemarks || []);
             } else {
-                console.error("Student document not found");
+                //console.error("Student document not found");
             }
         } catch (error) {
-            console.error("Error fetching attendance data:", error);
+            //console.error("Error fetching attendance data:", error);
         }
     };
 
@@ -69,7 +69,7 @@ export default function CreateExaminationRemarks() {
             alert("Examination remarks are added successfully!");
             setExaminationRemarks([...examinationRemarks, newExaminationRemarks]); // Update local state
         } catch (error) {
-            console.error("Error adding examination reamr:", error);
+            //console.error("Error adding examination reamr:", error);
             alert("Failed to add Examination remark. See console for details.");
         }
     };

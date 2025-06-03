@@ -64,7 +64,7 @@ const Result = () => {
                 }, {});
                 setResults(studentResults);
             } catch (error) {
-                console.error("Error fetching data:", error);
+                //console.error("Error fetching data:", error);
                 setError(error.message || "Failed to fetch data.");
             } finally {
                 setIsLoading(false);
@@ -105,7 +105,7 @@ const Result = () => {
             }, { merge: true });
             toast.success("Result saved successfully!");
         } catch (error) {
-            console.error("Error saving result:", error);
+            //console.error("Error saving result:", error);
             toast.error("Failed to save result");
         }
     };

@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Attendance() {
   const navigate = useNavigate();
+  const { user, rolePermissions } = useAuth();
   const [attendanceData, setAttendanceData] = useState([]);
   const [file, setFile] = useState(null);
   const [batches, setBatches] = useState([]);
@@ -17,9 +18,16 @@ export default function Attendance() {
   const [selectedCenter, setSelectedCenter] = useState('');
   const [batchStatusFilter, setBatchStatusFilter] = useState('Active');
   const [startDateFilter, setStartDateFilter] = useState('');
-  const { user, rolePermissions } = useAuth();
+
+  // Define permissions
+  const canView = rolePermissions?.attendance?.display|| false;
+  const canCreate = rolePermissions?.attendance?.create || false;
+  // const canUpdate = rolePermissions?.attendance?.update || false; // Reserved for future use
+  // const canDelete = rolePermissions?.attendance?.delete || false; // Reserved for future use
+  // const canViewAnalytics = rolePermissions?.attendance?.viewAnalytics || false;
 
   const logActivity = async (action, details) => {
+    if (!user) return;
     try {
       const activityLog = {
         action,
@@ -31,13 +39,13 @@ export default function Attendance() {
         batchId: expandedBatch || 'N/A',
       };
       await addDoc(collection(db, 'activityLogs'), activityLog);
-      console.log(`Logged activity: ${action}`, details);
     } catch (error) {
-      console.error('Error logging activity:', error);
+      //console.error('Error logging activity:', error);
     }
   };
 
   const fetchCenters = async () => {
+    if (!canView) return;
     try {
       const centersCollection = collection(db, 'instituteSetup');
       const centersSnapshot = await getDocs(centersCollection);
@@ -54,12 +62,13 @@ export default function Attendance() {
       const allCenters = centersData.flat();
       setCenters(allCenters);
     } catch (error) {
-      console.error('Error fetching centers:', error);
+      //console.error('Error fetching centers:', error);
       alert('Failed to fetch centers. Please check your permissions or network.');
     }
   };
 
   const fetchBatchesAndStudents = async (centerId) => {
+    if (!canView) return;
     try {
       let batchesQuery =
         batchStatusFilter === 'All'
@@ -118,7 +127,6 @@ export default function Attendance() {
           studentsByBatchMap[batchId] = [];
 
           if (studentIds.length === 0) {
-            console.log(`Batch ${batchId} (${batch.batchName}): No students in students array`);
             return;
           }
 
@@ -130,26 +138,22 @@ export default function Attendance() {
                 const studentData = studentDoc.data();
                 studentsByBatchMap[batchId].push({
                   id: studentId,
-                  first_name: studentData.first_name || 'Unknown',
-                  last_name: studentData.last_name || '',
+                  first_name: studentData.Name|| 'Unknown',
+                  
                 });
               } else {
                 console.warn(`Student ${studentId} not found in student collection for batch ${batchId}`);
               }
             } catch (error) {
-              console.error(`Error fetching student ${studentId} for batch ${batchId}:`, error);
+              //console.error(`Error fetching student ${studentId} for batch ${batchId}:`, error);
             }
           }
         })
       );
 
-      console.log('Batches:', batchData);
-      console.log('Batch Map:', batchMap);
-      console.log('Students by Batch:', studentsByBatchMap);
-
       setStudentsByBatch(studentsByBatchMap);
     } catch (error) {
-      console.error('Error fetching batches and students:', error);
+      //console.error('Error fetching batches and students:', error);
       alert('Failed to load batches or students. Check console for details.');
     }
   };
@@ -170,6 +174,10 @@ export default function Attendance() {
   };
 
   const generateTemplate = (batchId) => {
+    if (!canView) {
+      alert('You do not have permission to download attendance templates.');
+      return;
+    }
     const students = studentsByBatch[batchId] || [];
     if (students.length === 0) {
       alert('No students found for this batch.');
@@ -190,7 +198,7 @@ export default function Attendance() {
 
     const headers = ['Student Name', ...dateHeaders];
     const data = students.map((student) => [
-      `${student.first_name} ${student.last_name}`.trim(),
+      `${student.Name}`.trim(),
       ...dateHeaders.map(() => ''),
     ]);
 
@@ -203,6 +211,10 @@ export default function Attendance() {
   };
 
   const handleFileChange = (event) => {
+    if (!canCreate) {
+      alert('You do not have permission to upload attendance data.');
+      return;
+    }
     const uploadedFile = event.target.files[0];
     setFile(uploadedFile);
     if (uploadedFile) {
@@ -257,7 +269,7 @@ export default function Attendance() {
 
         setAttendanceData(formattedData);
       } catch (error) {
-        console.error('Error processing file:', error);
+        //console.error('Error processing file:', error);
         alert('Failed to process Excel file. Ensure correct format.');
       }
     };
@@ -265,6 +277,10 @@ export default function Attendance() {
   };
 
   const uploadToFirestore = async () => {
+    if (!canCreate) {
+      alert('You do not have permission to upload attendance data.');
+      return;
+    }
     if (!attendanceData.length) {
       alert('No attendance data to upload. Please select a file.');
       return;
@@ -304,12 +320,13 @@ export default function Attendance() {
       setAttendanceData([]);
       fetchAttendanceData();
     } catch (error) {
-      console.error('Error uploading attendance data:', error);
+      //console.error('Error uploading attendance data:', error);
       alert('Failed to upload attendance data. Check console for details.');
     }
   };
 
   const fetchAttendanceData = async () => {
+    if (!canView) return;
     try {
       const attendanceCollection = collection(db, 'attendance');
       const snapshot = await getDocs(attendanceCollection);
@@ -320,27 +337,36 @@ export default function Attendance() {
       }));
       setAttendanceData(fetchedData);
     } catch (error) {
-      console.error('Error fetching attendance data:', error);
+      //console.error('Error fetching attendance data:', error);
       alert('Failed to fetch attendance data.');
     }
   };
 
   useEffect(() => {
-    fetchCenters();
-    fetchBatchesAndStudents(selectedCenter);
-    fetchAttendanceData();
-  }, [batchStatusFilter, startDateFilter, selectedCenter]);
+    if (canView) {
+      fetchCenters();
+      fetchBatchesAndStudents(selectedCenter);
+      fetchAttendanceData();
+    }
+  }, [batchStatusFilter, startDateFilter, selectedCenter, canView]);
 
   const handleCenterChange = (e) => {
+    if (!canView) {
+      alert('You do not have permission to change center filters.');
+      return;
+    }
     const centerId = e.target.value;
     setSelectedCenter(centerId);
     logActivity('Change Center Filter', { centerId });
   };
 
   const toggleBatch = (batchId) => {
+    if (!canView) {
+      alert('You do not have permission to view batch details.');
+      return;
+    }
     setExpandedBatch((prev) => (prev === batchId ? null : batchId));
     setFile(null);
-    // logActivity('Toggle Batch View', { batchId, batchName: batchDetails[batchId]?.batchName || 'Unknown' });
   };
 
   const getAttendanceTableData = (batchId) => {
@@ -356,7 +382,7 @@ export default function Attendance() {
     }
 
     const dates = generateDateRange(batch.startDate, batch.endDate);
-    const studentNames = students.map((s) => `${s.first_name} ${s.last_name}`.trim());
+    const studentNames = students.map((s) => `${s.first_name}`.trim());
     const attendanceMap = {};
 
     batchAttendance.forEach((record) => {
@@ -364,87 +390,109 @@ export default function Attendance() {
       attendanceMap[`${record.student_name}-${dateStr}`] = record.status;
     });
 
-    console.log(`Batch ${batchId} Table Data:`, { students: studentNames, dates, attendanceMap });
-
     return { students: studentNames, dates, attendanceMap };
   };
 
   const handleAnalyticsClick = () => {
-    // logActivity('NAVIGATE_TO_ANALYTICS', { destination: 'attendance-dashboard' });
+    // if (!canViewAnalytics) {
+    //   alert('You do not have permission to view analytics.');
+    //   return;
+    // }
     navigate('/attendance-dashboard');
+    logActivity('Navigate to Analytics', { destination: 'attendance-dashboard' });
   };
 
+  if (!canView) {
+    return (
+      <div className="p-4 text-red-600 text-center">
+        Access Denied: You do not have permission to view attendance data.
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-gray-50 sm:p-6 md:p-8 p-4 fixed inset-0 left-[300px] overflow-y-auto">
       {/* Header with Analytics Button */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Attendance Management</h2>
-        <button
-          onClick={handleAnalyticsClick}
-          className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200"
-        >
-          Analytics
-        </button>
+        {/* {canViewAnalytics && ( */}
+          <button
+            onClick={handleAnalyticsClick}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
+          >
+            Analytics
+          </button>
+        {/* )} */}
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label htmlFor="centerSelect" className="block text-sm font-medium text-gray-700">
-              Select Center
-            </label>
-            <select
-              id="centerSelect"
-              value={selectedCenter}
-              onChange={handleCenterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-            >
-              <option value="">All Centers</option>
-              {centers.map((center) => (
-                <option key={center.id} value={center.id}>
-                  {center.name || 'Unnamed Center'}
-                </option>
-              ))}
-            </select>
-          </div>
+     
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-4 bg-white rounded-lg shadow-md">
+  <div>
+    <label htmlFor="centerSelect" className="block text-sm font-semibold text-gray-800 mb-2">
+      Select Center
+    </label>
+    <select
+      id="centerSelect"
+      value={selectedCenter}
+      onChange={handleCenterChange}
+      className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm 
+                 transition duration-200 ease-in-out
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+      disabled={!canView}
+    >
+      <option value="">All Centers</option>
+      {centers.map((center) => (
+        <option key={center.id} value={center.id}>
+          {center.name || 'Unnamed Center'}
+        </option>
+      ))}
+    </select>
+  </div>
 
-          <div>
-            <label htmlFor="statusFilter" className="block text-sm font-medium text-gray-700">
-              Batch Status
-            </label>
-            <select
-              id="statusFilter"
-              value={batchStatusFilter}
-              onChange={(e) => {
-                setBatchStatusFilter(e.target.value);
-                // logActivity('Change Batch Status Filter', { status: e.target.value });
-              }}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-            >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="All">All</option>
-            </select>
-          </div>
+  <div>
+    <label htmlFor="statusFilter" className="block text-sm font-semibold text-gray-800 mb-2">
+      Batch Status
+    </label>
+    <select
+      id="statusFilter"
+      value={batchStatusFilter}
+      onChange={(e) => {
+        setBatchStatusFilter(e.target.value);
+        logActivity('Change Batch Status Filter', { status: e.target.value });
+      }}
+      className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm 
+                 transition duration-200 ease-in-out
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+      disabled={!canView}
+    >
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+      <option value="All">All</option>
+    </select>
+  </div>
 
-          <div>
-            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-              Start Date From
-            </label>
-            <input
-              type="date"
-              id="startDate"
-              value={startDateFilter}
-              onChange={(e) => {
-                setStartDateFilter(e.target.value);
-                logActivity('Change Start Date Filter', { startDate: e.target.value });
-              }}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-            />
-          </div>
-        </div>
-      </div>
+  <div>
+    <label htmlFor="startDate" className="block text-sm font-semibold text-gray-800 mb-2">
+      Start Date From
+    </label>
+    <input
+      type="date"
+      id="startDate"
+      value={startDateFilter}
+      onChange={(e) => {
+        setStartDateFilter(e.target.value);
+        logActivity('Change Start Date Filter', { startDate: e.target.value });
+      }}
+      className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm 
+                 transition duration-200 ease-in-out
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+      disabled={!canView}
+    />
+  </div>
+</div>
+
+  
 
       {/* Batch List */}
       <div className="bg-white rounded-lg shadow-md p-4">
@@ -474,26 +522,30 @@ export default function Attendance() {
                 {expandedBatch === batch.id && (
                   <div className="p-4 bg-gray-50 rounded-b-md">
                     <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                      <button
-                        onClick={() => generateTemplate(batch.id)}
-                        className="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
-                      >
-                        Download Template
-                      </button>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="file"
-                          accept=".xlsx, .xls"
-                          onChange={handleFileChange}
-                          className="text-sm text-gray-600"
-                        />
+                      {canView && (
                         <button
-                          onClick={uploadToFirestore}
-                          className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200"
+                          onClick={() => generateTemplate(batch.id)}
+                          className="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
                         >
-                          Upload
+                          Download Template
                         </button>
-                      </div>
+                      )}
+                      {canCreate && (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            onChange={handleFileChange}
+                            className="text-sm text-gray-600"
+                          />
+                          <button
+                            onClick={uploadToFirestore}
+                            className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200"
+                          >
+                            Upload
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <h4 className="font-semibold text-gray-700 mb-2">Attendance for {batch.batchName || 'Batch'}</h4>
                     <div className="overflow-x-auto">

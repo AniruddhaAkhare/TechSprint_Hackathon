@@ -31,10 +31,10 @@ export default function CreateMockTest() {
                 const data = studentSnap.data();
                 setMockTests(data.mockTests || []);
             } else {
-                console.error("Student document not found");
+                //console.error("Student document not found");
             }
         } catch (error) {
-            console.error("Error fetching mock tests:", error);
+            //console.error("Error fetching mock tests:", error);
         }
     };
 
@@ -67,7 +67,7 @@ export default function CreateMockTest() {
             alert("Mock test added successfully!");
             setMockTests([...mockTests, newMockTest]); 
         } catch (error) {
-            console.error("Error adding mock test:", error);
+            //console.error("Error adding mock test:", error);
             alert("Failed to add mock test. See console for details.");
         }
     };

@@ -16,7 +16,6 @@
 //         e.preventDefault();
 
 //         if (!f_name || !email || !phone || !password || !phone || !l_name) {
-//             console.error("All fields are required.");
 //             return;
 //         }
 
@@ -24,7 +23,7 @@
 //             const adminCredential = await createUserWithEmailAndPassword(auth, email, password);
 //             const admin = adminCredential.user;
 
-//             console.log("Admin registered:", admin);
+
 
 //             if (admin) {
 //                 await setDoc(doc(db, "Instructor", admin.uid), {
@@ -34,15 +33,15 @@
 //                     phone: phone,
 //                     specialization: specialization
 //                 });
-//                 console.log("Admin data stored in Firestore.");
+
 //             }
 //             alert("Admin registered successfully");
 //             window.location.href = "/";
-//             console.log("Admin registered successfully");
+
 
 //         } catch (err) {
 //             alert("Admin already registered")
-//             console.log("Admin already registered");
+
 //         }
 //     };
 

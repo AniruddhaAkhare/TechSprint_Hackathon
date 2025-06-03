@@ -25,7 +25,6 @@ export default function LearnerList({ courseId, open, onClose }) {
             setLearners([]);
 
             try {
-                // Step 1: Fetch enrollments
                 const enrollmentsRef = collection(db, "enrollments");
                 const enrollmentSnapshot = await getDocs(enrollmentsRef);
                 const allEnrollments = enrollmentSnapshot.docs.map(doc => ({
@@ -33,7 +32,6 @@ export default function LearnerList({ courseId, open, onClose }) {
                     ...doc.data()
                 }));
 
-                // Filter enrollments for the given courseId
                 const matchedLearners = allEnrollments
                     .filter(enrollment => 
                         enrollment.courses?.some(course => 
@@ -41,13 +39,12 @@ export default function LearnerList({ courseId, open, onClose }) {
                         )
                     )
                     .map(enrollment => ({
-                        studentId: enrollment.id, // Assuming enrollment.id is the studentId
+                        studentId: enrollment.id,
                         courseDetails: enrollment.courses.find(course => 
                             course.selectedCourse?.id === courseId
                         )
                     }));
 
-                // Step 2: Fetch student details from the student collection
                 const studentsRef = collection(db, "student");
                 const studentSnapshot = await getDocs(studentsRef);
                 const allStudents = studentSnapshot.docs.map(doc => ({
@@ -60,14 +57,12 @@ export default function LearnerList({ courseId, open, onClose }) {
                     const student = allStudents.find(s => s.id === learner.studentId);
                     return {
                         ...learner,
-                        firstName: student?.first_name || student?.f_name || 'N/A',
-                        lastName: student?.last_name || student?.l_name || 'N/A'
+                        Name: student?.Name || 'N/A',
+                    
                     };
                 });
-                console.log(learnersWithNames);
                 setLearners(learnersWithNames);
             } catch (err) {
-                console.error("Error fetching learners:", err);
                 setError("Failed to load learners");
             } finally {
                 setIsLoading(false);
@@ -89,7 +84,9 @@ export default function LearnerList({ courseId, open, onClose }) {
             </DialogHeader>
             <DialogBody className="text-gray-600 max-h-[60vh] overflow-y-auto">
                 {isLoading ? (
-                    <p>Loading learners...</p>
+                          <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+                            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+                          </div>
                 ) : error ? (
                     <p className="text-red-500">{error}</p>
                 ) : learners.length === 0 ? (
@@ -107,7 +104,7 @@ export default function LearnerList({ courseId, open, onClose }) {
                             {learners.map((learner, index) => (
                                 <tr key={learner.studentId} className="border-b hover:bg-gray-50 cursor-pointer hover:text-blue-600" onClick={()=>{navigate(`/studentdetails/${learner.studentId}`)}}>
                                     <td className="px-4 py-2 ">{index + 1}</td>
-                                    <td className="px-4 py-2" >{learner.firstName}<span>   </span>{learner.lastName}</td>
+                                    <td className="px-4 py-2" >{learner.Name}</td>
                                     <td className="px-4 py-2">{learner.courseDetails?.mode || 'N/A'}</td>
                                 </tr>
                             ))}

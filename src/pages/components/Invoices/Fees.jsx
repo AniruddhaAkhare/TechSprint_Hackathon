@@ -26,7 +26,7 @@ export default function  Fees ()  {
                 }));
                 setStudents(studentsList);
             } catch (error) {
-                console.error("Error fetching invoices or students:", error);
+                //console.error("Error fetching invoices or students:", error);
             }
         };
 

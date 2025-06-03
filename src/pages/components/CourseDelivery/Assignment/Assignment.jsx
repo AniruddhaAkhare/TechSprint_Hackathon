@@ -16,7 +16,6 @@ export default function Assignments() {
             fetchBatches();
             alert('Batch deleted successfully!');
         } catch (err) {
-            console.error("Error deleting batch:", err);
             alert('Failed to delete batch. Please try again.');
         } finally {
             setOpenDelete(false);
@@ -43,7 +42,6 @@ export default function Assignments() {
                 }));
                 setAssignments(assignmentList);
             } catch (error) {
-                console.error("Error fetching assignments:", error);
             }
         };
 
@@ -56,38 +54,50 @@ export default function Assignments() {
     };
 
     return (
-        <div className="p-20">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Assignments</h2>
-                <Button
-                    onClick={handleCreateAssignment}
-                    // disabled={!permissions?.Courses?.Create} // Optional: Disable based on permissions
+    <div className="p-6 md:ml-64 bg-gray-50 min-h-screen">
+  <div className="bg-white shadow-lg rounded-xl p-6">
+   <div className="flex justify-between items-center mb-6">
+  <h2 className="text-2xl font-bold text-[#333333] font-sans">Assignments</h2>
+  <button
+    onClick={handleCreateAssignment}
+    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
+  >
+   + Create Assignment
+  </button>
+</div>
+
+
+    <div className="overflow-x-auto">
+      <table className="min-w-full table-auto border-collapse">
+        <thead>
+          <tr className="bg-gray-100 text-gray-700 text-sm uppercase">
+            <th className="px-6 py-3 text-left">Curriculum</th>
+            <th className="px-6 py-3 text-left">Due Date</th>
+            <th className="px-6 py-3 text-left">Document</th>
+          </tr>
+        </thead>
+        <tbody>
+          {assignments.map((assignment, index) => (
+            <tr key={assignment.id} className={`text-gray-700 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+              <td className="px-6 py-4">{assignment.curriculum}</td>
+              <td className="px-6 py-4">{assignment.dueDate}</td>
+              <td className="px-6 py-4">
+                <a
+                  href={assignment.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
                 >
-                    Create Assignment
-                </Button>
-            </div>
-            <table className="w-full border-collapse border border-gray-300 mt-4">
-                <thead>
-                    <tr className="bg-gray-200">
-                        <th className="border p-2">Curriculum</th>
-                        <th className="border p-2">Due Date</th>
-                        <th className="border p-2">Document</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {assignments.map((assignment) => (
-                        <tr key={assignment.id} className="text-center">
-                            <td className="border p-2">{assignment.curriculum}</td>
-                            <td className="border p-2">{assignment.dueDate}</td>
-                            <td className="border p-2">
-                                <a href={assignment.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500">
-                                    View Document
-                                </a>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+                  View Document
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
     );
 }

@@ -51,9 +51,8 @@ export default function AttendanceDashboard() {
             batchId: filters.batches.join(', ') || 'All',
         };
         await addDoc(collection(db, 'activityLogs'), activityLog);
-        console.log(`Logged activity: ${action}`, details);
     } catch (error) {
-        console.error('Error logging activity:', error);
+        //console.error('Error logging activity:', error);
     }
 };
 
@@ -74,11 +73,10 @@ export default function AttendanceDashboard() {
         })
       );
       const allCenters = centersData.flat();
-      console.log('Fetched Centers:', allCenters);
       setCenters(allCenters);
       // logActivity('Fetch Centers', { centerCount: allCenters.length });
     } catch (error) {
-      console.error('Error fetching centers:', error);
+      //console.error('Error fetching centers:', error);
       alert('Failed to fetch centers.');
     }
   };
@@ -161,22 +159,19 @@ export default function AttendanceDashboard() {
                 });
               }
             } catch (error) {
-              console.error(`Error fetching student ${studentId}:`, error);
+              //console.error(`Error fetching student ${studentId}:`, error);
             }
           }
         })
       );
 
-      console.log('Fetched Batches:', batchData);
-      console.log('Batch Details:', batchMap);
-      console.log('Students by Batch:', studentsByBatchMap);
       setStudentsByBatch(studentsByBatchMap);
       // logActivity('Fetch Batches and Students', {
       //   batchCount: batchData.length,
       //   studentCount: Object.values(studentsByBatchMap).flat().length,
       // });
     } catch (error) {
-      console.error('Error fetching batches and students:', error);
+      //console.error('Error fetching batches and students:', error);
       alert('Failed to load batches and students.');
     } finally {
       setLoading(false);
@@ -215,11 +210,10 @@ export default function AttendanceDashboard() {
         });
       }
 
-      console.log('Fetched Attendance Data:', filteredData);
       setAttendanceData(filteredData);
       // logActivity('Fetch Attendance', { recordCount: filteredData.length });
     } catch (error) {
-      console.error('Error fetching attendance:', error);
+      //console.error('Error fetching attendance:', error);
       alert('Failed to fetch attendance data.');
     }
   };
@@ -311,7 +305,6 @@ export default function AttendanceDashboard() {
       };
     });
 
-    console.log('Analytics Calculated:', { overallAttendance, batchTrends, studentSummary, centerComparison });
     setAnalytics({ overallAttendance, batchTrends, studentSummary, centerComparison });
     //  logActivity('Calculate Analytics', {
     //   batches: batches.length,
@@ -356,7 +349,7 @@ export default function AttendanceDashboard() {
       pdf.save('Attendance_Dashboard.pdf');
       logActivity('Export PDF', {});
     } catch (error) {
-      console.error('PDF Export Error:', error);
+      //console.error('PDF Export Error:', error);
       alert('Failed to export PDF.');
     }
   };
@@ -456,7 +449,7 @@ export default function AttendanceDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8" ref={dashboardRef}>
+    <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px] overflow-y-auto" ref={dashboardRef}>
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Attendance Analytics Dashboard</h2>
 
       {/* Filters */}

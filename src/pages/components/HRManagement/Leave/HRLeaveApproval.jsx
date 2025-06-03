@@ -1,0 +1,293 @@
+import React, { useState, useEffect } from "react";
+import { db } from "../../../../config/firebase";
+import { collection, getDocs, doc, getDoc, updateDoc } from "firebase/firestore";
+import { useAuth } from "../../../../context/AuthContext";
+import { toast } from "react-toastify";
+
+const HRLeaveApproval = () => {
+  const { user, rolePermissions } = useAuth();
+  const [leaves, setLeaves] = useState([]);
+  const [filter, setFilter] = useState("Pending");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // Define permissions
+  const canView = rolePermissions?.Leaves?.display || false;
+  const canCreate = rolePermissions?.Leaves?.create || false; 
+  const canUpdate = rolePermissions?.Leaves?.update || false;
+  const canDelete = rolePermissions?.Leaves?.delete || false; 
+
+  useEffect(() => {
+    const checkPermissionsAndFetchLeaves = async () => {
+      if (!user) {
+        setError("Please log in to view this page.");
+        setLoading(false);
+        return;
+      }
+
+      if (!canView) {
+        setError("You do not have permission to view leave applications.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const leavesSnapshot = await getDocs(collection(db, "Leaves"));
+        const leaveList = leavesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setLeaves(leaveList);
+        setLoading(false);
+      } catch (error) {
+        // //console.error("Error fetching data:", error);
+        setError("Failed to load leave applications.");
+        setLoading(false);
+      }
+    };
+
+    checkPermissionsAndFetchLeaves();
+  }, [user, canView]);
+
+  const handleStatusUpdate = async (leaveId, newStatus) => {
+    if (!canUpdate) {
+      toast.error("You do not have permission to update leave statuses.");
+      return;
+    }
+
+    try {
+      const leaveRef = doc(db, "Leaves", leaveId);
+      await updateDoc(leaveRef, {
+        status: newStatus,
+        updatedAt: new Date().toISOString(),
+      });
+      setLeaves((prev) =>
+        prev.map((leave) =>
+          leave.id === leaveId ? { ...leave, status: newStatus } : leave
+        )
+      );
+      await sendStatusEmail(leaveId, newStatus);
+      toast.success(`Leave ${newStatus.toLowerCase()} successfully!`);
+    } catch (error) {
+      // //console.error(`Error updating leave status to ${newStatus}:`, error);
+      setError(`Failed to update leave status: ${error.message}`);
+      toast.error(`Failed to update leave status.`);
+    }
+  };
+
+  const sendStatusEmail = async (leaveId, status) => {
+    try {
+      const leaveRef = doc(db, "Leaves", leaveId);
+      const leaveSnap = await getDoc(leaveRef);
+      if (!leaveSnap.exists()) {
+        throw new Error("Leave document not found");
+      }
+
+      const { email, startDate, endDate, leaveType, attachmentUrl } = leaveSnap.data();
+      if (!email || !startDate || !endDate || !leaveType) {
+        throw new Error("Missing required fields in leave document");
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error(`Invalid email format: ${email}`);
+      }
+
+      const payload = {
+        toEmail: email,
+        subject: `Leave Application ${status}`,
+        htmlContent: `<p>Your ${leaveType} leave request from ${new Date(
+          startDate
+        ).toLocaleDateString()} to ${new Date(
+          endDate
+        ).toLocaleDateString()} has been ${status.toLowerCase()}.</p>
+        ${attachmentUrl ? `<p>Attachment: <a href="${attachmentUrl}">View Attachment</a></p>` : ""}`,
+      };
+
+      const response = await fetch(
+        "http://localhost:5001/fireblaze-ignite/us-central1/sendEmail",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to send email");
+      }
+    } catch (error) {
+      // //console.error("Error sending status email:", error);
+      throw error;
+    }
+  };
+
+  const handleFilterChange = (e) => {
+    if (!canView) {
+      toast.error("You do not have permission to change the status filter.");
+      return;
+    }
+    setFilter(e.target.value);
+  };
+
+  const filteredLeaves = leaves.filter((leave) =>
+    filter === "All" ? true : leave.status === filter
+  );
+
+  if (!canView) {
+    return (
+      <div className="p-4 text-red-600 text-center">
+        Access Denied: You do not have permission to view leave applications.
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  return (
+  <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-100 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
+  <h1 className="text-2xl font-bold text-[#333333] font-sans mb-4">
+    Leave Approval Dashboard
+  </h1>
+
+  {error && (
+    <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-6 text-sm text-red-600 font-medium">
+      {error}
+    </div>
+  )}
+
+  <div className="flex justify-between items-center mb-8">
+    <div className="flex items-center gap-4">
+      <label className="text-sm font-semibold text-gray-700">Filter by Status</label>
+      <select
+        value={filter}
+        onChange={handleFilterChange}
+        disabled={!canView}
+        className="w-full sm:w-48 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+      >
+        <option value="">All</option>
+        <option value="Pending">Pending</option>
+        <option value="Approved">Approved</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+    </div>
+  </div>
+
+  <div className="rounded-xl shadow-lg border border-gray-200 overflow-x-auto max-h-[70vh] overflow-y-auto bg-white">
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+          <tr>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Employee Email
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Leave Type
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Start Date
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              End Date
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Reason
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Attachment
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Status
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {filteredLeaves.length === 0 ? (
+            <tr>
+              <td
+                colSpan="8"
+                className="px-6 py-4 text-center text-sm text-gray-500"
+              >
+                No leave applications found.
+              </td>
+            </tr>
+          ) : (
+            filteredLeaves.map((leave) => (
+              <tr key={leave.id} className="hover:bg-gray-50 transition-colors duration-150">
+                <td className="px-6 py-4 text-sm text-gray-700">{leave.email}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{leave.leaveType}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">
+                  {new Date(leave.startDate).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-700">
+                  {new Date(leave.endDate).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-700">{leave.reason}</td>
+                <td className="px-6 py-4 text-sm">
+                  {leave.attachmentUrl ? (
+                    <a
+                      href={leave.attachmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 font-medium transition duration-150"
+                      aria-label={`View attachment for ${leave.leaveType} leave request by ${leave.email}`}
+                    >
+                      View Attachment
+                    </a>
+                  ) : (
+                    <span className="text-gray-400">No Attachment</span>
+                  )}
+                </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                      leave.status === "Approved"
+                        ? "bg-green-100 text-green-800"
+                        : leave.status === "Rejected"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {leave.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  {leave.status === "Pending" && canUpdate && (
+                    <div className="flex space-x-3">
+                      <button
+                        className="bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-2 rounded-lg shadow-sm hover:from-green-700 hover:to-green-800 transition duration-200 font-medium"
+                        onClick={() => handleStatusUpdate(leave.id, "Approved")}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        className="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-lg shadow-sm hover:from-red-700 hover:to-red-800 transition duration-200 font-medium"
+                        onClick={() => handleStatusUpdate(leave.id, "Rejected")}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+  );
+};
+
+export default HRLeaveApproval;

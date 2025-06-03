@@ -56,7 +56,7 @@
 // //             toggleSidebar();
 // //             refreshCenters(); // Refresh the center list in Centers.jsx
 // //         } catch (error) {
-// //             console.error("Error saving center:", error);
+// //             //console.error("Error saving center:", error);
 // //         }
 // //     };
 
@@ -150,7 +150,7 @@
 //             toggleSidebar();
 //             refreshCenters(); // Refresh the center list in Centers.jsx
 //         } catch (error) {
-//             console.error("Error saving center:", error);
+//             //console.error("Error saving center:", error);
 //             alert("Failed to save center. Please try again.");
 //         }
 //     };
@@ -246,7 +246,7 @@ export default function CreateCenters({ isOpen, toggleSidebar, centerData, refre
             toggleSidebar();
             refreshCenters();
         } catch (error) {
-            console.error("Error saving center:", error);
+            //console.error("Error saving center:", error);
             alert("Failed to save center. Please try again.");
         }
     };

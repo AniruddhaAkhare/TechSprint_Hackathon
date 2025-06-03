@@ -36,7 +36,7 @@ const QuestionTemplate = () => {
                 }));
                 setTemplates(templatesData);
             } catch (error) {
-                console.error('Error fetching templates:', error);
+                //console.error('Error fetching templates:', error);
             }
         };
 
@@ -50,7 +50,7 @@ const QuestionTemplate = () => {
                 }));
                 setQuestions(questionsData);
             } catch (error) {
-                console.error('Error fetching questions:', error);
+                //console.error('Error fetching questions:', error);
             }
         };
 
@@ -72,7 +72,7 @@ const QuestionTemplate = () => {
                 timestamp: serverTimestamp(),
             });
         } catch (error) {
-            console.error('Error logging activity:', error);
+            //console.error('Error logging activity:', error);
         }
     };
 
@@ -128,7 +128,7 @@ const QuestionTemplate = () => {
             setIsDialogOpen(false);
             setTemplateData({ name: '', subject: '', selectedQuestions: [] });
         } catch (error) {
-            console.error('Error saving template:', error);
+            //console.error('Error saving template:', error);
             alert('Failed to save template. Please try again.');
         }
     };
@@ -158,7 +158,7 @@ const QuestionTemplate = () => {
             });
             alert('Template deleted successfully!');
         } catch (error) {
-            console.error('Error deleting template:', error);
+            //console.error('Error deleting template:', error);
             alert('Failed to delete template. Please try again.');
         }
     };
@@ -186,7 +186,7 @@ const QuestionTemplate = () => {
             setSelectedTemplates([]);
             alert(`${selectedTemplates.length} template(s) deleted successfully!`);
         } catch (error) {
-            console.error('Error deleting multiple templates:', error);
+            //console.error('Error deleting multiple templates:', error);
             alert('Failed to delete some templates. Please try again.');
         }
     };
@@ -226,15 +226,15 @@ const QuestionTemplate = () => {
     }
 
     return (
-        <div className="max-w-6xl mx-auto p-6 bg-gray-100 min-h-screen">
-            {/* Header and Buttons */}
+       <div className="bg-gray-100 min-h-screen p-4 fixed inset-0 left-[300px]">
+            {/* Header */}
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-semibold text-gray-900">Question Templates</h1>
+                <h1 className="text-2xl font-bold text-[#333333] font-sans">Question Templates</h1>
                 <div className="flex gap-4">
                     {canDelete && selectedTemplates.length > 0 && (
                         <button
                             onClick={deleteMultipleTemplates}
-                            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors flex items-center gap-2"
+                            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center gap-2"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4a2 2 0 012 2v1H7V5a2 2 0 012-2z" />
@@ -249,7 +249,7 @@ const QuestionTemplate = () => {
                                 setTemplateData({ name: '', subject: '', selectedQuestions: [] });
                                 setIsDialogOpen(true);
                             }}
-                            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -260,36 +260,28 @@ const QuestionTemplate = () => {
                 </div>
             </div>
 
-            {/* Filters and Search */}
+            {/* Filters */}
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
                 <div className="flex flex-col md:flex-row gap-4">
                     <select
                         value={filterSubject}
                         onChange={(e) => setFilterSubject(e.target.value)}
-                        className="w-full md:w-1/4 p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700"
+                        className="w-full md:w-1/4 p-2.5 border border-gray-300 rounded-md"
                     >
                         <option value="">All Subjects</option>
                         {uniqueSubjects.map(subject => (
-                            <option key={subject} value={subject}>
-                                {subject}
-                            </option>
+                            <option key={subject} value={subject}>{subject}</option>
                         ))}
                     </select>
-
                     <div className="relative w-full md:w-1/2">
                         <input
                             type="text"
                             placeholder="Search templates..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full p-2.5 pl-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            className="w-full p-2.5 pl-10 border border-gray-300 rounded-md"
                         />
-                        <svg
-                            className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
+                        <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
@@ -297,76 +289,71 @@ const QuestionTemplate = () => {
             </div>
 
             {/* Templates List */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-                {filteredTemplates.length === 0 ? (
-                    <p className="text-gray-500 text-center">No templates available</p>
-                ) : (
-                    <>
-                        <div className="p-4 border-b border-gray-200 flex items-center">
-                            <input
-                                type="checkbox"
-                                onChange={handleSelectAll}
-                                checked={selectedTemplates.length === filteredTemplates.length && filteredTemplates.length > 0}
-                                className="mr-4 h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                            />
-                            <span className="text-gray-700 font-medium">Select All</span>
-                        </div>
-                        <ul className="divide-y divide-gray-200">
-                            {filteredTemplates.map(template => (
-                                <li key={template.id} className="py-4 flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedTemplates.includes(template.id)}
-                                        onChange={() => handleSelectTemplate(template.id)}
-                                        className="mr-4 h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                    />
-                                    <div className="flex-1">
-                                        <h3 className="text-lg font-medium text-gray-900">{template.name}</h3>
-                                        <p className="text-sm text-gray-500">Subject: {template.subject}</p>
-                                        <p className="text-sm text-gray-500">
-                                            Questions: {template.selectedQuestions.length}
-                                        </p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        {canUpdate && (
-                                            <button
-                                                onClick={() => editTemplate(template)}
-                                                className="text-indigo-600 hover:text-indigo-800"
-                                            >
-                                                Edit
-                                            </button>
-                                        )}
-                                        {canDelete && (
-                                            <button
-                                                onClick={() => deleteTemplate(template.id)}
-                                                className="text-red-600 hover:text-red-800"
-                                            >
-                                                Delete
-                                            </button>
-                                        )}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    </>
-                )}
+       <div className="bg-white p-6 rounded-xl shadow-lg max-w-4xl mx-auto">
+  {filteredTemplates.length === 0 ? (
+    <p className="text-gray-400 italic text-center py-10">No templates available</p>
+  ) : (
+    <>
+      <div className="flex items-center border-b border-gray-200 pb-3 mb-4">
+        <input
+          type="checkbox"
+          onChange={handleSelectAll}
+          checked={selectedTemplates.length === filteredTemplates.length}
+          className="mr-4 h-6 w-6 text-indigo-600 rounded-md focus:ring-indigo-500 focus:ring-2"
+        />
+        <span className="text-gray-800 font-semibold text-lg select-none">Select All</span>
+      </div>
+      <ul className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+        {filteredTemplates.map(template => (
+          <li
+            key={template.id}
+            className="py-4 flex items-center hover:bg-indigo-50 rounded-lg transition-colors duration-200"
+          >
+            <input
+              type="checkbox"
+              checked={selectedTemplates.includes(template.id)}
+              onChange={() => handleSelectTemplate(template.id)}
+              className="mr-5 h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 focus:ring-2"
+            />
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-gray-900 truncate">{template.name}</h3>
+              <p className="text-sm text-gray-600 truncate">Subject: {template.subject}</p>
+              <p className="text-sm text-gray-600">Questions: {template.selectedQuestions.length}</p>
             </div>
+            <div className="flex space-x-3 ml-6">
+              {canUpdate && (
+                <button
+                  onClick={() => editTemplate(template)}
+                  className="px-4 py-1 rounded-md bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transition"
+                  aria-label={`Edit ${template.name}`}
+                >
+                  Edit
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  onClick={() => deleteTemplate(template.id)}
+                  className="px-4 py-1 rounded-md bg-red-600 text-white text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition"
+                  aria-label={`Delete ${template.name}`}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+</div>
 
-            {/* Right-Side Dialog */}
-            <div
-                className={`fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
-                    isDialogOpen ? 'translate-x-0' : 'translate-x-full'
-                }`}
-            >
-                <div className="p-6 bg-white h-full overflow-y-auto">
+
+            {/* Side Dialog */}
+            <div className={`fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${isDialogOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className="p-6 h-full overflow-y-auto">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-semibold text-gray-900">
-                            {editingTemplate ? 'Edit Template' : 'Create New Template'}
-                        </h2>
-                        <button
-                            onClick={() => setIsDialogOpen(false)}
-                            className="text-gray-500 hover:text-gray-700"
-                        >
+                        <h2 className="text-xl font-semibold">{editingTemplate ? 'Edit Template' : 'Create New Template'}</h2>
+                        <button onClick={() => setIsDialogOpen(false)} className="text-gray-500 hover:text-gray-700">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -376,76 +363,62 @@ const QuestionTemplate = () => {
                     {/* Template Form */}
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Template Name</label>
+                            <label className="block text-sm font-medium text-gray-700">Template Name <span className="text-red-500">*</span></label>
                             <input
-                                type="text"
                                 name="name"
                                 value={templateData.name}
                                 onChange={handleInputChange}
-                                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
                                 placeholder="Enter template name"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Subject</label>
+                            <label className="block text-sm font-medium text-gray-700">Subject <span className="text-red-500">*</span></label>
                             <select
                                 name="subject"
                                 value={templateData.subject}
                                 onChange={handleInputChange}
-                                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
                                 required
                             >
                                 <option value="">Select subject</option>
                                 {uniqueSubjects.map(subject => (
-                                    <option key={subject} value={subject}>
-                                        {subject}
-                                    </option>
+                                    <option key={subject} value={subject}>{subject}</option>
                                 ))}
                             </select>
                         </div>
 
-                        {/* Question Selection */}
+                        {/* Question List */}
                         <div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Add Questions</h3>
+                            <h3 className="text-lg font-medium mb-2">Add Questions</h3>
                             <div className="max-h-64 overflow-y-auto border border-gray-300 rounded-md p-2">
-                                {questions.length === 0 ? (
-                                    <p className="text-gray-500 text-center">No questions available</p>
-                                ) : (
-                                    questions
-                                        .filter(q => !templateData.subject || q.subject === templateData.subject)
-                                        .map(question => (
-                                            <div key={question.id} className="flex items-center gap-2 py-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={templateData.selectedQuestions.includes(question.id)}
-                                                    onChange={() => toggleQuestion(question.id)}
-                                                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                                                />
-                                                <span className="text-sm text-gray-700 truncate">{question.question}</span>
-                                            </div>
-                                        ))
-                                )}
+                                {questions.filter(q => !templateData.subject || q.subject === templateData.subject).map(question => (
+                                    <div key={question.id} className="flex items-center gap-2 py-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={templateData.selectedQuestions.includes(question.id)}
+                                            onChange={() => toggleQuestion(question.id)}
+                                            className="h-4 w-4 text-indigo-600"
+                                        />
+                                        <span className="text-sm text-gray-700 truncate">{question.question}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Selected Questions Preview */}
+                        {/* Preview */}
                         {templateData.selectedQuestions.length > 0 && (
                             <div>
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">Selected Questions</h3>
+                                <h3 className="text-lg font-medium mb-2">Selected Questions</h3>
                                 <ul className="space-y-2">
                                     {templateData.selectedQuestions.map(id => {
                                         const question = questions.find(q => q.id === id);
                                         return (
                                             <li key={id} className="flex justify-between items-center bg-gray-50 p-2 rounded-md">
                                                 <span className="text-sm text-gray-700 truncate">{question?.question || 'Unknown'}</span>
-                                                <button
-                                                    onClick={() => toggleQuestion(id)}
-                                                    className="text-red-600 hover:text-red-800 text-sm"
-                                                >
-                                                    Remove
-                                                </button>
+                                                <button onClick={() => toggleQuestion(id)} className="text-red-600 text-sm">Remove</button>
                                             </li>
                                         );
                                     })}
@@ -456,30 +429,11 @@ const QuestionTemplate = () => {
 
                     {/* Action Buttons */}
                     <div className="mt-6 flex justify-end gap-2">
-                        <button
-                            onClick={() => setIsDialogOpen(false)}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={saveTemplate}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                            disabled={!templateData.name || !templateData.subject || (!canCreate && !editingTemplate) || (!canUpdate && editingTemplate)}
-                        >
-                            {editingTemplate ? 'Update' : 'Save'}
-                        </button>
+                        <button onClick={() => setIsDialogOpen(false)} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100">Cancel</button>
+                        <button onClick={saveTemplate} className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Save</button>
                     </div>
                 </div>
             </div>
-
-            {/* Overlay */}
-            {isDialogOpen && (
-                <div
-                    className="fixed inset-0 bg-gray-900 bg-opacity-60 z-40"
-                    onClick={() => setIsDialogOpen(false)}
-                />
-            )}
         </div>
     );
 };

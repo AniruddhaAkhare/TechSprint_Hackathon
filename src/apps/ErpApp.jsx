@@ -11,7 +11,6 @@ import PageLoader from '@/components/PageLoader';
 import useResponsive from '@/hooks/useResponsive';
 
 export default function ErpApp() {
-  console.log("Inside ErpApp - Component mounted");
   const { Content } = Layout;
   const { isMobile } = useResponsive();
   const [user, setUser] = useState(null);
@@ -49,8 +48,13 @@ export default function ErpApp() {
     unsubscribeAuth();
   }, []);
 
-  // if (loading) return <PageLoader />;
-
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+      </div>
+    );
+  }
   return (
     <Layout hasSider>
       <Navigation user={user} />

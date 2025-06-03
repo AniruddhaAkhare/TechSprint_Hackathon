@@ -122,146 +122,159 @@ const QuestionForm = ({ onAddQuestion, initialData, questions }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="overflow-y-auto h-full">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Question</label>
-        <input
-          type="text"
-          value={formData.question}
-          onChange={(e) => setFormData({ ...formData, question: e.target.value })}
-          placeholder="Enter question"
-          required
-          className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-        />
-      </div>
+  {/* Question Input */}
+  <div className="overflow-y-auto h-full">
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      Question <span className="text-red-500">*</span>
+    </label>
+    <input
+      type="text"
+      value={formData.question}
+      onChange={(e) => setFormData({ ...formData, question: e.target.value })}
+      placeholder="Enter question"
+      required
+      className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+    />
+  </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-        <select
-          value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-          className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+  {/* Type Selector */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      Type <span className="text-red-500">*</span>
+    </label>
+    <select
+      value={formData.type}
+      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+      className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+    >
+      <option value="mcq">MCQ</option>
+      <option value="short">Short Question</option>
+      <option value="upload">Upload File</option>
+      <option value="rating">Rating</option>
+    </select>
+  </div>
+
+  {/* Subject with Suggestions */}
+  <div className="relative">
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      Subject <span className="text-red-500">*</span>
+    </label>
+    <input
+      type="text"
+      value={formData.subject}
+      onChange={handleSubjectChange}
+      placeholder="Enter subject"
+      required
+      className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+    />
+    {showSubjectDropdown && formData.subject && filteredSubjects.length > 0 && (
+      <ul className="absolute z-10 w-full bg-white border rounded-md mt-1 max-h-40 overflow-auto shadow-lg">
+        {filteredSubjects.map(subject => (
+          <li
+            key={subject}
+            onClick={() => {
+              setFormData(prev => ({ ...prev, subject }));
+              setShowSubjectDropdown(false);
+            }}
+            className="p-2 hover:bg-gray-100 cursor-pointer"
+          >
+            {subject}
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+
+  {/* Tags Input */}
+  <div className="relative">
+    <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+    <input
+      type="text"
+      value={currentTag}
+      onChange={handleTagInput}
+      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag(currentTag))}
+      placeholder="Enter tag and press Enter"
+      className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+    />
+    {showTagDropdown && currentTag && filteredTags.length > 0 && (
+      <ul className="absolute z-10 w-full bg-white border rounded-md mt-1 max-h-40 overflow-auto shadow-lg">
+        {filteredTags.map(tag => (
+          <li
+            key={tag}
+            onClick={() => addTag(tag)}
+            className="p-2 hover:bg-gray-100 cursor-pointer"
+          >
+            {tag}
+          </li>
+        ))}
+      </ul>
+    )}
+    <div className="mt-2 flex flex-wrap gap-2">
+      {formData.tags.map(tag => (
+        <span
+          key={tag}
+          className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-sm flex items-center gap-1"
         >
-          <option value="mcq">MCQ</option>
-          <option value="short">Short Question</option>
-          <option value="upload">Upload File</option>
-          <option value="rating">Rating</option>
-        </select>
-      </div>
-
-      <div className="relative">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-        <input
-          type="text"
-          value={formData.subject}
-          onChange={handleSubjectChange}
-          placeholder="Enter subject"
-          required
-          className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-        />
-        {showSubjectDropdown && formData.subject && filteredSubjects.length > 0 && (
-          <ul className="absolute z-10 w-full bg-white border rounded-md mt-1 max-h-40 overflow-auto shadow-lg">
-            {filteredSubjects.map(subject => (
-              <li
-                key={subject}
-                onClick={() => {
-                  setFormData(prev => ({ ...prev, subject }));
-                  setShowSubjectDropdown(false);
-                }}
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-              >
-                {subject}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="relative">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-        <input
-          type="text"
-          value={currentTag}
-          onChange={handleTagInput}
-          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag(currentTag))}
-          placeholder="Enter tag and press Enter"
-          className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-        />
-        {showTagDropdown && currentTag && filteredTags.length > 0 && (
-          <ul className="absolute z-10 w-full bg-white border rounded-md mt-1 max-h-40 overflow-auto shadow-lg">
-            {filteredTags.map(tag => (
-              <li
-                key={tag}
-                onClick={() => addTag(tag)}
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-              >
-                {tag}
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="mt-2 flex flex-wrap gap-2">
-          {formData.tags.map(tag => (
-            <span
-              key={tag}
-              className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-sm flex items-center gap-1"
-            >
-              {tag}
-              <button
-                type="button"
-                onClick={() => removeTag(tag)}
-                className="text-indigo-600 hover:text-indigo-800"
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {formData.type === 'mcq' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
-          {formData.options.map((option, index) => (
-            <div key={index} className="flex items-center mb-2 gap-2">
-              <input
-                type="text"
-                value={option}
-                onChange={(e) => handleOptionChange(index, e.target.value)}
-                placeholder={`Option ${index + 1}`}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <button
-                type="button"
-                onClick={() => deleteOption(index)}
-                className="text-red-600 hover:text-red-800"
-                disabled={formData.options.length <= 1}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          ))}
+          {tag}
           <button
             type="button"
-            onClick={addOption}
-            className="mt-2 text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1"
+            onClick={() => removeTag(tag)}
+            className="text-indigo-600 hover:text-indigo-800"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            ×
+          </button>
+        </span>
+      ))}
+    </div>
+  </div>
+
+  {/* MCQ Options */}
+  {formData.type === 'mcq' && (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
+      {formData.options.map((option, index) => (
+        <div key={index} className="flex items-center mb-2 gap-2">
+          <input
+            type="text"
+            value={option}
+            onChange={(e) => handleOptionChange(index, e.target.value)}
+            placeholder={`Option ${index + 1}`}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <button
+            type="button"
+            onClick={() => deleteOption(index)}
+            className="text-red-600 hover:text-red-800"
+            disabled={formData.options.length <= 1}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
-            Add Option
           </button>
         </div>
-      )}
-
+      ))}
       <button
-        type="submit"
-        className="w-full bg-indigo-600 text-white px-4 py-2.5 rounded-md hover:bg-indigo-700 transition-colors font-medium"
+        type="button"
+        onClick={addOption}
+        className="mt-2 text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1"
       >
-        {initialData ? 'Update Question' : 'Add Question'}
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add Option
       </button>
-    </form>
+    </div>
+  )}
+
+  {/* Submit Button */}
+  <button
+    type="submit"
+    className="w-full bg-indigo-600 text-white px-4 py-2.5 rounded-md hover:bg-indigo-700 transition-colors font-medium"
+  >
+    {initialData ? 'Update Question' : 'Add Question'}
+  </button>
+</form>
+
   );
 };
 

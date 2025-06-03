@@ -14,7 +14,6 @@ const CurriculumPage = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       if (!currentUser) {
-        console.log("No authenticated user found");
       }
       setLoading(false);
     });
@@ -25,7 +24,7 @@ const CurriculumPage = () => {
   const logActivity = async (action, details) => {
     const currentUser = auth.currentUser;
     if (!currentUser) {
-      console.error("No authenticated user, cannot log activity");
+      // //console.error("No authenticated user, cannot log activity");
       return;
     }
 
@@ -36,9 +35,8 @@ const CurriculumPage = () => {
         details: typeof details === "object" ? JSON.stringify(details) : details,
         timestamp: serverTimestamp(),
       });
-      console.log(`Activity logged: ${action} - ${JSON.stringify(details)}`);
     } catch (error) {
-      console.error("Error logging activity:", error);
+      // //console.error("Error logging activity:", error);
     }
   };
 
@@ -63,13 +61,16 @@ const CurriculumPage = () => {
       // logActivity("access_denied", "Attempted to submit curriculum without permission");
       return;
     }
-    console.log("New Curriculum:", data);
     // Logging is handled in CreateCurriculum on successful save
     setIsModalOpen(false);
   };
 
   if (loading) {
-    return <div className="p-6 text-center text-gray-600">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+      </div>
+    );
   }
 
   return (

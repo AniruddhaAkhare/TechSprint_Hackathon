@@ -6,11 +6,10 @@ import { db } from '../config/firebase';
 export default function StudentProfile() {
     const { studentId } = useParams();
     const [student, setStudent] = useState(null);
-    const [centers, setCenters] = useState([]); // State to store center details
+    const [centers, setCenters] = useState([]); 
     const navigate = useNavigate();
 
     useEffect(() => {
-        console.log("Fetching student data for ID:", studentId);
 
         const fetchStudentData = async () => {
             // Fetch student data
@@ -20,7 +19,6 @@ export default function StudentProfile() {
             if (docSnap.exists()) {
                 setStudent(docSnap.data());
             } else {
-                console.log("No such document!");
             }
         };
 
@@ -30,10 +28,10 @@ export default function StudentProfile() {
                 // Fetch the instituteSetup document first to get its ID
                 const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
                 if (instituteSnapshot.empty) {
-                    console.error("No instituteSetup document found");
+                    //console.error("No instituteSetup document found");
                     return;
                 }
-                const instituteId = instituteSnapshot.docs[0].id;
+                const instituteId = "RDJ9wMXGrIUk221MzDxP";
 
                 // Fetch only active centers from the Center subcollection
                 const centerQuery = query(
@@ -44,7 +42,7 @@ export default function StudentProfile() {
                 const centersList = centerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setCenters(centersList);
             } catch (error) {
-                console.error("Error fetching centers:", error);
+                //console.error("Error fetching centers:", error);
             }
         };
 
@@ -62,15 +60,15 @@ export default function StudentProfile() {
                 <h2 className="text-lg font-medium text-gray-700 mb-4">Personal Details</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-600">First Name</label>
+                        <label className="block text-sm font-medium text-gray-600">Name</label>
                         <input
                             type="text"
-                            value={student.first_name || "N/A"}
+                            value={student.Name || "N/A"}
                             readOnly
                             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:outline-none"
                         />
                     </div>
-                    <div>
+                    {/* <div>
                         <label className="block text-sm font-medium text-gray-600">Last Name</label>
                         <input
                             type="text"
@@ -78,7 +76,7 @@ export default function StudentProfile() {
                             readOnly
                             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:outline-none"
                         />
-                    </div>
+                    </div> */}
                     <div>
                         <label className="block text-sm font-medium text-gray-600">Email</label>
                         <input

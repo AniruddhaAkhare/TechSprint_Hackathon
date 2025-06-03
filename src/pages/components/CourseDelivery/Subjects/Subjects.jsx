@@ -83,66 +83,85 @@ export default function Subjects() {
                 await deleteDoc(doc(db, "Subjects", deleteId));
                 fetchSubjects();
             } catch (err) {
-                console.error("Error deleting subjects:", err);
+                // //console.error("Error deleting subjects:", err);
             }
         }
         setOpenDelete(false);
     };
 
     return (
-        <div className="flex-col w-screen ml-80 p-4">
-            <div className="justify-between items-center p-4 mb-4">
-                <div className="flex-1">
-                    <h1 className="text-2xl font-semibold">Subjects</h1>
+    <div className="w-full ml-[20rem] p-8 bg-gray-100 min-h-screen font-sans">
+  <div className="max-w-6xl mx-auto space-y-8">
+    
+    {/* Header Section */}
+    <div className="flex justify-between items-center">
+      <h1 className="text-3xl font-bold text-gray-800">📘 Subjects</h1>
+      <button
+        type="button"
+        onClick={handleCreateSubjectClick}
+        className="bg-indigo-600 text-white px-5 py-2 rounded-lg shadow hover:bg-indigo-700 transition duration-200"
+      >
+        + Create Subject
+      </button>
+    </div>
+
+    {/* Create Subject Form */}
+    <CreateSubjects isOpen={isOpen} toggleSidebar={handleClose} subject={currentSubject} />
+
+    {/* Search Bar */}
+    <div className="mt-4">
+      <SearchBar
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        handleSearch={handleSearch}
+      />
+    </div>
+
+    {/* Subject Table */}
+    <div className="mt-6 bg-white rounded-xl shadow-md overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200 text-sm">
+        <thead className="bg-gray-50 text-gray-700 text-left uppercase tracking-wider">
+          <tr>
+            <th className="px-6 py-3">Sr No</th>
+            <th className="px-6 py-3">Subject Name</th>
+            <th className="px-6 py-3">Action</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-100">
+          {(searchResults.length > 0 ? searchResults : subjects).map((subject, index) => (
+            <tr key={subject.id} className="hover:bg-gray-50 transition">
+              <td className="px-6 py-4">{index + 1}</td>
+              <td className="px-6 py-4 font-medium text-gray-800">{subject.name}</td>
+              <td className="px-6 py-4">
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => { setDeleteId(subject.id); setOpenDelete(true); }}
+                    className="bg-red-500 text-white px-4 py-1 rounded-md hover:bg-red-600 transition duration-150"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => handleEditClick(subject)}
+                    className="bg-blue-500 text-white px-4 py-1 rounded-md hover:bg-blue-600 transition duration-150"
+                  >
+                    Update
+                  </button>
                 </div>
-                <div>
-                    <button type="button"
-                        className="btn btn-primary bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
-                        onClick={handleCreateSubjectClick}>
-                        + Create subject
-                    </button>
-                </div>
-            </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-            <CreateSubjects isOpen={isOpen} toggleSidebar={handleClose} subject={currentSubject} />
-
-            <div className="justify-between items-center p-4 mt-4">
-                <SearchBar
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    handleSearch={handleSearch}
-                />
-            </div>
-
-            <div className="sec-3">
-                <table className="data-table table">
-                    <thead className="table-secondary">
-                        <tr>
-                            <th>Sr No</th>
-                            <th>Subject Name</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(searchResults.length > 0 ? searchResults : subjects).map((subject, index) => (
-                            <tr key={subject.id}>
-                                <td>{index + 1}</td>
-                                <td>{subject.name}</td>
-                                <td>
-                                    <div className="flex items-center space-x-2">
-                                        <button onClick={() => { setDeleteId(subject.id); setOpenDelete(true); }} className="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600">
-                                            Delete
-                                        </button>
-                                        <button onClick={() => handleEditClick(subject)} className="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600">
-                                            Update
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+      {/* Empty state fallback */}
+      {(searchResults.length === 0 && subjects.length === 0) && (
+        <div className="text-center text-gray-500 p-6">
+          No subjects available.
         </div>
+      )}
+    </div>
+  </div>
+</div>
+
     );
 }

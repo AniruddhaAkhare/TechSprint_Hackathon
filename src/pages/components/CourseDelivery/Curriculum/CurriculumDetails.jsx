@@ -40,7 +40,7 @@ const CurriculumDetails = () => {
         //   name: curriculum?.data().name || "Unknown"
         // });
       } catch (error) {
-        console.error("Error fetching curriculum data:", error);
+        // //console.error("Error fetching curriculum data:", error);
       }
     };
 
@@ -49,7 +49,7 @@ const CurriculumDetails = () => {
 
   const logActivity = async (action, details) => {
     if (!user) {
-      console.error("No user logged in for logging activity");
+      // //console.error("No user logged in for logging activity");
       return;
     }
     try {
@@ -60,9 +60,8 @@ const CurriculumDetails = () => {
         action,
         details
       });
-      console.log("Activity logged:", action, details);
     } catch (err) {
-      console.error("Error logging activity:", err.message);
+      // //console.error("Error logging activity:", err.message);
     }
   };
 
@@ -80,7 +79,7 @@ const CurriculumDetails = () => {
       // });
       // navigate(`/curriculum/${curriculumId}/section/${sectionId}/add-material`);
     } catch (error) {
-      console.error("Error logging navigation to add material:", error);
+      // //console.error("Error logging navigation to add material:", error);
     }
   };
 

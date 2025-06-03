@@ -233,7 +233,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
       };
       await addDoc(collection(db, "activityLogs"), activityLog);
     } catch (error) {
-      console.error("Error logging activity:", error);
+      // //console.error("Error logging activity:", error);
     }
   };
 
@@ -252,7 +252,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
           setTransactionCount(transactionSnapshot.docs.length);
           // logActivity("FETCH_TRANSACTIONS_SUCCESS", { transactionCount: transactionSnapshot.docs.length });
         } catch (error) {
-          console.error("Error fetching transactions:", error);
+          // //console.error("Error fetching transactions:", error);
           setTransactionCount(0);
           // logActivity("FETCH_TRANSACTIONS_ERROR", { error: error.message });
         }
@@ -316,7 +316,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
       resetForm();
       toggleSidebar();
     } catch (error) {
-      console.error("Error saving finance partner:", error);
+      // //console.error("Error saving finance partner:", error);
       toast.error("Failed to save finance partner. Please try again.");
       // logActivity(`${actionType.toUpperCase()}_PARTNER_ERROR`, { error: error.message, name: partnerName });
     }
@@ -545,7 +545,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
           {/* Partner Name */}
           <div>
             <label htmlFor="partnerName" className="block text-sm font-medium text-gray-700">
-              Partner Name
+              Partner Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -604,7 +604,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
               type="button"
               onClick={handleAddContact}
               disabled={(!canUpdate && partner) || (!canCreate && !partner)}
-              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
             >
               Add Contact
             </button>
@@ -633,7 +633,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
                             type="button"
                             onClick={() => handleRemoveContact(index)}
                             disabled={(!canUpdate && partner) || (!canCreate && !partner)}
-                            className="text-red-500 hover:text-red-700 font-bold disabled:text-gray-400 disabled:cursor-not-allowed"
+                            className="bg-indigo-600 text-white px-2 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
                           >
                             ✕
                           </button>
@@ -695,7 +695,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
               type="button"
               onClick={handleAddScheme}
               disabled={(!canUpdate && partner) || (!canCreate && !partner)}
-              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
             >
               Add Scheme
             </button>
@@ -826,7 +826,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
             <button
               type="submit"
               disabled={(!canUpdate && partner) || (!canCreate && !partner)}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition duration-200 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
             >
               {partner ? "Update Partner" : "Save Partner"}
             </button>

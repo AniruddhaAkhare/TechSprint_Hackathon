@@ -1,16 +1,513 @@
+// import React, { useState, useEffect } from "react";
+// import { db } from "../../../../config/firebase";
+// import {
+//   getDocs,
+//   collection,
+//   addDoc,
+//   updateDoc,
+//   doc,
+//   serverTimestamp,
+//   query,
+//   where,
+// } from "firebase/firestore";
+// import sendBatchEnrollmentEmail from "../../../../services/sendBatchEnrollmentMail";
+// import BatchForm from "./BatchForm";
+// import CenterSelection from "./CenterSelection";
+// import CurriculumSelection from "./CurriculumSelection";
+// import BatchManagerSelection from "./BatchManagerSelection";
+// import BatchFacultySelection from "./BatchFacultySelection";
+// import StudentSelection from "./StudentSelection";
+
+// const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user }) => {
+//   const [batchName, setBatchName] = useState("");
+//   const [startDate, setStartDate] = useState("");
+//   const [endDate, setEndDate] = useState("");
+//   const [status, setStatus] = useState(batch?.status || "Active");
+//   const [preFeedbackForm, setPreFeedbackForm] = useState(batch?.preFeedbackForm || "");
+//   const [postFeedbackForm, setPostFeedbackForm] = useState(batch?.postFeedbackForm || "");
+//   const [centers, setCenters] = useState([]);
+//   const [selectedCenters, setSelectedCenters] = useState([]);
+//   const [availableCenters, setAvailableCenters] = useState([]);
+//   const [courses, setCourses] = useState([]);
+//   const [selectedCourses, setSelectedCourses] = useState([]);
+//   const [availableCourses, setAvailableCourses] = useState([]);
+//   const [curriculum, setCurriculum] = useState([]);
+//   const [selectedCurriculum, setSelectedCurriculum] = useState([]);
+//   const [availableCurriculum, setAvailableCurriculum] = useState([]);
+//   const [batchManager, setBatchManager] = useState([]);
+//   const [selectedBatchManager, setSelectedBatchManager] = useState([]);
+//   const [availableBatchManager, setAvailableBatchManager] = useState([]);
+//   const [batchFaculty, setBatchFaculty] = useState([]);
+//   const [selectedBatchFaculty, setSelectedBatchFaculty] = useState([]);
+//   const [availableBatchFaculty, setAvailableBatchFaculty] = useState([]);
+//   const [students, setStudents] = useState([]);
+//   const [selectedStudents, setSelectedStudents] = useState([]);
+//   const [availableStudents, setAvailableStudents] = useState([]);
+//   const [templates, setTemplates] = useState([]);
+//   const [availableTemplates, setAvailableTemplates] = useState([]);
+
+//   const capitalizeFirstLetter = (str) => {
+//     if (!str || typeof str !== "string") return str;
+//     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+//   };
+
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         // Fetch Centers
+//         const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
+//         if (instituteSnapshot.empty) {
+//           return;
+//         }
+//         const instituteId = instituteSnapshot.docs[0].id;
+//         const centerQuery = query(
+//           collection(db, "instituteSetup", instituteId, "Center"),
+//           where("isActive", "==", true)
+//         );
+//         const centerSnapshot = await getDocs(centerQuery);
+//         const centersList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+//         setCenters(centersList);
+//         setAvailableCenters(centersList);
+
+//         // Fetch Courses
+//         const courseSnapshot = await getDocs(collection(db, "Course"));
+//         const coursesList = courseSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+//         setCourses(coursesList);
+//         setAvailableCourses(coursesList);
+
+//         // Fetch Curriculum
+//         const curriculumSnapshot = await getDocs(collection(db, "curriculums"));
+//         const curriculumList = curriculumSnapshot.docs.map((doc) => ({
+//           id: doc.id,
+//           ...doc.data(),
+//         }));
+//         setCurriculum(curriculumList);
+//         setAvailableCurriculum(curriculumList);
+
+//         // Fetch Batch Manager
+//         const batchManagerSnapshot = await getDocs(collection(db, "Instructor"));
+//         const batchManagersList = batchManagerSnapshot.docs.map((doc) => ({
+//           id: doc.id,
+//           ...doc.data(),
+//         }));
+//         setBatchManager(batchManagersList);
+//         setAvailableBatchManager(batchManagersList);
+
+//         // Fetch Batch Faculty
+//         const batchFacultySnapshot = await getDocs(collection(db, "Instructor"));
+//         const batchFacultyList = batchFacultySnapshot.docs.map((doc) => ({
+//           id: doc.id,
+//           ...doc.data(),
+//         }));
+//         setBatchFaculty(batchFacultyList);
+//         setAvailableBatchFaculty(batchFacultyList);
+
+//         // Fetch Students
+//         const studentSnapshot = await getDocs(collection(db, "student"));
+//         const studentsList = studentSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+//         setStudents(studentsList);
+//         setAvailableStudents(studentsList);
+
+//         // Fetch Templates
+//         const templateSnapshot = await getDocs(collection(db, "templates"));
+//         const templatesList = templateSnapshot.docs.map((doc) => ({
+//           id: doc.id,
+//           ...doc.data(),
+//         }));
+//         setTemplates(templatesList);
+//         setAvailableTemplates(templatesList);
+//       } catch (error) {
+//         await logActivity("FETCH_DATA_ERROR", { error: error.message }, user);
+//       }
+//     };
+//     fetchData();
+//   }, [logActivity, user]);
+
+//   useEffect(() => {
+//     if (batch) {
+//       setBatchName(batch.batchName || "");
+//       setStartDate(
+//         batch.startDate?.toDate?.().toISOString().split("T")[0] ||
+//           new Date(batch.startDate).toISOString().split("T")[0] ||
+//           ""
+//       );
+//       setEndDate(
+//         batch.endDate?.toDate?.().toISOString().split("T")[0] ||
+//           new Date(batch.endDate).toISOString().split("T")[0] ||
+//           ""
+//       );
+//       setStatus(batch.status || "Active");
+//       setPreFeedbackForm(batch.preFeedbackForm || "");
+//       setPostFeedbackForm(batch.postFeedbackForm || "");
+//       setSelectedCenters(batch.centers || []);
+//       setAvailableCenters(centers.filter((c) => !batch.centers?.includes(c.id)));
+//       setSelectedCourses(batch.courses || []);
+//       setAvailableCourses(courses.filter((c) => !batch.courses?.includes(c.id)));
+//       setSelectedCurriculum(batch.curriculum || []);
+//       setAvailableCurriculum(curriculum.filter((c) => !batch.curriculum?.includes(c.id)));
+//       setSelectedBatchManager(batch.batchManager || []);
+//       setAvailableBatchManager(batchManager.filter((c) => !batch.batchManager?.includes(c.id)));
+//       setSelectedBatchFaculty(batch.batchFaculty || []);
+//       setAvailableBatchFaculty(batchFaculty.filter((c) => !batch.batchFaculty?.includes(c.id)));
+//       setSelectedStudents(batch.students || []);
+//       setAvailableStudents(students.filter((s) => !batch.students?.includes(s.id)));
+//     }
+//   }, [batch, centers, courses, curriculum, batchManager, batchFaculty, students]);
+
+//   const handleAddCenter = (centerId) => {
+//     if (centerId && !selectedCenters.includes(centerId)) {
+//       setSelectedCenters([...selectedCenters, centerId]);
+//       setAvailableCenters(availableCenters.filter((c) => c.id !== centerId));
+//     }
+//   };
+
+//   const handleRemoveCenter = (centerId) => {
+//     setSelectedCenters(selectedCenters.filter((id) => id !== centerId));
+//     const removedCenter = centers.find((c) => c.id === centerId);
+//     if (removedCenter) setAvailableCenters([...availableCenters, removedCenter]);
+//   };
+
+//   const handleAddCourse = (courseId) => {
+//     if (courseId && !selectedCourses.includes(courseId)) {
+//       setSelectedCourses([...selectedCourses, courseId]);
+//       setAvailableCourses(availableCourses.filter((c) => c.id !== courseId));
+//     }
+//   };
+
+//   const handleRemoveCourse = (courseId) => {
+//     setSelectedCourses(selectedCourses.filter((id) => id !== courseId));
+//     const removedCourse = courses.find((c) => c.id === courseId);
+//     if (removedCourse) setAvailableCourses([...availableCourses, removedCourse]);
+//   };
+
+//   const handleAddCurriculum = (curriculumId) => {
+//     if (curriculumId && !selectedCurriculum.includes(curriculumId)) {
+//       setSelectedCurriculum([...selectedCurriculum, curriculumId]);
+//       setAvailableCurriculum(availableCurriculum.filter((c) => c.id !== curriculumId));
+//     }
+//   };
+
+//   const handleRemoveCurriculum = (curriculumId) => {
+//     setSelectedCurriculum(selectedCurriculum.filter((id) => id !== curriculumId));
+//     const removedCurriculum = curriculum.find((c) => c.id === curriculumId);
+//     if (removedCurriculum) setAvailableCurriculum([...availableCurriculum, removedCurriculum]);
+//   };
+
+//   const handleAddBatchManager = (batchManagerId) => {
+//     if (batchManagerId && !selectedBatchManager.includes(batchManagerId)) {
+//       setSelectedBatchManager([...selectedBatchManager, batchManagerId]);
+//       setAvailableBatchManager(availableBatchManager.filter((c) => c.id !== batchManagerId));
+//     }
+//   };
+
+//   const handleRemoveBatchManager = (batchManagerId) => {
+//     setSelectedBatchManager(selectedBatchManager.filter((id) => id !== batchManagerId));
+//     const removedBatchManager = batchManager.find((c) => c.id === batchManagerId);
+//     if (removedBatchManager)
+//       setAvailableBatchManager([...availableBatchManager, removedBatchManager]);
+//   };
+
+//   const handleAddBatchFaculty = (batchFacultyId) => {
+//     if (batchFacultyId && !selectedBatchFaculty.includes(batchFacultyId)) {
+//       setSelectedBatchFaculty([...selectedBatchFaculty, batchFacultyId]);
+//       setAvailableBatchFaculty(availableBatchFaculty.filter((c) => c.id !== batchFacultyId));
+//     }
+//   };
+
+//   const handleRemoveBatchFaculty = (batchFacultyId) => {
+//     setSelectedBatchFaculty(selectedBatchFaculty.filter((id) => id !== batchFacultyId));
+//     const removedBatchFaculty = batchFaculty.find((c) => c.id === batchFacultyId);
+//     if (removedBatchFaculty)
+//       setAvailableBatchFaculty([...availableBatchFaculty, removedBatchFaculty]);
+//   };
+
+//   const handleAddStudent = (studentId) => {
+//     if (studentId && !selectedStudents.includes(studentId)) {
+//       setSelectedStudents([...selectedStudents, studentId]);
+//       setAvailableStudents(availableStudents.filter((s) => s.id !== studentId));
+//     }
+//   };
+
+//   const handleRemoveStudent = (studentId) => {
+//     setSelectedStudents(selectedStudents.filter((id) => id !== studentId));
+//     const removedStudent = students.find((s) => s.id === studentId);
+//     if (removedStudent) setAvailableStudents([...availableStudents, removedStudent]);
+//   };
+
+//   const handleSelectAllStudents = () => {
+//     const allStudentIds = availableStudents.map((student) => student.id);
+//     setSelectedStudents((prev) => [...new Set([...prev, ...allStudentIds])]);
+//     setAvailableStudents([]);
+//   };
+
+//   const resetForm = () => {
+//     setBatchName("");
+//     setStartDate("");
+//     setEndDate("");
+//     setStatus("Active");
+//     setPreFeedbackForm("");
+//     setPostFeedbackForm("");
+//     setSelectedCenters([]);
+//     setAvailableCenters(centers);
+//     setSelectedCourses([]);
+//     setAvailableCourses(courses);
+//     setSelectedCurriculum([]);
+//     setAvailableCurriculum(curriculum);
+//     setSelectedBatchManager([]);
+//     setAvailableBatchManager(batchManager);
+//     setSelectedBatchFaculty([]);
+//     setAvailableBatchFaculty(batchFaculty);
+//     setSelectedStudents([]);
+//     setAvailableStudents(students);
+//     setAvailableTemplates(templates);
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+
+//     // Validate dates
+//     const currentDate = new Date("2025-04-30"); // Current date as per system context
+//     const start = new Date(startDate);
+//     const end = new Date(endDate);
+//     if (start < currentDate.setHours(0, 0, 0, 0)) {
+//       alert("Start date cannot be in the past.");
+//       return;
+//     }
+//     if (end < start) {
+//       alert("End date must be after start date.");
+//       return;
+//     }
+
+//     const batchData = {
+//       batchName: capitalizeFirstLetter(batchName),
+//       startDate: new Date(startDate),
+//       endDate: new Date(endDate),
+//       status,
+//       preFeedbackForm: preFeedbackForm || null,
+//       postFeedbackForm: postFeedbackForm || null,
+//       centers: selectedCenters,
+//       courses: selectedCourses,
+//       curriculum: selectedCurriculum,
+//       batchManager: selectedBatchManager,
+//       batchFaculty: selectedBatchFaculty,
+//       students: selectedStudents,
+//       lastUpdated: serverTimestamp(),
+//     };
+
+//     try {
+//       let batchId;
+//       let newlyAddedStudents = selectedStudents;
+
+//       if (batch) {
+//         // Update existing batch
+//         const batchRef = doc(db, "Batch", batch.id);
+//         await updateDoc(batchRef, { ...batchData, statusChangeDate: serverTimestamp() });
+//         batchId = batch.id;
+//         // Identify newly added students
+//         newlyAddedStudents = selectedStudents.filter(
+//           (studentId) => !batch.students?.includes(studentId)
+//         );
+//         await logActivity(
+//           "UPDATE_BATCH",
+//           {
+//             batchId: batch.id,
+//             name: batchData.batchName,
+//             changes: {
+//               oldName: batch.batchName,
+//               newName: batchData.batchName,
+//               oldStatus: batch.status,
+//               newStatus: batchData.status,
+//             },
+//           },
+//           user
+//         );
+//         alert("Batch updated successfully!");
+//       } else {
+//         // Create new batch
+//         const docRef = await addDoc(collection(db, "Batch"), {
+//           ...batchData,
+//           createdAt: serverTimestamp(),
+//         });
+//         batchId = docRef.id;
+//         await logActivity(
+//           "CREATE_BATCH",
+//           {
+//             batchId: docRef.id,
+//             name: batchData.batchName,
+//           },
+//           user
+//         );
+//         alert("Batch created successfully!");
+//       }
+
+//       // Update student documents with enrolledBatch
+//       for (const studentId of selectedStudents) {
+//         await updateDoc(doc(db, "student", studentId), {
+//           enrolledBatch: batchId,
+//         });
+//       }
+
+//       // Send emails to newly added students
+//       const studentsToEmail = students.filter((student) =>
+//         newlyAddedStudents.includes(student.id)
+//       );
+//       for (const student of studentsToEmail) {
+//         const studentEmail = student.email || "";
+//         const studentName = `${student.first_name || ""} ${student.last_name || ""}`.trim();
+//         if (studentEmail) {
+//           try {
+//             await sendBatchEnrollmentEmail(studentEmail, studentName, {
+//               batchName: batchData.batchName,
+//             });
+//             await logActivity(
+//               "SEND_BATCH_ENROLLMENT_EMAIL_SUCCESS",
+//               {
+//                 batchId,
+//                 email: studentEmail,
+//                 studentName,
+//                 batchName: batchData.batchName,
+//               },
+//               user
+//             );
+//           } catch (emailError) {
+//             await logActivity(
+//               "SEND_BATCH_ENROLLMENT_EMAIL_ERROR",
+//               {
+//                 batchId,
+//                 email: studentEmail,
+//                 studentName,
+//                 batchName: batchData.batchName,
+//                 error: emailError.message,
+//               },
+//               user
+//             );
+//           }
+//         }
+//       }
+
+//       // Call onSubmit to notify parent component
+//       if (typeof onSubmit === "function") {
+//         await onSubmit({ ...batchData, id: batchId });
+//       }
+
+//       resetForm();
+//       toggleSidebar();
+//     } catch (error) {
+//       alert("Failed to save batch. Please try again.");
+//       await logActivity("SAVE_BATCH_ERROR", { error: error.message, batchId }, user);
+//     }
+//   };
+
+//   return (
+//     <>
+//       {isOpen && (
+//         <div
+//           className="fixed inset-0 bg-black bg-opacity-50 z-40"
+//           onClick={toggleSidebar}
+//         />
+//       )}
+//       <div
+//         className={`fixed top-0 right-0 h-full bg-white w-full shadow-lg transform transition-transform duration-300 ${
+//           isOpen ? "translate-x-0" : "translate-x-full"
+//         } p-6 overflow-y-auto z-50`}
+//       >
+//         <BatchForm
+//           batchName={batchName}
+//           setBatchName={setBatchName}
+//           startDate={startDate}
+//           setStartDate={setStartDate}
+//           endDate={endDate}
+//           setEndDate={setEndDate}
+//           status={status}
+//           setStatus={setStatus}
+//           preFeedbackForm={preFeedbackForm}
+//           setPreFeedbackForm={setPreFeedbackForm}
+//           postFeedbackForm={postFeedbackForm}
+//           setPostFeedbackForm={setPostFeedbackForm}
+//           availableTemplates={availableTemplates}
+//           toggleSidebar={toggleSidebar}
+//           isEdit={!!batch}
+//         />
+//         <CenterSelection
+//           availableCenters={availableCenters}
+//           selectedCenters={selectedCenters}
+//           centers={centers}
+//           handleAddCenter={handleAddCenter}
+//           handleRemoveCenter={handleRemoveCenter}
+//         />
+//         <CurriculumSelection
+//           availableCurriculum={availableCurriculum}
+//           selectedCurriculum={selectedCurriculum}
+//           curriculum={curriculum}
+//           handleAddCurriculum={handleAddCurriculum}
+//           handleRemoveCurriculum={handleRemoveCurriculum}
+//         />
+//         <BatchManagerSelection
+//           availableBatchManager={availableBatchManager}
+//           selectedBatchManager={selectedBatchManager}
+//           batchManager={batchManager}
+//           handleAddBatchManager={handleAddBatchManager}
+//           handleRemoveBatchManager={handleRemoveBatchManager}
+//         />
+//         <BatchFacultySelection
+//           availableBatchFaculty={availableBatchFaculty}
+//           selectedBatchFaculty={selectedBatchFaculty}
+//           batchFaculty={batchFaculty}
+//           handleAddBatchFaculty={handleAddBatchFaculty}
+//           handleRemoveBatchFaculty={handleRemoveBatchFaculty}
+//         />
+//         <StudentSelection
+//           availableStudents={availableStudents}
+//           selectedStudents={selectedStudents}
+//           students={students}
+//           handleAddStudent={handleAddStudent}
+//           handleRemoveStudent={handleRemoveStudent}
+//           handleSelectAllStudents={handleSelectAllStudents}
+//         />
+//         <div className="flex justify-end mt-6">
+//           <button
+//             type="button"
+//             onClick={handleSubmit}
+//             className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200 text-base font-medium"
+//           >
+//             {batch ? "Update Batch" : "Create Batch"}
+//           </button>
+//         </div>
+//       </div>
+//     </>
+//   );
+// };
+
+// export default CreateBatch;
+
+
+
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
-import { getDocs, collection, addDoc, updateDoc, doc, serverTimestamp, query, where } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import {
+  getDocs,
+  collection,
+  addDoc,
+  updateDoc,
+  doc,
+  serverTimestamp,
+  query,
+} from "firebase/firestore";
+import sendBatchEnrollmentEmail from "../../../../services/sendBatchEnrollmentMail";
+import BatchForm from "./BatchForm";
+import CenterSelection from "./CenterSelection";
+import CurriculumSelection from "./CurriculumSelection";
+import BatchManagerSelection from "./BatchManagerSelection";
+import BatchFacultySelection from "./BatchFacultySelection";
+import StudentSelection from "./StudentSelection";
 
-const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity }) => {
+const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user }) => {
   const [batchName, setBatchName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [status, setStatus] = useState(batch?.status || "Active");
   const [preFeedbackForm, setPreFeedbackForm] = useState(batch?.preFeedbackForm || "");
   const [postFeedbackForm, setPostFeedbackForm] = useState(batch?.postFeedbackForm || "");
-
   const [centers, setCenters] = useState([]);
   const [selectedCenters, setSelectedCenters] = useState([]);
   const [availableCenters, setAvailableCenters] = useState([]);
@@ -40,72 +537,99 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity }) =>
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch Centers
-        const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
-        if (instituteSnapshot.empty) {
-          console.error("No instituteSetup document found");
-          return;
-        }
-        const instituteId = instituteSnapshot.docs[0].id;
-        const centerQuery = query(
-          collection(db, "instituteSetup", instituteId, "Center"),
-          where("isActive", "==", true)
-        );
-        const centerSnapshot = await getDocs(centerQuery);
+        // Fetch Centers using hardcoded instituteId
+        const instituteId = "RDJ9wMXGrIUk221MzDxP";
+        console.log("Fetching centers for instituteId:", instituteId);
+        const centerCollection = collection(db, "instituteSetup", instituteId, "Center");
+        const centerSnapshot = await getDocs(centerCollection);
         const centersList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        console.log("Fetched centers:", centersList);
+        if (centersList.length === 0) {
+          console.warn("No centers found at /instituteSetup/RDJ9wMXGrIUk221MzDxP/Center");
+          alert("No centers found. Please check Firestore data at /instituteSetup/RDJ9wMXGrIUk221MzDxP/Center.");
+        } else if (!centersList.some((center) => center.id === "8qQ8wfp9QLCt8m67OH7t")) {
+          console.warn("Center with ID 8qQ8wfp9QLCt8m67OH7t not found in fetched centers");
+          alert("Center with ID 8qQ8wfp9QLCt8m67OH7t not found. Please verify the center ID.");
+        }
         setCenters(centersList);
         setAvailableCenters(centersList);
 
         // Fetch Courses
         const courseSnapshot = await getDocs(collection(db, "Course"));
         const coursesList = courseSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        console.log("Fetched courses:", coursesList);
         setCourses(coursesList);
         setAvailableCourses(coursesList);
 
         // Fetch Curriculum
         const curriculumSnapshot = await getDocs(collection(db, "curriculums"));
-        const curriculumList = curriculumSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const curriculumList = curriculumSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("Fetched curriculum:", curriculumList);
         setCurriculum(curriculumList);
         setAvailableCurriculum(curriculumList);
 
         // Fetch Batch Manager
-        const batchManagerSnapshot = await getDocs(collection(db, "Instructor"));
-        const batchManagersList = batchManagerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const batchManagerSnapshot = await getDocs(collection(db, "Users"));
+        const batchManagersList = batchManagerSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("Fetched batch managers:", batchManagersList);
         setBatchManager(batchManagersList);
         setAvailableBatchManager(batchManagersList);
 
         // Fetch Batch Faculty
-        const batchFacultySnapshot = await getDocs(collection(db, "Instructor"));
-        const batchFacultyList = batchFacultySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const batchFacultySnapshot = await getDocs(collection(db, "Users"));
+        const batchFacultyList = batchFacultySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("Fetched batch faculty:", batchFacultyList);
         setBatchFaculty(batchFacultyList);
         setAvailableBatchFaculty(batchFacultyList);
 
         // Fetch Students
         const studentSnapshot = await getDocs(collection(db, "student"));
         const studentsList = studentSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        console.log("Fetched students:", studentsList);
         setStudents(studentsList);
         setAvailableStudents(studentsList);
 
         // Fetch Templates
         const templateSnapshot = await getDocs(collection(db, "templates"));
-        const templatesList = templateSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const templatesList = templateSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("Fetched templates:", templatesList);
         setTemplates(templatesList);
         setAvailableTemplates(templatesList);
       } catch (error) {
         console.error("Error fetching data:", error);
+        alert(`Failed to fetch data: ${error.message}`);
+        await logActivity("FETCH_DATA_ERROR", { error: error.message }, user);
       }
     };
     fetchData();
-  }, []);
+  }, [logActivity, user]);
 
   useEffect(() => {
+    console.log("centers state:", centers);
+    console.log("availableCenters state:", availableCenters);
     if (batch) {
       setBatchName(batch.batchName || "");
       setStartDate(
-        batch.startDate?.toDate?.().toISOString().split("T")[0] || new Date(batch.startDate).toISOString().split("T")[0] || ""
+        batch.startDate?.toDate?.().toISOString().split("T")[0] ||
+          new Date(batch.startDate).toISOString().split("T")[0] ||
+          ""
       );
       setEndDate(
-        batch.endDate?.toDate?.().toISOString().split("T")[0] || new Date(batch.endDate).toISOString().split("T")[0] || ""
+        batch.endDate?.toDate?.().toISOString().split("T")[0] ||
+          new Date(batch.endDate).toISOString().split("T")[0] ||
+          ""
       );
       setStatus(batch.status || "Active");
       setPreFeedbackForm(batch.preFeedbackForm || "");
@@ -125,113 +649,16 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity }) =>
     }
   }, [batch, centers, courses, curriculum, batchManager, batchFaculty, students]);
 
-  const handleStatusChange = (newStatus) => {
-    setStatus(newStatus);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const batchData = {
-      batchName: capitalizeFirstLetter(batchName),
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
-      status,
-      preFeedbackForm: preFeedbackForm || null,
-      postFeedbackForm: postFeedbackForm || null,
-      centers: selectedCenters,
-      courses: selectedCourses,
-      curriculum: selectedCurriculum,
-      batchManager: selectedBatchManager,
-      batchFaculty: selectedBatchFaculty,
-      students: selectedStudents,
-      lastUpdated: serverTimestamp(),
-    };
-
-    try {
-      let batchId;
-      if (batch) {
-        const batchRef = doc(db, "Batch", batch.id);
-        await updateDoc(batchRef, { ...batchData, statusChangeDate: serverTimestamp() });
-        batchId = batch.id;
-        await logActivity("Updated batch", {
-          // batchId: batch.id,
-          name: batchData.batchName,
-          changes: {
-            oldName: batch.batchName,
-            newName: batchData.batchName,
-            oldStatus: batch.status,
-            newStatus: batchData.status,
-            // oldPreFeedbackForm: batch.preFeedbackForm,
-            // newPreFeedbackForm: batchData.preFeedbackForm,
-            // oldPostFeedbackForm: batch.postFeedbackForm,
-            // newPostFeedbackForm: batchData.postFeedbackForm,
-          },
-        });
-        alert("Batch updated successfully!");
-      } else {
-        const docRef = await addDoc(collection(db, "Batch"), {
-          ...batchData,
-          createdAt: serverTimestamp(),
-        });
-        batchId = docRef.id;
-        await logActivity("Created batch", {
-          // batchId: docRef.id,
-          name: batchData.batchName,
-          // preFeedbackForm: batchData.preFeedbackForm,
-          // postFeedbackForm: batchData.postFeedbackForm,
-        });
-        alert("Batch created successfully!");
-      }
-
-      for (const studentId of selectedStudents) {
-        await updateDoc(doc(db, "student", studentId), {
-          enrolledBatch: batchId,
-        });
-      }
-
-      if (typeof onSubmit === "function") {
-        await onSubmit({ ...batchData, id: batchId });
-      }
-
-      resetForm();
-      toggleSidebar();
-    } catch (error) {
-      console.error("Error saving batch:", error);
-      alert("Failed to save batch. Please try again.");
-    }
-  };
-
-  const resetForm = () => {
-    setBatchName("");
-    setStartDate("");
-    setEndDate("");
-    setStatus("Active");
-    setPreFeedbackForm("");
-    setPostFeedbackForm("");
-    setSelectedCenters([]);
-    setAvailableCenters(centers);
-    setSelectedCourses([]);
-    setAvailableCourses(courses);
-    setSelectedCurriculum([]);
-    setAvailableCurriculum(curriculum);
-    setSelectedBatchManager([]);
-    setAvailableBatchManager(batchManager);
-    setSelectedBatchFaculty([]);
-    setAvailableBatchFaculty(batchFaculty);
-    setSelectedStudents([]);
-    setAvailableStudents(students);
-    setAvailableTemplates(templates);
-  };
-
   const handleAddCenter = (centerId) => {
     if (centerId && !selectedCenters.includes(centerId)) {
+      console.log("Adding center:", centerId);
       setSelectedCenters([...selectedCenters, centerId]);
       setAvailableCenters(availableCenters.filter((c) => c.id !== centerId));
     }
   };
 
   const handleRemoveCenter = (centerId) => {
+    console.log("Removing center:", centerId);
     setSelectedCenters(selectedCenters.filter((id) => id !== centerId));
     const removedCenter = centers.find((c) => c.id === centerId);
     if (removedCenter) setAvailableCenters([...availableCenters, removedCenter]);
@@ -273,7 +700,22 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity }) =>
   const handleRemoveBatchManager = (batchManagerId) => {
     setSelectedBatchManager(selectedBatchManager.filter((id) => id !== batchManagerId));
     const removedBatchManager = batchManager.find((c) => c.id === batchManagerId);
-    if (removedBatchManager) setAvailableBatchManager([...availableBatchManager, removedBatchManager]);
+    if (removedBatchManager)
+      setAvailableBatchManager([...availableBatchManager, removedBatchManager]);
+  };
+
+  const handleAddBatchFaculty = (batchFacultyId) => {
+    if (batchFacultyId && !selectedBatchFaculty.includes(batchFacultyId)) {
+      setSelectedBatchFaculty([...selectedBatchFaculty, batchFacultyId]);
+      setAvailableBatchFaculty(availableBatchFaculty.filter((c) => c.id !== batchFacultyId));
+    }
+  };
+
+  const handleRemoveBatchFaculty = (batchFacultyId) => {
+    setSelectedBatchFaculty(selectedBatchFaculty.filter((id) => id !== batchFacultyId));
+    const removedBatchFaculty = batchFaculty.find((c) => c.id === batchFacultyId);
+    if (removedBatchFaculty)
+      setAvailableBatchFaculty([...availableBatchFaculty, removedBatchFaculty]);
   };
 
   const handleAddStudent = (studentId) => {
@@ -295,17 +737,162 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity }) =>
     setAvailableStudents([]);
   };
 
-  const handleAddBatchFaculty = (batchFacultyId) => {
-    if (batchFacultyId && !selectedBatchFaculty.includes(batchFacultyId)) {
-      setSelectedBatchFaculty([...selectedBatchFaculty, batchFacultyId]);
-      setAvailableBatchFaculty(availableBatchFaculty.filter((c) => c.id !== batchFacultyId));
-    }
+  const resetForm = () => {
+    setBatchName("");
+    setStartDate("");
+    setEndDate("");
+    setStatus("Active");
+    setPreFeedbackForm("");
+    setPostFeedbackForm("");
+    setSelectedCenters([]);
+    setAvailableCenters(centers);
+    setSelectedCourses([]);
+    setAvailableCourses(courses);
+    setSelectedCurriculum([]);
+    setAvailableCurriculum(curriculum);
+    setSelectedBatchManager([]);
+    setAvailableBatchManager(batchManager);
+    setSelectedBatchFaculty([]);
+    setAvailableBatchFaculty(batchFaculty);
+    setSelectedStudents([]);
+    setAvailableStudents(students);
+    setAvailableTemplates(templates);
   };
 
-  const handleRemoveBatchFaculty = (batchFacultyId) => {
-    setSelectedBatchFaculty(selectedBatchFaculty.filter((id) => id !== batchFacultyId));
-    const removedBatchFaculty = batchFaculty.find((c) => c.id === batchFacultyId);
-    if (removedBatchFaculty) setAvailableBatchFaculty([...availableBatchFaculty, removedBatchFaculty]);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate dates
+    const currentDate = new Date("2025-04-30"); // Current date as per system context
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (start < currentDate.setHours(0, 0, 0, 0)) {
+      alert("Start date cannot be in the past.");
+      return;
+    }
+    if (end < start) {
+      alert("End date must be after start date.");
+      return;
+    }
+
+    const batchData = {
+      batchName: capitalizeFirstLetter(batchName),
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      status,
+      preFeedbackForm: preFeedbackForm || null,
+      postFeedbackForm: postFeedbackForm || null,
+      centers: selectedCenters,
+      courses: selectedCourses,
+      curriculum: selectedCurriculum,
+      batchManager: selectedBatchManager,
+      batchFaculty: selectedBatchFaculty,
+      students: selectedStudents,
+      lastUpdated: serverTimestamp(),
+    };
+
+    try {
+      let batchId;
+      let newlyAddedStudents = selectedStudents;
+
+      if (batch) {
+        // Update existing batch
+        const batchRef = doc(db, "Batch", batch.id);
+        await updateDoc(batchRef, { ...batchData, statusChangeDate: serverTimestamp() });
+        batchId = batch.id;
+        newlyAddedStudents = selectedStudents.filter(
+          (studentId) => !batch.students?.includes(studentId)
+        );
+        await logActivity(
+          "UPDATE_BATCH",
+          {
+            batchId: batch.id,
+            name: batchData.batchName,
+            changes: {
+              oldName: batch.batchName,
+              newName: batchData.batchName,
+              oldStatus: batch.status,
+              newStatus: batchData.status,
+            },
+          },
+          user
+        );
+        alert("Batch updated successfully!");
+      } else {
+        // Create new batch
+        const docRef = await addDoc(collection(db, "Batch"), {
+          ...batchData,
+          createdAt: serverTimestamp(),
+        });
+        batchId = docRef.id;
+        await logActivity(
+          "CREATE_BATCH",
+          {
+            batchId: docRef.id,
+            name: batchData.batchName,
+          },
+          user
+        );
+        alert("Batch created successfully!");
+      }
+
+      // Update student documents with enrolledBatch
+      for (const studentId of selectedStudents) {
+        await updateDoc(doc(db, "student", studentId), {
+          enrolledBatch: batchId,
+        });
+      }
+
+      // Send emails to newly added students
+      const studentsToEmail = students.filter((student) =>
+        newlyAddedStudents.includes(student.id)
+      );
+      for (const student of studentsToEmail) {
+        const studentEmail = student.email || "";
+        const studentName = `${student.first_name || ""} ${student.last_name || ""}`.trim();
+        if (studentEmail) {
+          try {
+            await sendBatchEnrollmentEmail(studentEmail, studentName, {
+              batchName: batchData.batchName,
+            });
+            await logActivity(
+              "SEND_BATCH_ENROLLMENT_EMAIL_SUCCESS",
+              {
+                batchId,
+                email: studentEmail,
+                studentName,
+                batchName: batchData.batchName,
+              },
+              user
+            );
+          } catch (emailError) {
+            await logActivity(
+              "SEND_BATCH_ENROLLMENT_EMAIL_ERROR",
+              {
+                batchId,
+                email: studentEmail,
+                studentName,
+                batchName: batchData.batchName,
+                error: emailError.message,
+              },
+              user
+            );
+          }
+        }
+      }
+
+      // Call onSubmit to notify parent component
+      if (typeof onSubmit === "function") {
+        await onSubmit({ ...batchData, id: batchId });
+      }
+
+      resetForm();
+      toggleSidebar();
+    } catch (error) {
+      console.error("Error saving batch:", error);
+      alert(`Failed to save batch: ${error.message}`);
+      await logActivity("SAVE_BATCH_ERROR", { error: error.message, batchId }, user);
+    }
   };
 
   return (
@@ -316,448 +903,73 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity }) =>
           onClick={toggleSidebar}
         />
       )}
-
       <div
         className={`fixed top-0 right-0 h-full bg-white w-full shadow-lg transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         } p-6 overflow-y-auto z-50`}
       >
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">
-            {batch ? "Edit Batch" : "Create Batch"}
-          </h1>
+        <BatchForm
+          batchName={batchName}
+          setBatchName={setBatchName}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          status={status}
+          setStatus={setStatus}
+          preFeedbackForm={preFeedbackForm}
+          setPreFeedbackForm={setPreFeedbackForm}
+          postFeedbackForm={postFeedbackForm}
+          setPostFeedbackForm={setPostFeedbackForm}
+          availableTemplates={availableTemplates}
+          toggleSidebar={toggleSidebar}
+          isEdit={!!batch}
+        />
+        <CenterSelection
+          availableCenters={availableCenters}
+          selectedCenters={selectedCenters}
+          centers={centers}
+          handleAddCenter={handleAddCenter}
+          handleRemoveCenter={handleRemoveCenter}
+        />
+        <CurriculumSelection
+          availableCurriculum={availableCurriculum}
+          selectedCurriculum={selectedCurriculum}
+          curriculum={curriculum}
+          handleAddCurriculum={handleAddCurriculum}
+          handleRemoveCurriculum={handleRemoveCurriculum}
+        />
+        <BatchManagerSelection
+          availableBatchManager={availableBatchManager}
+          selectedBatchManager={selectedBatchManager}
+          batchManager={batchManager}
+          handleAddBatchManager={handleAddBatchManager}
+          handleRemoveBatchManager={handleRemoveBatchManager}
+        />
+        <BatchFacultySelection
+          availableBatchFaculty={availableBatchFaculty}
+          selectedBatchFaculty={selectedBatchFaculty}
+          batchFaculty={batchFaculty}
+          handleAddBatchFaculty={handleAddBatchFaculty}
+          handleRemoveBatchFaculty={handleRemoveBatchFaculty}
+        />
+        <StudentSelection
+          availableStudents={availableStudents}
+          selectedStudents={selectedStudents}
+          students={students}
+          handleAddStudent={handleAddStudent}
+          handleRemoveStudent={handleRemoveStudent}
+          handleSelectAllStudents={handleSelectAllStudents}
+        />
+        <div className="flex justify-end mt-6">
           <button
             type="button"
-            onClick={toggleSidebar}
-            className="bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700 transition duration-200 text-base font-medium"
+            onClick={handleSubmit}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
           >
-            Back
+            {batch ? "Update Batch" : "Create Batch"}
           </button>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Batch Name */}
-          <div>
-            <label htmlFor="batchName" className="block text-base font-medium text-gray-700 mb-1">
-              Batch Name
-            </label>
-            <input
-              type="text"
-              value={batchName}
-              onChange={(e) => setBatchName(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-              placeholder="Enter Batch Name"
-            />
-          </div>
-
-          {/* Start Date */}
-          <div>
-            <label htmlFor="startDate" className="block text-base font-medium text-gray-700 mb-1">
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-            />
-          </div>
-
-          {/* End Date */}
-          <div>
-            <label htmlFor="endDate" className="block text-base font-medium text-gray-700 mb-1">
-              End Date
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label htmlFor="status" className="block text-base font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-            >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-          </div>
-
-          {/* Pre Feedback Form */}
-          <div>
-            <label htmlFor="preFeedbackForm" className="block text-base font-medium text-gray-700 mb-1">
-              Pre Feedback Form
-            </label>
-            <select
-              value={preFeedbackForm}
-              onChange={(e) => setPreFeedbackForm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-            >
-              <option value="">Select a Pre Feedback Form</option>
-              {availableTemplates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Post Feedback Form */}
-          <div>
-            <label htmlFor="postFeedbackForm" className="block text-base font-medium text-gray-700 mb-1">
-              Post Feedback Form
-            </label>
-            <select
-              value={postFeedbackForm}
-              onChange={(e) => setPostFeedbackForm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-            >
-              <option value="">Select a Post Feedback Form</option>
-              {availableTemplates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Centers */}
-          <div>
-            <label className="block text-base font-medium text-gray-700 mb-1">
-              Select Center
-            </label>
-            <select
-              onChange={(e) => handleAddCenter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-            >
-              <option value="">Select a Center</option>
-              {availableCenters.map((center) => (
-                <option key={center.id} value={center.id}>
-                  {center.name}
-                </option>
-              ))}
-            </select>
-
-            {selectedCenters.length > 0 && (
-              <div className="mt-4">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Sr No
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Center Name
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {selectedCenters.map((centerId, index) => {
-                      const center = centers.find((c) => c.id === centerId);
-                      return (
-                        <tr key={centerId}>
-                          <td className="px-4 py-2 whitespace-nowrap text-base text-gray-500">
-                            {index + 1}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-base text-gray-900">
-                            {center?.name}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveCenter(centerId)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              ✕
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* Curriculum */}
-          <div>
-            <label className="block text-base font-medium text-gray-700 mb-1">
-              Select Curriculum
-            </label>
-            <select
-              onChange={(e) => handleAddCurriculum(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-            >
-              <option value="">Select a Curriculum</option>
-              {availableCurriculum.map((curriculumItem) => (
-                <option key={curriculumItem.id} value={curriculumItem.id}>
-                  {curriculumItem.name}
-                </option>
-              ))}
-            </select>
-
-            {selectedCurriculum.length > 0 && (
-              <div className="mt-4">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Sr No
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Curriculum Name
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {selectedCurriculum.map((curriculumId, index) => {
-                      const curr = curriculum.find((c) => c.id === curriculumId);
-                      return (
-                        <tr key={curriculumId}>
-                          <td className="px-4 py-2 whitespace-nowrap text-base text-gray-500">
-                            {index + 1}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-base text-gray-900">
-                            {curr?.name}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveCurriculum(curriculumId)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              ✕
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* Batch Manager */}
-          <div>
-            <label className="block text-base font-medium text-gray-700 mb-1">
-              Select Batch Manager
-            </label>
-            <select
-              onChange={(e) => handleAddBatchManager(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-            >
-              <option value="">Select a Batch Manager</option>
-              {availableBatchManager.map((manager) => (
-                <option key={manager.id} value={manager.id}>
-                  {manager.first_name || manager.f_name}
-                </option>
-              ))}
-            </select>
-
-            {selectedBatchManager.length > 0 && (
-              <div className="mt-4">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Sr No
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Batch Manager
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {selectedBatchManager.map((managerId, index) => {
-                      const BM = batchManager.find((c) => c.id === managerId);
-                      return (
-                        <tr key={managerId}>
-                          <td className="px-4 py-2 whitespace-nowrap text-base text-gray-500">
-                            {index + 1}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-base text-gray-900">
-                            {BM?.first_name || BM?.f_name}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveBatchManager(managerId)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              ✕
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* Batch Faculty */}
-          <div>
-            <label className="block text-base font-medium text-gray-700 mb-1">
-              Select Batch Faculty
-            </label>
-            <select
-              onChange={(e) => handleAddBatchFaculty(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-            >
-              <option value="">Select a Batch Faculty</option>
-              {availableBatchFaculty.map((faculty) => (
-                <option key={faculty.id} value={faculty.id}>
-                  {faculty.first_name || faculty.f_name}
-                </option>
-              ))}
-            </select>
-
-            {selectedBatchFaculty.length > 0 && (
-              <div className="mt-4">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Sr No
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Batch Faculty Name
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {selectedBatchFaculty.map((facultyId, index) => {
-                      const BF = batchFaculty.find((c) => c.id === facultyId);
-                      return (
-                        <tr key={facultyId}>
-                          <td className="px-4 py-2 whitespace-nowrap text-base text-gray-500">
-                            {index + 1}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-base text-gray-900">
-                            {BF?.first_name || BF?.f_name}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveBatchFaculty(factoryId)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              ✕
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* Students */}
-          <div>
-            <label className="block text-base font-medium text-gray-700 mb-1">
-              Select Students
-            </label>
-            <div className="flex items-center space-x-4">
-              <select
-                onChange={(e) => handleAddStudent(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base"
-              >
-                <option value="">Select Students</option>
-                {availableStudents.map((student) => (
-                  <option key={student.id} value={student.id}>
-                    {student.first_name} {student.last_name} ({student.email})
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={handleSelectAllStudents}
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200 text-base font-medium min-w-40"
-                disabled={availableStudents.length === 0}
-              >
-                Select All
-              </button>
-            </div>
-
-            {selectedStudents.length > 0 && (
-              <div className="mt-4">
-                <div className="bg-gray-100 p-3 rounded-md">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">
-                    Selected Students ({selectedStudents.length})
-                  </h3>
-                  <div className="max-h-40 overflow-y-auto">
-                    {selectedStudents.map((studentId) => {
-                      const student = students.find((s) => s.id === studentId);
-                      return (
-                        <div
-                          key={studentId}
-                          className="flex items-center justify-between bg-white p-2 mb-2 rounded-md shadow-sm"
-                        >
-                          <span className="text-sm text-gray-900">
-                            {student?.first_name} {student?.last_name}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveStudent(studentId)}
-                            className="text-red-600 hover:text-red-800 text-sm"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Total Students */}
-          <div>
-            <label className="block text-base font-medium text-gray-700 mb-1">
-              Total Students: {selectedStudents.length}
-            </label>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-end mt-6">
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200 text-base font-medium"
-            >
-              {batch ? "Update Batch" : "Create Batch"}
-            </button>
-          </div>
-        </form>
       </div>
     </>
   );

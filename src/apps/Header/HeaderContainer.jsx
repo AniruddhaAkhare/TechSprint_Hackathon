@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Avatar, Dropdown, Layout, Badge, Button } from 'antd';
+import { Avatar, Dropdown, Layout } from 'antd';
 import { LogoutOutlined, ToolOutlined, UserOutlined } from '@ant-design/icons';
 import { auth, db } from '../../config/firebase'; // Import your Firebase config
 import { signOut } from 'firebase/auth';
@@ -35,7 +35,7 @@ export default function HeaderContent() {
       await signOut(auth);
       navigate('/login');
     } catch (error) {
-      console.error('Logout error:', error);
+  console.error('Logout error:', error);
     }
   };
 

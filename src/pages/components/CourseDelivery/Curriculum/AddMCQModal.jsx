@@ -64,7 +64,7 @@
 //             setMcqs([{ question: "", options: ["", "", "", ""], correctAnswer: "" }]);
 //             if (onClose) onClose();
 //         } catch (error) {
-//             console.error("Error adding MCQs:", error);
+//             //console.error("Error adding MCQs:", error);
 //         }
 //     };
 
@@ -233,7 +233,7 @@ const AddMCQModal = ({ sectionId, curriculumId, onClose }) => {
             setMcqs([{ question: "", options: ["", "", "", ""], correctAnswer: "" }]);
             if (onClose) onClose();
         } catch (error) {
-            console.error("Error adding MCQs:", error);
+            // //console.error("Error adding MCQs:", error);
         }
     };
 

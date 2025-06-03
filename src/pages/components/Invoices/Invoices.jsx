@@ -59,7 +59,7 @@ export default function Invoices() {
 
         setInvoices(invoicesWithStudentNames);
       } catch (error) {
-        console.error("Error fetching invoices or students:", error);
+        //console.error("Error fetching invoices or students:", error);
       }
     };
 
@@ -76,7 +76,7 @@ export default function Invoices() {
       setInvoices((prevInvoices) => prevInvoices.filter((invoice) => invoice.id !== invoiceId));
       alert("Invoice deleted successfully!");
     } catch (error) {
-      console.error("Error deleting invoice: ", error);
+      //console.error("Error deleting invoice: ", error);
     }
   };
 

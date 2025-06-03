@@ -16,7 +16,7 @@
 
 //     return roleDoc.data().permissions; // Return permissions object
 //   } catch (error) {
-//     console.error("Error fetching permissions:", error);
+//     //console.error("Error fetching permissions:", error);
 //     return {}; // Return empty permissions if error occurs
 //   }
 // };
@@ -32,7 +32,6 @@ export const fetchUserPermissions = async (userId) => {
 
     try {
         const userDocRef = doc(db, "Users", userId);
-        console.log("Fetching permissions for user:", userId);
         
         const userDoc = await getDoc(userDocRef);
 
@@ -42,7 +41,7 @@ export const fetchUserPermissions = async (userId) => {
 
         return userDoc.data().permissions || {};
     } catch (error) {
-        console.error("Error fetching permissions:", error);
+        //console.error("Error fetching permissions:", error);
         return {};
     }
 };

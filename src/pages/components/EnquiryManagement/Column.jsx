@@ -343,6 +343,9 @@ import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { FaCircle, FaPlus } from "react-icons/fa";
 
 const Column = ({ columnId, column, filteredEnquiries, canUpdate, handleViewEnquiry, handleAddNotes, handleSelectForAction, selectedEnquiries }) => {
+  // Ensure filteredEnquiries is an array, default to empty array if not
+  const enquiries = Array.isArray(filteredEnquiries) ? filteredEnquiries : [];
+
   return (
     <Droppable droppableId={columnId}>
       {(provided) => (
@@ -356,15 +359,15 @@ const Column = ({ columnId, column, filteredEnquiries, canUpdate, handleViewEnqu
               </p>
             </div>
           </div>
-          <div className="p-4 h-[calc(100%-4rem)] overflow-y-auto">
+          <div className="p-4 h-[calc(100%-6rem)] overflow-y-auto">
             {column.items.length === 0 ? (
               <p className="text-gray-500 text-center">No enquiries in this stage</p>
             ) : (
-              filteredEnquiries.map((item, index) => (
+              enquiries.map((item, index) => (
                 <Draggable key={item.id} draggableId={String(item.id)} index={index}>
                   {(provided) => (
                     <div
-                      className={`bg-white p-4 mb-2 rounded-md shadow-sm hover:shadow-md transition-shadow cursor-pointer ${selectedEnquiries.includes(item.id) ? "border-2 border-red-500 bg-red-100"  :""} rounded-md p-4 mb-2 shadow-sm relative`}
+                      className={`bg-white p-4 mb-2 rounded-md shadow-sm hover:shadow-md transition-shadow cursor-pointer ${selectedEnquiries.includes(item.id) ? "border-2 border-red-500 bg-red-100" : ""} rounded-md p-4 mb-2 shadow-sm relative`}
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
@@ -380,7 +383,7 @@ const Column = ({ columnId, column, filteredEnquiries, canUpdate, handleViewEnqu
                       <button
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent triggering handleViewEnquiry
-                          handleAddNotes(item);
+                          handleAddNotes(item, e);
                         }}
                         className="absolute top-2 right-2 text-blue-500 hover:text-blue-700"
                       >
@@ -391,13 +394,19 @@ const Column = ({ columnId, column, filteredEnquiries, canUpdate, handleViewEnqu
                       <p className="text-gray-500 truncate">{item.phone || "No phone"}</p>
                       <p className="text-gray-500 truncate">{item.email || "No email"}</p>
                       <p className="text-gray-500 truncate">Owner: {item.assignTo || "Unassigned"}</p>
+                      <p className="text-gray-500 truncate">Last Modified Time: {item.lastModifiedTime || "Not available"}</p>
+                      <p className="text-gray-500 truncate">Last Touched: {item.lastTouched || "Not available"}</p>
                       <div className="flex flex-wrap gap-2 mt-2 min-h-[40px]">
-                        {item.tags?.map((tag) => (
-                          <span key={tag} className="flex items-center gap-1 text-orange-500 px-2 py-1 bg-orange-50 rounded-full text-sm whitespace-nowrap">
-                            <FaCircle className="text-orange-500 text-xs" />
-                            {tag}
-                          </span>
-                        ))}
+                        {Array.isArray(item.tags) ? (
+                          item.tags.map((tag) => (
+                            <span key={tag} className="flex items-center gap-1 text-orange-500 px-2 py-1 bg-orange-50 rounded-full text-sm whitespace-nowrap">
+                              <FaCircle className="text-orange-500 text-xs" />
+                              {tag}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-gray-500 text-sm">No tags</span>
+                        )}
                       </div>
                     </div>
                   )}

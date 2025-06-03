@@ -39,7 +39,6 @@ const CourseAnalyticsDashboard = () => {
       }));
       setCourses(courseData);
     } catch (err) {
-      console.error('Error fetching courses:', err.message);
     }
   }, []);
 
@@ -52,7 +51,6 @@ const CourseAnalyticsDashboard = () => {
       }));
       setStudents(studentData);
     } catch (err) {
-      console.error('Error fetching students:', err.message);
     }
   }, []);
 
@@ -65,7 +63,6 @@ const CourseAnalyticsDashboard = () => {
       }));
       setEnrollments(enrollmentData);
     } catch (err) {
-      console.error('Error fetching enrollments:', err.message);
     }
   }, []);
 
@@ -203,8 +200,8 @@ const CourseAnalyticsDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <p className="text-gray-600 text-lg">Loading analytics...</p>
+      <div className="flex justify-center items-center h-screen p-4 fixed inset-0 left-[300px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
       </div>
     );
   }
@@ -260,7 +257,7 @@ const CourseAnalyticsDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px] overflow-y-auto">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Course Management Analytics</h1>
 

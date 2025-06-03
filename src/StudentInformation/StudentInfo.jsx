@@ -57,7 +57,7 @@
 //                     navigate(-1);
 //                 }
 //             } catch (error) {
-//                 console.error("Error fetching student data:", error);
+//                 //console.error("Error fetching student data:", error);
 //             }
 //         };
 
@@ -155,161 +155,369 @@
 //     )
 // }
 
+
+// import { useNavigate, useParams } from "react-router-dom";
+// import { useState, useEffect } from "react";
+// import { db } from "../config/firebase";
+// import { doc, getDoc } from "firebase/firestore";
+// import Enrollments from "./Enrollments";
+// import Fees from "./Fees";
+// import Batches from "./Batches";
+// import StudentProfile from "./StudentProfile";
+// import Result from "./Result";
+// import Placement from "./Placement";
+
+// export default function StudentInfo() {
+//     const navigate = useNavigate();
+//     const { studentId } = useParams();
+
+//     const [student, setStudent] = useState({
+//         Name: "",
+//         email: "",
+//         phone: "",
+//         residential_address: [],
+//         billing_address: [],
+//         installment: [],
+//         courses: [],
+//         experience: [],
+//         date_of_birth: "",
+//         admission_date: "",
+//         course_name: "",
+//         batch: "",
+//         branch: ""
+//     });
+
+//     const [selectedForm, setSelectedForm] = useState(1);
+
+//     useEffect(() => {
+//         const fetchStudent = async () => {
+//             try {
+//                 const studentRef = doc(db, "student", studentId);
+//                 const studentSnap = await getDoc(studentRef);
+
+//                 if (studentSnap.exists()) {
+//                     const data = studentSnap.data();
+//                     setStudent({
+//                         Name: data.Name || "",
+//                         // last_name: data.last_name || "",
+//                         email: data.email || "",
+//                         phone: data.phone || "",
+//                         date_of_birth: data.date_of_birth ? data.date_of_birth.toDate().toISOString().split("T")[0] : "N/A",
+//                         admission_date: data.admission_date ? data.admission_date.toDate().toISOString().split("T")[0] : "N/A",
+//                         batch: data.batch || "",
+//                         branch: data.branch || ""
+//                     });
+//                 } else {
+//                     alert("Student not found.");
+//                     navigate(-1);
+//                 }
+//             } catch (error) {
+//                 //console.error("Error fetching student data:", error);
+//             }
+//         };
+
+//         fetchStudent();
+//     }, [studentId, navigate]);
+
+//     const handleFormSelection = (formNumber) => {
+//         setSelectedForm(formNumber);
+//     };
+
+//     return (
+//         <div className="p-4 fixed inset-0 left-[300px] min-h-screen overflow-scroll">
+//         {/* <div className="min-h-screen bg-gray-50 p-6 ml-80 w-[calc(100vw-20rem)]"> */}
+//             <div className="max-w-8xl mx-auto">
+//                 {/* Header */}
+//                 <div className="flex justify-between items-center mb-6">
+//                     <div className="flex items-center space-x-4">
+//                         <button
+//                             onClick={() => navigate("/studentdetails")}
+//                             className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition duration-200"
+//                         >
+//                             Back
+//                         </button>
+//                         <div>
+//                             <h1 className="text-2xl font-semibold text-gray-800 mb-0 p-0 ml-0">
+//                                 {student.Name || "NA"}
+//                             </h1>
+//                             <p className="text-sm text-gray-600 mt-0 p-0 ml-0">{student.email}</p>
+//                         </div>
+//                     </div>
+//                     <button
+//                         onClick={() => navigate(`/add-course/${studentId}`)}
+//                         className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+//                     >
+//                         Courses
+//                     </button>
+//                 </div>
+
+//                 {/* Student Info */}
+//                 <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+//                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+//                         <p className="text-sm text-gray-600">
+//                             <span className="font-medium">Registered on:</span> {student.admission_date}
+//                         </p>
+//                         <p className="text-sm text-gray-600">
+//                             <span className="font-medium">Reg. ID:</span> {studentId}
+//                         </p>
+//                         <p className="text-sm text-gray-600">
+//                             <span className="font-medium">Phone:</span> {student.phone}
+//                         </p>
+//                     </div>
+//                 </div>
+
+//                 {/* Navigation Tabs */}
+//                 <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+//                     <div className="flex space-x-6 border-b border-gray-200">
+//                         <button
+//                             onClick={() => handleFormSelection(1)}
+//                             className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 1 ? "text-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
+//                         >
+//                             Profile
+//                         </button>
+//                         {/* <button
+//                             onClick={() => handleFormSelection(2)}
+//                             className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 2 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
+//                         >
+//                             Enrollment
+//                         </button> */}
+//                         <button
+//                             onClick={() => handleFormSelection(3)}
+//                             className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 3 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
+//                         >
+//                             Enrollments
+//                         </button>
+//                         <button
+//                             onClick={() => handleFormSelection(4)}
+//                             className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 4 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
+//                         >
+//                             Batches
+//                         </button>
+//                         <button
+//                             onClick={() => handleFormSelection(5)}
+//                             className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 5 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
+//                         >
+//                             Result
+//                         </button>
+//                         <button
+//                             onClick={() => handleFormSelection(6)}
+//                             className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 6 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
+//                         >
+//                             Placements
+//                         </button>
+//                     </div>
+//                 </div>
+
+//                 {/* Content Area */}
+//                 <div className="bg-white p-6 rounded-lg shadow-md">
+//                     {selectedForm === 1 && <StudentProfile />}
+//                     {/* {selectedForm === 2 && <Enrollments studentId={studentId} />} */}
+//                     {selectedForm === 3 && <Fees studentId={studentId} />}
+//                     {selectedForm === 4 && <Batches studentId={studentId} />}
+//                     {selectedForm === 5 && <Result studentId={studentId} />}
+//                     {selectedForm === 6 && <Placement studentId={studentId} />}
+
+//                 </div>
+//             </div>
+//         </div>
+//     );
+// }
+
+
 import { useNavigate, useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { db } from "../config/firebase";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { doc, getDoc } from "firebase/firestore";
-import Enrollments from "./Enrollments";
-import Fees from "./Fees";
-import Batches from "./Batches";
-import StudentProfile from "./StudentProfile";
-import Result from "./Result";
+import { db } from "../config/firebase";
+
+// Lazy load child components to reduce initial load time
+const StudentProfile = lazy(() => import("./StudentProfile"));
+const Fees = lazy(() => import("./Fees"));
+const Batches = lazy(() => import("./Batches"));
+const Result = lazy(() => import("./Result"));
+const Placement = lazy(() => import("./Placement"));
 
 export default function StudentInfo() {
-    const navigate = useNavigate();
-    const { studentId } = useParams();
+  const navigate = useNavigate();
+  const { studentId } = useParams();
+  const [student, setStudent] = useState({
+    Name: "",
+    email: "",
+    phone: "",
+    date_of_birth: "",
+    admission_date: "",
+    batch: "",
+    branch: "",
+  });
+  const [selectedForm, setSelectedForm] = useState(1);
+  const [loading, setLoading] = useState(true); // Added loading state
+  const [error, setError] = useState(null); // Added error state
 
-    const [student, setStudent] = useState({
-        first_name: "",
-        last_name: "",
-        email: "",
-        phone: "",
-        residential_address: [],
-        billing_address: [],
-        installment: [],
-        courses: [],
-        experience: [],
-        date_of_birth: "",
-        admission_date: "",
-        course_name: "",
-        batch: "",
-        branch: ""
-    });
+  useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const studentRef = doc(db, "student", studentId);
+        const studentSnap = await getDoc(studentRef);
 
-    const [selectedForm, setSelectedForm] = useState(1);
-
-    useEffect(() => {
-        const fetchStudent = async () => {
-            try {
-                const studentRef = doc(db, "student", studentId);
-                const studentSnap = await getDoc(studentRef);
-
-                if (studentSnap.exists()) {
-                    const data = studentSnap.data();
-                    setStudent({
-                        first_name: data.first_name || "",
-                        last_name: data.last_name || "",
-                        email: data.email || "",
-                        phone: data.phone || "",
-                        date_of_birth: data.date_of_birth ? data.date_of_birth.toDate().toISOString().split("T")[0] : "N/A",
-                        admission_date: data.admission_date ? data.admission_date.toDate().toISOString().split("T")[0] : "N/A",
-                        batch: data.batch || "",
-                        branch: data.branch || ""
-                    });
-                } else {
-                    alert("Student not found.");
-                    navigate(-1);
-                }
-            } catch (error) {
-                console.error("Error fetching student data:", error);
-            }
-        };
-
-        fetchStudent();
-    }, [studentId, navigate]);
-
-    const handleFormSelection = (formNumber) => {
-        setSelectedForm(formNumber);
+        if (studentSnap.exists()) {
+          const data = studentSnap.data();
+          setStudent({
+            Name: data.Name || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            date_of_birth: data.date_of_birth || null,
+            admission_date: data.admission_date || null,
+            batch: data.batch || "",
+            branch: data.branch || "",
+          });
+        } else {
+          setError("Student not found.");
+          alert("Student not found.");
+          navigate(-1);
+        }
+      } catch (error) {
+        setError("Failed to fetch student data: " + error.message);
+        console.error("Error fetching student data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
+    fetchStudent();
+  }, [studentId, navigate]);
+
+  const handleFormSelection = (formNumber) => {
+    setSelectedForm(formNumber);
+  };
+
+  // Show loading state while fetching data
+  if (loading) {
     return (
-        <div className="p-2">
-        {/* <div className="min-h-screen bg-gray-50 p-6 ml-80 w-[calc(100vw-20rem)]"> */}
-            <div className="max-w-8xl mx-auto">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center space-x-4">
-                        <button
-                            onClick={() => navigate("/studentdetails")}
-                            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition duration-200"
-                        >
-                            Back
-                        </button>
-                        <div>
-                            <h1 className="text-2xl font-semibold text-gray-800 mb-0 p-0 ml-0">
-                                {student.first_name} {student.last_name}
-                            </h1>
-                            <p className="text-sm text-gray-600 mt-0 p-0 ml-0">{student.email}</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => navigate(`/add-course/${studentId}`)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
-                    >
-                        Courses
-                    </button>
-                </div>
-
-                {/* Student Info */}
-                <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <p className="text-sm text-gray-600">
-                            <span className="font-medium">Registered on:</span> {student.admission_date}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                            <span className="font-medium">Reg. ID:</span> {studentId}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                            <span className="font-medium">Phone:</span> {student.phone}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Navigation Tabs */}
-                <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-                    <div className="flex space-x-6 border-b border-gray-200">
-                        <button
-                            onClick={() => handleFormSelection(1)}
-                            className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 1 ? "text-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
-                        >
-                            Profile
-                        </button>
-                        {/* <button
-                            onClick={() => handleFormSelection(2)}
-                            className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 2 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
-                        >
-                            Enrollment
-                        </button> */}
-                        <button
-                            onClick={() => handleFormSelection(3)}
-                            className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 3 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
-                        >
-                            Enrollments
-                        </button>
-                        <button
-                            onClick={() => handleFormSelection(4)}
-                            className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 4 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
-                        >
-                            Batches
-                        </button>
-                        <button
-                            onClick={() => handleFormSelection(5)}
-                            className={`p-2 text-sm font-medium bg-transparent border-none ${selectedForm === 5 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"} transition duration-200`}
-                        >
-                            Result
-                        </button>
-                    </div>
-                </div>
-
-                {/* Content Area */}
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                    {selectedForm === 1 && <StudentProfile />}
-                    {/* {selectedForm === 2 && <Enrollments studentId={studentId} />} */}
-                    {selectedForm === 3 && <Fees studentId={studentId} />}
-                    {selectedForm === 4 && <Batches studentId={studentId} />}
-                    {selectedForm === 5 && <Result studentId={studentId} />}
-                </div>
-            </div>
+      <div className="p-4 fixed inset-0 left-[300px] min-h-screen overflow-scroll">
+        <div className="max-w-8xl mx-auto">
+          <p className="text-center text-gray-600 text-lg">Loading...</p>
         </div>
+      </div>
     );
+  }
+
+  // Show error state if fetch fails
+  if (error) {
+    return (
+      <div className="p-4 fixed inset-0 left-[300px] min-h-screen overflow-scroll">
+        <div className="max-w-8xl mx-auto">
+          <p className="text-center text-red-600 text-lg">{error}</p>
+          <button
+            onClick={() => navigate("/studentdetails")}
+            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition duration-200 mt-4"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 fixed inset-0 left-[300px] min-h-screen overflow-scroll">
+      <div className="max-w-8xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => navigate("/studentdetails")}
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition duration-200"
+            >
+              Back
+            </button>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-800 mb-0 p-0 ml-0">
+                {student.Name || "N/A"}
+              </h1>
+              <p className="text-sm text-gray-600 mt-0 p-0 ml-0">{student.email}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate(`/add-course/${studentId}`)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+          >
+            Courses
+          </button>
+        </div>
+
+        {/* Student Info */}
+        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Registered on:</span> {student.admission_date}
+            </p>
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Reg. ID:</span> {studentId}
+            </p>
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Phone:</span> {student.phone}
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+          <div className="flex space-x-6 border-b border-gray-200">
+            <button
+              onClick={() => handleFormSelection(1)}
+              className={`p-2 text-sm font-medium bg-transparent border-none ${
+                selectedForm === 1 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"
+              } transition duration-200`}
+            >
+              Profile
+            </button>
+            <button
+              onClick={() => handleFormSelection(3)}
+              className={`p-2 text-sm font-medium bg-transparent border-none ${
+                selectedForm === 3 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"
+              } transition duration-200`}
+            >
+              Enrollments
+            </button>
+            <button
+              onClick={() => handleFormSelection(4)}
+              className={`p-2 text-sm font-medium bg-transparent border-none ${
+                selectedForm === 4 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"
+              } transition duration-200`}
+            >
+              Batches
+            </button>
+            <button
+              onClick={() => handleFormSelection(5)}
+              className={`p-2 text-sm font-medium bg-transparent border-none ${
+                selectedForm === 5 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"
+              } transition duration-200`}
+            >
+              Result
+            </button>
+            <button
+              onClick={() => handleFormSelection(6)}
+              className={`p-2 text-sm font-medium bg-transparent border-none ${
+                selectedForm === 6 ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-blue-600"
+              } transition duration-200`}
+            >
+              Placements
+            </button>
+          </div>
+        </div>
+
+        {/* Content Area with Suspense for Lazy Loading */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <Suspense fallback={<p className="text-center text-gray-600">Loading component...</p>}>
+            {selectedForm === 1 && <StudentProfile />}
+            {selectedForm === 3 && <Fees studentId={studentId} />}
+            {selectedForm === 4 && <Batches studentId={studentId} />}
+            {selectedForm === 5 && <Result studentId={studentId} />}
+            {selectedForm === 6 && <Placement studentId={studentId} />}
+          </Suspense>
+        </div>
+      </div>
+    </div>
+  );
 }

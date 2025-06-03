@@ -50,7 +50,6 @@ const contextActions = (dispatch) => {
           await signOut(auth);
           dispatch({ type: actionTypes.AUTH_LOGOUT });
         } catch (error) {
-          console.error('Logout error:', error);
         }
       }
     },

@@ -164,7 +164,6 @@
 
 
 import React, { useState } from "react";
-import { sendWelcomeEmail } from '../../../../services/emailService'; // Use named import
 import './Feedback.css';
 
 const formFieldTemplates = {
@@ -211,19 +210,14 @@ export default function Feedback() {
       email: userEmail,
     };
 
-    try {
-      // Use sendWelcomeEmail (adjust parameters as needed)
-      await sendWelcomeEmail(
-        userEmail, // toEmail
-        "User", // fullName (replace with actual name or form data)
-        "Feedback Form" // courseName (replace with relevant value)
-      );
-      console.log("Email sent successfully");
-      alert("Form submitted and email sent!");
-    } catch (error) {
-      console.error("Error sending email:", error);
-      alert("Failed to send email");
-    }
+
+
+    // emailService.sendEmail(formData) // Call the email service to send the data
+    //   .then(response => {
+    //   })
+    //   .catch(error => {
+    //     //console.error("Error sending email:", error);
+    //   });
   };
 
   return (

@@ -33,10 +33,10 @@ export default function CreateAttendenceRemarks() {
                 const data = studentSnap.data();
                 setAttendanceRemarks(data.attendenceRemarks || []);
             } else {
-                console.error("Student document not found");
+                //console.error("Student document not found");
             }
         } catch (error) {
-            console.error("Error fetching attendance data:", error);
+            //console.error("Error fetching attendance data:", error);
         }
     };
 
@@ -70,7 +70,7 @@ export default function CreateAttendenceRemarks() {
             alert("Mock test added successfully!");
             setAttendanceRemarks([...attendanceRemarks, newAttenceRemarks]); // Update local state
         } catch (error) {
-            console.error("Error adding mock test:", error);
+            //console.error("Error adding mock test:", error);
             alert("Failed to add mock test. See console for details.");
         }
     };
@@ -80,54 +80,122 @@ export default function CreateAttendenceRemarks() {
     );
 
     return (
-        <div  className="ml-[20rem] p-4">
-            <h1>Create Attendance Remarks</h1>
-            {student ? (
-                <p>Adding Attendance remarks for: <strong>{student.first_name}</strong></p>
-            ) : (
-                <p style={{ color: 'red' }}>⚠ No student selected!</p>
-            )}
+       <div className="ml-[20rem] p-6 bg-gray-100 min-h-screen font-sans">
+  <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-md p-8 space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900 mb-1">➕ Create Attendance Remarks</h1>
+      {student ? (
+        <p className="text-gray-600">
+          Adding remarks for: <span className="text-blue-600 font-semibold">{student.first_name}</span>
+        </p>
+      ) : (
+        <p className="text-red-600 font-medium">⚠ No student selected!</p>
+      )}
+    </div>
 
-            <input
-                type="text"
-                placeholder="Search by subject"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ marginBottom: "20px", padding: "8px", width: "100%" }}
-            />
+    <input
+      type="text"
+      placeholder="🔍 Search by subject..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+    />
 
-            <form onSubmit={handleSubmit}>
-                <label>Subject:</label>
-                <input type="text" name="subject" value={testDetails.subject} onChange={handleInputChange} required />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Subject</label>
+        <input
+          type="text"
+          name="subject"
+          value={testDetails.subject}
+          onChange={handleInputChange}
+          required
+          className="w-full mt-1 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
 
-                <label>Present session count:</label>
-                <input type="number" name="present" value={testDetails.present} onChange={handleInputChange} required />
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Present session count</label>
+        <input
+          type="number"
+          name="present"
+          value={testDetails.present}
+          onChange={handleInputChange}
+          required
+          className="w-full mt-1 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
 
-                <label>Remarks:</label>
-                <input type="text" name="remarks" value={testDetails.remarks} onChange={handleInputChange} required />
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Remarks</label>
+        <input
+          type="text"
+          name="remarks"
+          value={testDetails.remarks}
+          onChange={handleInputChange}
+          required
+          className="w-full mt-1 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
 
-                <label>Updated by:</label>
-                <input type="text" name="admin" value={testDetails.admin} onChange={handleInputChange} required />
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Updated by</label>
+        <input
+          type="text"
+          name="admin"
+          value={testDetails.admin}
+          onChange={handleInputChange}
+          required
+          className="w-full mt-1 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
 
-                <label>Updated on:</label>
-                <input type="date" name="updatedOn" value={testDetails.updatedOn} onChange={handleInputChange} required />
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Updated on</label>
+        <input
+          type="date"
+          name="updatedOn"
+          value={testDetails.updatedOn}
+          onChange={handleInputChange}
+          required
+          className="w-full mt-1 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
 
-                <button type="submit">Add Attendance remarks</button>
-            </form>
+      <button
+        type="submit"
+        className="w-full bg-indigo-600 text-white py-3 rounded-md hover:bg-indigo-700 transition duration-200 font-medium"
+      >
+        Add Attendance Remark
+      </button>
+    </form>
 
-            {/* Display existing attendance remarks */}
-            <h2>Attendance Remark History</h2>
-            {filteredRemarks.length > 0 ? (
-                <ul>
-                    {filteredRemarks.map((attendance, index) => (
-                        <li key={index}>
-                            <strong>{attendance.subject}</strong> - Present session count: {attendance.present} - Remarks: {attendance.remarks} - Updated by: {attendance.admin} - Updated On: {attendance.updatedOn}
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p>No attendance remarks are added yet.</p>
-            )}
-        </div>
+    <div>
+      <h2 className="text-xl font-semibold text-gray-800 mt-8 mb-4">🗂 Attendance Remark History</h2>
+      {filteredRemarks.length > 0 ? (
+        <ul className="space-y-3">
+          {filteredRemarks.map((attendance, index) => (
+            <li key={index} className="bg-gray-50 p-4 rounded-md border border-gray-200 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <div>
+                  <p className="font-semibold text-indigo-700">{attendance.subject}</p>
+                  <p className="text-sm text-gray-600 italic">"{attendance.remarks}"</p>
+                  <p className="text-sm text-gray-500">Present: {attendance.present}</p>
+                </div>
+                <div className="text-sm text-gray-500 text-right">
+                  <p>By: <span className="font-medium">{attendance.admin}</span></p>
+                  <p>{attendance.updatedOn}</p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-gray-500">No attendance remarks are added yet.</p>
+      )}
+    </div>
+  </div>
+</div>
+
     );
 }

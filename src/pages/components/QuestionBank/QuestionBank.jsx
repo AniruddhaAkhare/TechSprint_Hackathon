@@ -15,12 +15,20 @@ const QuestionBank = () => {
   const [selectedQuestions, setSelectedQuestions] = useState([]);
   const { user, rolePermissions } = useAuth();
 
-  const canCreate = rolePermissions.templates?.create || false;
-  const canUpdate = rolePermissions.templates?.update || false;
-  const canDelete = rolePermissions.templates?.delete || false;
+  const canCreate = rolePermissions.questions?.create || false;
+  const canUpdate = rolePermissions.questions?.update || false;
+  const canDelete = rolePermissions.questions?.delete || false;
+  const canView = rolePermissions.questions?.display || false;
 
   useEffect(() => {
     const fetchQuestions = async () => {
+      if(!canView){
+        return (
+          <div className="p-6 bg-gray-100 min-h-screen text-center py-8 text-gray-500">
+              You don't have permission to view templates.
+          </div>
+      );
+      }
       try {
         const q = query(collection(db, 'questions'));
         const querySnapshot = await getDocs(q);
@@ -30,7 +38,7 @@ const QuestionBank = () => {
         }));
         setQuestions(questionsData);
       } catch (error) {
-        console.error('Error fetching questions:', error);
+        //console.error('Error fetching questions:', error);
       }
     };
     fetchQuestions();
@@ -51,7 +59,7 @@ const QuestionBank = () => {
         timestamp: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Error logging activity:', error);
+      //console.error('Error logging activity:', error);
     }
   };
 
@@ -85,7 +93,7 @@ const QuestionBank = () => {
       }
       setIsPanelOpen(false);
     } catch (error) {
-      console.error('Error adding/updating question:', error);
+      //console.error('Error adding/updating question:', error);
       alert('Failed to save question. Please try again.');
     }
   };
@@ -105,7 +113,7 @@ const QuestionBank = () => {
       });
       alert('Question deleted successfully!');
     } catch (error) {
-      console.error('Error deleting question:', error);
+      //console.error('Error deleting question:', error);
       alert('Failed to delete question. Please try again.');
     }
   };
@@ -131,7 +139,7 @@ const QuestionBank = () => {
       setSelectedQuestions([]);
       alert(`${selectedQuestions.length} question(s) deleted successfully!`);
     } catch (error) {
-      console.error('Error deleting multiple questions:', error);
+      //console.error('Error deleting multiple questions:', error);
       alert('Failed to delete some questions. Please try again.');
     }
   };
@@ -164,9 +172,9 @@ const QuestionBank = () => {
   });
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 min-h-screen p-4 fixed inset-0 left-[300px] overflow-y-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-semibold text-gray-900">Question Bank</h1>
+        <h1 className="text-2xl font-bold text-[#333333] font-sans">Question Bank</h1>
         <div className="flex gap-4">
           {canDelete && selectedQuestions.length > 0 && (
             <button
@@ -196,52 +204,60 @@ const QuestionBank = () => {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="w-full md:w-1/4 p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700"
-          >
-            <option value="">All Types</option>
-            <option value="mcq">MCQ</option>
-            <option value="short">Short Question</option>
-            <option value="upload">Upload File</option>
-            <option value="rating">Rating</option>
-          </select>
+   <div className="bg-white p-6 rounded-xl shadow mb-6">
+      <div className="flex flex-col md:flex-row md:items-center gap-4">
+        {/* Type Filter */}
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+          className="w-full md:w-1/4 p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700"
+        >
+          <option value="">All Types</option>
+          <option value="mcq">MCQ</option>
+          <option value="short">Short Question</option>
+          <option value="upload">Upload File</option>
+          <option value="rating">Rating</option>
+        </select>
 
-          <select
-            value={filterSubject}
-            onChange={(e) => setFilterSubject(e.target.value)}
-            className="w-full md:w-1/4 p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700"
-          >
-            <option value="">All Subjects</option>
-            {uniqueSubjects.map(subject => (
-              <option key={subject} value={subject}>
-                {subject}
-              </option>
-            ))}
-          </select>
+        {/* Subject Filter */}
+        <select
+          value={filterSubject}
+          onChange={(e) => setFilterSubject(e.target.value)}
+          className="w-full md:w-1/4 p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700"
+        >
+          <option value="">All Subjects</option>
+          {uniqueSubjects.map((subject) => (
+            <option key={subject} value={subject}>
+              {subject}
+            </option>
+          ))}
+        </select>
 
-          <div className="relative w-full md:w-1/2">
-            <input
-              type="text"
-              placeholder="Search questions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2.5 pl-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        {/* Search Input */}
+        <div className="relative w-full md:w-1/2">
+          <input
+            type="text"
+            placeholder="Search questions..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-2.5 pl-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <svg
+            className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
-            <svg
-              className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+          </svg>
         </div>
       </div>
+    </div>
 
       <QuestionList
         questions={filteredQuestions}
@@ -283,3 +299,4 @@ const QuestionBank = () => {
 };
 
 export default QuestionBank;
+

@@ -26,10 +26,10 @@ export default function FeesRemarks() {
                 const data = studentSnap.data();
                 setFeesRemarks(data.feesRemarks || []);
             } else {
-                console.error("Student document not found");
+                //console.error("Student document not found");
             }
         } catch (error) {
-            console.error("Error fetching Fees remarks:", error);
+            //console.error("Error fetching Fees remarks:", error);
         }
     };
 

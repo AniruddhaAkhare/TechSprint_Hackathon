@@ -9,7 +9,6 @@ import {
   orderBy,
   setDoc,
   updateDoc,
-  addDoc,
   serverTimestamp,
   onSnapshot,
   where,
@@ -55,7 +54,7 @@ export default function Batches() {
 
   const BatchCollectionRef = collection(db, "Batch");
   const StudentCollectionRef = collection(db, "student");
-  const instituteId = "9z6G6BLzfDScI0mzMOlB"; // Hardcoded institute ID
+  const instituteId = "RDJ9wMXGrIUk221MzDxP"; // Hardcoded institute ID
   const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
 
   const toggleSidebar = () => setIsOpen((prev) => !prev);
@@ -82,8 +81,7 @@ export default function Batches() {
         }
       });
     } catch (err) {
-      console.error("Error logging activity:", err.message);
-      toast.error("Failed to log activity.");
+      toast.error("Failed to log activity.", err);
     }
   };
 
@@ -96,8 +94,7 @@ export default function Batches() {
       }));
       setCenters(centerData);
     }, (err) => {
-      console.error("Error fetching centers:", err.message);
-      toast.error("Failed to fetch centers");
+      toast.error("Failed to fetch centers", err);
     });
     return unsubscribe;
   }, [canDisplay]);
@@ -124,8 +121,7 @@ export default function Batches() {
       setBatches(batchData);
       setSearchResults(batchData);
     }, (err) => {
-      console.error("Error fetching batches:", err.message);
-      toast.error("Failed to fetch batches");
+      toast.error("Failed to fetch batches", err);
     });
     return unsubscribe;
   }, [canDisplay]);
@@ -237,7 +233,6 @@ export default function Batches() {
       const snapshot = await getDocs(q);
       return !snapshot.empty;
     } catch (err) {
-      console.error("Error checking students in batch:", err.message);
       return false;
     }
   };
@@ -264,7 +259,6 @@ export default function Batches() {
       );
       toast.success("Batch deleted successfully.");
     } catch (err) {
-      console.error("Error deleting batch:", err.message);
       setDeleteMessage("An error occurred while trying to delete the batch.");
       toast.error("Failed to delete batch.");
     }
@@ -281,9 +275,7 @@ export default function Batches() {
         await logActivity("Created batch", { name: formData.batchName });
       }
       handleClose();
-    } catch (err) {
-      console.error("Error logging batch action:", err.message);
-      toast.error("Failed to log batch action.");
+    } catch (err) {      toast.error("Failed to log batch action.", err);
     }
   };
 
@@ -296,14 +288,14 @@ export default function Batches() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-gray-50 p-2">
+    <div className="flex flex-col min-h-screen bg-gray-50 p-4 fixed inset-0 left-[300px]">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Batches</h1>
+        <h1 className="text-2xl font-bold text-[#333333] font-sans">Batches</h1>
         {canCreate && (
           <button
             type="button"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-700"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
             onClick={handleCreateBatchClick}
           >
             + Create Batch
@@ -311,158 +303,208 @@ export default function Batches() {
         )}
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex items-center mb-6 space-x-4 flex-wrap">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search batches by name..."
-            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="All">All Batches</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-          <select
-            value={filterCenter}
-            onChange={(e) => setFilterCenter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="All">All Centers</option>
-            {centers.map((center) => (
-              <option key={center.id} value={center.id}>
-                {center.name}
-              </option>
-            ))}
-          </select>
-          <div>
-            <label
-              htmlFor="startDateFrom"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Start Date From
-            </label>
-            <input
-              type="date"
-              id="startDateFrom"
-              value={startDateFrom}
-              onChange={(e) => setStartDateFrom(e.target.value)}
-              className="mt-1 block w-48 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="startDateTo"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Start Date To
-            </label>
-            <input
-              type="date"
-              id="startDateTo"
-              value={startDateTo}
-              onChange={(e) => setStartDateTo(e.target.value)}
-              className="mt-1 block w-48 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button
-            onClick={resetFilters}
-            className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition duration-200"
-          >
-            Reset Filters
-          </button>
-        </div>
+    <div className="bg-white p-6 rounded-lg shadow-md">
+  {/* Filters Section */}
+<div className="flex flex-col md:flex-row flex-wrap md:items-center gap-4 mb-6">
+  <div className="relative w-48">
+  <svg
+    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <circle cx="11" cy="11" r="7" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+  <input
+    type="text"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    placeholder="Search batches by name..."
+    className="h-10 w-full px-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+    aria-label="Search batches by name"
+  />
+</div>
 
-        <div className="rounded-lg shadow-md overflow-x-auto">
-          <table className="w-full table-auto">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Sr No
-                </th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Batch Name
-                </th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Centers
-                </th>
-                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {searchResults.length > 0 ? (
-                searchResults.map((batch, index) => (
-                  <tr
-                    key={batch.id}
-                    className="border-b hover:bg-gray-50 transition duration-150"
-                  >
-                    <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                    <td className="px-4 py-3 text-gray-800">{batch.batchName}</td>
-                    <td className="px-4 py-3 text-gray-600">{batch.status}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {batch.centers
-                        ? batch.centers
-                            .map((centerId) =>
-                              centers.find((c) => c.id === centerId)?.name || centerId
-                            )
-                            .join(", ")
-                        : batch.center || "N/A"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {(canUpdate || canDelete) && (
-                        <div className="flex items-center space-x-2">
-                          {canDelete && (
-                            <button
-                              onClick={() => {
-                                setDeleteId(batch.id);
-                                setOpenDelete(true);
-                                setDeleteMessage(
-                                  "Are you sure you want to delete this batch? This action cannot be undone."
-                                );
-                              }}
-                              className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                            >
-                              Delete
-                            </button>
-                          )}
-                          {canUpdate && (
-                            <button
-                              onClick={() => handleEditClick(batch)}
-                              className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                            >
-                              Update
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="5"
-                    className="px-4 py-3 text-center text-gray-600"
-                  >
-                    No batches found matching the selected filters.
-                  </td>
-                </tr>
+  <select
+    value={filterStatus}
+    onChange={(e) => setFilterStatus(e.target.value)}
+    className="h-10 w-48 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+    aria-label="Filter by status"
+  >
+    <option value="All">All Batches</option>
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+  </select>
+
+  <select
+    value={filterCenter}
+    onChange={(e) => setFilterCenter(e.target.value)}
+    className="h-10 w-48 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+    aria-label="Filter by center"
+  >
+    <option value="All">All Centers</option>
+    {centers.map((center) => (
+      <option key={center.id} value={center.id}>
+        {center.name}
+      </option>
+    ))}
+  </select>
+
+  <div className="flex flex-col space-y-1 mb-6">
+    <label htmlFor="startDateFrom" className="text-sm font-medium text-gray-700">
+      Start Date From
+    </label>
+    <input
+      type="date"
+      id="startDateFrom"
+      value={startDateFrom}
+      onChange={(e) => setStartDateFrom(e.target.value)}
+      className="h-10 w-48 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+    />
+  </div>
+
+  <div className="flex flex-col space-y-1 mb-6">
+    <label htmlFor="startDateTo" className="text-sm font-medium text-gray-700">
+      Start Date To
+    </label>
+    <input
+      type="date"
+      id="startDateTo"
+      value={startDateTo}
+      onChange={(e) => setStartDateTo(e.target.value)}
+      className="h-10 w-48 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+    />
+  </div>
+
+  <button
+    onClick={resetFilters}
+    className="self-start bg-gray-600 text-white px-5 py-2 rounded-md hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
+    aria-label="Reset Filters"
+  >
+    Reset Filters
+  </button>
+</div>
+
+
+  {/* Table Section */}
+ <div className="rounded-xl shadow-lg border border-gray-200 overflow-x-auto max-h-[70vh] overflow-y-auto bg-white">
+  <table className="w-full min-w-[600px] table-auto text-left text-sm md:text-base">
+   <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+  <tr>
+    <th className="px-3 py-1 font-semibold text-gray-700 uppercase tracking-wide w-14">Sr No</th>
+    <th className="px-3 py-1 font-semibold text-gray-700 uppercase tracking-wide">Batch Name</th>
+    <th className="px-3 py-1 font-semibold text-gray-700 uppercase tracking-wide w-28">Status</th>
+    <th className="px-3 py-1 font-semibold text-gray-700 uppercase tracking-wide">Centers</th>
+    <th className="px-3 py-1 font-semibold text-gray-700 uppercase tracking-wide w-36">Action</th>
+  </tr>
+</thead>
+
+    <tbody>
+      {searchResults.length > 0 ? (
+        searchResults.map((batch, index) => (
+          <tr
+            key={batch.id}
+            className={`border-b last:border-none transition-colors duration-300 hover:bg-gray-50 ${
+              index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+            }`}
+          >
+            <td className="px-6 py-3 text-gray-700 font-medium">{index + 1}</td>
+            <td className="px-6 py-3 text-gray-900 font-semibold">{batch.batchName}</td>
+            <td className="px-6 py-3 text-gray-700 capitalize">{batch.status}</td>
+            <td
+              className="px-6 py-3 text-gray-700 max-w-xs truncate"
+              title={
+                batch.centers
+                  ? batch.centers
+                      .map((centerId) => centers.find((c) => c.id === centerId)?.name || centerId)
+                      .join(', ')
+                  : batch.center || 'N/A'
+              }
+            >
+              {batch.centers
+                ? batch.centers
+                    .map((centerId) => centers.find((c) => c.id === centerId)?.name || centerId)
+                    .join(', ')
+                : batch.center || 'N/A'}
+            </td>
+            <td className="px-6 py-3">
+              {(canUpdate || canDelete) && (
+                <div className="flex items-center space-x-3">
+                  {canDelete && (
+                    <button
+                      onClick={() => {
+                        setDeleteId(batch.id);
+                        setOpenDelete(true);
+                        setDeleteMessage(
+                          'Are you sure you want to delete this batch? This action cannot be undone.'
+                        );
+                      }}
+                      className="flex items-center space-x-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md transition focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2"
+                      aria-label={`Delete batch ${batch.batchName}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                      <span>Delete</span>
+                    </button>
+                  )}
+                  {canUpdate && (
+                    <button
+                      onClick={() => handleEditClick(batch)}
+                      className="flex items-center space-x-1 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded-md transition focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2"
+                      aria-label={`Update batch ${batch.batchName}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5h6M6 12h12M6 19h12"
+                        />
+                      </svg>
+                      <span>Update</span>
+                    </button>
+                  )}
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="5" className="px-6 py-6 text-center text-gray-500 italic">
+            No batches found matching the selected filters.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
+</div>
+
 
       {isOpen && (
         <div

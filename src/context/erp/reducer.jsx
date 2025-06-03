@@ -28,7 +28,6 @@ export function contextReducer(state, action) {
 
     case actionTypes.OPEN_PANEL:
       if (!keyState || !state[keyState]) {
-        console.error(`Invalid keyState: ${keyState}`);
         return state; // Prevent errors if keyState is invalid
       }
       return {
@@ -41,7 +40,6 @@ export function contextReducer(state, action) {
       return { ...initialState };
 
     default:
-      console.error(`Unhandled action type: ${type}`);
       return state;
   }
 }

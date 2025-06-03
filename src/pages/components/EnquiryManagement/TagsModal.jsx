@@ -15,7 +15,7 @@ const TagsModal = ({ isOpen, onRequestClose, availableTags, setAvailableTags }) 
         await addDoc(collection(db, "tags"), { name: newTag.trim() });
         setNewTag("");
       } catch (error) {
-        console.error("Error adding tag:", error);
+        // //console.error("Error adding tag:", error);
         alert("Failed to add tag");
       }
     }
@@ -27,7 +27,7 @@ const TagsModal = ({ isOpen, onRequestClose, availableTags, setAvailableTags }) 
       const tagSnapshot = await getDocs(tagQuery);
       tagSnapshot.forEach(async (doc) => await deleteDoc(doc.ref));
     } catch (error) {
-      console.error("Error deleting tag:", error);
+      // //console.error("Error deleting tag:", error);
       alert("Failed to delete tag");
     }
   };

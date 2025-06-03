@@ -25,10 +25,10 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
       try {
         const instituteSnapshot = await getDocs(collection(db, 'instituteSetup'));
         if (instituteSnapshot.empty) {
-          console.error('No instituteSetup document found');
+          // //console.error('No instituteSetup document found');
           return;
         }
-        const instituteId = instituteSnapshot.docs[0].id;
+        const instituteId = "RDJ9wMXGrIUk221MzDxP";
         const centerQuery = query(
           collection(db, 'instituteSetup', instituteId, 'Center'),
           where('isActive', '==', true)
@@ -40,7 +40,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
         }));
         setCenters(centersList);
       } catch (err) {
-        console.error('Error fetching centers:', err);
+        // //console.error('Error fetching centers:', err);
         setError('Failed to load centers. Please try again.');
       }
     };
@@ -50,14 +50,12 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
   // Populate form with existing curriculum data for editing
   useEffect(() => {
     if (curriculumToEdit) {
-      console.log('Loading curriculum for edit:', curriculumToEdit);
       setFormData({
         name: curriculumToEdit.name || '',
         centers: curriculumToEdit.centers || [], // Expecting array of center IDs
         maxViewDuration: curriculumToEdit.maxViewDuration || 'Unlimited',
       });
     } else {
-      console.log('Resetting form for new curriculum');
       setFormData({
         name: '',
         centers: [],
@@ -84,12 +82,12 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name) {
-      alert('Please enter a curriculum name.');
-      return;
-    }
+    // if (!formData.name) {
+    //   // alert('Please enter a curriculum name.');
+    //   return;
+    // }
     if (formData.centers.length === 0) {
-      alert('Please select at least one center.');
+      toast('Please select at least one center.');
       return;
     }
 
@@ -115,7 +113,6 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
         const curriculumRef = doc(db, 'curriculums', curriculumToEdit.id);
         const oldDataSnap = await getDoc(curriculumRef);
         const oldData = oldDataSnap.data() || {};
-        console.log('Old data:', oldData);
 
         await updateDoc(curriculumRef, {
           name: formData.name,
@@ -145,9 +142,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
             name: formData.name,
             changes,
           });
-          console.log('Logged update changes:', changes);
         } else {
-          console.log('No changes detected or logActivity not available.');
         }
 
         onSubmit({
@@ -170,9 +165,8 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
             // curriculumId: docRef.id,
             name: formData.name,
           });
-          console.log('Logged creation of curriculum with ID:', docRef.id);
         } else {
-          console.error('logActivity function is not available');
+          // //console.error('logActivity function is not available');
         }
 
         onSubmit({
@@ -186,7 +180,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
       setLoading(false);
       onClose();
     } catch (err) {
-      console.error('Error saving curriculum:', err);
+      // //console.error('Error saving curriculum:', err);
       setError(`Failed to save curriculum: ${err.message}`);
       // if (logActivity) {
       //   await logActivity('error_curriculum', {
@@ -220,13 +214,14 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
             <h3 className="text-lg font-semibold text-gray-900">
               {curriculumToEdit ? 'Edit Curriculum' : 'Add Curriculum'}
             </h3>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-xl"
-              disabled={loading}
-            >
-              ✕
-            </button>
+           <button
+  onClick={onClose}
+  className="bg-indigo-600 text-white px-2 py-1 rounded-md hover:bg-indigo-700 flex items-center justify-center gap-2"
+  disabled={loading}
+>
+  ✕
+</button>
+
           </div>
 
           {((!curriculumToEdit && !canCreate) || (curriculumToEdit && !canUpdate)) ? (
@@ -249,6 +244,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
                     placeholder="Enter curriculum name"
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50"
                     maxLength="100"
+                    required
                     disabled={loading}
                   />
                   <span className="text-xs text-gray-500 mt-1 block">
@@ -272,7 +268,8 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
                             checked={formData.centers.includes(center.id)}
                             onChange={() => handleCenterChange(center.id)}
                             className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500 disabled:opacity-50"
-                            disabled={loading}
+                            // disabled={loading}
+                            
                           />
                           <span className="text-sm text-gray-700">{center.name}</span>
                         </label>

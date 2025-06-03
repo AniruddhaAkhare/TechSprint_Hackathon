@@ -30,7 +30,6 @@ export default function UpgradeButton() {
 
              window.open(`https://cloud.idurarapp.com`);
         } catch (error) {
-            console.error("Error tracking upgrade click:", error);
         }
     };
 

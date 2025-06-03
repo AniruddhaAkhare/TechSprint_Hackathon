@@ -15,9 +15,16 @@ const Header = () => {
           <a href="#about" className="text-gray-600 hover:text-indigo-600">About Us</a>
           <a href="#contact" className="text-gray-600 hover:text-indigo-600">Contact</a>
         </nav>
-        <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition" onClick={()=>{navigate('/login')}}>
+        <div className='gap-4'>
+        <button className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition disabled:opacity-50" onClick={()=>{navigate('/employee-registration')}}>
+          Register as Employee
+        </button>
+        <button className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition disabled:opacity-50" 
+        onClick={()=>{navigate('/login')}}
+        >
           Login
         </button>
+        </div>
       </div>
     </header>
   );

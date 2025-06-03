@@ -21,7 +21,7 @@
 
 //         return response.data.access_token;
 //     } catch (error) {
-//         console.error("Error getting Zoom access token:", error);
+//         //console.error("Error getting Zoom access token:", error);
 //         return null;
 //     }
 // };
@@ -41,7 +41,7 @@ export default async function getZoomAccessToken() {
     );
     return response.data.access_token;
   } catch (error) {
-    console.error('Zoom token error:', error);
+    //console.error('Zoom token error:', error);
     return null;
   }
 }

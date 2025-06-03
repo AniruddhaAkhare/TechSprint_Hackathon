@@ -4,6 +4,7 @@ import { db } from "../../../config/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 import { FaFilter, FaChevronDown } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 
 const initialColumns = {
   "pre-qualified": { name: "Pre Qualified", items: [], count: 0 },
@@ -15,6 +16,7 @@ const initialColumns = {
 };
 
 const EnquiryAnalyticsPage = () => {
+  const { user } = useAuth();
   const [columns, setColumns] = useState(initialColumns);
   const [courses, setCourses] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -38,8 +40,45 @@ const EnquiryAnalyticsPage = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const sourceOptions = ["Instagram", "Friend", "Family", "LinkedIn", "College"];
   const tagOptions = ["High Priority", "Follow Up", "Hot Lead", "Career Change", "Corporate Enquiry", "International"];
-  const [instituteId] = useState("9z6G6BLzfDScI0mzMOlB");
+  const [instituteId, setInstituteId] = useState();
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+      const fetchData = async () => {
+        if (!user) {
+          // setError('No user is signed in');
+          // setLoading(false);
+          return;
+        }
+  
+        try {
+          // Fetch user data and institute ID
+          const userDocRef = doc(db, 'Users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+  
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            setUserData(data);
+            
+            const institute = 'RDJ9wMXGrIUk221MzDxP';
+            if (institute) {
+              setInstituteId('RDJ9wMXGrIUk221MzDxP');
+              // localStorage.setItem('instituteId', institute);
+            } else {
+              // setError('Institute ID not found in user document');
+            }
+          } else {
+            // setError('User data not found');
+          }
+        } catch (err) {
+          // setError('Failed to fetch data: ' + err.message);
+        } finally {
+          // setLoading(false);
+        }
+      };
+  
+      fetchData();
+    }, [user]);
 
   // Fetch Courses
   useEffect(() => {
@@ -50,11 +89,10 @@ const EnquiryAnalyticsPage = () => {
           id: doc.id,
           ...doc.data(),
         }));
-        console.log("Fetched courses:", coursesData);
         setCourses(coursesData);
       },
       (error) => {
-        console.error("Error fetching courses:", error);
+        // //console.error("Error fetching courses:", error);
       }
     );
     return () => unsubscribe();
@@ -63,17 +101,16 @@ const EnquiryAnalyticsPage = () => {
   // Fetch Branches
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      collection(db, "instituteSetup", instituteId, "Center"),
+      collection(db, "instituteSetup", 'RDJ9wMXGrIUk221MzDxP', "Center"),
       (snapshot) => {
         const branchesData = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        console.log("Fetched branches:", branchesData);
         setBranches(branchesData);
       },
       (error) => {
-        console.error("Error fetching branches:", error);
+        // //console.error("Error fetching branches:", error);
       }
     );
     return () => unsubscribe();
@@ -82,17 +119,16 @@ const EnquiryAnalyticsPage = () => {
   // Fetch Instructors
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      collection(db, "Instructor"),
+      collection(db, "Users"),
       (snapshot) => {
         const instructorsData = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        console.log("Fetched instructors:", instructorsData);
         setInstructors(instructorsData);
       },
       (error) => {
-        console.error("Error fetching instructors:", error);
+        // //console.error("Error fetching instructors:", error);
       }
     );
     return () => unsubscribe();
@@ -107,7 +143,6 @@ const EnquiryAnalyticsPage = () => {
           id: doc.id,
           ...doc.data(),
         }));
-        console.log("Fetched enquiries:", enquiries);
 
         setColumns((prevColumns) => {
           const updatedColumns = Object.keys(initialColumns).reduce((acc, key) => {
@@ -123,13 +158,12 @@ const EnquiryAnalyticsPage = () => {
               console.warn(`Invalid stage "${columnId}" for enquiry:`, enquiry);
             }
           });
-          console.log("Updated columns:", updatedColumns);
           setIsLoading(false);
           return { ...updatedColumns };
         });
       },
       (error) => {
-        console.error("Error fetching enquiries:", error);
+        // //console.error("Error fetching enquiries:", error);
         setIsLoading(false);
       }
     );
@@ -169,7 +203,6 @@ const EnquiryAnalyticsPage = () => {
 
       return dateMatch && branchMatch && courseMatch && sourceMatch && instructorMatch && tagsMatch;
     });
-    console.log("Filtered enquiries:", filtered);
     return filtered;
   };
 
@@ -177,7 +210,6 @@ const EnquiryAnalyticsPage = () => {
   const applyPendingFilters = () => {
     setFilters(pendingFilters);
     setIsFilterOpen(false); // Close filter panel after applying
-    console.log("Applied filters:", pendingFilters);
   };
 
   // Reset Filters Function
@@ -193,7 +225,6 @@ const EnquiryAnalyticsPage = () => {
     setFilters(initialFilters);
     setPendingFilters(initialFilters);
     setIsFilterOpen(false); // Close filter panel after resetting
-    console.log("Filters reset to initial state");
   };
 
   // Handle Tag Toggle for Pending Filters
@@ -212,7 +243,6 @@ const EnquiryAnalyticsPage = () => {
     name: column.name,
     count: applyFilters(column.items).length,
   }));
-  console.log("Stage data:", stageData);
 
   const sourceData = sourceOptions
     .map((source) => ({
@@ -220,7 +250,6 @@ const EnquiryAnalyticsPage = () => {
       value: allEnquiries.filter((item) => item.source === source).length,
     }))
     .filter((data) => data.value > 0);
-  console.log("Source data:", sourceData);
 
   const courseData = courses
     .map((course) => ({
@@ -228,7 +257,6 @@ const EnquiryAnalyticsPage = () => {
       count: allEnquiries.filter((item) => item.course === course.name).length,
     }))
     .filter((data) => data.count > 0);
-  console.log("Course data:", courseData);
 
   const branchData = branches
     .map((branch) => ({
@@ -236,7 +264,6 @@ const EnquiryAnalyticsPage = () => {
       count: allEnquiries.filter((item) => item.branch === branch.name).length,
     }))
     .filter((data) => data.count > 0);
-  console.log("Branch data:", branchData);
 
   const tagData = tagOptions
     .map((tag) => ({
@@ -244,7 +271,6 @@ const EnquiryAnalyticsPage = () => {
       count: allEnquiries.filter((item) => item.tags?.includes(tag)).length,
     }))
     .filter((data) => data.count > 0);
-  console.log("Tag data:", tagData);
 
   const timeSeriesData = [];
   const startDate = new Date();
@@ -264,7 +290,6 @@ const EnquiryAnalyticsPage = () => {
       }).length,
     });
   }
-  console.log("Time series data:", timeSeriesData);
 
   const totalEnquiries = allEnquiries.length;
   const closedWon = applyFilters(columns["closed-won"]?.items || []).length;
@@ -283,7 +308,7 @@ const EnquiryAnalyticsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6">
+    <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px] overflow-y-auto">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold">Enquiry Analytics</h1>
@@ -378,8 +403,8 @@ const EnquiryAnalyticsPage = () => {
                 >
                   <option value="">All Instructors</option>
                   {instructors.map((instructor) => (
-                    <option key={instructor.id} value={instructor.f_name}>
-                      {instructor.f_name} {instructor.l_name}
+                    <option key={instructor.id} value={instructor.displayName}>
+                      {instructor.displayName}
                     </option>
                   ))}
                 </select>

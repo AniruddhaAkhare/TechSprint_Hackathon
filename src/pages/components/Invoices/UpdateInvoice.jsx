@@ -26,10 +26,10 @@
 //         if (invoiceSnap.exists()) {
 //           setInvoice(invoiceSnap.data());
 //         } else {
-//           console.error("Invoice not found!");
+//           //console.error("Invoice not found!");
 //         }
 //       } catch (error) {
-//         console.error("Error fetching invoice:", error);
+//         //console.error("Error fetching invoice:", error);
 //       }
 //     };
 //     fetchInvoice();
@@ -46,7 +46,7 @@
 //       alert("Invoice updated successfully!");
 //       navigate("/invoices"); // Redirect to invoices page
 //     } catch (error) {
-//       console.error("Error updating invoice:", error);
+//       //console.error("Error updating invoice:", error);
 //     }
 //   };
 
@@ -108,10 +108,10 @@ export default function UpdateInvoice() {
         if (invoiceSnap.exists()) {
           setInvoice(invoiceSnap.data());
         } else {
-          console.error("Invoice not found!");
+          //console.error("Invoice not found!");
         }
       } catch (error) {
-        console.error("Error fetching invoice:", error);
+        //console.error("Error fetching invoice:", error);
       }
     };
     fetchInvoice();
@@ -145,7 +145,7 @@ export default function UpdateInvoice() {
       alert("Invoice updated successfully!");
       navigate("/invoices"); // Redirect to invoices page
     } catch (error) {
-      console.error("Error updating invoice:", error);
+      //console.error("Error updating invoice:", error);
     }
   };
 
