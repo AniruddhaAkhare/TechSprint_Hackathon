@@ -19,7 +19,7 @@ const BatchFacultySelection = ({
         <option value="">Select a Batch Faculty</option>
         {availableBatchFaculty.map((faculty) => (
           <option key={faculty.id} value={faculty.id}>
-            {faculty.Name}
+            {faculty.displayName}
           </option>
         ))}
       </select>
@@ -49,7 +49,7 @@ const BatchFacultySelection = ({
                       {index + 1}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-base text-gray-900">
-                      {BF?.first_name || BF?.Name}
+                      {BF?.displayName}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       <button

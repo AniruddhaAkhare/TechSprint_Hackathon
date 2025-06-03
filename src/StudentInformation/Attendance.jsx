@@ -138,8 +138,8 @@ export default function Attendance() {
                 const studentData = studentDoc.data();
                 studentsByBatchMap[batchId].push({
                   id: studentId,
-                  first_name: studentData.first_name || 'Unknown',
-                  last_name: studentData.last_name || '',
+                  first_name: studentData.Name|| 'Unknown',
+                  
                 });
               } else {
                 console.warn(`Student ${studentId} not found in student collection for batch ${batchId}`);
@@ -382,7 +382,7 @@ export default function Attendance() {
     }
 
     const dates = generateDateRange(batch.startDate, batch.endDate);
-    const studentNames = students.map((s) => `${s.first_name} ${s.last_name}`.trim());
+    const studentNames = students.map((s) => `${s.first_name}`.trim());
     const attendanceMap = {};
 
     batchAttendance.forEach((record) => {
