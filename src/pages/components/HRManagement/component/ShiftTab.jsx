@@ -1,346 +1,332 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Clock, Settings, Calendar } from "lucide-react";
+import { Plus, Clock, Edit2 } from "lucide-react";
+import { collection, addDoc, getDocs, updateDoc, doc } from "firebase/firestore";
+import { db } from "../../../../config/firebase";
 
-const ShiftManagement = () => {
-  const [showForm, setShowForm] = useState(false);
+const ShiftManager = () => {
   const [shiftData, setShiftData] = useState({
     shiftName: "",
     fromTime: "",
+    fromAmPm: "AM",
     toTime: "",
+    toAmPm: "PM",
     marginBefore: "",
     marginAfter: "",
-    payableHoursRange: "",
     coreWorkingHours: "",
   });
+  const [shifts, setShifts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [editingShiftId, setEditingShiftId] = useState(null);
 
-  const [shifts, setShifts] = useState([
-    {
-      id: 1,
-      shiftName: "Morning Shift",
-      fromTime: "09:00",
-      toTime: "17:00",
-      marginBefore: "01:00",
-      marginAfter: "01:00",
-      payableHoursRange: "09:00 AM - 05:00 PM",
-      coreWorkingHours: "8"
-    },
-    {
-      id: 2,
-      shiftName: "Evening Shift",
-      fromTime: "14:00",
-      toTime: "22:00",
-      marginBefore: "00:30",
-      marginAfter: "00:30",
-      payableHoursRange: "02:00 PM - 10:00 PM",
-      coreWorkingHours: "8"
-    }
-  ]);
+  useEffect(() => {
+    const fetchShifts = async () => {
+      try {
+        setLoading(true);
+        const shiftsCollection = collection(db, "Shifts");
+        const shiftsSnapshot = await getDocs(shiftsCollection);
+        const shiftsList = shiftsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setShifts(shiftsList);
+        setLoading(false);
+      } catch (error) {
+        setError(`Failed to fetch shifts: ${error.message}`);
+        setLoading(false);
+      }
+    };
+    fetchShifts();
+  }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setShiftData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setShiftData({ ...shiftData, [e.target.name]: e.target.value });
+  };
+
+  const handleEdit = (shift) => {
+    setShiftData({
+      shiftName: shift.shiftName,
+      fromTime: shift.fromTime,
+      fromAmPm: shift.fromAmPm,
+      toTime: shift.toTime,
+      toAmPm: shift.toAmPm,
+      marginBefore: shift.marginBefore.toString(),
+      marginAfter: shift.marginAfter.toString(),
+      coreWorkingHours: shift.coreWorkingHours,
+    });
+    setEditingShiftId(shift.id);
   };
 
   const handleSave = async () => {
     try {
+      if (!shiftData.shiftName) {
+        alert("Shift Name is required!");
+        return;
+      }
+      if (!shiftData.fromTime || !shiftData.toTime) {
+        alert("From Time and To Time are required!");
+        return;
+      }
+      if (!shiftData.coreWorkingHours) {
+        alert("Core Working Hours is required!");
+        return;
+      }
+      if (!shiftData.marginBefore || !shiftData.marginAfter) {
+        alert("Margin Before and Margin After are required!");
+        return;
+      }
+      if (isNaN(shiftData.marginBefore) || isNaN(shiftData.marginAfter)) {
+        alert("Margins must be valid numbers!");
+        return;
+      }
+      if (
+        parseFloat(shiftData.marginBefore) < 0 ||
+        parseFloat(shiftData.marginAfter) < 0
+      ) {
+        alert("Margins cannot be negative!");
+        return;
+      }
+
       const newShift = {
-        id: Date.now(),
-        ...shiftData
+        ...shiftData,
+        marginBefore: parseFloat(shiftData.marginBefore),
+        marginAfter: parseFloat(shiftData.marginAfter),
+        createdAt: new Date().toISOString(),
       };
-      
-      setShifts(prev => [...prev, newShift]);
-      
+
+      if (editingShiftId) {
+        const shiftRef = doc(db, "Shifts", editingShiftId);
+        await updateDoc(shiftRef, newShift);
+        setShifts((prev) =>
+          prev.map((shift) =>
+            shift.id === editingShiftId ? { id: editingShiftId, ...newShift } : shift
+          )
+        );
+        setEditingShiftId(null);
+      } else {
+        const docRef = await addDoc(collection(db, "Shifts"), newShift);
+        setShifts((prev) => [...prev, { id: docRef.id, ...newShift }]);
+      }
+
       setShiftData({
         shiftName: "",
         fromTime: "",
+        fromAmPm: "AM",
         toTime: "",
+        toAmPm: "PM",
         marginBefore: "",
         marginAfter: "",
-        payableHoursRange: "",
         coreWorkingHours: "",
       });
-
-      setShowForm(false);
     } catch (error) {
-      console.error("Error saving shift:", error);
+      alert(`Failed to save shift: ${error.message}`);
     }
   };
 
-  const formatTime = (time) => {
-    if (!time) return "";
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
+  const formatTime = (time, period) => {
+    if (!time || !time.includes(":")) {
+      return time || "N/A";
+    }
+    if (!period) {
+      period = "AM";
+    }
+    try {
+      const [hours, minutes] = time.split(":");
+      const hour = parseInt(hours);
+      if (isNaN(hour)) {
+        return time;
+      }
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${minutes} ${period}`;
+    } catch {
+      return time || "N/A";
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-indigo-600 rounded-lg">
-              <Settings className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Shift Management
-            </h1>
+    <div className="flex flex-col space-y-6 p-6">
+      <h1 className="text-2xl font-bold text-gray-800">Shift Management</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Create Shift Card */}
+        <div className="bg-white shadow-md rounded-xl border border-gray-200">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 rounded-t-xl">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              {editingShiftId ? "Edit Shift" : "Create New Shift"}
+            </h2>
           </div>
-          <p className="text-gray-600">
-            Create and manage work shifts for your organization
-          </p>
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Shift Name
+              </label>
+              <input
+                type="text"
+                name="shiftName"
+                value={shiftData.shiftName}
+                onChange={handleChange}
+                placeholder="Morning Shift"
+                className="mt-1 w-full px-4 py-2 border rounded-md"
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  From Time
+                </label>
+                <input
+                  type="time"
+                  name="fromTime"
+                  value={shiftData.fromTime}
+                  onChange={handleChange}
+                  className="mt-1 w-full px-4 py-2 border rounded-md"
+                />
+              </div>
+              <div className="w-20">
+                <label className="block text-sm font-medium text-gray-700">
+                  AM/PM
+                </label>
+                <select
+                  name="fromAmPm"
+                  value={shiftData.fromAmPm}
+                  onChange={handleChange}
+                  className="mt-1 w-full px-2 py-2 border rounded-md"
+                >
+                  <option>AM</option>
+                  <option>PM</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  To Time
+                </label>
+                <input
+                  type="time"
+                  name="toTime"
+                  value={shiftData.toTime}
+                  onChange={handleChange}
+                  className="mt-1 w-full px-4 py-2 border rounded-md"
+                />
+              </div>
+              <div className="w-20">
+                <label className="block text-sm font-medium text-gray-700">
+                  AM/PM
+                </label>
+                <select
+                  name="toAmPm"
+                  value={shiftData.toAmPm}
+                  onChange={handleChange}
+                  className="mt-1 w-full px-2 py-2 border rounded-md"
+                >
+                  <option>AM</option>
+                  <option>PM</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Margin Before (min)
+                </label>
+                <input
+                  type="number"
+                  name="marginBefore"
+                  value={shiftData.marginBefore}
+                  onChange={handleChange}
+                  min="0"
+                  className="mt-1 w-full px-4 py-2 border rounded-md"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Margin After (min)
+                </label>
+                <input
+                  type="number"
+                  name="marginAfter"
+                  value={shiftData.marginAfter}
+                  onChange={handleChange}
+                  min="0"
+                  className="mt-1 w-full px-4 py-2 border rounded-md"
+                />
+              </div>
+            </div>
+           
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Core Working Hours
+              </label>
+              <input
+                type="text"
+                name="coreWorkingHours"
+                value={shiftData.coreWorkingHours}
+                onChange={handleChange}
+                placeholder="e.g., 8"
+                className="mt-1 w-full px-4 py-2 border rounded-md"
+              />
+            </div>
+            <button
+              onClick={handleSave}
+              className="w-full mt-4 bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700"
+            >
+              {editingShiftId ? "Update Shift" : "Save Shift"}
+            </button>
+          </div>
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Shifts</p>
-                <p className="text-2xl font-bold text-gray-900">{shifts.length}</p>
+        <div className="md:col-span-1 lg:col-span-2 space-y-6">
+          {loading ? (
+            <div className="text-center text-gray-600">Loading shifts...</div>
+          ) : error ? (
+            <div className="text-center text-red-600">{error}</div>
+          ) : shifts.length === 0 ? (
+            <div className="bg-white shadow-md border border-gray-200 rounded-xl p-4 text-center">
+              <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <Clock className="w-8 h-8 text-gray-400" />
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Calendar className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Shifts</p>
-                <p className="text-2xl font-bold text-green-600">{shifts.length}</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <Clock className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Avg. Hours</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {shifts.length > 0 
-                    ? (shifts.reduce((acc, shift) => acc + parseFloat(shift.coreWorkingHours || 0), 0) / shifts.length).toFixed(1)
-                    : '0'
-                  }
-                </p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <Settings className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Shift Form Card */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <Plus className="w-5 h-5" />
-                  Create New Shift
-                </h2>
-              </div>
-              
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Shift Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="shiftName"
-                    value={shiftData.shiftName}
-                    onChange={handleChange}
-                    placeholder="e.g., Morning Shift"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Start Time
-                    </label>
-                    <input
-                      type="time"
-                      name="fromTime"
-                      value={shiftData.fromTime}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      End Time
-                    </label>
-                    <input
-                      type="time"
-                      name="toTime"
-                      value={shiftData.toTime}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Margin Before
-                    </label>
-                    <input
-                      type="text"
-                      name="marginBefore"
-                      value={shiftData.marginBefore}
-                      onChange={handleChange}
-                      placeholder="01:00"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Margin After
-                    </label>
-                    <input
-                      type="text"
-                      name="marginAfter"
-                      value={shiftData.marginAfter}
-                      onChange={handleChange}
-                      placeholder="01:00"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Payable Hours Range
-                  </label>
-                  <input
-                    type="text"
-                    name="payableHoursRange"
-                    value={shiftData.payableHoursRange}
-                    onChange={handleChange}
-                    placeholder="09:00 AM - 05:00 PM"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Core Working Hours
-                  </label>
-                  <input
-                    type="text"
-                    name="coreWorkingHours"
-                    value={shiftData.coreWorkingHours}
-                    onChange={handleChange}
-                    placeholder="8"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                  />
-                </div>
-
-                <div className="pt-4">
-                  <button
-                    onClick={handleSave}
-                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  >
-                    Create Shift
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Shifts Display Section */}
-          <div className="lg:col-span-2">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Active Shifts
-              </h2>
-              <p className="text-gray-600">
-                Manage your organization's work shifts
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No shifts created yet
+              </h3>
+              <p className="text-gray-500">
+                Create your first shift using the form
               </p>
             </div>
-
-            {shifts.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-                <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <Clock className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No shifts created yet
-                </h3>
-                <p className="text-gray-500 mb-4">
-                  Create your first shift using the form on the left
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {shifts.map((shift) => (
-                  <div
-                    key={shift.id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 hover:-translate-y-1"
+          ) : (
+            shifts.map((shift) => (
+              <div
+                key={shift.id}
+                className="bg-white shadow-md border border-gray-200 rounded-xl p-4"
+              >
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-800">
+                    <Clock className="w-5 h-5 text-indigo-500" />
+                    {shift.shiftName}
+                  </h3>
+                  <button
+                    onClick={() => handleEdit(shift)}
+                    className="p-2 text-blue-600 hover:text-blue-800"
                   >
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-1">
-                            {shift.shiftName}
-                          </h3>
-                          <div className="flex items-center gap-2 text-lg font-medium text-indigo-600">
-                            <Clock className="w-4 h-4" />
-                            {formatTime(shift.fromTime)} - {formatTime(shift.toTime)}
-                          </div>
-                        </div>
-                        <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                          Active
-                        </span>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-sm font-medium text-gray-600">Margin Before/After</span>
-                          <span className="text-sm text-gray-900 font-medium">
-                            {shift.marginBefore} / {shift.marginAfter}
-                          </span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-sm font-medium text-gray-600">Payable Hours</span>
-                          <span className="text-sm text-gray-900 font-medium">
-                            {shift.payableHoursRange}
-                          </span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center py-2">
-                          <span className="text-sm font-medium text-gray-600">Core Working Hours</span>
-                          <span className="text-sm font-bold text-indigo-600">
-                            {shift.coreWorkingHours} hrs
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  <strong>Time:</strong>{" "}
+                  {formatTime(shift.fromTime, shift.fromAmPm)} -{" "}
+                  {formatTime(shift.toTime, shift.toAmPm)}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Margins:</strong> Before {shift.marginBefore} min, After{" "}
+                  {shift.marginAfter} min
+                </p>
+               
               </div>
-            )}
-          </div>
+            ))
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default ShiftManagement;
+export default ShiftManager;

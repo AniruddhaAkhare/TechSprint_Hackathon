@@ -77,7 +77,7 @@ import EmployeeAttendance from './pages/components/HRManagement/TimeAndAttendanc
 import HolidayCalendar from './pages/components/HRManagement/HolidayCalendar.jsx';
 import EmployeePage from './pages/components/HRManagement/TimeAndAttendanceTracking/EmployeePage.jsx';
 import HRLeaveApproval from './pages/components/HRManagement/Leave/HRLeaveApproval.jsx';
-import LeaveApplication from './pages/components/HRManagement/Leave/LeaveApplication.jsx';
+import LeaveApplication from './pages/components/HRManagement/LeaveApplicationForm.jsx';
 import Companies from './pages/components/PlacementManagement/Companies/Companies.jsx';
 import JobOpenings from './pages/components/PlacementManagement/JobOpenings/JobOpenings.jsx';
 import RecruiterView from './pages/components/PlacementManagement/JobOpenings/RecruiterView.jsx';
@@ -90,10 +90,16 @@ import BulkAddStudents from './pages/components/Students/BulkAddStudents.jsx';
 import { CheckInReminderProvider } from './context/CheckInRemainderContext.jsx';
 import { ToastContainer } from 'react-toastify';
 import AddStaff from './pages/components/Staff/AddStaff.jsx'
+import Staff from  './pages/components/Staff/StaffAndUsers.jsx'
 import EditStaff from './pages/components/Staff/EditStaff.jsx';
 import StaffAndUsers from './pages/components/Staff/StaffAndUsers.jsx';
 import EmployeeDashboard from './pages/home/EmployeeDashboard.jsx';
-import Operation from './pages/components/HRManagement/Operation.jsx';
+import OperationMain from './pages/components/HRManagement/Operation.jsx';
+import Operation from './pages/components/HRManagement/Operation_main.jsx'
+import MyShift from './pages/components/HRManagement/myShift.jsx'
+import ShiftDisplay from  './pages/components/HRManagement/ShiftManagement.jsx'
+import EmployeeManagement from './pages/components/HRManagement/Emanagement.jsx'
+import AttendanceManagement from './pages/components/HRManagement/Amanagement.jsx'
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -141,7 +147,7 @@ export default function App() {
 
 
                 
-                <Route path="/staff" element={<ProtectedRoute permissionSection="Users"><StaffAndUsers /></ProtectedRoute>} />
+                <Route path="/" element={<ProtectedRoute permissionSection="Users"><StaffAndUsers /></ProtectedRoute>} />
 
                 <Route path="/forgetPassword" element={!user ? <ForgetPasswordForm /> : <Navigate to="/my-profile" />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -185,6 +191,7 @@ export default function App() {
 
                 {/* Instructor Routes */}
                 <Route path="/addstaff" element={<ProtectedRoute permissionSection="Users"><AddStaff /></ProtectedRoute>} />
+                <Route path="/staff" element={<Staff />} />
                 <Route path="/editstaff/:staffId" element={<ProtectedRoute permissionSection="Users"><EditStaff /></ProtectedRoute>} />
 
 
@@ -262,8 +269,18 @@ export default function App() {
                 <Route path="/employee-attendance/:email" element={<EmployeePage />} />
                 <Route path="/leave-management" element={<HRLeaveApproval />} />
                 <Route path="/leave-application" element={<LeaveApplication />} />
-                <Route path="/operation" element={<Operation />} />
+                <Route path="/myShift" element={<MyShift  />} />                                                    
+                <Route path="/operations-dashboard" element={<OperationMain/>} />
+                <Route path="/shiftAll" element={<ShiftDisplay />} />
+                <Route path="/operations" element={<Operation/>} />
                 <Route path="/employee-profile/:employeeId" element={<EmployeeProfile />} />
+                 <Route path="/employeeManagemnet" element={<EmployeeManagement />} />
+                    <Route path="/attendanceManagemnet" element={<AttendanceManagement/>} />
+                {/* <Route path="/Shift-Mapping" element={<ShiftManager/>} />
+                <Route path="/Manage-ShiftsEmployee" element={< EmployeeManager />} />
+                <Route path="/User-specific Operations" element={<UserSpecific />} /> */}
+               
+
                 {/* <Route path="/add-employee" element={<AddEmployee/>}/> */}
 
                  {/* Employee Dashboard  */}

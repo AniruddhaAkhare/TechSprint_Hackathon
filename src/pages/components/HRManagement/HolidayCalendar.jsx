@@ -1,372 +1,46 @@
-// import React, { useState, useEffect } from "react";
-// import { db } from "../../../config/firebase";
-// import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
-// import { useAuth } from "../../../context/AuthContext";
-// import Calendar from "react-calendar";
-// import "react-calendar/dist/Calendar.css";
-// import { PlusCircleIcon, TrashIcon } from "@heroicons/react/24/solid";
+import React, { useState } from "react";
+import { Calendar, Plus, Trash2, CalendarDays, AlertCircle, CheckCircle } from "lucide-react";
 
-// // Custom CSS for calendar styling
-// const customStyles = `
-//   .react-calendar {
-//     width: 100%;
-//     max-width: 800px;
-//     height: 600px;
-//     font-size: 1.25rem;
-//     line-height: 1.5;
-//     border: none;
-//     background: transparent;
-//   }
-//   .react-calendar__tile {
-//     height: 80px;
-//     padding: 10px;
-//     border-radius: 8px;
-//     transition: background 0.2s;
-//   }
-//   .react-calendar__month-view__days__day {
-//     font-size: 1.1rem;
-//     color: #374151;
-//   }
-//   .react-calendar__navigation {
-//     margin-bottom: 1rem;
-//   }
-//   .react-calendar__navigation__label,
-//   .react-calendar__navigation__arrow {
-//     font-size: 1.5rem;
-//     padding: 10px;
-//     color: #1f2937;
-//     border-radius: 8px;
-//   }
-//   .react-calendar__month-view__weekdays__weekday {
-//     font-size: 1.2rem;
-//     color: #6b7280;
-//     font-weight: 500;
-//   }
-//   .react-calendar__tile--active,
-//   .react-calendar__tile--hover {
-//     background: #e0f7fa !important;
-//   }
-//   .react-calendar__tile--now {
-//     background: #f3f4f6 !important;
-//   }
-//   .react-calendar__tile:enabled:hover {
-//     background: #e5e7eb !important;
-//   }
-// `;
-
-// const HolidayCalendar = () => {
-//   const { user } = useAuth();
-//   const [holidays, setHolidays] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-//   const [selectedDate, setSelectedDate] = useState(null);
-//   const [holidayName, setHolidayName] = useState("");
-
-//   // Fetch holidays from Firestore
-//   useEffect(() => {
-//     const fetchHolidays = async () => {
-//       setLoading(true);
-//       setError("");
-//       try {
-//         const holidaysSnapshot = await getDocs(collection(db, "Holidays"));
-//         const holidaysData = holidaysSnapshot.docs.map((doc) => ({
-//           id: doc.id,
-//           ...doc.data(),
-//         }));
-//         setHolidays(holidaysData);
-//       } catch (err) {
-//         //console.error("Error fetching holidays:", err);
-//         setError("Failed to load holidays.");
-//       }
-//       setLoading(false);
-//     };
-
-//     if (user) {
-//       fetchHolidays();
-//     }
-//   }, [user]);
-
-//   // Format date to YYYY-MM-DD in local timezone
-//   const formatLocalDate = (date) => {
-//     const year = date.getFullYear();
-//     const month = String(date.getMonth() + 1).padStart(2, "0");
-//     const day = String(date.getDate()).padStart(2, "0");
-//     return `${year}-${month}-${day}`;
-//   };
-
-//   // Handle date click on calendar
-//   const handleDateClick = (date) => {
-//     const dateStr = formatLocalDate(date);
-//     setSelectedDate(dateStr);
-//     const existingHoliday = holidays.find((holiday) => holiday.date === dateStr);
-//     setHolidayName(existingHoliday ? existingHoliday.name || "" : "");
-//   };
-
-//   // Add or update a holiday
-//   const handleAddHoliday = async () => {
-//     if (!selectedDate) {
-//       setError("Please select a date.");
-//       return;
-//     }
-//     if (!holidayName.trim()) {
-//       setError("Please enter a holiday name.");
-//       return;
-//     }
-
-//     try {
-//       const holidayDocId = selectedDate;
-//       await setDoc(doc(db, "Holidays", holidayDocId), {
-//         date: selectedDate,
-//         name: holidayName.trim(),
-//       });
-//       setHolidays((prev) => [
-//         ...prev.filter((h) => h.date !== selectedDate),
-//         { id: holidayDocId, date: selectedDate, name: holidayName.trim() },
-//       ]);
-//       setError("");
-//       setHolidayName("");
-//       setSelectedDate(null);
-//     } catch (err) {
-//       //console.error("Error adding holiday:", err);
-//       setError("Failed to add holiday.");
-//     }
-//   };
-
-//   // Remove a holiday
-//   const handleRemoveHoliday = async () => {
-//     if (!selectedDate) {
-//       setError("Please select a date.");
-//       return;
-//     }
-
-//     try {
-//       await deleteDoc(doc(db, "Holidays", selectedDate));
-//       setHolidays((prev) => prev.filter((h) => h.date !== selectedDate));
-//       setError("");
-//       setHolidayName("");
-//       setSelectedDate(null);
-//     } catch (err) {
-//       //console.error("Error removing holiday:", err);
-//       setError("Failed to remove holiday.");
-//     }
-//   };
-
-//   // Customize calendar tile content to show holiday names
-//   const tileContent = ({ date, view }) => {
-//     if (view === "month") {
-//       const dateStr = formatLocalDate(date);
-//       const holiday = holidays.find((h) => h.date === dateStr);
-//       if (holiday) {
-//         return (
-//           <div className="text-center text-red-600 text-xs mt-1">
-//             {holiday.name}
-//           </div>
-//         );
-//       }
-//     }
-//     return null;
-//   };
-
-//   // Customize tile class for holiday styling
-//   const tileClassName = ({ date, view }) => {
-//     if (view === "month") {
-//       const dateStr = formatLocalDate(date);
-//       const isHoliday = holidays.some((h) => h.date === dateStr);
-//       return isHoliday ? "bg-red-100 rounded-full" : "";
-//     }
-//     return "";
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px]">
-//       <div className="max-w-7xl mx-auto">
-//         <div className="bg-white rounded-lg shadow-lg p-6">
-//           <h3 className="text-2xl font-semibold text-gray-800 mb-6">Holiday Calendar</h3>
-//           {error && (
-//             <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-md">
-//               {error}
-//             </div>
-//           )}
-//           {loading ? (
-//             <div className="flex justify-center items-center h-64">
-//               <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
-//             </div>
-//           ) : (
-//             <div className="flex flex-col lg:flex-row gap-6">
-//               {/* Calendar */}
-//               <div className="w-full lg:w-2/3">
-//                 <div className="bg-white rounded-lg shadow-md p-4">
-//                   <style>{customStyles}</style>
-//                   <Calendar
-//                     onClickDay={handleDateClick}
-//                     tileContent={tileContent}
-//                     tileClassName={tileClassName}
-//                     className="w-full"
-//                   />
-//                 </div>
-//               </div>
-//               {/* Holiday Form */}
-//               <div className="w-full lg:w-1/3">
-//                 <div className="bg-white rounded-lg shadow-md p-6">
-//                   <h4 className="text-lg font-semibold text-gray-800 mb-4">
-//                     {selectedDate
-//                       ? `Manage Holiday for ${new Date(selectedDate).toLocaleDateString()}`
-//                       : "Select a Date"}
-//                   </h4>
-//                   {selectedDate && (
-//                     <div className="space-y-6">
-//                       <div>
-//                         <label htmlFor="holidayName" className="block text-sm font-medium text-gray-700">
-//                           Holiday Name
-//                         </label>
-//                         <input
-//                           type="text"
-//                           id="holidayName"
-//                           value={holidayName}
-//                           onChange={(e) => setHolidayName(e.target.value)}
-//                           className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-//                           placeholder="e.g., Christmas Day"
-//                         />
-//                       </div>
-//                       <div className="flex gap-3">
-//                         <button
-//                           onClick={handleAddHoliday}
-//                           className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors duration-200"
-//                         >
-//                           <PlusCircleIcon className="w-5 h-5 mr-2" />
-//                           {holidayName && holidays.some((h) => h.date === selectedDate)
-//                             ? "Update Holiday"
-//                             : "Add Holiday"}
-//                         </button>
-//                         {holidays.some((h) => h.date === selectedDate) && (
-//                           <button
-//                             onClick={handleRemoveHoliday}
-//                             className="flex items-center bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors duration-200"
-//                           >
-//                             <TrashIcon className="w-5 h-5 mr-2" />
-//                             Remove Holiday
-//                           </button>
-//                         )}
-//                       </div>
-//                     </div>
-//                   )}
-//                 </div>
-//               </div>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default HolidayCalendar;
-
-
-import React, { useState, useEffect } from "react";
-import { db } from "../../../config/firebase";
-import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
-import { useAuth } from "../../../context/AuthContext";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import { PlusCircleIcon, TrashIcon } from "@heroicons/react/24/solid";
-import { toast } from "react-toastify";
-
-// Custom CSS for calendar styling
-const customStyles = `
-  .react-calendar {
-    width: 100%;
-    max-width: 800px;
-    height: 600px;
-    font-size: 1.25rem;
-    line-height: 1.5;
-    border: none;
-    background: transparent;
-  }
-  .react-calendar__tile {
-    height: 80px;
-    padding: 10px;
-    border-radius: 8px;
-    transition: background 0.2s;
-  }
-  .react-calendar__month-view__days__day {
-    font-size: 1.1rem;
-    color: #374151;
-  }
-  .react-calendar__navigation {
-    margin-bottom: 1rem;
-  }
-  .react-calendar__navigation__label,
-  .react-calendar__navigation__arrow {
-    font-size: 1.5rem;
-    padding: 10px;
-    color: #1f2937;
-    border-radius: 8px;
-  }
-  .react-calendar__month-view__weekdays__weekday {
-    font-size: 1.2rem;
-    color: #6b7280;
-    font-weight: 500;
-  }
-  .react-calendar__tile--active,
-  .react-calendar__tile--hover {
-    background: #e0f7fa !important;
-  }
-  .react-calendar__tile--now {
-    background: #f3f4f6 !important;
-  }
-  .react-calendar__tile:enabled:hover {
-    background: #e5e7eb !important;
-  }
-`;
+const mockHolidays = [
+  { id: "2024-12-25", date: "2024-12-25", name: "Christmas Day", applicableFor: "All Employees", description: "Company-wide holiday" },
+  { id: "2024-01-01", date: "2024-01-01", name: "New Year's Day", applicableFor: "All Employees", description: "Start of the new year" },
+  { id: "2024-07-04", date: "2024-07-04", name: "Independence Day", applicableFor: "US Employees", description: "National holiday" },
+];
 
 const HolidayCalendar = () => {
-  const { user, rolePermissions } = useAuth();
-  const [holidays, setHolidays] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [holidays, setHolidays] = useState(mockHolidays);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
   const [holidayName, setHolidayName] = useState("");
+  const [applicableFor, setApplicableFor] = useState("");
+  const [description, setDescription] = useState("");
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Define permissions
-  const canView = rolePermissions?.Holidays?.display || false;
-  const canCreate = rolePermissions?.Holidays?.create || false;
-  const canUpdate = rolePermissions?.Holidays?.update || false;
-  const canDelete = rolePermissions?.Holidays?.delete || false;
+  const canView = true;
+  const canCreate = true;
+  const canUpdate = true;
+  const canDelete = true;
 
-  // Fetch holidays from Firestore
-  useEffect(() => {
-    const fetchHolidays = async () => {
-      if (!canView) {
-        setError("You do not have permission to view holidays.");
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setError("");
-      try {
-        const holidaysSnapshot = await getDocs(collection(db, "Holidays"));
-        const holidaysData = holidaysSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setHolidays(holidaysData);
-      } catch (err) {
-        // //console.error("Error fetching holidays:", err);
-        setError("Failed to load holidays.");
-      }
-      setLoading(false);
-    };
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
 
-    if (user && canView) {
-      fetchHolidays();
-    } else if (!canView) {
-      setError("You do not have permission to view holidays.");
-      setLoading(false);
+    const days = [];
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
     }
-  }, [user, canView]);
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+    return days;
+  };
 
-  // Format date to YYYY-MM-DD in local timezone
   const formatLocalDate = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -374,19 +48,21 @@ const HolidayCalendar = () => {
     return `${year}-${month}-${day}`;
   };
 
-  // Handle date click on calendar
   const handleDateClick = (date) => {
     if (!canCreate && !canUpdate) {
-      toast.error("You do not have permission to add or update holidays.");
+      setError("You do not have permission to add or update holidays.");
       return;
     }
     const dateStr = formatLocalDate(date);
     setSelectedDate(dateStr);
     const existingHoliday = holidays.find((holiday) => holiday.date === dateStr);
     setHolidayName(existingHoliday ? existingHoliday.name || "" : "");
+    setApplicableFor(existingHoliday ? existingHoliday.applicableFor || "" : "");
+    setDescription(existingHoliday ? existingHoliday.description || "" : "");
+    setError("");
+    setSuccess("");
   };
 
-  // Add or update a holiday
   const handleAddHoliday = async () => {
     if (!selectedDate) {
       setError("Please select a date.");
@@ -396,41 +72,37 @@ const HolidayCalendar = () => {
       setError("Please enter a holiday name.");
       return;
     }
-
-    const isExistingHoliday = holidays.some((h) => h.date === selectedDate);
-    const requiredPermission = isExistingHoliday ? canUpdate : canCreate;
-    const permissionType = isExistingHoliday ? "update" : "add";
-
-    if (!requiredPermission) {
-      toast.error(`You do not have permission to ${permissionType} holidays.`);
+    if (!applicableFor.trim()) {
+      setError("Please enter who the holiday is applicable for.");
       return;
     }
 
+    const isExistingHoliday = holidays.some((h) => h.date === selectedDate);
     try {
-      const holidayDocId = selectedDate;
-      await setDoc(doc(db, "Holidays", holidayDocId), {
-        date: selectedDate,
-        name: holidayName.trim(),
-      });
       setHolidays((prev) => [
         ...prev.filter((h) => h.date !== selectedDate),
-        { id: holidayDocId, date: selectedDate, name: holidayName.trim() },
+        {
+          id: selectedDate,
+          date: selectedDate,
+          name: holidayName.trim(),
+          applicableFor: applicableFor.trim(),
+          description: description.trim(),
+        },
       ]);
       setError("");
+      setSuccess(`Holiday ${isExistingHoliday ? "updated" : "added"} successfully!`);
       setHolidayName("");
+      setApplicableFor("");
+      setDescription("");
       setSelectedDate(null);
-      toast.success(`Holiday ${isExistingHoliday ? "updated" : "added"} successfully!`);
     } catch (err) {
-      // //console.error(`Error ${isExistingHoliday ? "updating" : "adding"} holiday:`, err);
       setError(`Failed to ${isExistingHoliday ? "update" : "add"} holiday.`);
-      toast.error(`Failed to ${isExistingHoliday ? "update" : "add"} holiday.`);
     }
   };
 
-  // Remove a holiday
   const handleRemoveHoliday = async () => {
     if (!canDelete) {
-      toast.error("You do not have permission to remove holidays.");
+      setError("You do not have permission to remove holidays.");
       return;
     }
     if (!selectedDate) {
@@ -439,142 +111,286 @@ const HolidayCalendar = () => {
     }
 
     try {
-      await deleteDoc(doc(db, "Holidays", selectedDate));
       setHolidays((prev) => prev.filter((h) => h.date !== selectedDate));
+      setSuccess("Holiday removed successfully!");
       setError("");
       setHolidayName("");
+      setApplicableFor("");
+      setDescription("");
       setSelectedDate(null);
-      toast.success("Holiday removed successfully!");
     } catch (err) {
-      // //console.error("Error removing holiday:", err);
       setError("Failed to remove holiday.");
-      toast.error("Failed to remove holiday.");
     }
   };
 
-  // Customize calendar tile content to show holiday names
-  const tileContent = ({ date, view }) => {
-    if (view === "month") {
-      const dateStr = formatLocalDate(date);
-      const holiday = holidays.find((h) => h.date === dateStr);
-      if (holiday) {
-        return (
-          <div className="text-center text-red-600 text-xs mt-1">
-            {holiday.name}
-          </div>
-        );
-      }
-    }
-    return null;
+  const navigateMonth = (direction) => {
+    setCurrentDate((prev) => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() + direction);
+      return newDate;
+    });
   };
 
-  // Customize tile class for holiday styling
-  const tileClassName = ({ date, view }) => {
-    if (view === "month") {
-      const dateStr = formatLocalDate(date);
-      const isHoliday = holidays.some((h) => h.date === dateStr);
-      return isHoliday ? "bg-red-100 rounded-full" : "";
-    }
-    return "";
+  const isHoliday = (date) => {
+    if (!date) return false;
+    const dateStr = formatLocalDate(date);
+    return holidays.find((h) => h.date === dateStr);
   };
+
+  const isToday = (date) => {
+    if (!date) return false;
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  const isSelected = (date) => {
+    if (!date || !selectedDate) return false;
+    return formatLocalDate(date) === selectedDate;
+  };
+
+  const days = getDaysInMonth(currentDate);
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ];
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   if (!canView) {
     return (
-      <div className="p-4 text-red-600 text-center">
-        Access Denied: You do not have permission to view holidays.
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-red-200 p-8 text-center max-w-md">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-slate-800 mb-2">Access Denied</h2>
+          <p className="text-slate-600">You do not have permission to view holidays.</p>
+        </div>
       </div>
     );
   }
 
   return (
-  <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-100 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
-  <div className="max-w-7xl mx-auto">
-    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-      <h1 className="text-2xl font-bold text-[#333333] font-sans mb-8">
-        Holiday Calendar
-      </h1>
-
-      {error && (
-        <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-6 text-sm text-red-600 font-medium">
-          {error}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid"></div>
-        </div>
-      ) : (
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Calendar */}
-          <div className="w-full lg:w-2/3">
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-              <style>{customStyles}</style>
-              <Calendar
-                onClickDay={canCreate || canUpdate ? handleDateClick : undefined}
-                tileContent={tileContent}
-                tileClassName={tileClassName}
-                className="w-full border-0 text-gray-700"
-              />
+    <div className="flex flex-col bg-gray-50 p-4 h-full">
+      <div className="max-w-7xl mx-auto w-full">
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 mb-6">
+          <div className="flex items-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl mr-4">
+              <CalendarDays className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Holiday Calendar</h1>
+              <p className="text-slate-600">Manage company holidays and events</p>
             </div>
           </div>
+        </div>
 
-          {/* Holiday Form */}
-          <div className="w-full lg:w-1/3">
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                {selectedDate
-                  ? `Manage Holiday for ${new Date(selectedDate).toLocaleDateString()}`
-                  : "Select a Date"}
-              </h2>
-              {selectedDate && (canCreate || canUpdate || canDelete) && (
-                <div className="space-y-6">
-                  <div>
-                    <label htmlFor="holidayName" className="block text-sm font-medium text-gray-700">
-                      Holiday Name
-                    </label>
-                    <input
-                      type="text"
-                      id="holidayName"
-                      value={holidayName}
-                      onChange={(e) => setHolidayName(e.target.value)}
-                      className="mt-1 block w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      placeholder="Enter holiday name"
-                      disabled={!(canCreate || canUpdate)}
-                    />
-                  </div>
-                  <div className="flex gap-3">
-                    {(canCreate || canUpdate) && (
-                      <button
-                        onClick={handleAddHoliday}
-                        className="flex items-center bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 transition duration-200 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
-                        disabled={!(canCreate || canUpdate)}
-                      >
-                        <PlusCircleIcon className="w-5 h-5 mr-2" />
-                        {holidayName && holidays.some((h) => h.date === selectedDate)
-                          ? "Update Holiday"
-                          : "Add Holiday"}
-                      </button>
-                    )}
-                    {canDelete && holidays.some((h) => h.date === selectedDate) && (
-                      <button
-                        onClick={handleRemoveHoliday}
-                        className="flex items-center bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-red-700 hover:to-red-800 transition duration-200 font-medium"
-                      >
-                        <TrashIcon className="w-5 h-5 mr-2" />
-                        Remove Holiday
-                      </button>
-                    )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 flex items-center">
+            <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-4 flex items-center">
+            <CheckCircle className="w-5 h-5 mr-3 flex-shrink-0" />
+            {success}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-12">
+            <div className="flex justify-center items-center">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="ml-3 text-slate-600">Loading calendar...</span>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            <div className="xl:col-span-3">
+              <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-slate-800">
+                    {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                  </h2>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => navigateMonth(-1)}
+                      className="p-2 rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setCurrentDate(new Date())}
+                      className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      Today
+                    </button>
+                    <button
+                      onClick={() => navigateMonth(1)}
+                      className="p-2 rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l-7 7 7 7" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
-              )}
+
+                <div className="grid grid-cols-7 gap-1">
+                  {weekDays.map((day) => (
+                    <div key={day} className="p-3 text-center text-sm font-medium text-slate-600 bg-slate-50 rounded-lg">
+                      {day}
+                    </div>
+                  ))}
+                  {days.map((date, index) => {
+                    const holiday = date ? isHoliday(date) : null;
+                    const today = date ? isToday(date) : false;
+                    const selected = date ? isSelected(date) : false;
+
+                    return (
+                      <div
+                        key={index}
+                        onClick={date ? () => handleDateClick(date) : undefined}
+                        className={`
+                          relative h-20 p-2 border border-slate-200 rounded-lg cursor-pointer transition-all duration-200
+                          ${!date ? "cursor-default" : ""}
+                          ${today ? "bg-blue-50 border-blue-300" : "hover:bg-slate-50"}
+                          ${selected ? "bg-blue-100 border-blue-400" : ""}
+                          ${holiday ? "bg-red-50 border-red-300" : ""}
+                        `}
+                      >
+                        {date && (
+                          <>
+                            <div className={`text-sm font-medium ${today ? "text-blue-600" : "text-slate-700"}`}>
+                              {date.getDate()}
+                            </div>
+                            {holiday && (
+                              <div className="text-xs text-red-600 mt-1 leading-tight line-clamp-2">
+                                {holiday.name}
+                              </div>
+                            )}
+                            {today && (
+                              <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="xl:col-span-1">
+              <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 sticky top-6">
+                <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                  <Calendar className="w-5 h-5 mr-2 text-blue-600" />
+                  Holiday Management
+                </h3>
+
+                {selectedDate ? (
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm font-medium text-blue-800 mb-1">Selected Date</p>
+                      <p className="text-blue-700">
+                        {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
+                          weekday: "long",
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
+
+                    {(canCreate || canUpdate) && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Holiday Name
+                          </label>
+                          <input
+                            type="text"
+                            value={holidayName}
+                            onChange={(e) => setHolidayName(e.target.value)}
+                            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                            placeholder="Enter holiday name"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Date
+                          </label>
+                          <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Applicable For
+                          </label>
+                          <input
+                            type="text"
+                            value={applicableFor}
+                            onChange={(e) => setApplicableFor(e.target.value)}
+                            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                            placeholder="Enter applicable group (e.g., All Employees)"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Description
+                          </label>
+                          <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                            placeholder="Enter holiday description"
+                            rows="4"
+                          />
+                        </div>
+
+                        <div className="flex flex-col space-y-3">
+                          <button
+                            onClick={handleAddHoliday}
+                            className="flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span>Submit</span>
+                          </button>
+
+                          {canDelete && holidays.some((h) => h.date === selectedDate) && (
+                            <button
+                              onClick={handleRemoveHoliday}
+                              className="flex items-center justify-center space-x-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span>Remove Holiday</span>
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-500 text-sm">
+                      Click on a date to add or manage holidays
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
-  </div>
-</div>
   );
 };
 

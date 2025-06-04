@@ -431,51 +431,22 @@ const Sidebar = () => {
           Human Resource
           {accordionState.hr ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
         </li>
-        {accordionState.hr && (
-          <>
-            {canViewInstructors && (
-              <Link to="/staff" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-users"></i>
-                  <span>&nbsp;&nbsp;Staff Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewUsers && (
-              <Link to="/employee-attendance" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-check-to-slot"></i>
-                  <span> &nbsp;&nbsp;CheckIn/CheckOut</span>
-                </li>
-              </Link>
-            )}
-            {canViewHolidays && (
-              <Link to="/holiday-calendar" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-calendar-days"></i>
-                  <span>&nbsp;&nbsp;Holiday Calendar</span>
-                </li>
-              </Link>
-            )}
-            {canViewLeaves && (
-              <Link to="/leave-management" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-right-from-bracket"></i>
-                  <span>&nbsp;&nbsp;Leave Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewLeaves && (
-              <Link to="/operation" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-gears"></i>
-                  <span>&nbsp;&nbsp;Operation</span>
-                </li>
-              </Link>
-            )}
-
-          </>
-        )}
+     {accordionState.hr && (
+  <>
+    <Link to="/operations-dashboard" className="nav-link">
+      <li className="nav-item">
+        <i className="fa-solid fa-gears"></i>
+        <span>&nbsp;&nbsp;Operation</span>
+      </li>
+    </Link>
+    <Link to="/operations" className="nav-link">
+      <li className="nav-item">
+        <i className="fa-solid fa-database"></i>
+        <span>&nbsp;&nbsp;My Data</span>
+      </li>
+    </Link>
+  </>
+)}
 
         <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("analytics")}>
           Analytics

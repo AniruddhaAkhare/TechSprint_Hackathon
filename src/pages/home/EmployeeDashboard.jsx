@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getDoc, doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import LeaveApplicationForm from './LeaveApplicationForm';
+import LeaveApplicationForm from '../components/HRManagement/LeaveApplicationForm';
 import { db } from '../../config/firebase';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';

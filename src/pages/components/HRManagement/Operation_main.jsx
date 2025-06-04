@@ -1,15 +1,15 @@
 import {
   Search,
-  Clock,
+  CalendarX, // <-- Add this
+  Calendar,
   Users,
-  UserCheck,
-  CalendarDays,
-  CalendarClock,
-  ClipboardList // <-- Add this line
+  FileText,
+  CheckSquare,
+  FileCheck
 } from "lucide-react";
 
-
 import { Link } from "react-router-dom";
+
 
 const ServiceCard = ({ icon: Icon, title, iconColor, route }) => (
   <Link to={route}>
@@ -30,15 +30,11 @@ const ServiceCard = ({ icon: Icon, title, iconColor, route }) => (
 
 export default function OperationsDashboard() {
   const services = [
-  { icon: Users, title: "Employee Managemnet", iconColor: "text-blue-400", route: "/employeeManagemnet" },
-  { icon: CalendarClock, title: "Shift Management", iconColor: "text-green-500", route: "/shiftAll" },
-  // { icon: Clock, title: "Time Tracker", iconColor: "text-orange-500", route: "/time-tracker" },
-  // { icon: Users, title: "Leave Management", iconColor: "text-purple-500", route: "/leave-management" },
-  { icon: ClipboardList, title: "Attendance", iconColor: "text-indigo-500", route: "/attendanceManagemnet" }, // <-- New Entry
-  // { icon: UserCheck, title: "CheckIn/CheckOut", iconColor: "text-green-600", route: "/checkin-checkout" },
-  // { icon: CalendarDays, title: "Holiday Calendar", iconColor: "text-blue-600", route: "/holiday-calendar" },
-];
-
+    { icon: CalendarX, title: "Leave Application", iconColor: "text-blue-500", route: "/leave-application" },
+    { icon: Users, title: "My Shift", iconColor: "text-blue-400", route: "/myShift" }, // Shift renamed
+    { icon: FileText, title: "Assessment", iconColor: "text-pink-500", route: "/assessment" },
+    { icon: CheckSquare, title: "Tasks", iconColor: "text-red-500", route: "/tasks" },
+  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 p-2 fixed inset-0 left-[300px] overflow-auto">
@@ -79,7 +75,7 @@ export default function OperationsDashboard() {
           </div>
         </div>
 
-        {/* Last card with just icon */}
+        {/* Optional Last Icon Card */}
       </div>
     </div>
   );
