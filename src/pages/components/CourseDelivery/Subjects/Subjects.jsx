@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { db } from '../../../../config/firebase.jsx';
+import { db } from '../../../../config/firebase.js';
 import { getDocs, collection, deleteDoc, doc } from 'firebase/firestore';
 import CreateSubjects from "./CreateSubjects.jsx";
 import SearchBar from '../../../../pages/components/SearchBar.jsx';

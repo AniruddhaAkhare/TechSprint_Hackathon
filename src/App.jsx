@@ -147,7 +147,7 @@ export default function App() {
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 {/* <Route path="/tasks" element={<ProtectedRoute><TaskCallSchdule /></ProtectedRoute>} /> */}
                 <Route path="/roles" element={<ProtectedRoute permissionSection="roles"><Roles /></ProtectedRoute>} />
-                <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
+                {/* <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} /> */}
 
                 {/* Protected Routes */}
                 <Route path="/instituteSetup" element={<ProtectedRoute permissionSection="instituteSetup"><InstituteSetup /></ProtectedRoute>} />

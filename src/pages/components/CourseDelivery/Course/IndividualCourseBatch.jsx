@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import React from "react";
 import { useParams } from "react-router-dom";
 import { getDocs, collection, doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from '../../../../config/firebase.jsx'
+import { db } from '../../../../config/firebase.js'
 import EditCourseNavbar from "./EditCourseNavbar.jsx";
 import SearchBar from "../../../components/SearchBar.jsx";
 
