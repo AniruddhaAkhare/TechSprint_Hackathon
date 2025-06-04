@@ -61,12 +61,6 @@
       ]
     }
   ],
-<<<<<<< HEAD
-  "functions": {
-    "source": "functions",
-    "predeploy": []
-  }
-=======
   "functions": [
     {
       "source": "functions",
@@ -338,5 +332,4 @@
       ]
     }
   ]
->>>>>>> origin/feature/ignite-update
 }
