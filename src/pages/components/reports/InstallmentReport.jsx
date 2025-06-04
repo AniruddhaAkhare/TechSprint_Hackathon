@@ -646,7 +646,6 @@ const InstallmentReport = () => {
               );
               totalFees = regAmount + installmentTotal;
             } else if (course.feeTemplate === 'Finance') {
-              // Use feeAfterDiscount as totalFees, or sum of registration amounts
               totalFees = toNumber(course.financeDetails?.feeAfterDiscount || 0);
 
               // Validate sum of Loan Amount registrations matches loanAmount
@@ -782,9 +781,7 @@ const InstallmentReport = () => {
 
                 if ((inRange || (filter === 'all' && dateField)) && regAmount > 0) {
                   enrollmentMap[key].transactions.push({
-
-                    // type: `Finance ${registration.srNo}`,
-                    type: 'Finance',
+                    type: `Finance (Registration ${registration.srNo})`,
                     amount: regAmount,
                     status,
                     date: dateField,
@@ -807,23 +804,22 @@ const InstallmentReport = () => {
                     const subDateField = subReg.date || null;
                     const subInRange = subDateField ? isDateInRange(subDateField, start, end) : false;
 
-                    // if ((subInRange || (filter === 'all' && subDateField)) && subRegAmount > 0) {
-                    //   enrollmentMap[key].transactions.push({
-                    //     type: `Finance (Loan Sub-Registration ${registration.srNo}.${subReg.srNo})`,
-                    //     amount: subRegAmount,
-                    //     status: subStatus,
-                    //     date: subDateField,
-                    //     paymentMethod: subReg.paymentMethod || 'N/A',
-                    //     amountType: 'Loan Amount',
-                    //   });
-                    //   if (subStatus === 'Paid') {
-                    //     enrollmentMap[key].totalPaid += subRegAmount;
-                    //     totalReceivedAcc += subRegAmount;
-                    //     // totalPendingAcc += (loanAmount - subRegAmount);
-                    //   } else {
-                    //     totalPendingAcc += subRegAmount;
-                    //   }
-                    // }
+                    if ((subInRange || (filter === 'all' && subDateField)) && subRegAmount > 0) {
+                      enrollmentMap[key].transactions.push({
+                        type: `Finance (Loan Downpayment ${registration.srNo}.${subReg.srNo})`,
+                        amount: subRegAmount,
+                        status: subStatus,
+                        date: subDateField,
+                        paymentMethod: subReg.paymentMethod || 'N/A',
+                        amountType: 'Loan Amount',
+                      });
+                      if (subStatus === 'Paid') {
+                        enrollmentMap[key].totalPaid += subRegAmount;
+                        totalReceivedAcc += subRegAmount;
+                      } else {
+                        totalPendingAcc += subRegAmount;
+                      }
+                    }
                   });
                 }
               });
@@ -854,7 +850,7 @@ const InstallmentReport = () => {
         setTotalReceived(totalReceivedAcc);
         setTotalPending(totalPendingAcc);
       } catch (error) {
-        //console.error('Error fetching fee data:', error);
+        console.error('Error fetching fee data:', error);
       } finally {
         setLoading(false);
       }
