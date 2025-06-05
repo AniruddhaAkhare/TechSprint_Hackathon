@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import UserOperation from '../../../pages/components/HRManagement/EmployeeAttendanceManagement';
-import ARule from '../../../pages/components/HRManagement/ARule';
-import HolidayCalendar from '../../../pages/components/HRManagement/HolidayCalendar';
-import AttendanceDashboard from '../../../pages/components/HRManagement/AttendanceDashboard'; // Corrected import
-
-
+import LeaveApproval from '../../../pages/components/HRManagement/Leave/HRLeaveApproval';
+import LeaveType from  '../../../pages/components/HRManagement/Leave/LeaveType'
+import LeavePolicy from  '../../../pages/components/HRManagement/Leave/LeavePolicy'
+import EmployeLeave from '../../../pages/components/HRManagement/Leave/EmployeeLeave'
+import LeaveCalendre from '../../../pages/components/HRManagement/LeaveCalendre'
 export default function SimpleShiftManagement() {
-  const [activeTab, setActiveTab] = useState('User Specific Operations');
+  const [activeTab, setActiveTab] = useState('User-specific Operations');
   const navigate = useNavigate();
 
   const tabs = [
-    'User Specific Operations',
-    'Attendance Analysis', // Ensure this matches exactly
-    'Attendance Rules',
-    'Holiday Setup',
+    'User-specific Operations',
+    'Leave Approval',
+    'Audit & Report',
+    'Define Leave Type',
+    'Leave Policy',
   ];
 
   const handleBack = () => {
@@ -23,9 +23,9 @@ export default function SimpleShiftManagement() {
   };
 
   return (
-     <div className="flex flex-col min-h-screen bg-gray-50 p-2 fixed inset-0 lg:left-[300px] overflow-auto">
+    <div className="flex flex-col min-h-screen bg-gray-50 p-2 fixed inset-0 lg:left-[300px] overflow-auto">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-700 rounded-xl shadow-xl mb-2 z-10">
+      <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-700 rounded-xl shadow-xl mb-2">
         <div className="px-3 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
@@ -64,27 +64,33 @@ export default function SimpleShiftManagement() {
             {activeTab}
           </h2>
 
-          {activeTab === 'User Specific Operations' && (
+          {activeTab === 'User-specific Operations' && (
             <div className="animate-fadeIn">
-              <UserOperation />
+            < EmployeLeave />
             </div>
           )}
 
-          {activeTab === 'Attendance Analysis' && ( // Corrected tab name
+          {activeTab === 'Leave Approval' && (
             <div className="animate-fadeIn">
-              <AttendanceDashboard /> 
+            <LeaveApproval/>
             </div>
           )}
 
-          {activeTab === 'Attendance Rules' && (
+          {activeTab === 'Audit & Report' && (
             <div className="animate-fadeIn">
-              <ARule />
+              <LeaveCalendre/>
             </div>
           )}
 
-          {activeTab === 'Holiday Setup' && (
+          {activeTab === 'Define Leave Type' && (
             <div className="animate-fadeIn">
-              <HolidayCalendar />
+           < LeaveType/>
+            </div>
+          )}
+
+          {activeTab === 'Leave Policy' && (
+            <div className="animate-fadeIn">
+            <LeavePolicy/>
             </div>
           )}
         </div>

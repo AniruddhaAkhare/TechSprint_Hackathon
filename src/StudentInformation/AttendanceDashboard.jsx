@@ -437,21 +437,10 @@ export default function AttendanceDashboard() {
     ],
   };
 
-  if (!canView) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8 flex items-center justify-center">
-        <div className="bg-red-100 p-6 rounded-lg shadow-md text-center">
-          <h2 className="text-2xl font-bold text-red-800 mb-4">Access Denied</h2>
-          <p className="text-red-600">You do not have permission to view the Attendance Dashboard.</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px] overflow-y-auto" ref={dashboardRef}>
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Attendance Analytics Dashboard</h2>
-
+    <div className="flex flex-col space-y-6 pt-4">
+     <h2 className="text-2xl font-bold text-gray-800 mb-6">Attendance Analytics Dashboard</h2>
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

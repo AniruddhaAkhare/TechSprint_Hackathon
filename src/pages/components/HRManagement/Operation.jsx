@@ -1,11 +1,10 @@
 import {
   Search,
-  Clock,
   Users,
   UserCheck,
-  CalendarDays,
   CalendarClock,
-  ClipboardList // <-- Add this line
+  ClipboardList,
+  Calendar // <-- Add this line
 } from "lucide-react";
 
 
@@ -26,19 +25,33 @@ const ServiceCard = ({ icon: Icon, title, iconColor, route }) => (
   </Link>
 );
 
-
-
 export default function OperationsDashboard() {
   const services = [
-  { icon: Users, title: "Employee Managemnet", iconColor: "text-blue-400", route: "/employeeManagemnet" },
-  { icon: CalendarClock, title: "Shift Management", iconColor: "text-green-500", route: "/shiftAll" },
-  // { icon: Clock, title: "Time Tracker", iconColor: "text-orange-500", route: "/time-tracker" },
-  // { icon: Users, title: "Leave Management", iconColor: "text-purple-500", route: "/leave-management" },
-  { icon: ClipboardList, title: "Attendance", iconColor: "text-indigo-500", route: "/attendanceManagemnet" }, // <-- New Entry
-  // { icon: UserCheck, title: "CheckIn/CheckOut", iconColor: "text-green-600", route: "/checkin-checkout" },
-  // { icon: CalendarDays, title: "Holiday Calendar", iconColor: "text-blue-600", route: "/holiday-calendar" },
-];
-
+    {
+      icon: Users,
+      title: "Employee Managemnet",
+      iconColor: "text-blue-400",
+      route: "/employeeManagemnet"
+    },
+    {
+      icon: CalendarClock,
+      title: "Shift Management",
+      iconColor: "text-green-500",
+      route: "/shiftAll"
+    },
+    {
+      icon: ClipboardList,
+      title: "Attendance",
+      iconColor: "text-indigo-500",
+      route: "/attendanceManagemnet"
+    },
+    {
+      icon: UserCheck, // or use CalendarDays if you prefer
+      title: "Leave Management",
+      iconColor: "text-purple-500",
+      route: "/LeaveManagement"
+    }
+  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 p-2 fixed inset-0 left-[300px] overflow-auto">
@@ -78,8 +91,6 @@ export default function OperationsDashboard() {
             ))}
           </div>
         </div>
-
-        {/* Last card with just icon */}
       </div>
     </div>
   );

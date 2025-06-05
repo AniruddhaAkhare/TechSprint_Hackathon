@@ -100,7 +100,11 @@ import MyShift from './pages/components/HRManagement/myShift.jsx'
 import ShiftDisplay from  './pages/components/HRManagement/ShiftManagement.jsx'
 import EmployeeManagement from './pages/components/HRManagement/Emanagement.jsx'
 import AttendanceManagement from './pages/components/HRManagement/Amanagement.jsx'
-
+import EmployeeAttendanceManagement from  './pages/components/HRManagement/EmployeeAttendanceManagement.jsx'
+import AttendanceEmployee from  './pages/components/HRManagement/AttendanceDashboard.jsx'
+import LeaveManagement from './pages/components/HRManagement/Lmanagement.jsx'
+import MyLeaveSummery from './pages/components/HRManagement/MyLeaveSummery.jsx'
+import LeaveCalendre from './pages/components/HRManagement/LeaveCalendre.jsx'
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
   const auth = getAuth();
@@ -275,17 +279,12 @@ export default function App() {
                 <Route path="/operations" element={<Operation/>} />
                 <Route path="/employee-profile/:employeeId" element={<EmployeeProfile />} />
                  <Route path="/employeeManagemnet" element={<EmployeeManagement />} />
-                    <Route path="/attendanceManagemnet" element={<AttendanceManagement/>} />
-                {/* <Route path="/Shift-Mapping" element={<ShiftManager/>} />
-                <Route path="/Manage-ShiftsEmployee" element={< EmployeeManager />} />
-                <Route path="/User-specific Operations" element={<UserSpecific />} /> */}
-               
-
-                {/* <Route path="/add-employee" element={<AddEmployee/>}/> */}
-
-                 {/* Employee Dashboard  */}
-                   {/* <Route path="/employeeDashbard" element={<EmployeeDashboard />} /> */}
-
+                <Route path="/attendanceManagemnet" element={<AttendanceManagement/>} />
+                <Route path="/EmployeeAttendance" element={<EmployeeAttendanceManagement/>} />
+                <Route path="/AttendanceDashboard" element={<AttendanceEmployee/>} />
+                <Route path="/LeaveManagement" element={<LeaveManagement/>} />
+                <Route path="/LeaveSummery" element={<MyLeaveSummery />} />
+                <Route path="/LeaveCalendre" element={< LeaveCalendre />} />
                 {/* Placement */}
                 <Route path="/companies" element={<Companies />} />
                 <Route path="/job-openings" element={<JobOpenings />} />
