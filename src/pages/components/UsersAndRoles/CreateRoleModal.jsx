@@ -156,7 +156,7 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
     "FinancePartner",
     "Holidays",
     "Leaves",
-    "JopOpenings",
+    "JobOpenings",
     "Companies",
     "templates",
     "invoices",
