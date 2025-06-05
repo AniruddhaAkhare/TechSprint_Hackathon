@@ -445,6 +445,13 @@ const Sidebar = () => {
         <span>&nbsp;&nbsp;My Data</span>
       </li>
     </Link>
+    <Link to="/my-activities">
+          <li className="nav-item mt-3 mb-3">
+            {/* <FaTachometerAlt className="nav-icon" /> */}
+            <i class="fa fa-home" aria-hidden="true"></i>
+            <span>&nbsp;&nbsp;Activities</span>
+          </li>
+        </Link>
   </>
 )}
 

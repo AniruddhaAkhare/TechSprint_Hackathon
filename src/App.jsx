@@ -100,6 +100,8 @@ import MyShift from './pages/components/HRManagement/myShift.jsx'
 import ShiftDisplay from  './pages/components/HRManagement/ShiftManagement.jsx'
 import EmployeeManagement from './pages/components/HRManagement/Emanagement.jsx'
 import AttendanceManagement from './pages/components/HRManagement/Amanagement.jsx'
+import Activity from './pages/components/Activity/Activities.jsx';             
+
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -144,6 +146,8 @@ export default function App() {
                 <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/my-profile" />} />
                 <Route path="/registration-welcome" element={<AfterEmployeeRegistration/>} />
                 <Route path="/employee-registration" element={!user ? <EmployeeRegistrationForm /> : <Navigate to="/my-profile" />} />
+
+                <Route path="/my-activities" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
 
 
                 
