@@ -135,7 +135,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex p-4">
+    <div className="min-h-screen bg-gray-100 p-6 fixed inset-0 left-[300px] overflow-y-auto">
       <div className="flex flex-col md:flex-row w-screen max-w-6xl mx-auto gap-4">
         {/* Profile Card (Left Side) */}
       <div className="bg-white p-8 rounded-lg shadow-lg w-full md:w-1/3 ml-36">

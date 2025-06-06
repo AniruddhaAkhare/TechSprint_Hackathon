@@ -8,6 +8,7 @@ import { Timestamp } from "firebase/firestore";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../../context/AuthContext";
+import { runTransaction } from "firebase/firestore";
 
 export default function EditStudent() {
     const { studentId } = useParams();
@@ -49,19 +50,50 @@ export default function EditStudent() {
 
     // Activity logging function
     const logActivity = async (action, details) => {
-        try {
-            const activityLog = {
-                action,
-                details: { studentId, ...details },
-                timestamp: new Date().toISOString(),
-                userEmail: user?.email || "anonymous",
-                userId: user?.uid || "anonymous",
-            };
-            await addDoc(collection(db, "activityLogs"), activityLog);
-        } catch (error) {
-            //console.error("Error logging activity:", error);
-        }
-    };
+  if (!user?.email) {
+    console.warn("No user email found, skipping activity log");
+    return;
+  }
+
+  const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+  const logEntry = {
+    action,
+    details, // Use details as provided, expecting studentId to be included where necessary
+    timestamp: new Date().toISOString(),
+    userEmail: user.email,
+    userId: user.uid,
+    section:"Student",
+    // adminId: adminId || "N/A",
+  };
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const logDoc = await transaction.get(activityLogRef);
+      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+      // Ensure logs is an array
+      if (!Array.isArray(logs)) {
+        logs = [];
+      }
+
+      // Append the new log entry
+      logs.push(logEntry);
+
+      // Trim to the last 1000 entries
+      if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+      }
+
+      // Update the document
+      transaction.set(activityLogRef, { logs }, { merge: true });
+    });
+    console.log("Activity logged successfully");
+  } catch (error) {
+    console.error("Error logging activity:", error);
+    toast.error("Failed to log activity");
+  }
+};
 
     // List of country codes (unchanged)
     const countryCodes = [
@@ -428,14 +460,6 @@ export default function EditStudent() {
         logActivity("ADD EDUCATION", {});
     };
 
-    const addInstallment = () => {
-        if (!canUpdate) {
-            toast.error("You don't have permission to update student details");
-            return;
-        }
-        setStudent(prev => ({ ...prev, installmentDetails: [...prev.installmentDetails, { number: '', dueAmount: '', dueDate: '', paidOn: '', amtPaid: '', modeOfPayment: '', pdcStatus: '', remark: '' }] }));
-        logActivity("ADD INSTALLMENT", {});
-    };
 
     const addExperience = () => {
         if (!canUpdate) {
@@ -446,14 +470,6 @@ export default function EditStudent() {
         logActivity("ADD EXPERIENCE", {});
     };
 
-    const removeCourse = (index) => {
-        if (!canUpdate) {
-            toast.error("You don't have permission to update student details");
-            return;
-        }
-        setStudent(prev => ({ ...prev, courseDetails: prev.courseDetails.filter((_, i) => i !== index) }));
-        logActivity("REMOVE COURSE", { index });
-    };
 
     const deleteEducation = (index) => {
         if (!canUpdate) {
@@ -464,14 +480,8 @@ export default function EditStudent() {
         logActivity("DELETE EDUCATION", { index });
     };
 
-    const deleteInstallment = (index) => {
-        if (!canUpdate) {
-            toast.error("You don't have permission to update student details");
-            return;
-        }
-        setStudent(prev => ({ ...prev, installmentDetails: prev.installmentDetails.filter((_, i) => i !== index) }));
-        logActivity("DELETE INSTALLMENT", { index });
-    };
+
+
 
     const deleteExperience = (index) => {
         if (!canUpdate) {
@@ -558,7 +568,7 @@ export default function EditStudent() {
             });
 
             toast.success("Student updated successfully!");
-            logActivity("UPDATE STUDENT SUCCESS", { updatedFields: Object.keys(student) });
+            logActivity("UPDATE STUDENT", student.Name);
             navigate("/studentdetails");
         } catch (error) {
             //console.error("Error updating student:", error);
@@ -576,14 +586,14 @@ export default function EditStudent() {
             try {
                 await deleteDoc(doc(db, "student", studentId));
                 toast.success("Student deleted successfully!");
-                logActivity("DELETE STUDENT SUCCESS", {});
+                logActivity("DELETE STUDENT", student.Name);
                 navigate("/studentdetails");
             } catch (error) {
                 //console.error("Error deleting student:", error);
                 toast.error("Failed to delete student");
             }
         } else {
-            logActivity("CANCEL DELETE STUDENT", {});
+            // logActivity("CANCEL DELETE STUDENT", {});
         }
     };
 
@@ -610,26 +620,7 @@ export default function EditStudent() {
         setStudent(prev => ({ ...prev, total: finalTotal }));
     };
 
-    const handleTemplateChange = async (e) => {
-        if (!canUpdate) {
-            toast.error("You don't have permission to update student details");
-            return;
-        }
-        const templateId = e.target.value;
-        setSelectedTemplate(templateId);
 
-        try {
-            const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
-            const templateData = templateSnapshot.docs.find(doc => doc.id === templateId)?.data();
-            if (templateData && templateData.installments) {
-                setStudent(prev => ({ ...prev, installmentDetails: templateData.installments }));
-                logActivity("APPLY FEE TEMPLATE", { templateId });
-            }
-        } catch (error) {
-            //console.error("Error applying fee template:", error);
-            toast.error("Failed to apply fee template");
-        }
-    };
 
     if (!canDisplay) return null;
 

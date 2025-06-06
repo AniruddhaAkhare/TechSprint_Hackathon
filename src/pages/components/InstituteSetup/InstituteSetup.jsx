@@ -12,6 +12,7 @@ import BasicInformation from "./BasicInformation";
 import LogoUpload from "./LogoUpload";
 import BranchSetup from "./BranchSetup";
 import ContactInformation from "./ContactInformation";
+import { runTransaction } from "firebase/firestore";
 
 const InstituteSetup = () => {
   const navigate = useNavigate();
@@ -47,6 +48,49 @@ const InstituteSetup = () => {
   const canUpdate = rolePermissions?.instituteSetup?.update || false;
   const canDisplay = rolePermissions?.instituteSetup?.display || false;
   const canDelete = rolePermissions?.instituteSetup?.delete || false;
+
+
+  const logActivity = async (action, details) => {
+    if (!user?.email) {
+      console.warn("No user email found, skipping activity log");
+      return;
+    }
+
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      // adminId: adminId || "N/A",
+    };
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        logs.push(logEntry);
+
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully:", action);
+    } catch (error) {
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
+    }
+  };
+
 
   useEffect(() => {
     if (!canDisplay) {
@@ -103,6 +147,7 @@ const InstituteSetup = () => {
       const logoUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`;
       setFormData((prev) => ({ ...prev, logoUrl }));
       setLogoError("");
+      logActivity("LOGO UPLOADED", `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`);
       return logoUrl;
     } catch (error) {
       // //console.error("S3 Upload Error:", error);
@@ -146,6 +191,7 @@ const InstituteSetup = () => {
       }
 
       alert("Data saved successfully!");
+      logActivity("Update Institute Details", `${docRef} to ${updatedFormData}`)
       setEditModes((prev) => ({ ...prev, [activeStep]: false }));
 
       if (nextStep) setActiveStep(nextStep);

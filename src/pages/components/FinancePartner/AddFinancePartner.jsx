@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { runTransaction } from "firebase/firestore";
 
 const countryCodes = [
   { code: "+1", label: "USA (+1)" },
@@ -223,19 +224,47 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
 
   // Activity logging function
   const logActivity = async (action, details) => {
+    if (!user?.email) {
+      console.warn("No user email found, skipping activity log");
+      return;
+    }
+
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Finance Partner",
+      // adminId: adminId || "N/A",
+    };
+
     try {
-      const activityLog = {
-        action,
-        details: { partnerId: partner?.id || null, ...details },
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email || "anonymous",
-        userId: user.uid
-      };
-      await addDoc(collection(db, "activityLogs"), activityLog);
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        logs.push(logEntry);
+
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully:", action);
     } catch (error) {
-      // //console.error("Error logging activity:", error);
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+
 
   useEffect(() => {
     if (!canDisplay) {

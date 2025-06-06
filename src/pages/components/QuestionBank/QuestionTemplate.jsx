@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../../config/firebase';
 import { collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
+import { runTransaction } from 'firebase/firestore';
 
 const QuestionTemplate = () => {
     const { user, rolePermissions } = useAuth();
@@ -60,21 +61,47 @@ const QuestionTemplate = () => {
 
     // Log Activity Function
     const logActivity = async (action, details) => {
-        try {
-            await addDoc(collection(db, 'activityLogs'), {
-                action,
-                details: {
-                    ...details,
-                    
-                },
-                userId: user.uid,
-                userEmail: user.email,
-                timestamp: serverTimestamp(),
-            });
-        } catch (error) {
-            //console.error('Error logging activity:', error);
-        }
+    if (!user?.email) {
+      console.warn("No user email found, skipping activity log");
+      return;
+    }
+
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section:"Question Template",
+    //   adminId: adminId || "N/A",
     };
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        logs.push(logEntry);
+
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully:", action);
+    } catch (error) {
+      console.error("Error logging activity:", error);
+    //   toast.error("Failed to log activity");
+    }
+  };
+
 
     // Handle input changes
     const handleInputChange = (e) => {

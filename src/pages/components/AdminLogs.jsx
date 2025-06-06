@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase';
 
 const AdminLogs = () => {
@@ -11,6 +11,11 @@ const AdminLogs = () => {
     canDelete: false,
     canDisplay: false,
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sectionFilter, setSectionFilter] = useState('');
+  const [userFilter, setUserFilter] = useState('');
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const recordsPerPage = 10;
 
   const getUserRoleAndPermissions = async (uid) => {
     try {
@@ -67,9 +72,6 @@ const AdminLogs = () => {
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return 'N/A';
     try {
-      if (timestamp.toDate && typeof timestamp.toDate === 'function') {
-        return new Date(timestamp.toDate()).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-      }
       const date = new Date(timestamp);
       return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     } catch (error) {
@@ -145,34 +147,46 @@ const AdminLogs = () => {
         return;
       }
 
-      const logsQuery = query(collection(db, 'activityLogs'), orderBy('timestamp', 'desc'));
+      const logDocRef = doc(db, 'activityLogs', 'logDocument');
 
       const unsubscribe = onSnapshot(
-        logsQuery,
-        async (snapshot) => {
+        logDocRef,
+        async (snap) => {
+          if (!snap.exists()) {
+            console.warn('Log document activityLogs/logDocument does not exist');
+            setLogs([]);
+            setLoading(false);
+            return;
+          }
+
+          const logData = snap.data();
+          const logsArray = logData.logs || [];
+
           const logsData = await Promise.all(
-            snapshot.docs.map(async (doc) => {
-              const logData = doc.data();
-              if (!logData.userId) {
-                console.warn(`No userId found in activity log: ${doc.id}`);
+            logsArray
+              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+              .map(async (logData, index) => {
+                if (!logData.userId) {
+                  console.warn(`No userId found in activity log entry: ${index}`);
+                  return {
+                    id: `log-${index}`,
+                    ...logData,
+                    displayName: 'Unknown',
+                    userEmail: logData.userEmail || 'Unknown',
+                  };
+                }
+                const { displayName, email } = await fetchUserData(logData.userId);
                 return {
-                  id: doc.id,
+                  id: `log-${index}`,
                   ...logData,
-                  displayName: 'Unknown',
-                  userEmail: logData.userEmail || 'Unknown',
+                  displayName,
+                  userEmail: logData.userEmail || email,
                 };
-              }
-              const { displayName, email } = await fetchUserData(logData.userId);
-              return {
-                id: doc.id,
-                ...logData,
-                displayName,
-                userEmail: logData.userEmail || email,
-              };
-            })
+              })
           );
 
           setLogs(logsData);
+          setCurrentPage(1); // Reset to first page on new data
           setLoading(false);
         },
         (error) => {
@@ -186,6 +200,58 @@ const AdminLogs = () => {
 
     fetchLogsWithPermissions();
   }, []);
+
+  // Filter logs based on section, user, and date range
+  const filteredLogs = logs.filter((log) => {
+    const sectionMatch = !sectionFilter || log.action === sectionFilter;
+    const userMatch = !userFilter || log.displayName === userFilter || (log.userId === userFilter && log.displayName === 'Unknown');
+    const dateMatch = !dateRange.start && !dateRange.end
+      ? true
+      : (() => {
+          const logDate = new Date(log.timestamp);
+          if (isNaN(logDate.getTime())) return false;
+          const start = dateRange.start ? new Date(dateRange.start) : null;
+          const end = dateRange.end ? new Date(dateRange.end) : null;
+          if (start) start.setHours(0, 0, 0, 0);
+          if (end) end.setHours(23, 59, 59, 999);
+          return (!start || logDate >= start) && (!end || logDate <= end);
+        })();
+    return sectionMatch && userMatch && dateMatch;
+  });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredLogs.length / recordsPerPage);
+  const startIndex = (currentPage - 1) * recordsPerPage;
+  const endIndex = startIndex + recordsPerPage;
+  const currentLogs = filteredLogs.slice(startIndex, endIndex);
+
+  // Get unique sections and users for filter options
+  const sections = [...new Set(logs.map((log) => log.action).filter(Boolean))].sort();
+  const users = [...new Set(
+    logs.map((log) => log.displayName !== 'Unknown' ? log.displayName : log.userId ? `${log.displayName} (${log.userId})` : null).filter(Boolean)
+  )].sort();
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleFilterChange = (setter) => (e) => {
+    setter(e.target.value);
+    setCurrentPage(1); // Reset to first page on filter change
+  };
+
+  const handleDateChange = (field) => (e) => {
+    setDateRange((prev) => ({ ...prev, [field]: e.target.value }));
+    setCurrentPage(1); // Reset to first page on date change
+  };
 
   if (loading) {
     return (
@@ -204,85 +270,129 @@ const AdminLogs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 ml-400">
+    <div className="min-h-screen bg-gray-50 p-6 fixed inset-0 left-[300px] overflow-y-auto">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Activity Logs</h2>
-
-        <div className="mb-6 flex justify-between items-center">
+        {/* Filters */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            {permissions.canCreate && (
-              <button
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md mr-2"
-                disabled
-                title="Create functionality not implemented"
-              >
-                Create Log
-              </button>
-            )}
-            {permissions.canUpdate && (
-              <button
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md mr-2"
-                disabled
-                title="Update functionality not implemented"
-              >
-                Update Log
-              </button>
-            )}
-            {permissions.canDelete && (
-              <button
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
-                disabled
-                title="Delete functionality not implemented"
-              >
-                Delete Log
-              </button>
-            )}
+            <label htmlFor="sectionFilter" className="block text-sm font-medium text-gray-700 mb-2">
+              Filter by Section
+            </label>
+            <select
+              id="sectionFilter"
+              value={sectionFilter}
+              onChange={handleFilterChange(setSectionFilter)}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="">All Sections</option>
+              {sections.map((section) => (
+                <option key={section} value={section}>{section}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="userFilter" className="block text-sm font-medium text-gray-700 mb-2">
+              Filter by User
+            </label>
+            <select
+              id="userFilter"
+              value={userFilter}
+              onChange={handleFilterChange(setUserFilter)}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="">All Users</option>
+              {users.map((user) => (
+                <option key={user} value={user}>{user}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Date Range</label>
+            <div className="flex space-x-2">
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={handleDateChange('start')}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={handleDateChange('end')}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
           </div>
         </div>
-
-        {logs.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No logs available.</p>
+        {filteredLogs.length === 0 ? (
+          <p className="text-gray-500 text-center py-4">No logs match the selected filters.</p>
         ) : (
-          <div className="overflow-x-auto bg-white rounded-lg shadow-md">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Timestamp
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Action
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Details
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50 transition duration-150">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {formatTimestamp(log.timestamp)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      {log.displayName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {log.userEmail}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{log.action}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{formatDetails(log.details)}</td>
+          <>
+            <div className="overflow-x-auto bg-white rounded-lg shadow-md">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Timestamp
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Action
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Details
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentLogs.map((log) => (
+                    <tr key={log.id} className="hover:bg-gray-50 transition duration-150">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {formatTimestamp(log.timestamp)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                        {log.displayName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {log.userEmail}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{log.action}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{formatDetails(log.details)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-between items-center mt-4">
+              <button
+                onClick={handlePrevious}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-md text-white ${
+                  currentPage === 1 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                } transition duration-200`}
+              >
+                Previous
+              </button>
+              <span className="text-gray-600">
+                Page {currentPage} of {totalPages} ({filteredLogs.length} total logs)
+              </span>
+              <button
+                onClick={handleNext}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-md text-white ${
+                  currentPage === totalPages ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                } transition duration-200`}
+              >
+                Next
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>

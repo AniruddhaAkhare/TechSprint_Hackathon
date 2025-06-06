@@ -293,7 +293,7 @@ const Activity = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
+    <div className="p-6 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl sm:text-2xl font-semibold">My tasks</h2>
         <button

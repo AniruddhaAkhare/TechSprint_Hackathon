@@ -15,10 +15,12 @@ import {
 } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "../../../context/AuthContext";
+import { runTransaction } from "firebase/firestore";
+
 
 export default function StaffAndUsers() {
   const navigate = useNavigate();
-  const { currentUser, rolePermissions } = useAuth();
+  const { user, rolePermissions } = useAuth();
 
   // Permissions
   const canDisplay = rolePermissions?.Users?.display || false;
@@ -51,6 +53,7 @@ export default function StaffAndUsers() {
   const usersCollectionRef = collection(db, "Users");
   const rolesCollectionRef = collection(db, "roles");
   const activityLogsCollectionRef = collection(db, "activityLogs");
+  
 
   // Fetch Data
   useEffect(() => {
@@ -92,20 +95,47 @@ export default function StaffAndUsers() {
 
   // Activity Logging
   const logActivity = async (action, details) => {
-    if (!currentUser) return;
-    try {
-      const logData = {
-        userId: currentUser.uid,
-        userEmail: currentUser.email || "Unknown",
-        timestamp: serverTimestamp(),
-        action,
-        details,
-      };
-      await addDoc(activityLogsCollectionRef, logData);
-    } catch (error) {
-      console.error("Error logging activity:", error);
-    }
+  if (!user?.email) return;
+
+  const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+  const logEntry = {
+    action,
+    details,
+    timestamp: new Date().toISOString(),
+    userEmail: user.email,
+    userId: user.uid,
+    section: "Staff",
+    // adminId: adminId || "N/A",
   };
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const logDoc = await transaction.get(activityLogRef);
+      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+      // Ensure logs is an array and contains only valid data
+      if (!Array.isArray(logs)) {
+        logs = [];
+      }
+
+      // Append the new log entry
+      logs.push(logEntry);
+
+      // Trim to the last 1000 entries if necessary
+      if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+      }
+
+      // Update the document with the new logs array
+      transaction.set(activityLogRef, { logs }, { merge: true });
+    });
+    console.log("Activity logged successfully");
+  } catch (error) {
+    console.error("Error logging activity:", error);
+    // toast.error("Failed to log activity");
+  }
+};
 
   // Create User
   const handleCreateUser = async () => {

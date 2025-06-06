@@ -4,6 +4,7 @@ import { collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc, serverTi
 import QuestionList from './QusetionList'; // Corrected typo from QusetionList
 import QuestionForm from './QuestionForm';
 import { useAuth } from '../../../context/AuthContext';
+import { runTransaction } from 'firebase/firestore';
 
 const QuestionBank = () => {
   const [questions, setQuestions] = useState([]);
@@ -46,22 +47,48 @@ const QuestionBank = () => {
 
   const uniqueSubjects = [...new Set(questions.map(q => q.subject))].filter(Boolean);
 
-  const logActivity = async (action, details) => {
+const logActivity = async (action, details) => {
+    if (!user?.email) {
+      console.warn("No user email found, skipping activity log");
+      return;
+    }
+
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Question Bank",
+      // adminId: adminId || "N/A",
+    };
+
     try {
-      await addDoc(collection(db, 'activityLogs'), {
-        action,
-        details: {
-          ...details,
-          
-        },
-        userId: user.uid,
-        userEmail: user.email,
-        timestamp: serverTimestamp(),
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        logs.push(logEntry);
+
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        transaction.set(activityLogRef, { logs }, { merge: true });
       });
+      console.log("Activity logged successfully:", action);
     } catch (error) {
-      //console.error('Error logging activity:', error);
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+
 
   const addQuestion = async (questionData) => {
     try {

@@ -1200,6 +1200,7 @@ const FinanceForm = ({
   const viewDocument = async (s3Url, docType) => {
     try {
       if (!s3Url || !bucketName || !region || !s3Client.config.credentials) {
+        console.log(s3Url);
         throw new Error("Invalid URL or S3 configuration");
       }
 
@@ -1747,10 +1748,11 @@ const FinanceForm = ({
               { type: "loanDelivery", label: "Loan Delivery Order" },
             ].map((doc) => (
               <TableRow key={doc.type}>
-                <TableCell>{doc.label}</TableCell>
+                <TableCell>{doc.label} {financeDetails[doc.type]}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {financeDetails[doc.type] ? (
+
                       <>
                         <Button
                           variant="outlined"
