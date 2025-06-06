@@ -3,7 +3,7 @@ import { useState } from "react";
 const EnrollmentDialog = ({ open, onClose, student, onSendMail}) => {
     if (!open || !student) return null;
 
-    const link = `http://localhost:5174/enroll/${student.enquiryInfo.course}/${student.id}`;
+    const link = `https://fireblazeaischool.in/enroll/${student.enquiryInfo.course}/${student.id}`;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(link);
