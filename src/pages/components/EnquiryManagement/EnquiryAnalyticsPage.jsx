@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 
 const initialColumns = {
+  "raw": { name: "Raw", items: [], count: 0 },
   "pre-qualified": { name: "Pre Qualified", items: [], count: 0 },
   "qualified": { name: "Qualified", items: [], count: 0 },
   "negotiation": { name: "Negotiation", items: [], count: 0 },

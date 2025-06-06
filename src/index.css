@@ -70,3 +70,14 @@ button:focus-visible {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* Hide scrollbar for all browsers */
+*{
+  -ms-overflow-style: none;   
+  scrollbar-width: none;       
+}
+
+*::-webkit-scrollbar {
+  display: none;              
+}
