@@ -18,7 +18,7 @@ export const CheckInReminderProvider = ({ children }) => {
     lastCheckOut: null,
     dailyDurations: [],
   });
-  const CHECK_IN_RADIUS = 300;
+  const CHECK_IN_RADIUS = 100;
   const CHECK_IN_REMINDER_INTERVAL = 300000;
 
   useEffect(() => {

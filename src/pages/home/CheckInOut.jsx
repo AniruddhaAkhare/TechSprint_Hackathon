@@ -13,8 +13,8 @@ const CheckInOut = () => {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [currentDuration, setCurrentDuration] = useState(null);
   const [liveDuration, setLiveDuration] = useState(null);
-  const CHECK_IN_RADIUS = 300; // 100 meters
-  const AUTO_CHECKOUT_INTERVAL = 300000; // 5 minutes
+  const CHECK_IN_RADIUS = 100; // 100 meters
+  const AUTO_CHECKOUT_INTERVAL = 1800000; // 30 minutes
 
   useEffect(() => {
     let timer;

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import ShiftTab from '../../../pages/components/HRManagement/component/ShiftTab';
-import UserSpecific from '../../../pages/components/HRManagement/component/UserSpecific';
+import UserSpecific from '../../../pages/components/HRManagement/component/userSpecific';
 import EmployeeSpecific from '../../../pages/components/HRManagement/component/EmployeeShift';
 
 export default function SimpleShiftManagement() {
