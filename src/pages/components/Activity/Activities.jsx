@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { collection, query, getDocs, updateDoc, doc, deleteDoc } from "firebase/firestore";
-import { db } from "../../../config/firebase";
+import { collection, query, getDocs, updateDoc, doc, deleteDoc, addDoc } from "firebase/firestore";
+import { db, auth } from "../../../config/firebase";
 import { format, startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, subMonths, addDays } from "date-fns";
+import { useLocation } from "react-router-dom";
 import AddTask from "./AddTask";
 import DetailedForm from "./DetailedForm";
 
@@ -22,7 +23,12 @@ const Activity = () => {
     sortBy: "dueDate",
     sortOrder: "asc",
     searchQuery: "",
+    roleFilter: "both", // New filter for My Activities
   });
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const viewType = queryParams.get("view") || "all";
+  const currentUser = auth.currentUser || { displayName: "Unknown User", email: "unknown@example.com" };
 
   // Fetch activities from Firestore
   const fetchActivities = async () => {
@@ -38,20 +44,25 @@ const Activity = () => {
         fetchedActivities.map((activity) => ({
           id: activity.id,
           createdBy: activity.createdBy || "Unknown User",
-          assignedTo: activity.assignedTo || "Unassigned",
+          assignees: activity.assignees || ["Unassigned"],
           status: activity.status || "pending",
-          module: activity.module || "self",
+          module: activity.module || "general",
           dueDate: activity.dueDate || "",
           description: activity.description || "",
-          name: activity.name || activity.description || "", 
-          hotlead: activity.hotlead || false,
+          name: activity.name || activity.description || "",
+          highPriority: activity.highPriority || false,
           createdAt: activity.createdAt || "",
-          pinned: activity.pinned || false, 
+          pinned: activity.pinned || false,
+          enquiry: activity.enquiry || "",
+          company: activity.company || null,
+          learner: activity.learner || "",
+          history: activity.history || [],
+          comments: activity.comments || [],
         }))
       );
       setError(null);
-    } catch (error) {
-      setError(`Failed to fetch activities: ${error.message}`);
+    } catch (err) {
+      setError(`Failed to fetch activities: ${err.message}`);
       setActivities([]);
     } finally {
       setIsLoading(false);
@@ -79,14 +90,19 @@ const Activity = () => {
       const newStatus = activity.status === "completed" ? "pending" : "completed";
       const activityRef = doc(db, "activities", activity.id);
       await updateDoc(activityRef, { status: newStatus });
+      await addDoc(collection(db, `activities/${activity.id}/history`), {
+        action: `Status changed to ${newStatus}`,
+        user: currentUser.displayName || currentUser.email,
+        timestamp: new Date().toISOString(),
+      });
       setActivities((prev) =>
         prev.map((act) =>
           act.id === activity.id ? { ...act, status: newStatus } : act
         )
       );
       setError(null);
-    } catch (error) {
-      setError(`Failed to update status: ${error.message}`);
+    } catch (err) {
+      setError(`Failed to update status: ${err.message}`);
     }
   };
 
@@ -119,8 +135,8 @@ const Activity = () => {
       setActivities((prev) => prev.filter((act) => act.id !== activityId));
       setError(null);
       closeContextMenu();
-    } catch (error) {
-      setError(`Failed to delete activity: ${error.message}`);
+    } catch (err) {
+      setError(`Failed to delete activity: ${err.message}`);
     }
   };
 
@@ -130,6 +146,11 @@ const Activity = () => {
       const newPinnedStatus = !activity.pinned;
       const activityRef = doc(db, "activities", activity.id);
       await updateDoc(activityRef, { pinned: newPinnedStatus });
+      await addDoc(collection(db, `activities/${activity.id}/history`), {
+        action: newPinnedStatus ? "Pinned activity" : "Unpinned activity",
+        user: currentUser.displayName || currentUser.email,
+        timestamp: new Date().toISOString(),
+      });
       setActivities((prev) =>
         prev.map((act) =>
           act.id === activity.id ? { ...act, pinned: newPinnedStatus } : act
@@ -137,15 +158,15 @@ const Activity = () => {
       );
       setError(null);
       closeContextMenu();
-    } catch (error) {
-      setError(`Failed to pin activity: ${error.message}`);
+    } catch (err) {
+      setError(`Failed to pin activity: ${err.message}`);
     }
   };
 
   // Update activity from DetailedForm
   const handleUpdateActivity = async (e) => {
     e.preventDefault();
-    if (!selectedActivity.description.trim()) {
+    if (!selectedActivity.name.trim()) {
       setError("Task name is required.");
       return;
     }
@@ -153,9 +174,15 @@ const Activity = () => {
       const activityRef = doc(db, "activities", selectedActivity.id);
       const updatedActivity = {
         ...selectedActivity,
-        name: selectedActivity.description, // Ensure name is updated
+        name: selectedActivity.name,
+        description: selectedActivity.description,
       };
       await updateDoc(activityRef, updatedActivity);
+      await addDoc(collection(db, `activities/${selectedActivity.id}/history`), {
+        action: "Activity updated",
+        user: currentUser.displayName || currentUser.email,
+        timestamp: new Date().toISOString(),
+      });
       setActivities((prev) =>
         prev.map((act) =>
           act.id === selectedActivity.id ? { ...act, ...updatedActivity } : act
@@ -164,17 +191,37 @@ const Activity = () => {
       setIsDetailedFormOpen(false);
       setSelectedActivity(null);
       setError(null);
-    } catch (error) {
-      setError(`Failed to update activity: ${error.message}`);
+    } catch (err) {
+      setError(`Failed to update activity: ${err.message}`);
     }
   };
 
   // Filter and sort activities
   const filteredActivities = activities
     .filter((activity) => {
+      const userIdentifier = currentUser.displayName || currentUser.email;
+      const isCreator = activity.createdBy === userIdentifier;
+      const isAssignee = (activity.assignees || []).includes(userIdentifier);
+
+      // View type filter
+      if (viewType === "my") {
+        if (filters.roleFilter === "assignee" && !isAssignee) return false;
+        if (filters.roleFilter === "createdBy" && !isCreator) return false;
+        if (filters.roleFilter === "both" && !isCreator && !isAssignee) return false;
+      } else if (viewType === "dueToday") {
+        if (!isAssignee) return false;
+        const dueDate = activity.dueDate ? new Date(activity.dueDate) : null;
+        if (!dueDate) return false;
+        const todayStart = startOfDay(new Date());
+        const todayEnd = endOfDay(new Date());
+        return dueDate >= todayStart && dueDate <= todayEnd;
+      }
+      // viewType === "all" shows all activities, no user filter
+
+      // Additional filters
       if (filters.module && activity.module !== filters.module) return false;
       if (filters.status && activity.status !== filters.status) return false;
-      if (filters.searchQuery && !activity.description.toLowerCase().includes(filters.searchQuery.toLowerCase())) return false;
+      if (filters.searchQuery && !activity.name.toLowerCase().includes(filters.searchQuery.toLowerCase())) return false;
       if (filters.timeFilter) {
         const dueDate = activity.dueDate ? new Date(activity.dueDate) : null;
         if (!dueDate) return false;
@@ -212,11 +259,9 @@ const Activity = () => {
       return true;
     })
     .sort((a, b) => {
-      // Sort by pinned status first (pinned items at the top)
       if (a.pinned !== b.pinned) {
         return a.pinned ? -1 : 1;
       }
-      // Then sort by the selected criteria
       const aValue = a[filters.sortBy] || "";
       const bValue = b[filters.sortBy] || "";
       if (filters.sortBy === "dueDate" || filters.sortBy === "createdAt") {
@@ -226,7 +271,7 @@ const Activity = () => {
       }
       return filters.sortOrder === "asc"
         ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(bValue);
+        : bValue.localeCompare(aValue);
     });
 
   // Format date safely
@@ -292,10 +337,16 @@ const Activity = () => {
 
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
+  const handleProfileClick = (module, id) => {
+    alert(`Opening ${module} profile for ID: ${id}`);
+  };
+
   return (
-    <div className="p-6 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
+    <div className="bg-gray-50 p-4 fixed inset-0 left-[300px]">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl sm:text-2xl font-semibold">My tasks</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold">
+          {viewType === "all" ? "All Activities" : viewType === "my" ? "My Activities" : "Due Today"}
+        </h2>
         <button
           onClick={() => setIsModalOpen(true)}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
@@ -319,9 +370,10 @@ const Activity = () => {
           className="p-2 border border-gray-300 rounded-md text-sm"
         >
           <option value="">All modules</option>
+          <option value="general">General</option>
           <option value="enquiry">Enquiry</option>
           <option value="company">Company</option>
-          <option value="student">Student</option>
+          <option value="learner">Learner</option>
           <option value="self">Self</option>
         </select>
         <select
@@ -332,6 +384,7 @@ const Activity = () => {
         >
           <option value="">All status</option>
           <option value="pending">Pending</option>
+          <option value="in progress">In Progress</option>
           <option value="completed">Completed</option>
         </select>
         <select
@@ -365,6 +418,18 @@ const Activity = () => {
               className="p-2 border border-gray-300 rounded-md text-sm"
             />
           </>
+        )}
+        {viewType === "my" && (
+          <select
+            name="roleFilter"
+            value={filters.roleFilter}
+            onChange={handleFilterChange}
+            className="p-2 border border-gray-300 rounded-md text-sm"
+          >
+            <option value="both">Both</option>
+            <option value="assignee">Assignee</option>
+            <option value="createdBy">Created By</option>
+          </select>
         )}
         <select
           name="sortBy"
@@ -445,7 +510,7 @@ const Activity = () => {
                 <th className="border border-gray-200 p-2 text-sm font-medium text-gray-700 text-left">Name</th>
                 <th className="border border-gray-200 p-2 text-sm font-medium text-gray-700 text-left">Deadline</th>
                 <th className="border border-gray-200 p-2 text-sm font-medium text-gray-700 text-left">Created by</th>
-                <th className="border border-gray-200 p-2 text-sm font-medium text-gray-700 text-left">Assignee</th>
+                <th className="border border-gray-200 p-2 text-sm font-medium text-gray-700 text-left">Assignees</th>
                 <th className="border border-gray-200 p-2 text-sm font-medium text-gray-700 text-left">Module</th>
                 <th className="border border-gray-200 p-2 text-sm font-medium text-gray-700 text-left">Tags</th>
                 <th className="border border-gray-200 p-2 text-sm font-medium text-gray-700 text-left">Pinned</th>
@@ -467,7 +532,7 @@ const Activity = () => {
                     />
                   </td>
                   <td className="border border-gray-200 p-2 text-sm text-gray-900">
-                    {activity.description}
+                    {activity.name}
                   </td>
                   <td className="border border-gray-200 p-2 text-sm text-gray-900">
                     {formatDateSafely(activity.dueDate)}
@@ -476,20 +541,20 @@ const Activity = () => {
                     {activity.createdBy}
                   </td>
                   <td className="border border-gray-200 p-2 text-sm text-gray-900">
-                    {activity.assignedTo}
+                    {(activity.assignees || []).join(", ")}
                   </td>
                   <td className="border border-gray-200 p-2 text-sm text-gray-900">
-                    {activity.module}
+                    {activity.module === "learner" ? "Learner" : activity.module.charAt(0).toUpperCase() + activity.module.slice(1)}
                   </td>
                   <td className="border border-gray-200 p-2 text-sm text-gray-900">
                     <span
                       className={`inline-block px-2 py-1 rounded-full text-xs ${
-                        activity.hotlead
+                        activity.highPriority
                           ? "bg-red-100 text-red-700"
                           : "bg-gray-100 text-gray-700"
                       }`}
                     >
-                      {activity.hotlead ? "Hotlead" : "Not"}
+                      {activity.highPriority ? "High Priority" : "Normal"}
                     </span>
                   </td>
                   <td className="border border-gray-200 p-2 text-sm text-gray-900">
@@ -502,7 +567,6 @@ const Activity = () => {
         </div>
       )}
 
-      {/* Context Menu */}
       {contextMenu && (
         <div
           className="fixed bg-white border border-gray-200 rounded-md shadow-lg z-50"

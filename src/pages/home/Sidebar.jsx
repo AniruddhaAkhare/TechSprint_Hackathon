@@ -246,6 +246,33 @@ const Sidebar = () => {
         } */}
 
         <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("enquiry")}>
+          Activity
+          {accordionState.enquiry ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
+        </li>
+        {accordionState.enquiry && (
+          <>
+            <Link to="/my-activities?view=all" className="nav-link">
+              <li className="nav-item">
+                <i className="fa fa-home" aria-hidden="true"></i>
+                <span>&nbsp;&nbsp; All Activities</span>
+              </li>
+            </Link>
+            <Link to="/my-activities?view=my" className="nav-link">
+              <li className="nav-item">
+                <i className="fa-brands fa-wpforms"></i>
+                <span>&nbsp;&nbsp; My Activities</span>
+              </li>
+            </Link>
+            <Link to="/my-activities?view=dueToday" className="nav-link">
+              <li className="nav-item">
+                <i className="fa-brands fa-wpforms"></i>
+                <span>&nbsp;&nbsp; Due Today</span>
+              </li>
+            </Link>
+          </>
+        )}
+
+        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("enquiry")}>
           Sales And Marketing
           {accordionState.enquiry ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
         </li>
@@ -445,13 +472,7 @@ const Sidebar = () => {
         <span>&nbsp;&nbsp;My Data</span>
       </li>
     </Link>
-    <Link to="/my-activities">
-          <li className="nav-item mt-3 mb-3">
-            {/* <FaTachometerAlt className="nav-icon" /> */}
-            <i class="fa fa-home" aria-hidden="true"></i>
-            <span>&nbsp;&nbsp;Activities</span>
-          </li>
-        </Link>
+    
   </>
 )}
 
