@@ -91,7 +91,7 @@ export default function EditStudent() {
     console.log("Activity logged successfully");
   } catch (error) {
     console.error("Error logging activity:", error);
-    toast.error("Failed to log activity");
+    // toast.error("Failed to log activity");
   }
 };
 

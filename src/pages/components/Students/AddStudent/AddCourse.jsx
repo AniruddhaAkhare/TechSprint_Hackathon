@@ -129,52 +129,49 @@ const AddCourse = () => {
   };
 
   const logActivity = async (action, details) => {
-      if (!user?.email) {
-        console.warn("No user email found, skipping activity log");
-        return;
-      }
-  
-      const activityLogRef = doc(db, "activityLogs", "logDocument");
-  
-      const logEntry = {
-        action,
-        details,
-        timestamp: new Date().toISOString(),
-        userEmail: user.email,
-        userId: user.uid,
-        section:"Student",
-        // adminId: adminId || "N/A",
-      };
-  
-      try {
-        await runTransaction(db, async (transaction) => {
-          const logDoc = await transaction.get(activityLogRef);
-          let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
-  
-          if (!Array.isArray(logs)) {
-            logs = [];
-          }
-  
-          logs.push(logEntry);
-  
-          if (logs.length > 1000) {
-            logs = logs.slice(-1000);
-          }
-  
-          transaction.set(activityLogRef, { logs }, { merge: true });
-        });
-        console.log("Activity logged successfully:", action);
-      } catch (error) {
-        console.error("Error logging activity:", error);
-        toast.error("Failed to log activity");
-      }
+    if (!user?.email) {
+      console.warn("No user email found, skipping activity log");
+      return;
+    }
+
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Student",
+    };
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        logs.push(logEntry);
+
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully:", action);
+    } catch (error) {
+      console.error("Error logging activity:", error);
+      toast.error("Failed to log activity");
+    }
   };
-  
 
   useEffect(() => {
     if (!canDisplay) {
       toast.error("You don't have permission to view this page");
-      // logActivity("UNAUTHORIZED_ACCESS_ATTEMPT", { page: "AddCourse" }, user);
       navigate("/unauthorized");
       return;
     }
@@ -196,7 +193,6 @@ const AddCourse = () => {
           setPreferredCenters(studentPreferredCenters);
         } else if (isMounted) {
           toast.error("Student not found");
-          // logActivity("FETCH_STUDENT_NOT_FOUND", { studentId }, user);
           setPreferredCenters([]);
         }
 
@@ -292,7 +288,6 @@ const AddCourse = () => {
       } catch (error) {
         if (isMounted) {
           toast.error("Failed to fetch data");
-          // logActivity("FETCH_DATA_ERROR", { error: error.message, studentId }, user);
           setCourseEntries([defaultEntry]);
           setPreferredCenters([]);
           setCenters([]);
@@ -308,7 +303,7 @@ const AddCourse = () => {
     fetchData();
 
     return () => {
-      isMounted = false; // Cleanup on unmount
+      isMounted = false;
     };
   }, [studentId, canDisplay, navigate, user]);
 
@@ -360,19 +355,6 @@ const AddCourse = () => {
           ) &&
           entry.selectedCourse
       );
-      const updatedFees = updatedEntries.filter((entry) => {
-        const existing = existingCourses.find(
-          (e) => e.selectedCourse?.id === entry?.selectedCourse?.id
-        );
-        if (!existing) return false;
-        return (
-          entry.fullFeesDetails.totalFees !== existing.fullFeesDetails.totalFees ||
-          entry.fullFeesDetails.feeAfterDiscount !== existing.fullFeesDetails.feeAfterDiscount ||
-          entry.financeDetails.loanAmount !== existing.financeDetails.loanAmount ||
-          entry.registration.amount !== existing.registration.amount ||
-          entry.installmentDetails.length !== existing.installmentDetails.length
-        );
-      });
 
       toast.success("Enrollment data saved successfully!");
       logActivity("Enrollment saved", { courseCount: updatedEntries.length, studentId }, user);
@@ -382,29 +364,10 @@ const AddCourse = () => {
         if (studentEmail && course.selectedCourse?.name) {
           try {
             await sendWelcomeEmail(studentEmail, studentName, course.selectedCourse.name);
-            // logActivity(
-            //   "STUDENT_WELCOME_EMAIL_SUCCESS",
-            //   {
-            //     studentId,
-            //     email: studentEmail,
-            //     courseName: course.selectedCourse.name,
-            //   },
-            //   user
-            // );
           } catch (emailError) {
             toast.warn(
               `Enrollment saved, but failed to send welcome email for ${course.selectedCourse.name}`
             );
-            // logActivity(
-            //   "STUDENT_WELCOME_EMAIL_ERROR",
-            //   {
-            //     studentId,
-            //     email: studentEmail,
-            //     courseName: course.selectedCourse.name,
-            //     error: emailError.message,
-            //   },
-            //   user
-            // );
           }
         }
       }
@@ -412,7 +375,6 @@ const AddCourse = () => {
       handleClose();
     } catch (error) {
       toast.error(`Failed to save enrollment data: ${error.message}`);
-      // logActivity("SAVE_ENROLLMENT_ERROR", { error: error.message, studentId }, user);
     } finally {
       setIsSaving(false);
       setLoading(false);
@@ -425,14 +387,17 @@ const AddCourse = () => {
       return;
     }
     setIsOpen(false);
-    navigate(`/studentdetails/${studentId}`);
-    // logActivity("NAVIGATION_BACK", { from: "AddCourse", studentId }, user);
+    // Use a slight delay to allow UI to update before navigation
+    setTimeout(() => {
+      navigate(-1); // Navigate back to previous page
+      // Alternative: navigate(`/studentdetails/${studentId}`);
+    }, 100);
+    // logActivity("Navigation back", { from: "AddCourse", studentId }, user);
   };
 
   const addCourseEntry = () => {
     if (!canCreate) {
       toast.error("You don't have permission to add courses");
-      // logActivity("UNAUTHORIZED_CREATE_ATTEMPT", { action: "addCourseEntry", studentId }, user);
       return;
     }
     setCourseEntries([...courseEntries, defaultEntry]);
@@ -442,7 +407,6 @@ const AddCourse = () => {
   const removeCourseEntry = (index) => {
     if (!canDelete) {
       toast.error("You don't have permission to remove courses");
-      // logActivity("UNAUTHORIZED_DELETE_ATTEMPT", { action: "removeCourseEntry", index, studentId }, user);
       return;
     }
     setCourseEntries(courseEntries.filter((_, i) => i !== index));
@@ -452,7 +416,6 @@ const AddCourse = () => {
   const handleChange = async (index, field, value) => {
     if (!canUpdate) {
       toast.error("You don't have permission to update course details");
-      // logActivity("UNAUTHORIZED_UPDATE_ATTEMPT", { action: "updateCourseEntry", field }, user);
       return false;
     }
     const updatedEntries = courseEntries.map((entry, i) => {
@@ -523,7 +486,7 @@ const AddCourse = () => {
     }
     const updatedEntries = courseEntries.map((entry, i) => {
       if (i === index) {
-        logActivity("registration changed", { field, value, studentId }, user);
+        logActivity("Registration changed", { field, value, studentId }, user);
         return {
           ...entry,
           registration: { ...entry.registration, [field]: value },
@@ -632,7 +595,7 @@ const AddCourse = () => {
       }
       return entry;
     });
-    logActivity("Fine changed", { field, subField, value, studentId }, user);
+    logActivity("Finance changed", { field, subField, value, studentId }, user);
     setCourseEntries(updatedEntries);
   };
 
@@ -679,7 +642,13 @@ const AddCourse = () => {
   return (
     <>
       <ToastContainer position="bottom-right" autoClose={3000} />
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={handleClose} />
+      {/* Render backdrop only when modal is open */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={isSaving ? null : handleClose}
+        />
+      )}
       <div
         className={`fixed top-0 right-0 h-full bg-gray-100 w-3/4 shadow-lg transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"

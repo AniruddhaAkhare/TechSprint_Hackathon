@@ -4084,6 +4084,7 @@ import Notes from "../Notes.jsx";
 import { useAuth } from "../../../../context/AuthContext.jsx";
 import { toast } from "react-toastify";
 import { runTransaction } from "firebase/firestore";
+import { useCallback } from "react";
 
 const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, callSchedules, handleDeleteSchedule }) => {
   const { user } = useAuth();
@@ -4174,28 +4175,28 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, callSc
     }
   };
     
-    const fetchLogs = useCallback(() => {
-      if (!isAdmin) return;
-      const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const allLogs = [];
-          snapshot.docs.forEach((doc) => {
-            const data = doc.data();
-            (data.logs || []).forEach((log) => {
-              allLogs.push({ id: doc.id, ...log });
-            });
-          });
-          allLogs.sort(
-            (a, b) =>
-              (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
-          );
-          setLogs(allLogs);
-        },
-      );
-      return unsubscribe;
-    }, [isAdmin]);
+    // const fetchLogs = useCallback(() => {
+    //   if (!isAdmin) return;
+    //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    //   const unsubscribe = onSnapshot(
+    //     q,
+    //     (snapshot) => {
+    //       const allLogs = [];
+    //       snapshot.docs.forEach((doc) => {
+    //         const data = doc.data();
+    //         (data.logs || []).forEach((log) => {
+    //           allLogs.push({ id: doc.id, ...log });
+    //         });
+    //       });
+    //       allLogs.sort(
+    //         (a, b) =>
+    //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+    //       );
+    //       setLogs(allLogs);
+    //     },
+    //   );
+    //   return unsubscribe;
+    // }, [isAdmin]);
 
   const formatDateSafely = (date, format) => {
     try {

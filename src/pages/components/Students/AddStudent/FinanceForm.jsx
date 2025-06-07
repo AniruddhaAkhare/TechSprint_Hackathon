@@ -1232,7 +1232,7 @@ const FinanceForm = ({
         key = decodeURIComponent(key);
         const command = new DeleteObjectCommand({ Bucket: bucketName, Key: key });
         await s3Client.send(command);
-        logActivity("Documentd deleted", { studentId, courseIndex, docType, key }, user);
+        logActivity("Document deleted", { studentId, courseIndex, docType, key }, user);
       }
       setAttachmentError((prev) => ({ ...prev, [docType]: null }));
     } catch (err) {
@@ -1748,7 +1748,7 @@ const FinanceForm = ({
               { type: "loanDelivery", label: "Loan Delivery Order" },
             ].map((doc) => (
               <TableRow key={doc.type}>
-                <TableCell>{doc.label} {financeDetails[doc.type]}</TableCell>
+                <TableCell>{doc.label}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {financeDetails[doc.type] ? (
@@ -1831,3 +1831,6 @@ const FinanceForm = ({
 };
 
 export default FinanceForm;
+
+
+

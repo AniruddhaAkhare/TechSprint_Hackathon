@@ -34,6 +34,7 @@ import "react-toastify/dist/ReactToastify.css";
 import CompanyModal from "./CompanyModal/CompanyModal.jsx";
 import { format } from "date-fns";
 import { runTransaction } from "firebase/firestore";
+import { useCallback } from "react";
 
 export default function Companies() {
   const navigate = useNavigate();
@@ -210,28 +211,28 @@ const logActivity = async (action, details) => {
   }
 };
   
-  const fetchLogs = useCallback(() => {
-    if (!isAdmin) return;
-    const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const allLogs = [];
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data();
-          (data.logs || []).forEach((log) => {
-            allLogs.push({ id: doc.id, ...log });
-          });
-        });
-        allLogs.sort(
-          (a, b) =>
-            (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
-        );
-        setLogs(allLogs);
-      },
-    );
-    return unsubscribe;
-  }, [isAdmin]);
+  // const fetchLogs = useCallback(() => {
+  //   if (!isAdmin) return;
+  //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+  //   const unsubscribe = onSnapshot(
+  //     q,
+  //     (snapshot) => {
+  //       const allLogs = [];
+  //       snapshot.docs.forEach((doc) => {
+  //         const data = doc.data();
+  //         (data.logs || []).forEach((log) => {
+  //           allLogs.push({ id: doc.id, ...log });
+  //         });
+  //       });
+  //       allLogs.sort(
+  //         (a, b) =>
+  //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+  //       );
+  //       setLogs(allLogs);
+  //     },
+  //   );
+  //   return unsubscribe;
+  // }, [isAdmin]);
 
   // Fetch companies and their notes
   const fetchCompanies = async () => {

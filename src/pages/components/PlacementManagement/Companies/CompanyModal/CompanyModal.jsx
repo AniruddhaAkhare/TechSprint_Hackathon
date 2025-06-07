@@ -26,6 +26,7 @@ import PointsOfContact from "./PointsOfContact.jsx";
 import History from "./History.jsx";
 import { Timestamp, serverTimestamp } from "firebase/firestore";
 import { runTransaction } from "firebase/firestore";
+import { useCallback } from "react";
 
 Modal.setAppElement("#root");
 
@@ -207,28 +208,28 @@ const logActivity = async (action, details) => {
   }
 };
   
-  const fetchLogs = useCallback(() => {
-    if (!isAdmin) return;
-    const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const allLogs = [];
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data();
-          (data.logs || []).forEach((log) => {
-            allLogs.push({ id: doc.id, ...log });
-          });
-        });
-        allLogs.sort(
-          (a, b) =>
-            (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
-        );
-        setLogs(allLogs);
-      },
-    );
-    return unsubscribe;
-  }, [isAdmin]);
+  // const fetchLogs = useCallback(() => {
+  //   if (!isAdmin) return;
+  //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+  //   const unsubscribe = onSnapshot(
+  //     q,
+  //     (snapshot) => {
+  //       const allLogs = [];
+  //       snapshot.docs.forEach((doc) => {
+  //         const data = doc.data();
+  //         (data.logs || []).forEach((log) => {
+  //           allLogs.push({ id: doc.id, ...log });
+  //         });
+  //       });
+  //       allLogs.sort(
+  //         (a, b) =>
+  //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+  //       );
+  //       setLogs(allLogs);
+  //     },
+  //   );
+  //   return unsubscribe;
+  // }, [isAdmin]);
 
   const validateEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
