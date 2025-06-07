@@ -139,64 +139,78 @@ const AdminLogs = () => {
     }
 
     const fetchLogsWithPermissions = async () => {
-      const { permissions } = await getUserRoleAndPermissions(user.uid);
-      setPermissions(permissions);
+  const { permissions } = await getUserRoleAndPermissions(user.uid);
+  setPermissions(permissions);
 
-      if (!permissions.canDisplay) {
+  if (!permissions.canDisplay) {
+    setLoading(false);
+    return;
+  }
+
+  const logDocRef = doc(db, 'activityLogs', 'logDocument');
+
+  const unsubscribe = onSnapshot(
+    logDocRef,
+    async (snap) => {
+      if (!snap.exists()) {
+        console.warn('Log document activityLogs/logDocument does not exist');
+        setLogs([]);
         setLoading(false);
         return;
       }
 
-      const logDocRef = doc(db, 'activityLogs', 'logDocument');
+      const logData = snap.data();
+      const logsArray = logData.logs || [];
 
-      const unsubscribe = onSnapshot(
-        logDocRef,
-        async (snap) => {
-          if (!snap.exists()) {
-            console.warn('Log document activityLogs/logDocument does not exist');
-            setLogs([]);
-            setLoading(false);
-            return;
-          }
+      // Step 1: Collect all unique userIds
+      const userIdSet = new Set();
+      logsArray.forEach(log => {
+        if (log.userId) userIdSet.add(log.userId);
+      });
 
-          const logData = snap.data();
-          const logsArray = logData.logs || [];
-
-          const logsData = await Promise.all(
-            logsArray
-              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-              .map(async (logData, index) => {
-                if (!logData.userId) {
-                  console.warn(`No userId found in activity log entry: ${index}`);
-                  return {
-                    id: `log-${index}`,
-                    ...logData,
-                    displayName: 'Unknown',
-                    userEmail: logData.userEmail || 'Unknown',
-                  };
-                }
-                const { displayName, email } = await fetchUserData(logData.userId);
-                return {
-                  id: `log-${index}`,
-                  ...logData,
-                  displayName,
-                  userEmail: logData.userEmail || email,
-                };
-              })
-          );
-
-          setLogs(logsData);
-          setCurrentPage(1); // Reset to first page on new data
-          setLoading(false);
-        },
-        (error) => {
-          console.error('Error fetching logs:', error);
-          setLoading(false);
-        }
+      // Step 2: Batch fetch all user data
+      const userDocs = await Promise.all(
+        [...userIdSet].map(uid => getDoc(doc(db, 'Users', uid)).then(docSnap => ({
+          uid,
+          data: docSnap.exists() ? docSnap.data() : null
+        })))
       );
 
-      return () => unsubscribe();
-    };
+      // Step 3: Map user data for quick access
+      const userMap = {};
+      userDocs.forEach(({ uid, data }) => {
+        userMap[uid] = {
+          displayName: data?.displayName || 'Unknown',
+          email: data?.email || 'Unknown'
+        };
+      });
+
+      // Step 4: Attach user info to logs
+      const logsData = logsArray
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .map((logData, index) => {
+          const userInfo = logData.userId ? userMap[logData.userId] || {} : {};
+          return {
+            id: `log-${index}`,
+            ...logData,
+            displayName: userInfo.displayName || 'Unknown',
+            userEmail: logData.userEmail || userInfo.email || 'Unknown',
+          };
+        });
+
+      setLogs(logsData);
+      setCurrentPage(1); // Reset to first page on new data
+      setLoading(false);
+    },
+    (error) => {
+      console.error('Error fetching logs:', error);
+      setLoading(false);
+    }
+  );
+
+  return () => unsubscribe();
+};
+
 
     fetchLogsWithPermissions();
   }, []);

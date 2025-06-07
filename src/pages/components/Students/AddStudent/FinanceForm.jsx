@@ -1751,8 +1751,26 @@ const FinanceForm = ({
                 <TableCell>{doc.label}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    {financeDetails[doc.type] ? (
-
+                    {financeDetails[doc.type]===null || financeDetails[doc.type]===" " || !financeDetails[doc.type] ? (
+                      <>
+                        <Typography variant="body2" color="textSecondary">
+                          No file uploaded
+                        </Typography>
+                        <label className="cursor-pointer">
+                          <span className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                            Upload
+                          </span>
+                          <input
+                            type="file"
+                            accept="application/pdf,image/jpeg,image/png"
+                            onChange={(e) => handleFileChangeS3(courseIndex, doc.type, e)}
+                            className="hidden"
+                            disabled={!canUpdate}
+                          />
+                        </label>
+                      </>
+                      
+                    ) : (
                       <>
                         <Button
                           variant="outlined"
@@ -1788,24 +1806,7 @@ const FinanceForm = ({
                           {financeDetails[`${doc.type}Name`]}
                         </Typography>
                       </>
-                    ) : (
-                      <>
-                        <Typography variant="body2" color="textSecondary">
-                          No file uploaded
-                        </Typography>
-                        <label className="cursor-pointer">
-                          <span className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
-                            Upload
-                          </span>
-                          <input
-                            type="file"
-                            accept="application/pdf,image/jpeg,image/png"
-                            onChange={(e) => handleFileChangeS3(courseIndex, doc.type, e)}
-                            className="hidden"
-                            disabled={!canUpdate}
-                          />
-                        </label>
-                      </>
+                      
                     )}
                   </div>
                   {/* {attachmentError[doc.type] && (
