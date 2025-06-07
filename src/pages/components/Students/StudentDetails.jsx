@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   collection,
   onSnapshot,
@@ -91,47 +91,47 @@ export default function StudentDetails() {
   // };
 
   const logActivity = async (action, details) => {
-  if (!user?.email) return;
+    if (!user?.email) return;
 
-  const activityLogRef = doc(db, "activityLogs", "logDocument");
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
 
-  const logEntry = {
-    action,
-    details,
-    timestamp: new Date().toISOString(),
-    userEmail: user.email,
-    userId: user.uid,
-    section:"Student",
-    // adminId: adminId || "N/A",
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Student",
+      // adminId: adminId || "N/A",
+    };
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        // Ensure logs is an array and contains only valid data
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        // Append the new log entry
+        logs.push(logEntry);
+
+        // Trim to the last 1000 entries if necessary
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        // Update the document with the new logs array
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully");
+    } catch (error) {
+      console.error("Error logging activity:", error);
+      toast.error("Failed to log activity");
+    }
   };
-
-  try {
-    await runTransaction(db, async (transaction) => {
-      const logDoc = await transaction.get(activityLogRef);
-      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
-
-      // Ensure logs is an array and contains only valid data
-      if (!Array.isArray(logs)) {
-        logs = [];
-      }
-
-      // Append the new log entry
-      logs.push(logEntry);
-
-      // Trim to the last 1000 entries if necessary
-      if (logs.length > 1000) {
-        logs = logs.slice(-1000);
-      }
-
-      // Update the document with the new logs array
-      transaction.set(activityLogRef, { logs }, { merge: true });
-    });
-    console.log("Activity logged successfully");
-  } catch (error) {
-    console.error("Error logging activity:", error);
-    toast.error("Failed to log activity");
-  }
-};
 
   useEffect(() => {
     if (!canDisplay) {
@@ -161,7 +161,8 @@ export default function StudentDetails() {
     const fetchEnquiryUsers = async () => {
       try {
         const usersRef = collection(db, "users");
-        const q = query(usersRef, where("status", "==", "enquiry"));
+
+        const q = query(usersRef, where("status", "in", ["enquiry", "applied"]));
         const querySnapshot = await getDocs(q);
 
         const usersWithEnquiry = await Promise.all(
@@ -173,7 +174,7 @@ export default function StudentDetails() {
             if (enquiryId) {
               const enquiryRef = doc(db, "enquiries", enquiryId);
               const enquirySnap = await getDoc(enquiryRef);
-              console.log(enquirySnap)
+
               if (enquirySnap.exists()) {
                 enquiryInfo = { id: enquirySnap.id, ...enquirySnap.data() };
               }
@@ -193,6 +194,7 @@ export default function StudentDetails() {
         toast.error("No students available to enroll");
       }
     };
+
 
 
     // Fetch Courses
@@ -615,27 +617,36 @@ export default function StudentDetails() {
                           {student.enquiryInfo?.branch || "N/A"}
                         </td>
                         <td className="px-6 py-4">
-                          <span className="bg-yellow-500 text-white text-sm px-3 py-1 rounded-full">
+                          <span className={`${student.status === 'enquiry' ? 'bg-yellow-500' : 'bg-green-600'} text-white text-sm px-3 py-1 rounded-full`}>
                             {student.status || "N/A"}
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="bg-green-500 text-white text-sm px-3 py-1 rounded-full whitespace-nowrap">
+                          <span className="bg-blue-500 text-white text-sm px-3 py-1 rounded-full whitespace-nowrap">
                             {student.enquiryInfo?.stage || "N/A"}
                           </span>
                         </td>
                         {(canUpdate || canDelete) && (
                           <td className="px-6 py-4 text-right">
-                            <button
-                              onClick={() => openDialog(student)}
-                              disabled={disabledStudentId === student.id}
-                              className={`${disabledStudentId === student.id
+                            {student.status === 'applied' ?
+                              <Link to={`/enrollment/${student.enrollmentId}`}>
+                                <button
+                                  className={`bg-gray-600 hover:bg-gray-700 text-white text-sm px-4 py-2 rounded-lg transition whitespace-nowrap`}
+                                >
+                                  View Application
+                                </button>
+                              </Link> :
+                              <button
+                                onClick={() => openDialog(student)}
+                                disabled={disabledStudentId === student.id}
+                                className={`${disabledStudentId === student.id
                                   ? "bg-gray-400 cursor-not-allowed"
-                                  : "bg-emerald-600 hover:bg-emerald-700"
-                                } text-white text-sm px-4 py-2 rounded-lg transition whitespace-nowrap`}
-                            >
-                              Send Enrollment Form
-                            </button>
+                                  : "bg-gray-600 hover:bg-gray-700"
+                                  } text-white text-sm px-4 py-2 rounded-lg transition whitespace-nowrap`}
+                              >
+                                Send Enrollment Form
+                              </button>
+                            }
                           </td>
                         )}
                       </tr>
@@ -645,7 +656,7 @@ export default function StudentDetails() {
                   open={dialogOpen}
                   onClose={() => setDialogOpen(false)}
                   student={selectedUsers}
-                  onSendMail={() => setDisabledStudentId(selectedUsers.id)} 
+                  onSendMail={() => setDisabledStudentId(selectedUsers.id)}
                 />
               </tbody>
             </table>
