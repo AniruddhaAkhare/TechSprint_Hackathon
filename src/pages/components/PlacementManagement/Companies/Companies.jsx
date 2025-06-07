@@ -33,6 +33,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CompanyModal from "./CompanyModal/CompanyModal.jsx";
 import { format } from "date-fns";
+import { runTransaction } from "firebase/firestore";
 
 export default function Companies() {
   const navigate = useNavigate();
@@ -166,19 +167,71 @@ export default function Companies() {
     fetchUserDisplayName();
   }, [user?.uid, user?.email]);
 
-  const logActivity = async (action, details) => {
-    try {
-      await addDoc(collection(db, "activityLogs"), {
-        action,
-        details,
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email || "anonymous",
-        userId: user.uid,
-      });
-    } catch (error) {
-      console.error("Error logging activity:", error);
-    }
+const logActivity = async (action, details) => {
+  if (!user?.email) return;
+
+  const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+  const logEntry = {
+    action,
+    details,
+    timestamp: new Date().toISOString(),
+    userEmail: user.email,
+    userId: user.uid,
+    section: "Company",
+    // adminId: adminId || "N/A",
   };
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const logDoc = await transaction.get(activityLogRef);
+      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+      // Ensure logs is an array and contains only valid data
+      if (!Array.isArray(logs)) {
+        logs = [];
+      }
+
+      // Append the new log entry
+      logs.push(logEntry);
+
+      // Trim to the last 1000 entries if necessary
+      if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+      }
+
+      // Update the document with the new logs array
+      transaction.set(activityLogRef, { logs }, { merge: true });
+    });
+    console.log("Activity logged successfully");
+  } catch (error) {
+    console.error("Error logging activity:", error);
+    // toast.error("Failed to log activity");
+  }
+};
+  
+  const fetchLogs = useCallback(() => {
+    if (!isAdmin) return;
+    const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const allLogs = [];
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          (data.logs || []).forEach((log) => {
+            allLogs.push({ id: doc.id, ...log });
+          });
+        });
+        allLogs.sort(
+          (a, b) =>
+            (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+        );
+        setLogs(allLogs);
+      },
+    );
+    return unsubscribe;
+  }, [isAdmin]);
 
   // Fetch companies and their notes
   const fetchCompanies = async () => {
@@ -256,28 +309,28 @@ export default function Companies() {
   const handleAddCompanyClick = () => {
     if (!canCreate) return;
     setOpenAddOptions(true);
-    logActivity("OPEN_ADD_OPTIONS", {});
+    // logActivity("OPEN_ADD_OPTIONS", {});
   };
 
   const handleEditClick = (company) => {
     if (!canUpdate) return;
     setCurrentCompany(company);
     setIsAddSingleOpen(true);
-    logActivity("OPEN_EDIT_COMPANY", { companyId: company.id, name: company.name });
+    // logActivity("OPEN_EDIT_COMPANY", { companyId: company.id, name: company.name });
   };
 
   const handleDeleteClick = (companyId) => {
     if (!canDelete) return;
     setDeleteId(companyId);
     setOpenDelete(true);
-    logActivity("OPEN_DELETE_COMPANY", { companyId });
+    // logActivity("OPEN_DELETE_COMPANY", { companyId });
   };
 
   const handleRowClick = (company) => {
     if (!canDisplay) return;
     setSelectedCompany(company);
     setIsModalOpen(true);
-    logActivity("VIEW_COMPANY_DETAILS", { companyId: company.id });
+    logActivity("Company Details viewed", { companyId: company.id });
   };
 
   const handleCloseSingle = () => {
@@ -318,7 +371,7 @@ export default function Companies() {
       setOpenDelete(false);
       setDeleteMessage("Are you sure you want to delete this company? This action cannot be undone.");
       toast.success("Company deleted successfully!");
-      logActivity("DELETE_COMPANY", { companyId: deleteId, name: companyName });
+      logActivity("Company deleted", { companyId: deleteId, name: companyName });
     } catch (err) {
       console.error("Error deleting company:", err);
       setDeleteMessage("An error occurred while trying to delete the company.");
@@ -336,7 +389,7 @@ export default function Companies() {
       reminderTime: "15",
     });
     setOpenCallSchedule(true);
-    logActivity("OPEN_CALL_SCHEDULE", { companyId: company.id });
+    // logActivity("OPEN_CALL_SCHEDULE", { companyId: company.id });
   };
 
   const handleCallScheduleSubmit = async () => {
@@ -420,7 +473,7 @@ export default function Companies() {
               purpose,
             });
             setOpenReminderDialog(true);
-            logActivity("TRIGGER_CALL_REMINDER", { companyId, callDate, callTime, purpose });
+            // logActivity("TRIGGER_CALL_REMINDER", { companyId, callDate, callTime, purpose });
 
             await updateDoc(doc(db, "Companies", companyId, "notes", noteRef.id), {
               status: "notified",
@@ -444,7 +497,7 @@ export default function Companies() {
         reminderTime: "15",
       });
       toast.success("Call scheduled successfully!");
-      logActivity("ADD_CALL_SCHEDULE", { companyId, callDate, callTime, purpose });
+      logActivity("Call Schedule added", { companyId, callDate, callTime, purpose });
     } catch (error) {
       console.error("Error scheduling call:", error);
       toast.error(`Failed to schedule call: ${error.message}`);
@@ -473,7 +526,7 @@ export default function Companies() {
       await deleteDoc(noteRef);
       setCallSchedules(callSchedules.filter((s) => s.id !== noteId));
       toast.success("Call schedule deleted successfully!");
-      logActivity("DELETE_CALL_SCHEDULE", { companyId: selectedCompany.id, noteId });
+      logActivity("Call Schedule deleted", { companyId: selectedCompany.id, noteId });
     } catch (error) {
       console.error("Error deleting call schedule:", error);
       toast.error(`Failed to delete call schedule: ${error.message}`);
@@ -720,7 +773,7 @@ export default function Companies() {
                 onClick={() => {
                   setOpenAddOptions(false);
                   setIsAddSingleOpen(true);
-                  logActivity("SELECT_ADD_SINGLE", {});
+                  // logActivity("SELECT_ADD_SINGLE", {});
                 }}
                 className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 transition duration-200 font-medium"
               >
@@ -730,7 +783,7 @@ export default function Companies() {
                 onClick={() => {
                   setOpenAddOptions(false);
                   setIsAddBulkOpen(true);
-                  logActivity("SELECT_ADD_BULK", {});
+                  // logActivity("SELECT_ADD_BULK", {});
                 }}
                 className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-green-700 hover:to-green-800 transition duration-200 font-medium"
               >

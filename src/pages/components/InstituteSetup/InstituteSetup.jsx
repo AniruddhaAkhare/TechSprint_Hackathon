@@ -64,6 +64,7 @@ const InstituteSetup = () => {
       timestamp: new Date().toISOString(),
       userEmail: user.email,
       userId: user.uid,
+      section: "Institute Setup"
       // adminId: adminId || "N/A",
     };
 
@@ -147,7 +148,7 @@ const InstituteSetup = () => {
       const logoUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`;
       setFormData((prev) => ({ ...prev, logoUrl }));
       setLogoError("");
-      logActivity("LOGO UPLOADED", `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`);
+      logActivity("Logo uploaded", `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`);
       return logoUrl;
     } catch (error) {
       // //console.error("S3 Upload Error:", error);
@@ -191,7 +192,7 @@ const InstituteSetup = () => {
       }
 
       alert("Data saved successfully!");
-      logActivity("Update Institute Details", `${docRef} to ${updatedFormData}`)
+      logActivity("Institute Details updated", `${docRef} to ${updatedFormData}`)
       setEditModes((prev) => ({ ...prev, [activeStep]: false }));
 
       if (nextStep) setActiveStep(nextStep);

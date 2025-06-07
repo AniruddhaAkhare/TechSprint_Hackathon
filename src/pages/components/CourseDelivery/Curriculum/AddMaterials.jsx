@@ -93,7 +93,7 @@ const AddMaterial = () => {
       });
 
       await logActivity(
-        `Upload ${type}`,
+        `${type} uploaded`,
         `Uploaded ${file.name} to section ${sectionId}`
       );
 
@@ -151,7 +151,7 @@ const AddMaterial = () => {
       });
 
       await logActivity(
-        `Upload ${type}`,
+        `${type} uploaded`,
         `Uploaded ${file.name} to ${sessionId ? 'session' : 'section'} ${sessionId || sectionId}`
       );
 
@@ -188,7 +188,7 @@ const AddMaterial = () => {
       });
 
       await logActivity(
-        `Add ${type}`,
+        `${type} added`,
         `Added ${type} content: ${content} to ${sessionId ? 'session' : 'section'} ${sessionId || sectionId}`
       );
 
@@ -226,7 +226,7 @@ const AddMaterial = () => {
       });
 
       await logActivity(
-        'Add quiz',
+        'Quiz added',
         `Added quiz with ${selectedQuestions.length} questions to ${sessionId ? 'session' : 'section'} ${sessionId || sectionId}`
       );
 

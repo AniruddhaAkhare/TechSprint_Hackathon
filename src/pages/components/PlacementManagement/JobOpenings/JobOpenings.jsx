@@ -11,6 +11,7 @@ import ApplicationManagement from "./ApplicationManagement";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { runTransaction } from "firebase/firestore";
 
 export default function JobOpenings() {
   const navigate = useNavigate();
@@ -61,20 +62,71 @@ export default function JobOpenings() {
     fetchUserDisplayName();
   }, [user?.uid, user?.email]);
 
-  const logActivity = async (action, details) => {
-    try {
-      const activityLog = {
-        action,
-        details,
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email || "anonymous",
-        userId: user.uid,
-      };
-      await addDoc(collection(db, "activityLogs"), activityLog);
-    } catch (error) {
-      console.error("Error logging activity:", error);
-    }
+const logActivity = async (action, details) => {
+  if (!user?.email) return;
+
+  const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+  const logEntry = {
+    action,
+    details,
+    timestamp: new Date().toISOString(),
+    userEmail: user.email,
+    userId: user.uid,
+    section: "Job Opening",
+    // adminId: adminId || "N/A",
   };
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const logDoc = await transaction.get(activityLogRef);
+      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+      // Ensure logs is an array and contains only valid data
+      if (!Array.isArray(logs)) {
+        logs = [];
+      }
+
+      // Append the new log entry
+      logs.push(logEntry);
+
+      // Trim to the last 1000 entries if necessary
+      if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+      }
+
+      // Update the document with the new logs array
+      transaction.set(activityLogRef, { logs }, { merge: true });
+    });
+    console.log("Activity logged successfully");
+  } catch (error) {
+    console.error("Error logging activity:", error);
+    // toast.error("Failed to log activity");
+  }
+};
+  
+  const fetchLogs = useCallback(() => {
+    if (!isAdmin) return;
+    const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const allLogs = [];
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          (data.logs || []).forEach((log) => {
+            allLogs.push({ id: doc.id, ...log });
+          });
+        });
+        allLogs.sort(
+          (a, b) =>
+            (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+        );
+        setLogs(allLogs);
+      },
+    );
+    return unsubscribe;
+  }, [isAdmin]);
 
   const toggleAddSidebar = () => setIsAddOpen((prev) => !prev);
 
@@ -160,7 +212,7 @@ export default function JobOpenings() {
     }
     setSelectedJob(null);
     toggleAddSidebar();
-    logActivity("OPEN_ADD_JOB", {});
+    // logActivity("OP", {});
   };
 
   const handleEditClick = (job) => {
@@ -177,7 +229,7 @@ export default function JobOpenings() {
     
     setSelectedJob(job);
     setIsAddOpen(true);
-    logActivity("OPEN_EDIT_JOB", { jobId: job.id, title: job.title });
+    // logActivity("OPEN_EDIT_JOB", { jobId: job.id, title: job.title });
   };
 
   const handleDeleteClick = (jobId) => {
@@ -196,7 +248,7 @@ export default function JobOpenings() {
     console.log("Setting deleteId:", jobId);
     setDeleteId(jobId);
     setOpenDelete(true);
-    logActivity("OPEN_DELETE_JOB", { jobId });
+    // logActivity("OPEN_DELETE_JOB", { jobId });
   };
 
   const handleClose = () => {
@@ -265,7 +317,7 @@ export default function JobOpenings() {
       setDeleteId(null);
       setDeleteMessage("Are you sure you want to delete this job opening? This action cannot be undone.");
       toast.success("Job opening deleted successfully!");
-      logActivity("DELETE_JOB", { jobId: deleteId, title: jobTitle });
+      logActivity("Job deleted", { jobId: deleteId, title: jobTitle });
     } catch (err) {
       console.error("Error deleting job:", err);
       setDeleteMessage("An error occurred while trying to delete the job opening.");
@@ -305,7 +357,7 @@ export default function JobOpenings() {
       XLSX.utils.book_append_sheet(wb, ws, "Applications");
       XLSX.writeFile(wb, `Applications_${jobId}.xlsx`);
       
-      logActivity("EXPORT_EXCEL", { jobId });
+      logActivity("Excel sheet exported", { jobId });
       toast.success("Applications exported to Excel!");
     } catch (error) {
       console.error("Error exporting to Excel:", error);
@@ -347,7 +399,7 @@ export default function JobOpenings() {
       });
       doc.save(`Applications_${jobId}.pdf`);
       
-      logActivity("EXPORT_PDF", { jobId });
+      logActivity("Pdf exported", { jobId });
       toast.success("Applications exported to PDF!");
     } catch (error) {
       console.error("Error exporting to PDF:", error);

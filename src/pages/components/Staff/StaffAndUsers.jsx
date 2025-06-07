@@ -166,7 +166,7 @@ export default function StaffAndUsers() {
 
       await setDoc(doc(db, "Users", authUser.uid), userData);
 
-      await logActivity("Created user", {
+      await logActivity("User created", {
         userId: authUser.uid,
         email: newUser.email,
         name: newUser.name,
@@ -208,7 +208,7 @@ export default function StaffAndUsers() {
       await setDoc(doc(db, "Users", selectedUser.id), { role: selectedRoleId }, { merge: true });
       setUsers(users.map((u) => (u.id === selectedUser.id ? { ...u, role: selectedRoleId } : u)));
 
-      await logActivity("Updated user role", {
+      await logActivity("User role updated", {
         userId: selectedUser.id,
         userEmail: selectedUser.email,
         changes: { oldRole: oldRoleName, newRole: newRoleName },
@@ -237,7 +237,7 @@ export default function StaffAndUsers() {
 
       await deleteDoc(doc(db, "Users", userToDelete.id));
 
-      await logActivity("Deleted user", {
+      await logActivity("user deleted", {
         userId: userToDelete.id,
         email: userToDelete.email,
         name: userToDelete.displayName || "Unknown",

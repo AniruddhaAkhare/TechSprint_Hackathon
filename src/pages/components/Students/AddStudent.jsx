@@ -384,7 +384,7 @@ export default function AddStudent() {
       });
 
       const studentId = studentDocRef.id;
-      await logActivity("ADD STUDENT", { studentId, name: Name, email });
+      await logActivity("Student details added", { studentId, name: Name, email });
 
       try {
         await sendWelcomeEmail({

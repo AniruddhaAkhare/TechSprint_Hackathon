@@ -270,7 +270,7 @@ const logActivity = async (action, details) => {
       }
       const batch = batches.find((b) => b.id === deleteId);
       await deleteDoc(doc(db, "Batch", deleteId));
-      await logActivity("Deleted batch", { name: batch.batchName || "Unknown" });
+      await logActivity("Batch deleted", { name: batch.batchName || "Unknown" });
       setOpenDelete(false);
       setDeleteMessage(
         "Are you sure you want to delete this batch? This action cannot be undone."
@@ -285,12 +285,12 @@ const logActivity = async (action, details) => {
   const handleBatchSubmit = async (formData) => {
     try {
       if (currentBatch) {
-        await logActivity("Updated batch", {
+        await logActivity("Batch updated", {
           name: formData.batchName,
           changes: { oldName: currentBatch.batchName, newName: formData.batchName }
         });
       } else {
-        await logActivity("Created batch", { name: formData.batchName });
+        await logActivity("Batch created", { name: formData.batchName });
       }
       handleClose();
     } catch (err) {      toast.error("Failed to log batch action.", err);

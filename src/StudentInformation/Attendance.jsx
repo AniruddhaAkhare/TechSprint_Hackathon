@@ -233,7 +233,7 @@ const logActivity = async (action, details) => {
     XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
     XLSX.writeFile(wb, `Attendance_${batch.batchName || 'Batch'}.xlsx`);
 
-    logActivity('Download Template', { batchId, batchName: batch.batchName, studentCount: students.length });
+    logActivity('Template downloaded', { batchId, batchName: batch.batchName, studentCount: students.length });
   };
 
   const handleFileChange = (event) => {
@@ -334,7 +334,7 @@ const logActivity = async (action, details) => {
         })
       );
 
-      logActivity('Upload Attendance', {
+      logActivity('Attendance uploaded', {
         batchId: expandedBatch,
         batchName: batchDetails[expandedBatch]?.batchName || 'Unknown',
         recordCount: validRecords.length,

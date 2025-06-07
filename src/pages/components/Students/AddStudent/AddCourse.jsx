@@ -18,6 +18,7 @@ import sendWelcomeEmail from "../../../../services/sendWelcomeEmail";
 import PreferredCenters from "./PreferredCenters";
 import CourseEntryForm from "./CourseEntryForm";
 import "react-toastify/dist/ReactToastify.css";
+import { runTransaction } from "firebase/firestore";
 
 const AddCourse = () => {
   const { studentId } = useParams();
@@ -173,7 +174,7 @@ const AddCourse = () => {
   useEffect(() => {
     if (!canDisplay) {
       toast.error("You don't have permission to view this page");
-      logActivity("UNAUTHORIZED_ACCESS_ATTEMPT", { page: "AddCourse" }, user);
+      // logActivity("UNAUTHORIZED_ACCESS_ATTEMPT", { page: "AddCourse" }, user);
       navigate("/unauthorized");
       return;
     }
@@ -374,7 +375,7 @@ const AddCourse = () => {
       });
 
       toast.success("Enrollment data saved successfully!");
-      logActivity("SAVE ENROLLMENT", { courseCount: updatedEntries.length, studentId }, user);
+      logActivity("Enrollment saved", { courseCount: updatedEntries.length, studentId }, user);
 
       // Send welcome emails asynchronously
       for (const course of newCourses) {
@@ -435,7 +436,7 @@ const AddCourse = () => {
       return;
     }
     setCourseEntries([...courseEntries, defaultEntry]);
-    logActivity("ADD_COURSE_ENTRY", { studentId }, user);
+    logActivity("Course entry added", { studentId }, user);
   };
 
   const removeCourseEntry = (index) => {
@@ -445,7 +446,7 @@ const AddCourse = () => {
       return;
     }
     setCourseEntries(courseEntries.filter((_, i) => i !== index));
-    logActivity("REMOVE_COURSE", { index, studentId }, user);
+    logActivity("Course removed", { index, studentId }, user);
   };
 
   const handleChange = async (index, field, value) => {
@@ -457,7 +458,7 @@ const AddCourse = () => {
     const updatedEntries = courseEntries.map((entry, i) => {
       if (i === index) {
         if (field === "selectedCourse") {
-          logActivity("CHANGE_COURSE", { courseId: value?.id, field, studentId }, user);
+          logActivity("Course changed", { courseId: value?.id, field, studentId }, user);
           return {
             ...entry,
             [field]: value,
@@ -471,7 +472,7 @@ const AddCourse = () => {
             },
           };
         } else if (field === "freeReason") {
-          logActivity("CHANGE_FIELD", { field, value }, user);
+          logActivity("Field Changed", { field, value }, user);
           return { ...entry, freeReason: value };
         }
         return { ...entry, [field]: value };
@@ -511,7 +512,7 @@ const AddCourse = () => {
       }
       return entry;
     });
-    logActivity("FULL_FEES_CHANGE", { field, subField, value, studentId }, user);
+    logActivity("Full fees changed", { field, subField, value, studentId }, user);
     setCourseEntries(updatedEntries);
   };
 
@@ -522,7 +523,7 @@ const AddCourse = () => {
     }
     const updatedEntries = courseEntries.map((entry, i) => {
       if (i === index) {
-        logActivity("CHANGE_REGISTRATION", { field, value, studentId }, user);
+        logActivity("registration changed", { field, value, studentId }, user);
         return {
           ...entry,
           registration: { ...entry.registration, [field]: value },
@@ -550,7 +551,7 @@ const AddCourse = () => {
       }
       return entry;
     });
-    logActivity("UPDATE_INSTALLMENT", { index, field, value, studentId }, user);
+    logActivity("Installment updated", { index, field, value, studentId }, user);
     setCourseEntries(updatedEntries);
   };
 
@@ -561,7 +562,7 @@ const AddCourse = () => {
     }
     const updatedEntries = courseEntries.map((entry, i) => {
       if (i === index) {
-        logActivity("ADD_INSTALLMENT", { courseIndex: index, studentId }, user);
+        logActivity("Installment added", { courseIndex: index, studentId }, user);
         return {
           ...entry,
           installmentDetails: [
@@ -588,7 +589,7 @@ const AddCourse = () => {
     }
     const updatedEntries = courseEntries.map((entry, i) => {
       if (i === courseIndex) {
-        logActivity("REMOVE_INSTALLMENT", { courseIndex, index, studentId }, user);
+        logActivity("Installment removed", { courseIndex, index, studentId }, user);
         return {
           ...entry,
           installmentDetails: entry.installmentDetails.filter((_, j) => j !== index),
@@ -631,7 +632,7 @@ const AddCourse = () => {
       }
       return entry;
     });
-    logActivity("CHANGE_FINE", { field, subField, value, studentId }, user);
+    logActivity("Fine changed", { field, subField, value, studentId }, user);
     setCourseEntries(updatedEntries);
   };
 

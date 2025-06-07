@@ -336,11 +336,11 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
       if (partner) {
         await updateDoc(doc(db, "FinancePartner", partner.id), partnerData);
         toast.success("Finance Partner updated successfully!");
-        logActivity("UPDATE PARTNER ", { name: partnerName });
+        logActivity("Finance Partner updated", { name: partnerName });
       } else {
         const docRef = await addDoc(collection(db, "FinancePartner"), partnerData);
         toast.success("Finance Partner added successfully!");
-        logActivity("CREATE PARTNER", { name: partnerName, newPartnerId: docRef.id });
+        logActivity("Finance Partner created", { name: partnerName, newPartnerId: docRef.id });
       }
       resetForm();
       toggleSidebar();
@@ -360,7 +360,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     setTransactionCount(0);
     setNewContact({ name: "", countryCode: "+91", mobile: "", email: "" });
     setNewScheme({ plan: "", total_tenure: "", ratio: "", subvention_rate: "", description: "" });
-    logActivity("RESET_FORM", {});
+    // logActivity("RESET_FORM", {});
   };
 
   const handleAddContact = () => {
@@ -382,7 +382,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     ) {
       setContactPersons([...contactPersons, { ...newContact }]);
       setNewContact({ name: "", countryCode: "+91", mobile: "", email: "" });
-      logActivity("ADD CONTACT", { contactName: newContact.name });
+      logActivity("Contact added", { contactName: newContact.name });
     } else {
       toast.error("Please fill in all contact person details correctly. Mobile number must be 7-15 digits.");
       // logActivity("ADD_CONTACT_FAILED", { reason: "invalid input" });
@@ -409,7 +409,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     ) {
       setScheme([...scheme, { ...newScheme }]);
       setNewScheme({ plan: "", total_tenure: "", ratio: "", subvention_rate: "", description: "" });
-      logActivity("ADD SCHEME", { plan: newScheme.plan });
+      logActivity("Scheme added", { plan: newScheme.plan });
     } else {
       toast.error("Please fill in all scheme details.");
       // logActivity("ADD_SCHEME_FAILED", { reason: "invalid input" });
@@ -429,7 +429,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     }
     const contactName = contactPersons[index].name;
     setContactPersons(contactPersons.filter((_, i) => i !== index));
-    logActivity("REMOVE CONTACT", { contactName });
+    logActivity("Contact removed", { contactName });
   };
 
   const handleRemoveScheme = (index) => {
@@ -445,7 +445,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     }
     const plan = scheme[index].plan;
     setScheme(scheme.filter((_, i) => i !== index));
-    logActivity("REMOVE SCHEME", { plan });
+    logActivity("Scheme removed", { plan });
   };
 
   const handleAddressChange = (field, value) => {
@@ -461,7 +461,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     }
     setAddress((prev) => {
       const newAddress = { ...prev, [field]: value };
-      logActivity("CHANGE ADDRESS", { field, value });
+      logActivity("Address changed", { field, value });
       return newAddress;
     });
   };
@@ -478,7 +478,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
       return;
     }
     setPartnerName(value);
-    logActivity("CHANGE PARTNER NAME", { value });
+    logActivity("Partner name changed", { value });
   };
 
   const handleStatusChange = (value) => {
@@ -493,7 +493,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
       return;
     }
     setStatus(value);
-    logActivity("CHANGE STATUS", { value });
+    logActivity("Status changed", { value });
   };
 
   const handleNewContactChange = (field, value) => {
@@ -512,7 +512,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     }
     setNewContact((prev) => {
       const updated = { ...prev, [field]: value };
-      logActivity("CHANGE NEW CONTACT", { field, value });
+      logActivity("New Contact changed", { field, value });
       return updated;
     });
   };
@@ -530,7 +530,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     }
     setNewScheme((prev) => {
       const updated = { ...prev, [field]: value };
-      logActivity("CHANGE NEW SCHEME", { field, value });
+      logActivity("New Scheme changed", { field, value });
       return updated;
     });
   };

@@ -20,6 +20,7 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import AddSectionModal from "./AddSectionalModel";
 import AddMaterialModal from "./AddMaterialModal";
 import { useAuth } from "../../../../context/AuthContext";
+import { runTransaction } from "firebase/firestore";
 
 const EditCurriculum = () => {
   const { id } = useParams();
@@ -52,24 +53,71 @@ const EditCurriculum = () => {
     "Feedback",
   ];
 
-  const logActivity = async (action, details) => {
-    if (!user) return;
-    try {
-      await addDoc(collection(db, "activityLogs"), {
-        timestamp: serverTimestamp(),
-        userId: user.uid,
-        userEmail: user.email,
-        action,
-        details: {
-          curriculumId: id,
-          curriculumName: curriculum?.name || "Unknown",
-          ...details,
-        },
-      });
-    } catch (err) {
-      setError("Failed to log activity.");
-    }
+const logActivity = async (action, details) => {
+  if (!user?.email) return;
+
+  const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+  const logEntry = {
+    action,
+    details,
+    timestamp: new Date().toISOString(),
+    userEmail: user.email,
+    userId: user.uid,
+    section: "Curriculum",
+    // adminId: adminId || "N/A",
   };
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const logDoc = await transaction.get(activityLogRef);
+      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+      // Ensure logs is an array and contains only valid data
+      if (!Array.isArray(logs)) {
+        logs = [];
+      }
+
+      // Append the new log entry
+      logs.push(logEntry);
+
+      // Trim to the last 1000 entries if necessary
+      if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+      }
+
+      // Update the document with the new logs array
+      transaction.set(activityLogRef, { logs }, { merge: true });
+    });
+    console.log("Activity logged successfully");
+  } catch (error) {
+    console.error("Error logging activity:", error);
+    // toast.error("Failed to log activity");
+  }
+};
+  
+  const fetchLogs = useCallback(() => {
+    if (!isAdmin) return;
+    const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const allLogs = [];
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          (data.logs || []).forEach((log) => {
+            allLogs.push({ id: doc.id, ...log });
+          });
+        });
+        allLogs.sort(
+          (a, b) =>
+            (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+        );
+        setLogs(allLogs);
+      },
+    );
+    return unsubscribe;
+  }, [isAdmin]);
 
   useEffect(() => {
     const fetchCurriculum = async () => {
@@ -236,7 +284,7 @@ const EditCurriculum = () => {
         }
       }
 
-      await logActivity("Reordered material", {
+      await logActivity("Material recorded", {
         materialId: result.draggableId,
         sourceSectionId,
         destSectionId,
@@ -308,7 +356,7 @@ const EditCurriculum = () => {
       }
 
       await deleteDoc(doc(db, `curriculums/${id}/sections`, sectionId));
-      await logActivity("Deleted section", {
+      await logActivity("Section deleted", {
         sectionId,
         sectionName: sections.find((s) => s.id === sectionId)?.name || "Unknown",
         materialsDeleted: materials.length,
@@ -362,7 +410,7 @@ const EditCurriculum = () => {
         );
       }
       window.open(url, "_blank");
-      await logActivity("Opened material", {
+      await logActivity("Material opened", {
         materialId: material.id,
         materialName: material.name,
         materialType: material.type,
@@ -394,7 +442,7 @@ const EditCurriculum = () => {
         }
       }
 
-      await logActivity("Deleted material", {
+      await logActivity("Material deleted", {
         materialId,
         materialName:
           sections

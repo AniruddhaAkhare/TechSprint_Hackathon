@@ -304,7 +304,7 @@ export default function EditStaff() {
         },
       }));
       toast.success(`${docType} uploaded successfully`);
-      await logActivity("UPLOAD DOCUMENT", { docType, fileName: file.name });
+      await logActivity("Document uploaded", { docType, fileName: file.name });
     } catch (error) {
       //console.error(`Error in handleDocumentEdit for ${docType}:`, error);
       toast.error(`Failed to upload ${docType}: ${error.message}`);
@@ -337,7 +337,7 @@ export default function EditStaff() {
     } else {
       setStaff((prev) => ({ ...prev, [name]: value }));
     }
-    logActivity("FIELD CHANGED", { field: name, value });
+    logActivity("Field changed", { field: name, value });
   };
 
   const cleanPhoneNumber = (phone) => {
@@ -354,7 +354,7 @@ export default function EditStaff() {
       ...prev,
       education_details: [...prev.education_details, { level: '', institute: '', degree: '', specialization: '', grade: '', passingyr: '' }],
     }));
-    logActivity("ADD EDUCATION", {});
+    logActivity("Education details added", {});
   };
 
   const addExperience = () => {
@@ -366,7 +366,7 @@ export default function EditStaff() {
       ...prev,
       experience_details: [...prev.experience_details, { companyName: '', designation: '', salary: '', years: '', description: '' }],
     }));
-    logActivity("ADD EXPERIENCE", {});
+    logActivity("Experience details added", {});
   };
 
   const deleteEducation = (index) => {
@@ -378,7 +378,7 @@ export default function EditStaff() {
       ...prev,
       education_details: prev.education_details.filter((_, i) => i !== index),
     }));
-    logActivity("DELETE EDUCATION", { index });
+    logActivity("Educational details deleted", { index });
   };
 
   const deleteExperience = (index) => {
@@ -390,7 +390,7 @@ export default function EditStaff() {
       ...prev,
       experience_details: prev.experience_details.filter((_, i) => i !== index),
     }));
-    logActivity("DELETE EXPERIENCE", { index });
+    logActivity("Experience details deleted", { index });
   };
 
   // Validation
@@ -464,7 +464,7 @@ export default function EditStaff() {
 
       await updateDoc(staffRef, updateData);
       toast.success("Staff updated successfully!");
-      await logActivity("UPDATE STAFF SUCCESS", { updatedFields: Object.keys(updateData) });
+      await logActivity("Staff details updated", { updatedFields: Object.keys(updateData) });
       navigate("/staff");
     } catch (error) {
       //console.error("Error updating staff:", error);
@@ -483,14 +483,14 @@ export default function EditStaff() {
       try {
         await deleteDoc(doc(db, "Users", staffId));
         toast.success("Staff deleted successfully!");
-        await logActivity("DELETE STAFF SUCCESS", {});
+        await logActivity("Staff details deleted", {});
         navigate("/staff-and-users");
       } catch (error) {
         //console.error("Error deleting staff:", error);
         toast.error("Failed to delete staff");
       }
     } else {
-      await logActivity("CANCEL DELETE STAFF", {});
+      // await logActivity("CANCEL DELETE STAFF", {});
     }
   };
 
@@ -563,7 +563,7 @@ export default function EditStaff() {
                     value={countryCode}
                     onChange={(e) => {
                       setCountryCode(e.target.value);
-                      logActivity("CHANGE COUNTRY CODE", { field: "phone", value: e.target.value });
+                      logActivity("Country code changed", { field: "phone", value: e.target.value });
                     }}
                     disabled={!canUpdate}
                     className="w-1/3 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -672,7 +672,7 @@ export default function EditStaff() {
                     value={emergencyCountryCode}
                     onChange={(e) => {
                       setEmergencyCountryCode(e.target.value);
-                      logActivity("CHANGE COUNTRY CODE", { field: "emergency_phone", value: e.target.value });
+                      logActivity("Country Code changed", { field: "emergency_phone", value: e.target.value });
                     }}
                     disabled={!canUpdate}
                     className="w-1/3 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"

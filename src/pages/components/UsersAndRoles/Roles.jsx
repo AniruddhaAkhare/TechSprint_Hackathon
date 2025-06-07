@@ -169,7 +169,7 @@ export default function Roles() {
       setRoles([...roles, { id: newRoleId, ...newRole }]);
 
       // Log the creation
-      await logActivity("Created role", {
+      await logActivity("Role created", {
         roleId: newRoleId,
         name: newRoleName,
         permissions: newRolePermissions,
@@ -231,7 +231,7 @@ export default function Roles() {
       setRoles(roles.map(r => (r.id === editingRole.id ? { ...r, permissions: editingRole.permissions } : r)));
 
       // Log the update
-      await logActivity("Updated role", {
+      await logActivity("Role updated", {
         roleId: editingRole.id,
         name: editingRole.name,
         changes: {
@@ -264,7 +264,7 @@ export default function Roles() {
       await deleteDoc(doc(db, 'roles', deleteId));
 
       // Log the deletion
-      await logActivity("Deleted role", {
+      await logActivity("Role deleted", {
         roleId: deleteId,
         name: roleToDelete.name,
         permissions: roleToDelete.permissions,

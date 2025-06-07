@@ -129,7 +129,7 @@ const QuestionTemplate = () => {
                 await updateDoc(templateRef, templateData);
                 setTemplates(templates.map(t => (t.id === editingTemplate.id ? { id: t.id, ...templateData } : t)));
                 // Log update activity
-                await logActivity('Updated template', {
+                await logActivity('Template updated', {
                     templateId: editingTemplate.id,
                     name: templateData.name,
                     oldName: editingTemplate.name,
@@ -144,7 +144,7 @@ const QuestionTemplate = () => {
                 const docRef = await addDoc(collection(db, 'templates'), templateData);
                 setTemplates([...templates, { id: docRef.id, ...templateData }]);
                 // Log create activity
-                await logActivity('Created template', {
+                await logActivity('Template created', {
                     templateId: docRef.id,
                     name: templateData.name,
                     subject: templateData.subject,
@@ -177,7 +177,7 @@ const QuestionTemplate = () => {
             setTemplates(templates.filter(t => t.id !== id));
             setSelectedTemplates(selectedTemplates.filter(selectedId => selectedId !== id));
             // Log delete activity
-            await logActivity('Deleted template', {
+            await logActivity('Template deleted', {
                 templateId: id,
                 name: templateToDelete?.name || 'Unknown',
                 subject: templateToDelete?.subject,
@@ -200,7 +200,7 @@ const QuestionTemplate = () => {
             await Promise.all(selectedTemplates.map(id => deleteDoc(doc(db, 'templates', id))));
             setTemplates(templates.filter(t => !selectedTemplates.includes(t.id)));
             // Log bulk delete activity
-            await logActivity('Deleted multiple templates', {
+            await logActivity('Multiple templated deleted', {
                 templateIds: selectedTemplates,
                 count: selectedTemplates.length,
                 templates: templatesToDelete.map(t => ({

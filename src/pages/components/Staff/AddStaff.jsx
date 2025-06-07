@@ -301,7 +301,7 @@ export default function AddStaff() {
       }
 
       // Log Activity
-      await logActivity("Created staff", {
+      await logActivity("Staff created", {
         userId: authUser.uid,
         email,
         name: displayName,

@@ -301,7 +301,7 @@ export default function Sessions() {
         try {
             const sessionToDelete = sessions.find(s => s.id === deleteId);
             await deleteDoc(doc(db, "Sessions", deleteId));
-            await logActivity("Deleted session", {
+            await logActivity("Session deleted", {
                 name: sessionToDelete?.name || "Unknown",
             });
             setOpenDelete(false);
@@ -316,7 +316,7 @@ export default function Sessions() {
 
     const handleSessionSubmit = async (sessionData) => {
         try {
-            await logActivity(sessionData.id ? "Updated session" : "Created session", {
+            await logActivity(sessionData.id ? "Session updated" : "Session created", {
                 name: sessionData.name
             });
             handleClose();

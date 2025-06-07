@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { runTransaction } from "firebase/firestore";
 
 const domains = ["IT", "Healthcare", "Finance", "Education", "Manufacturing", "Retail", "Other"];
 const cities = [
@@ -77,19 +78,70 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
 
   // Activity logging function
   const logActivity = async (action, details) => {
+    if (!user?.email) return;
+  
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+  
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Company",
+      // adminId: adminId || "N/A",
+    };
+  
     try {
-      const activityLog = {
-        action,
-        details: { companyId: company?.id || null, ...details },
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email || "anonymous",
-        userId: user.uid
-      };
-      await addDoc(collection(db, "activityLogs"), activityLog);
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+  
+        // Ensure logs is an array and contains only valid data
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+  
+        // Append the new log entry
+        logs.push(logEntry);
+  
+        // Trim to the last 1000 entries if necessary
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+  
+        // Update the document with the new logs array
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully");
     } catch (error) {
-      //console.error("Error logging activity:", error);
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+    
+    const fetchLogs = useCallback(() => {
+      if (!isAdmin) return;
+      const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const allLogs = [];
+          snapshot.docs.forEach((doc) => {
+            const data = doc.data();
+            (data.logs || []).forEach((log) => {
+              allLogs.push({ id: doc.id, ...log });
+            });
+          });
+          allLogs.sort(
+            (a, b) =>
+              (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+          );
+          setLogs(allLogs);
+        },
+      );
+      return unsubscribe;
+    }, [isAdmin]);
 
   useEffect(() => {
     if (!canDisplay) {
@@ -144,7 +196,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
     setTransactionCount(0);
     setNewPOC({ name: "", countryCode: "+91", mobile: "", email: "", designation: "", linkedInProfile: "" });
     setCompanyType("");
-    logActivity("RESET_FORM", {});
+    // logActivity("RESET_FORM", {});
   };
 
   const validateEmail = (email) => {
@@ -181,7 +233,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
     } else {
       setCitySuggestions([]);
     }
-    logActivity("CHANGE_CITY", { value });
+    logActivity("City Changed", { value });
   };
 
   const handleSubmit = async (e) => {
@@ -226,14 +278,14 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
           updatedAt: serverTimestamp(),
         });
         toast.success("Company updated successfully!");
-        logActivity("UPDATE_COMPANY", { name: companyName });
+        logActivity("Company Updated", { name: companyName });
       } else {
         const docRef = await addDoc(collection(db, "Companies"), {
           ...companyData,
           createdAt: serverTimestamp(),
         });
         toast.success("Company added successfully!");
-        logActivity("CREATE_COMPANY", { name: companyName, newCompanyId: docRef.id });
+        logActivity("Company created", { name: companyName, newCompanyId: docRef.id });
       }
       resetForm();
       toggleSidebar();
@@ -274,7 +326,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
     }
     setPointsOfContact([...pointsOfContact, { ...newPOC }]);
     setNewPOC({ name: "", countryCode: "+91", mobile: "", email: "", designation: "", linkedInProfile: "" });
-    logActivity("ADD_POC", { pocName: newPOC.name });
+    logActivity("POC added", { pocName: newPOC.name });
   };
 
   const handleRemovePOC = (index) => {
@@ -288,7 +340,7 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
     }
     const pocName = pointsOfContact[index].name;
     setPointsOfContact(pointsOfContact.filter((_, i) => i !== index));
-    logActivity("REMOVE_POC", { pocName });
+    logActivity("POC removed", { pocName });
   };
 
   const handlePOCChange = (field, value) => {
@@ -305,14 +357,14 @@ const AddCompanies = ({ isOpen, toggleSidebar, company }) => {
     }
     setNewPOC((prev) => {
       const updated = { ...prev, [field]: value };
-      logActivity("CHANGE_NEW_POC", { field, value });
+      logActivity("POC changed", { field, value });
       return updated;
     });
   };
 
   const handleClose = () => {
     toggleSidebar();
-    logActivity("CLOSE_SIDEBAR", {});
+    // logActivity("CLOSE_SIDEBAR", {});
   };
 
   if (!canDisplay) return null;

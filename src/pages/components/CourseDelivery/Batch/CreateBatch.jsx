@@ -321,7 +321,7 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user
           (studentId) => !batch.students?.includes(studentId)
         );
         await logActivity(
-          "UPDATE_BATCH",
+          "Batch updated",
           {
             // batchId: batch.id,
             name: batchData.batchName,
@@ -342,7 +342,7 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user
         });
         batchId = docRef.id;
         await logActivity(
-          "CREATE_BATCH",
+          "batch created",
           {
             // batchId: docRef.id,
             name: batchData.batchName,

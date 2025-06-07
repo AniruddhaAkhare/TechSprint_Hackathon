@@ -278,7 +278,7 @@ export default function StudentDetails() {
     }
     const batch = writeBatch(db);
     batch.update(doc(db, "student", studentId), { status: newStatus });
-    logActivity("UPDATE STUDENT STATUS", { studentId, newStatus });
+    logActivity("Student status updated", { studentId, newStatus });
     try {
       await batch.commit();
       toast.success(`Status updated to ${newStatus}`);
@@ -295,7 +295,7 @@ export default function StudentDetails() {
     }
     const batch = writeBatch(db);
     batch.delete(doc(db, "student", deleteId));
-    logActivity("DELETE STUDENT", { student: deleteId.Name });
+    logActivity("Student details deleted", { student: deleteId.Name });
     try {
       await batch.commit();
       toast.success("Student deleted successfully!");

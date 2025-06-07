@@ -343,7 +343,7 @@ export default function Courses() {
       const courseSnapshot = await getDoc(courseRef);
       const courseData = courseSnapshot.exists() ? courseSnapshot.data() : {};
       await deleteDoc(courseRef);
-      await logActivity("Deleted course", { name: courseData.name || "Unknown" });
+      await logActivity("Course deleted", { name: courseData.name || "Unknown" });
       setOpenDelete(false);
       setDeleteMessage(
         "Are you sure you want to delete this course? This action cannot be undone."

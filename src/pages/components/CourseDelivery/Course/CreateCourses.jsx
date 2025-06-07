@@ -124,12 +124,12 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
           return acc;
         }, {});
         if (Object.keys(changes).length > 0) {
-          await logActivity("Updated course", { name: courseName, changes });
+          await logActivity("Course updated", { name: courseName, changes });
         }
         alert("Course updated successfully!");
       } else {
         await addDoc(collection(db, "Course"), courseData);
-        await logActivity("Created course", { name: courseName });
+        await logActivity("Course Created", { name: courseName });
         alert("Course created successfully!");
       }
       resetForm();

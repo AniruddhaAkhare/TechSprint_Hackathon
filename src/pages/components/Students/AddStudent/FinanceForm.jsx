@@ -1152,7 +1152,7 @@ const FinanceForm = ({
         const deleteCommand = new DeleteObjectCommand({ Bucket: bucketName, Key: key });
         await s3Client.send(deleteCommand);
         console.log(`Deleted existing document: ${key}`);
-        logActivity("DELETE_DOCUMENT_SUCCESS", { studentId, courseIndex, docType, key }, user);
+        logActivity("Document deleted", { studentId, courseIndex, docType, key }, user);
       }
 
       const timestamp = Date.now();
@@ -1188,12 +1188,12 @@ const FinanceForm = ({
       handleFinanceChange(courseIndex, docType, "", s3Url);
       handleFinanceChange(courseIndex, `${docType}Name`, "", file.name);
       setUploadProgress((prev) => ({ ...prev, [docType]: 100 }));
-      logActivity("UPLOAD_DOCUMENT_SUCCESS", { studentId, courseIndex, docType, fileName: file.name, url: s3Url }, user);
+      logActivity("Document uploaded", { studentId, courseIndex, docType, fileName: file.name, url: s3Url }, user);
     } catch (err) {
       console.error("Upload error:", err);
       setAttachmentError((prev) => ({ ...prev, [docType]: `Failed to upload ${docType}: ${err.message}` }));
       setUploadProgress((prev) => ({ ...prev, [docType]: -1 }));
-      logActivity("UPLOAD_DOCUMENT_ERROR", { studentId, courseIndex, docType, error: err.message }, user);
+      // logActivity("UPLOAD_DOCUMENT_ERROR", { studentId, courseIndex, docType, error: err.message }, user);
     }
   };
 
@@ -1214,11 +1214,11 @@ const FinanceForm = ({
       });
       const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
       window.open(url, "_blank");
-      logActivity("VIEW_DOCUMENT_SUCCESS", { studentId, courseIndex, docType, url }, user);
+      logActivity("Document viewed", { studentId, courseIndex, docType, url }, user);
     } catch (err) {
       console.error(`Failed to view ${docType}:`, err);
       setAttachmentError((prev) => ({ ...prev, [docType]: `Failed to view ${docType}: ${err.message}` }));
-      logActivity("VIEW_DOCUMENT_ERROR", { studentId, courseIndex, docType, error: err.message, url: s3Url }, user);
+      // logActivity("VIEW_DOCUMENT_ERROR", { studentId, courseIndex, docType, error: err.message, url: s3Url }, user);
     }
   };
 
@@ -1232,12 +1232,12 @@ const FinanceForm = ({
         key = decodeURIComponent(key);
         const command = new DeleteObjectCommand({ Bucket: bucketName, Key: key });
         await s3Client.send(command);
-        logActivity("DELETE_DOCUMENT_SUCCESS", { studentId, courseIndex, docType, key }, user);
+        logActivity("Documentd deleted", { studentId, courseIndex, docType, key }, user);
       }
       setAttachmentError((prev) => ({ ...prev, [docType]: null }));
     } catch (err) {
       setAttachmentError((prev) => ({ ...prev, [docType]: `Failed to remove ${docType}: ${err.message}` }));
-      logActivity("DELETE_DOCUMENT_ERROR", { studentId, courseIndex, docType, error: err.message }, user);
+      // logActivity("DELETE_DOCUMENT_ERROR", { studentId, courseIndex, docType, error: err.message }, user);
     }
   };
 

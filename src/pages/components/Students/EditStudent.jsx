@@ -439,7 +439,7 @@ export default function EditStudent() {
         } else {
             setStudent(prev => ({ ...prev, [name]: value }));
         }
-        logActivity("FIELD CHANGED", { field: name, value });
+        logActivity("Field changed", { field: name, value });
     };
 
     const addCourse = () => {
@@ -448,7 +448,7 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, courseDetails: [...prev.courseDetails, { courseName: '', batch: '', branch: '', mode: '', fee: 0 }] }));
-        logActivity("ADD COURSE", {});
+        logActivity("Course added", {});
     };
 
     const addEducation = () => {
@@ -457,7 +457,7 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, educationDetails: [...prev.educationDetails, { level: '', institute: '', degree: '', specialization: '', grade: '', passingyr: '' }] }));
-        logActivity("ADD EDUCATION", {});
+        logActivity("Education details added", {});
     };
 
 
@@ -467,7 +467,7 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, experienceDetails: [...prev.experienceDetails, { companyName: '', designation: '', salary: '', years: '', description: '' }] }));
-        logActivity("ADD EXPERIENCE", {});
+        logActivity("Experience details added", {});
     };
 
 
@@ -477,7 +477,7 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, educationDetails: prev.educationDetails.filter((_, i) => i !== index) }));
-        logActivity("DELETE EDUCATION", { index });
+        logActivity("Educational details added", { index });
     };
 
 
@@ -489,7 +489,7 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, experienceDetails: prev.experienceDetails.filter((_, i) => i !== index) }));
-        logActivity("DELETE EXPERIENCE", { index });
+        logActivity("Experience details deleted", { index });
     };
 
     const handleAddCenter = () => {
@@ -500,7 +500,7 @@ export default function EditStudent() {
         if (selectedCenter && !student.preferred_centers.includes(selectedCenter)) {
             setStudent(prev => ({ ...prev, preferred_centers: [...prev.preferred_centers, selectedCenter] }));
             setSelectedCenter("");
-            logActivity("ADD CENTER", { centerId: selectedCenter });
+            logActivity("crenter added", { centerId: selectedCenter });
         }
     };
 
@@ -510,7 +510,7 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, preferred_centers: prev.preferred_centers.filter(id => id !== centerId) }));
-        logActivity("REMOVE CENTER", { centerId });
+        logActivity("Center removed", { centerId });
     };
 
     // Validate and format date for Firestore Timestamp
@@ -568,7 +568,7 @@ export default function EditStudent() {
             });
 
             toast.success("Student updated successfully!");
-            logActivity("UPDATE STUDENT", student.Name);
+            logActivity("Student updated", student.Name);
             navigate("/studentdetails");
         } catch (error) {
             //console.error("Error updating student:", error);
@@ -586,7 +586,7 @@ export default function EditStudent() {
             try {
                 await deleteDoc(doc(db, "student", studentId));
                 toast.success("Student deleted successfully!");
-                logActivity("DELETE STUDENT", student.Name);
+                logActivity("Student deleted", student.Name);
                 navigate("/studentdetails");
             } catch (error) {
                 //console.error("Error deleting student:", error);
@@ -687,7 +687,7 @@ export default function EditStudent() {
                                             value={countryCode}
                                             onChange={(e) => {
                                                 setCountryCode(e.target.value);
-                                                logActivity("CHANGE COUNTRY CODE", { field: "phone", value: e.target.value });
+                                                logActivity("Country code changed", { field: "phone", value: e.target.value });
                                             }}
                                             disabled={!canUpdate}
                                             className="w-1/3 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -759,7 +759,7 @@ export default function EditStudent() {
                                             value={guardianCountryCode}
                                             onChange={(e) => {
                                                 setGuardianCountryCode(e.target.value);
-                                                logActivity("CHANGE COUNTRY CODE", { field: "guardian_phone", value: e.target.value });
+                                                logActivity("Country Code changed", { field: "guardian_phone", value: e.target.value });
                                             }}
                                             disabled={!canUpdate}
                                             className="w-1/3 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1220,7 +1220,7 @@ export default function EditStudent() {
                                             value={selectedCenter}
                                             onChange={(e) => {
                                                 setSelectedCenter(e.target.value);
-                                                logActivity("SELECT CENTER", { centerId: e.target.value });
+                                                // logActivity("SELECT CENTER", { centerId: e.target.value });
                                             }}
                                             disabled={!canUpdate}
                                             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

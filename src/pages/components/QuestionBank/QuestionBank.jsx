@@ -96,7 +96,7 @@ const logActivity = async (action, details) => {
         const questionRef = doc(db, 'questions', editingQuestion.id);
         await updateDoc(questionRef, questionData);
         setQuestions(questions.map(q => (q.id === editingQuestion.id ? { id: q.id, ...questionData } : q)));
-        await logActivity('Updated question', {
+        await logActivity('Question updated', {
           questionId: editingQuestion.id,
           question: questionData.question,
           oldQuestion: editingQuestion.question,
@@ -110,7 +110,7 @@ const logActivity = async (action, details) => {
       } else if (canCreate) {
         const docRef = await addDoc(collection(db, 'questions'), questionData);
         setQuestions([...questions, { id: docRef.id, ...questionData }]);
-        await logActivity('Created question', {
+        await logActivity('Question created', {
           questionId: docRef.id,
           question: questionData.question,
           type: questionData.type,
@@ -132,7 +132,7 @@ const logActivity = async (action, details) => {
       await deleteDoc(doc(db, 'questions', id));
       setQuestions(questions.filter(q => q.id !== id));
       setSelectedQuestions(selectedQuestions.filter(selectedId => selectedId !== id));
-      await logActivity('Deleted question', {
+      await logActivity('Question deleted', {
         questionId: id,
         question: questionToDelete?.question || 'Unknown',
         type: questionToDelete?.type,
@@ -153,7 +153,7 @@ const logActivity = async (action, details) => {
       const questionsToDelete = questions.filter(q => selectedQuestions.includes(q.id));
       await Promise.all(selectedQuestions.map(id => deleteDoc(doc(db, 'questions', id))));
       setQuestions(questions.filter(q => !selectedQuestions.includes(q.id)));
-      await logActivity('Deleted multiple questions', {
+      await logActivity('Multiple question deleted', {
         questionIds: selectedQuestions,
         count: selectedQuestions.length,
         questions: questionsToDelete.map(q => ({

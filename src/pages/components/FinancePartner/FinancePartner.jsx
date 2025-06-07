@@ -166,7 +166,7 @@ export default function FinancePartner() {
       fetchPartners();
       setOpenDelete(false);
       setDeleteMessage("Are you sure you want to delete this partner? This action cannot be undone.");
-      logActivity('DELETE PARTNER SUCCESS', { partnerId: deleteId });
+      logActivity('Finance Partner deleted', { partnerId: deleteId });
     } catch (err) {
       // //console.error("Error deleting partner:", err);
       setDeleteMessage("An error occurred while trying to delete the partner.");

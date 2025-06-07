@@ -203,7 +203,7 @@ const AdminLogs = () => {
 
   // Filter logs based on section, user, and date range
   const filteredLogs = logs.filter((log) => {
-    const sectionMatch = !sectionFilter || log.action === sectionFilter;
+    const sectionMatch = !sectionFilter || log.section === sectionFilter;
     const userMatch = !userFilter || log.displayName === userFilter || (log.userId === userFilter && log.displayName === 'Unknown');
     const dateMatch = !dateRange.start && !dateRange.end
       ? true
@@ -226,7 +226,7 @@ const AdminLogs = () => {
   const currentLogs = filteredLogs.slice(startIndex, endIndex);
 
   // Get unique sections and users for filter options
-  const sections = [...new Set(logs.map((log) => log.action).filter(Boolean))].sort();
+  const sections = [...new Set(logs.map((log) => log.section).filter(Boolean))].sort();
   const users = [...new Set(
     logs.map((log) => log.displayName !== 'Unknown' ? log.displayName : log.userId ? `${log.displayName} (${log.userId})` : null).filter(Boolean)
   )].sort();
@@ -330,7 +330,7 @@ const AdminLogs = () => {
         ) : (
           <>
             <div className="overflow-x-auto bg-white rounded-lg shadow-md">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 overflow-y-auto">
                 <thead className="bg-gray-100">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -341,6 +341,9 @@ const AdminLogs = () => {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Section
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Action
@@ -362,7 +365,8 @@ const AdminLogs = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {log.userEmail}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{log.action}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{log.section}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{log.action}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{formatDetails(log.details)}</td>
                     </tr>
                   ))}
