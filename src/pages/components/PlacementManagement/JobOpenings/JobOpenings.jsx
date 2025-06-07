@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
-import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, updateDoc, getDoc, arrayUnion, serverTimestamp, where } from "firebase/firestore";
+import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, updateDoc, getDoc, arrayUnion, serverTimestamp, where, writeBatch } from "firebase/firestore";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 import { useAuth } from "../../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +25,7 @@ export default function JobOpenings() {
   const [deleteId, setDeleteId] = useState(null);
   const [deleteMessage, setDeleteMessage] = useState("Are you sure you want to delete this job opening? This action cannot be undone.");
   const [userDisplayName, setUserDisplayName] = useState("");
+  const [migrationInProgress, setMigrationInProgress] = useState(false);
 
   const JobCollectionRef = collection(db, "JobOpenings");
 
@@ -36,6 +37,7 @@ export default function JobOpenings() {
   // Check if user is a recruiter using the correct role ID
   const RECRUITER_ROLE_ID = "sTRunlCqsvQ8PJRyRuPg";
   const isRecruiter = userRole === RECRUITER_ROLE_ID;
+  const isAdmin = userRole === "admin" || rolePermissions?.isAdmin;
 
   // Fetch user displayName from Users collection
   useEffect(() => {
@@ -76,6 +78,80 @@ export default function JobOpenings() {
     }
   };
 
+  // Helper function to check if current user performed the job creation
+  const isJobPerformedByCurrentUser = (job) => {
+    if (!job.history || !Array.isArray(job.history)) return false;
+    
+    // Find the "Created" action in history
+    const createdAction = job.history.find(historyItem => 
+      historyItem.action === "Created" && historyItem.performedBy === userDisplayName
+    );
+    
+    return !!createdAction;
+  };
+
+  // Auto-migration function to add createdBy field to existing jobs (keeping for backward compatibility)
+  const autoMigrateJobOpenings = async () => {
+    if (!user?.uid || migrationInProgress) return;
+    
+    try {
+      setMigrationInProgress(true);
+      console.log("Checking for jobs without createdBy field...");
+      
+      // Get all job openings
+      const allJobsQuery = query(JobCollectionRef, orderBy("createdAt", "desc"));
+      const snapshot = await getDocs(allJobsQuery);
+      
+      const jobsWithoutCreatedBy = [];
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (!data.createdBy) {
+          jobsWithoutCreatedBy.push({
+            id: doc.id,
+            ...data
+          });
+        }
+      });
+
+      if (jobsWithoutCreatedBy.length === 0) {
+        console.log("All jobs already have createdBy field");
+        return;
+      }
+
+      console.log(`Found ${jobsWithoutCreatedBy.length} jobs without createdBy field`);
+      
+      // AUTO-ASSIGN TO CURRENT USER (works for both admins and recruiters)
+      const batch = writeBatch(db);
+      
+      jobsWithoutCreatedBy.forEach((job) => {
+        const jobRef = doc(db, "JobOpenings", job.id);
+        batch.update(jobRef, {
+          createdBy: user.uid,
+          updatedAt: serverTimestamp(),
+          migrationNote: `Auto-assigned to ${isAdmin ? 'admin' : 'recruiter'} ${user.email} on ${new Date().toISOString()}`
+        });
+      });
+
+      await batch.commit();
+      console.log(`Successfully updated ${jobsWithoutCreatedBy.length} jobs with createdBy field`);
+      toast.success(`Migration completed! Assigned ${jobsWithoutCreatedBy.length} legacy job openings to you.`);
+      
+      // Log the migration activity
+      await logActivity("AUTO_MIGRATION", {
+        updatedJobs: jobsWithoutCreatedBy.length,
+        assignedTo: user.uid,
+        userEmail: user.email,
+        userRole: isAdmin ? 'admin' : 'recruiter'
+      });
+      
+    } catch (error) {
+      console.error("Error during auto-migration:", error);
+      toast.error(`Migration failed: ${error.message}`);
+    } finally {
+      setMigrationInProgress(false);
+    }
+  };
+
   const toggleAddSidebar = () => setIsAddOpen((prev) => !prev);
 
   const handleSearch = (e) => {
@@ -101,38 +177,45 @@ export default function JobOpenings() {
   const fetchJobOpenings = async () => {
     try {
       setLoading(true);
-      let q;
       
-      // If user is a recruiter, only fetch job openings created by them
-      if (isRecruiter && user?.uid) {
-        console.log("Fetching jobs for recruiter:", user.uid);
-        q = query(
-          JobCollectionRef, 
-          where("createdBy", "==", user.uid),
-          orderBy("createdAt", "desc")
-        );
-      } else {
-        // For other roles (admin, hr, etc.), fetch all job openings
-        console.log("Fetching all jobs for non-recruiter role");
-        q = query(JobCollectionRef, orderBy("createdAt", "desc"));
-      }
-      
+      // Fetch all job openings first
+      const q = query(JobCollectionRef, orderBy("createdAt", "desc"));
       const snapshot = await getDocs(q);
-      const jobData = snapshot.docs.map((doc) => ({
+      const allJobData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
       
-      console.log(`Fetched ${jobData.length} job openings for user role: ${userRole}`);
+      console.log(`Fetched ${allJobData.length} total job openings`);
       
-      setJobOpenings(jobData);
+      let filteredJobData = allJobData;
+      
+      // If user is a recruiter, filter by performedBy in history
+      if (isRecruiter && userDisplayName) {
+        console.log("Filtering jobs for recruiter:", userDisplayName);
+        filteredJobData = allJobData.filter(job => isJobPerformedByCurrentUser(job));
+        console.log(`After performedBy filtering: ${filteredJobData.length} jobs for recruiter ${userDisplayName}`);
+      } else if (!isAdmin) {
+        // For non-admin, non-recruiter roles, also filter by performedBy
+        filteredJobData = allJobData.filter(job => isJobPerformedByCurrentUser(job));
+        console.log(`After performedBy filtering: ${filteredJobData.length} jobs for user ${userDisplayName}`);
+      }
+      // Admins see all jobs
+      
+      setJobOpenings(filteredJobData);
       
       // Reset selected job if it's not in the filtered results
-      if (selectedJob && !jobData.find(job => job.id === selectedJob.id)) {
+      if (selectedJob && !filteredJobData.find(job => job.id === selectedJob.id)) {
         setSelectedJob(null);
-      } else if (jobData.length > 0 && !selectedJob) {
-        setSelectedJob(jobData[0]);
+      } else if (filteredJobData.length > 0 && !selectedJob) {
+        setSelectedJob(filteredJobData[0]);
       }
+
+      // Run auto-migration for both admins AND recruiters to assign legacy jobs
+      if ((isAdmin || isRecruiter) && !migrationInProgress) {
+        await autoMigrateJobOpenings();
+      }
+      
     } catch (err) {
       console.error("Error fetching job openings:", err);
       toast.error("Failed to fetch job openings: " + err.message);
@@ -147,11 +230,11 @@ export default function JobOpenings() {
       return;
     }
     
-    // Only fetch if user is loaded
-    if (user?.uid) {
+    // Only fetch if user is loaded and userDisplayName is available
+    if (user?.uid && userDisplayName) {
       fetchJobOpenings();
     }
-  }, [canDisplay, navigate, isRecruiter, user?.uid, userRole]);
+  }, [canDisplay, navigate, isRecruiter, user?.uid, userRole, userDisplayName]);
 
   const handleCreateJobClick = () => {
     if (!canCreate) {
@@ -169,8 +252,8 @@ export default function JobOpenings() {
       return;
     }
     
-    // Check if recruiter is trying to edit a job they didn't create
-    if (isRecruiter && job.createdBy !== user.uid) {
+    // CRITICAL: Check if recruiter is trying to edit a job they didn't perform
+    if (isRecruiter && !isJobPerformedByCurrentUser(job)) {
       toast.error("You can only edit job openings created by you.");
       return;
     }
@@ -186,9 +269,9 @@ export default function JobOpenings() {
       return;
     }
     
-    // Check if recruiter is trying to delete a job they didn't create
+    // CRITICAL: Check if recruiter is trying to delete a job they didn't perform
     const jobToDelete = jobOpenings.find(job => job.id === jobId);
-    if (isRecruiter && jobToDelete?.createdBy !== user.uid) {
+    if (isRecruiter && !isJobPerformedByCurrentUser(jobToDelete)) {
       toast.error("You can only delete job openings created by you.");
       return;
     }
@@ -222,8 +305,8 @@ export default function JobOpenings() {
       
       const jobData = jobDoc.data();
       
-      // Additional security check for recruiters
-      if (isRecruiter && jobData.createdBy !== user.uid) {
+      // CRITICAL: Additional security check for recruiters
+      if (isRecruiter && !isJobPerformedByCurrentUser(jobData)) {
         throw new Error("You can only delete job openings created by you.");
       }
       
@@ -275,9 +358,9 @@ export default function JobOpenings() {
 
   const exportToExcel = async (jobId) => {
     try {
-      // Check if recruiter can export this job's applications
+      // CRITICAL: Check if recruiter can export this job's applications
       const jobToExport = jobOpenings.find(job => job.id === jobId);
-      if (isRecruiter && jobToExport?.createdBy !== user.uid) {
+      if (isRecruiter && !isJobPerformedByCurrentUser(jobToExport)) {
         toast.error("You can only export applications for job openings created by you.");
         return;
       }
@@ -315,9 +398,9 @@ export default function JobOpenings() {
 
   const exportToPDF = async (jobId) => {
     try {
-      // Check if recruiter can export this job's applications
+      // CRITICAL: Check if recruiter can export this job's applications
       const jobToExport = jobOpenings.find(job => job.id === jobId);
-      if (isRecruiter && jobToExport?.createdBy !== user.uid) {
+      if (isRecruiter && !isJobPerformedByCurrentUser(jobToExport)) {
         toast.error("You can only export applications for job openings created by you.");
         return;
       }
@@ -360,6 +443,9 @@ export default function JobOpenings() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-100 min-h-screen fixed inset-0 left-[300px] overflow-y-auto">
         <div className="flex justify-center items-center h-64">
           <p className="text-lg text-gray-600">Loading job openings...</p>
+          {migrationInProgress && (
+            <p className="text-sm text-blue-600 mt-2">Running migration...</p>
+          )}
         </div>
       </div>
     );
@@ -416,8 +502,11 @@ export default function JobOpenings() {
                 <p className="text-sm text-gray-600">{job.companyName}</p>
                 <p className="text-sm text-gray-500">{job.locationType} | {job.jobType}</p>
                 <p className="text-sm text-gray-500">Status: {job.status}</p>
-                {isRecruiter && (
+                {isRecruiter && isJobPerformedByCurrentUser(job) && (
                   <p className="text-xs text-blue-600 mt-1 font-medium">✓ Created by you</p>
+                )}
+                {job.migrationNote && (
+                  <p className="text-xs text-orange-600 mt-1 font-medium">📝 Migrated job</p>
                 )}
 
                 {(canUpdate || canDelete) && (
@@ -472,9 +561,14 @@ export default function JobOpenings() {
             <>
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">{selectedJob.title}</h2>
-                {isRecruiter && (
+                {isRecruiter && isJobPerformedByCurrentUser(selectedJob) && (
                   <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
                     Your Job Opening
+                  </span>
+                )}
+                {selectedJob.migrationNote && (
+                  <span className="inline-block px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full ml-2">
+                    Migrated Job
                   </span>
                 )}
               </div>
