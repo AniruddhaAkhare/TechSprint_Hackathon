@@ -73,6 +73,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, instructors, 
   const canDisplay = rolePermissions.enquiries?.display || false;
 
   const stageDisplay = {
+    "raw": { name: "Raw", color: "bg-brown-100 text-brown-700" },
     "pre-qualified": { name: "Pre Qualified", color: "bg-blue-100 text-blue-700" },
     "qualified": { name: "Qualified", color: "bg-purple-100 text-purple-700" },
     "negotiation": { name: "Negotiation", color: "bg-yellow-100 text-yellow-700" },

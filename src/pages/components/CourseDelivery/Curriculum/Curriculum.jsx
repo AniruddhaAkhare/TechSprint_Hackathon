@@ -315,7 +315,7 @@ const Curriculum = () => {
   </div>
 </div>
 
-     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+     <div className="bg-white rounded-xl shadow-lg overflow-y-scroll h-[25vw]">
   <table className="w-full table-fixed border-collapse">
     <thead className="bg-gray-100">
       <tr>
