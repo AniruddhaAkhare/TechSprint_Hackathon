@@ -82,7 +82,7 @@ import React, { useState, useEffect } from 'react';
           }, {});
 
           if (Object.keys(changes).length > 0) {
-            await logActivity("Updated section", {
+            await logActivity("Section updated", {
               curriculumId,
               sectionId: sectionToEdit.id,
               name: formData.name,
@@ -100,7 +100,7 @@ import React, { useState, useEffect } from 'react';
             createdAt: serverTimestamp(),
           });
 
-          await logActivity("Created section", {
+          await logActivity("Section created", {
             curriculumId,
             sectionId: docRef.id,
             name: formData.name

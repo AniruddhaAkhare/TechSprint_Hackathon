@@ -1,17 +1,23 @@
 {
   "emulators": {
     "hosting": {
-      "port": 5000
+      "port": 5003
     },
     "ui": {
       "enabled": true
     },
-    "singleProjectMode": true
+    "singleProjectMode": true,
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    }
   },
   "hosting": [
     {
       "target": "ignite.fireblaze.in",
-      "public": "dist",
+      "public": "build",
       "ignore": [
         "firebase.json",
         "**/.*",
@@ -73,39 +79,6 @@
   ],
   "apphosting": [
     {
-      "backendId": "ignite",
-      "rootDir": "Ignite",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
-      "backendId": "backend",
-      "rootDir": "Ignite",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
-      "backendId": "ignite-backend",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
       "backendId": "backend",
       "rootDir": "/",
       "ignore": [
@@ -216,95 +189,7 @@
       ]
     },
     {
-      "backendId": "backend",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
-      "backendId": "backend",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
-      "backendId": "backend",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
-      "backendId": "backend",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
-      "backendId": "backend",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
-      "backendId": "backend",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
-      "backendId": "backend",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
-      "backendId": "backend",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    },
-    {
-      "backendId": "backend",
+      "backendId": "fireblaze-student-backend",
       "rootDir": "/",
       "ignore": [
         "node_modules",

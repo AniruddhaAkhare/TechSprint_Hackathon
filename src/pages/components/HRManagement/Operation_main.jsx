@@ -29,12 +29,14 @@ const ServiceCard = ({ icon: Icon, title, iconColor, route }) => (
 
 
 export default function OperationsDashboard() {
-  const services = [
-    { icon: CalendarX, title: "Leave Application", iconColor: "text-blue-500", route: "/leave-application" },
-    { icon: Users, title: "My Shift", iconColor: "text-blue-400", route: "/myShift" }, // Shift renamed
-    { icon: FileText, title: "Assessment", iconColor: "text-pink-500", route: "/assessment" },
-    { icon: CheckSquare, title: "Tasks", iconColor: "text-red-500", route: "/tasks" },
-  ];
+const services = [
+  { icon: CalendarX, title: "Leave Application", iconColor: "text-blue-500", route: "/leave-application" },
+  { icon: FileCheck, title: "Leave Summary", iconColor: "text-green-500", route: "/LeaveSummery" },
+  { icon: Users, title: "My Shift", iconColor: "text-blue-400", route: "/myShift" },
+  { icon: FileText, title: "Assessment", iconColor: "text-pink-500", route: "/assessment" },
+  { icon: CheckSquare, title: "Tasks", iconColor: "text-red-500", route: "/tasks" },
+];
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 p-2 fixed inset-0 left-[300px] overflow-auto">

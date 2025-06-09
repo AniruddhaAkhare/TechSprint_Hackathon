@@ -314,7 +314,7 @@ const AddMaterialModal = ({ isOpen, onClose, curriculumId, sectionId, sessionId,
 
       const fileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`;
       await logActivity({
-        action: 'file_upload',
+        action: 'File uploaded',
         details: `Uploaded ${selectedType} file: ${file.name} to S3`,
       });
 

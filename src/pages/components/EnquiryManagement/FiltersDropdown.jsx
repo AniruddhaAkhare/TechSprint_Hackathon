@@ -16,6 +16,10 @@ const FiltersDropdown = ({ filters, setFilters, availableTags, branches, courses
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    console.log("Instructors:", instructors); // Debug log
+  }, [instructors]);
+
   const handleFilterChange = (key, value) => {
     if (key === "tags") {
       setFilters((prev) => ({

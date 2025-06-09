@@ -27,6 +27,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import debounce from 'lodash/debounce';
+import { runTransaction } from "firebase/firestore";
 
 export default function Batches() {
   const { user, rolePermissions } = useAuth();
@@ -59,31 +60,48 @@ export default function Batches() {
 
   const toggleSidebar = () => setIsOpen((prev) => !prev);
 
-  const logActivity = async (action, details) => {
-    if (!user) return;
+const logActivity = async (action, details) => {
+    if (!user?.email) {
+      console.warn("No user email found, skipping activity log");
+      return;
+    }
+
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Batch",
+      // adminId: adminId || "N/A",
+    };
+
     try {
-      const logDocRef = doc(db, "activityLogs", "currentLog");
-      const logEntry = {
-        timestamp: serverTimestamp(),
-        userId: user.uid,
-        userEmail: user.email,
-        action,
-        details
-      };
-      await updateDoc(logDocRef, {
-        logs: arrayUnion(logEntry),
-        count: increment(1)
-      }).catch(async (err) => {
-        if (err.code === 'not-found') {
-          await setDoc(logDocRef, { logs: [logEntry], count: 1 });
-        } else {
-          throw err;
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        if (!Array.isArray(logs)) {
+          logs = [];
         }
+
+        logs.push(logEntry);
+
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        transaction.set(activityLogRef, { logs }, { merge: true });
       });
-    } catch (err) {
-      toast.error("Failed to log activity.", err);
+      console.log("Activity logged successfully:", action);
+    } catch (error) {
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+
 
   const fetchCenters = useCallback(() => {
     if (!canDisplay) return;
@@ -252,7 +270,7 @@ export default function Batches() {
       }
       const batch = batches.find((b) => b.id === deleteId);
       await deleteDoc(doc(db, "Batch", deleteId));
-      await logActivity("Deleted batch", { name: batch.batchName || "Unknown" });
+      await logActivity("Batch deleted", { name: batch.batchName || "Unknown" });
       setOpenDelete(false);
       setDeleteMessage(
         "Are you sure you want to delete this batch? This action cannot be undone."
@@ -267,12 +285,12 @@ export default function Batches() {
   const handleBatchSubmit = async (formData) => {
     try {
       if (currentBatch) {
-        await logActivity("Updated batch", {
+        await logActivity("Batch updated", {
           name: formData.batchName,
           changes: { oldName: currentBatch.batchName, newName: formData.batchName }
         });
       } else {
-        await logActivity("Created batch", { name: formData.batchName });
+        await logActivity("Batch created", { name: formData.batchName });
       }
       handleClose();
     } catch (err) {      toast.error("Failed to log batch action.", err);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { db } from '../../../../config/firebase.js';
+import { db } from '../../../../config/firebase.js'
 import { collection, onSnapshot, deleteDoc, doc, query, orderBy, updateDoc, setDoc, arrayUnion, increment } from 'firebase/firestore';
 import CreateSession from "./CreateSession.jsx";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
@@ -8,6 +8,7 @@ import { useAuth } from "../../../../context/AuthContext.jsx";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import debounce from 'lodash/debounce';
+import { runTransaction } from "firebase/firestore";
 
 export default function Sessions() {
     const { rolePermissions, user } = useAuth();
@@ -43,34 +44,47 @@ export default function Sessions() {
     const toggleSidebar = () => setIsOpen(prev => !prev);
 
     const logActivity = async (action, details) => {
-        if (!user) {
-            // //console.error("No user logged in for logging activity");
-            return;
-        }
-        try {
-            const logDocRef = doc(db, "activityLogs", "currentLog");
-            const logEntry = {
-                timestamp: serverTimestamp(),
-                userId: user.uid,
-                userEmail: user.email || 'Unknown',
-                action,
-                details
-            };
-            await updateDoc(logDocRef, {
-                logs: arrayUnion(logEntry),
-                count: increment(1)
-            }).catch(async (err) => {
-                if (err.code === 'not-found') {
-                    await setDoc(logDocRef, { logs: [logEntry], count: 1 });
-                } else {
-                    throw err;
-                }
-            });
-        } catch (err) {
-            // //console.error("Error logging activity:", err.message);
-            toast.error("Failed to log activity.");
-        }
+    if (!user?.email) {
+      console.warn("No user email found, skipping activity log");
+      return;
+    }
+
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Session",
+      // adminId: adminId || "N/A",
     };
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        logs.push(logEntry);
+
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully:", action);
+    } catch (error) {
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
+    }
+  };
+
 
     const calculateSessionStatus = useCallback((session) => {
         const sessionDateTime = new Date(`${session.date} ${session.endTime}`);
@@ -287,7 +301,7 @@ export default function Sessions() {
         try {
             const sessionToDelete = sessions.find(s => s.id === deleteId);
             await deleteDoc(doc(db, "Sessions", deleteId));
-            await logActivity("Deleted session", {
+            await logActivity("Session deleted", {
                 name: sessionToDelete?.name || "Unknown",
             });
             setOpenDelete(false);
@@ -302,7 +316,7 @@ export default function Sessions() {
 
     const handleSessionSubmit = async (sessionData) => {
         try {
-            await logActivity(sessionData.id ? "Updated session" : "Created session", {
+            await logActivity(sessionData.id ? "Session updated" : "Session created", {
                 name: sessionData.name
             });
             handleClose();

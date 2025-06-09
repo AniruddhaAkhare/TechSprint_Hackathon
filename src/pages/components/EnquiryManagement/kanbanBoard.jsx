@@ -13,6 +13,7 @@ import Column from "./Column";
 
 // Define stageDisplay for consistency with EnquiryModal
 const stageDisplay = {
+  "raw": { name: "Raw", color: "bg-amber-100 text-amber-700" },
   "pre-qualified": { name: "Pre Qualified", color: "bg-blue-100 text-blue-700" },
   "qualified": { name: "Qualified", color: "bg-purple-100 text-purple-700" },
   "negotiation": { name: "Negotiation", color: "bg-yellow-100 text-yellow-700" },
@@ -23,6 +24,7 @@ const stageDisplay = {
 
 // Initial columns for Kanban board, aligned with stageDisplay
 const initialColumns = {
+  "raw": { name: "Raw", items: [], icon: <FaCircle className="text-amber-500" />, count: 0, totalAmount: 0 },
   "pre-qualified": { name: "Pre Qualified", items: [], icon: <FaCircle className="text-blue-500" />, count: 0, totalAmount: 0 },
   "qualified": { name: "Qualified", items: [], icon: <FaCircle className="text-purple-500" />, count: 0, totalAmount: 0 },
   "negotiation": { name: "Negotiation", items: [], icon: <FaCircle className="text-yellow-500" />, count: 0, totalAmount: 0 },

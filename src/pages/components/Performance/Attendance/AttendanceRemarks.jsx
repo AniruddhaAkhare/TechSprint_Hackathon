@@ -29,6 +29,7 @@ export default function AttendanceRemarks() {
                 userId: user.uid,
                 userEmail: user.email || 'Unknown',
                 action,
+                section: "Attendance",
                 details
             };
             await updateDoc(logDocRef, {
@@ -82,10 +83,10 @@ export default function AttendanceRemarks() {
             return;
         }
         try {
-            await logActivity("Navigated to create attendance remark", {
-                studentId: student.id,
-                studentName: student.first_name || 'Unknown'
-            });
+            // await logActivity("Navigated to create attendance remark", {
+            //     studentId: student.id,
+            //     studentName: student.first_name || 'Unknown'
+            // });
             navigate("/createAttendanceRemarks", { state: { student, attendanceRemarks } });
         } catch (error) {
             //console.error("Error logging navigation:", error.message);

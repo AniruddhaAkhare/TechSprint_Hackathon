@@ -27,7 +27,7 @@ const Sidebar = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [instituteLogo, setInstituteLogo] = useState("/img/fireblaze.jpg");
   const [logoError, setLogoError] = useState(null);
-  const [trialStatus, setTrialStatus] = useState({ trialActive: false, daysRemaining: 0 });
+  // const [trialStatus, setTrialStatus] = useState({ trialActive: false, daysRemaining: 0 });
   const [error, setError] = useState(null);
   const [accordionState, setAccordionState] = useState({
     enquiry: false,
@@ -61,6 +61,7 @@ const Sidebar = () => {
   const canViewInvoices = rolePermissions?.invoice?.display || false;
   const canViewFee = rolePermissions?.fee?.display || false;
   const canViewEnquiry = rolePermissions?.enquiries?.display || false;
+  const canAddEnquiryForm = rolePermissions?.enquiries?.display || false;
   const canViewFinancePartners = rolePermissions?.FinancePartner?.display || false;
   const canViewactivityLogs = rolePermissions?.activityLogs?.display || false;
   const canViewLeaves = rolePermissions?.Leaves?.display || false;
@@ -111,58 +112,59 @@ const Sidebar = () => {
           );
           const instituteSnapshot = await getDocs(instituteQuery);
 
-          if (!instituteSnapshot.empty) {
-            const instituteData = instituteSnapshot.docs[0].data();
-            const trialEndDate = new Date(instituteData.trialEndDate);
-            const currentDate = new Date();
+          // if (!instituteSnapshot.empty) {
+          //   const instituteData = instituteSnapshot.docs[0].data();
+          //   // const trialEndDate = new Date(instituteData.trialEndDate);
+          //   const currentDate = new Date();
 
-            if (isNaN(trialEndDate.getTime())) {
-              setTrialStatus({ trialActive: false, daysRemaining: 0 });
-              setError("Invalid trialEndDate format.");
-              return;
-            }
+          //   // if (isNaN(trialEndDate.getTime())) {
+          //   //   setTrialStatus({ trialActive: false, daysRemaining: 0 });
+          //   //   setError("Invalid trialEndDate format.");
+          //   //   return;
+          //   // }
 
-            const timeDiff = trialEndDate - currentDate;
-            const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-            const isTrialActive = instituteData.trialActive && timeDiff > 0;
+          //   // const timeDiff = trialEndDate - currentDate;
+          //   // const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+          //   // // const isTrialActive = instituteData.trialActive && timeDiff > 0;
 
-            setTrialStatus({
-              trialActive: isTrialActive,
-              daysRemaining: daysRemaining > 0 ? daysRemaining : 0,
-            });
+          //   // setTrialStatus({
+          //   //   trialActive: isTrialActive,
+          //   //   daysRemaining: daysRemaining > 0 ? daysRemaining : 0,
+          //   // });
 
-            if (!isTrialActive) {
-              navigate("/subscribe");
-            }
-          } else {
-            const trialStartDate = new Date();
-            const trialEndDate = new Date(trialStartDate);
-            trialEndDate.setDate(trialStartDate.getDate() + 7);
+            
+          // }
+          //  else {
+          //   const trialStartDate = new Date();
+          //   const trialEndDate = new Date(trialStartDate);
+          //   trialEndDate.setDate(trialStartDate.getDate() + 7);
 
-            const newInstituteData = {
-              instituteName: `${currentUser.email}'s Institute`,
-              superAdminId: currentUser.uid,
-              trialStartDate: trialStartDate.toISOString(),
-              trialEndDate: trialEndDate.toISOString(),
-              trialActive: true,
-              createdAt: new Date().toISOString(),
-            };
+          //   const newInstituteData = {
+          //     instituteName: `${currentUser.email}'s Institute`,
+          //     superAdminId: currentUser.uid,
+          //     trialStartDate: trialStartDate.toISOString(),
+          //     trialEndDate: trialEndDate.toISOString(),
+          //     trialActive: true,
+          //     createdAt: new Date().toISOString(),
+          //   };
 
             await setDoc(doc(db, "instituteSetup", currentUser.uid), newInstituteData);
-            const timeDiff = trialEndDate - new Date();
-            const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-            setTrialStatus({ trialActive: true, daysRemaining });
-          }
-        } catch (err) {
-          //console.error("Error fetching trial status:", err);
-          setError("Failed to fetch trial status: " + err.message);
-          setTrialStatus({ trialActive: false, daysRemaining: 0 });
+            // const timeDiff = trialEndDate - new Date();
+            // const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+            // setTrialStatus({ trialActive: true, daysRemaining });
+          // }
+        } 
+        catch (err) {
+        //   //console.error("Error fetching trial status:", err);
+        //   setError("Failed to fetch trial status: " + err.message);
+        //   setTrialStatus({ trialActive: false, daysRemaining: 0 });
         }
-      } else {
-        setUser(null);
-        setTrialStatus({ trialActive: false, daysRemaining: 0 });
       }
-    });
+       else {
+        setUser(null);
+        // setTrialStatus({ trialActive: false, daysRemaining: 0 });
+      }
+  });
 
     return () => unsubscribe();
   }, [auth, db, navigate, authUser]);
@@ -242,6 +244,33 @@ const Sidebar = () => {
           
         </>
         } */}
+
+        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("enquiry")}>
+          Activity
+          {accordionState.enquiry ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
+        </li>
+        {accordionState.enquiry && (
+          <>
+            <Link to="/my-activities?view=all" className="nav-link">
+              <li className="nav-item">
+                <i className="fa fa-home" aria-hidden="true"></i>
+                <span>&nbsp;&nbsp; All Activities</span>
+              </li>
+            </Link>
+            <Link to="/my-activities?view=my" className="nav-link">
+              <li className="nav-item">
+                <i className="fa-brands fa-wpforms"></i>
+                <span>&nbsp;&nbsp; My Activities</span>
+              </li>
+            </Link>
+            <Link to="/my-activities?view=dueToday" className="nav-link">
+              <li className="nav-item">
+                <i className="fa-brands fa-wpforms"></i>
+                <span>&nbsp;&nbsp; Due Today</span>
+              </li>
+            </Link>
+          </>
+        )}
 
         <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("enquiry")}>
           Sales And Marketing
@@ -443,6 +472,7 @@ const Sidebar = () => {
         <span>&nbsp;&nbsp;My Data</span>
       </li>
     </Link>
+    
   </>
 )}
 
@@ -526,14 +556,14 @@ const Sidebar = () => {
           </>
         )}
 
-        {trialStatus.trialActive && (
+        {/* {trialStatus.trialActive && (
           <div className="trial-banner">
             <span>Trial expires in {trialStatus.daysRemaining} days</span>
             <Link to="/subscribe" className="choose-plan-link">
               Choose a plan
             </Link>
           </div>
-        )}
+        )} */}
       </ul>
 
       <UserProfile

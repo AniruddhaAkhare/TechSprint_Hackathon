@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../../../../config/firebase.js";
+import { db } from '../../../../config/firebase'
 import { collection, addDoc, getDocs, serverTimestamp, updateDoc, doc, query, where } from "firebase/firestore";
 import { FaTimes } from "react-icons/fa";
 
@@ -216,7 +216,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         await updateDoc(sessionRef, sessionData);
         sessionIdResult = sessionId;
         // Log update activity
-        await logActivity("Updated session", {
+        await logActivity("Session updated", {
           // sessionId: sessionId,
           name: sessionData.name,
           changes: {
@@ -236,7 +236,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         const docRef = await addDoc(collection(db, "Sessions"), sessionData);
         sessionIdResult = docRef.id;
         // Log create activity
-        await logActivity("Created session", {
+        await logActivity("Session created", {
           // sessionId: docRef.id,
           name: sessionData.name,
           // preFeedbackForm: sessionData.preFeedbackForm,

@@ -8,6 +8,7 @@ import { Timestamp } from "firebase/firestore";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../../context/AuthContext";
+import { runTransaction } from "firebase/firestore";
 
 export default function EditStudent() {
     const { studentId } = useParams();
@@ -49,19 +50,50 @@ export default function EditStudent() {
 
     // Activity logging function
     const logActivity = async (action, details) => {
-        try {
-            const activityLog = {
-                action,
-                details: { studentId, ...details },
-                timestamp: new Date().toISOString(),
-                userEmail: user?.email || "anonymous",
-                userId: user?.uid || "anonymous",
-            };
-            await addDoc(collection(db, "activityLogs"), activityLog);
-        } catch (error) {
-            //console.error("Error logging activity:", error);
-        }
-    };
+  if (!user?.email) {
+    console.warn("No user email found, skipping activity log");
+    return;
+  }
+
+  const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+  const logEntry = {
+    action,
+    details, // Use details as provided, expecting studentId to be included where necessary
+    timestamp: new Date().toISOString(),
+    userEmail: user.email,
+    userId: user.uid,
+    section:"Student",
+    // adminId: adminId || "N/A",
+  };
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const logDoc = await transaction.get(activityLogRef);
+      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+      // Ensure logs is an array
+      if (!Array.isArray(logs)) {
+        logs = [];
+      }
+
+      // Append the new log entry
+      logs.push(logEntry);
+
+      // Trim to the last 1000 entries
+      if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+      }
+
+      // Update the document
+      transaction.set(activityLogRef, { logs }, { merge: true });
+    });
+    console.log("Activity logged successfully");
+  } catch (error) {
+    console.error("Error logging activity:", error);
+    // toast.error("Failed to log activity");
+  }
+};
 
     // List of country codes (unchanged)
     const countryCodes = [
@@ -407,7 +439,7 @@ export default function EditStudent() {
         } else {
             setStudent(prev => ({ ...prev, [name]: value }));
         }
-        logActivity("FIELD CHANGED", { field: name, value });
+        logActivity("Field changed", { field: name, value });
     };
 
     const addCourse = () => {
@@ -416,7 +448,7 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, courseDetails: [...prev.courseDetails, { courseName: '', batch: '', branch: '', mode: '', fee: 0 }] }));
-        logActivity("ADD COURSE", {});
+        logActivity("Course added", {});
     };
 
     const addEducation = () => {
@@ -425,17 +457,9 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, educationDetails: [...prev.educationDetails, { level: '', institute: '', degree: '', specialization: '', grade: '', passingyr: '' }] }));
-        logActivity("ADD EDUCATION", {});
+        logActivity("Education details added", {});
     };
 
-    const addInstallment = () => {
-        if (!canUpdate) {
-            toast.error("You don't have permission to update student details");
-            return;
-        }
-        setStudent(prev => ({ ...prev, installmentDetails: [...prev.installmentDetails, { number: '', dueAmount: '', dueDate: '', paidOn: '', amtPaid: '', modeOfPayment: '', pdcStatus: '', remark: '' }] }));
-        logActivity("ADD INSTALLMENT", {});
-    };
 
     const addExperience = () => {
         if (!canUpdate) {
@@ -443,17 +467,9 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, experienceDetails: [...prev.experienceDetails, { companyName: '', designation: '', salary: '', years: '', description: '' }] }));
-        logActivity("ADD EXPERIENCE", {});
+        logActivity("Experience details added", {});
     };
 
-    const removeCourse = (index) => {
-        if (!canUpdate) {
-            toast.error("You don't have permission to update student details");
-            return;
-        }
-        setStudent(prev => ({ ...prev, courseDetails: prev.courseDetails.filter((_, i) => i !== index) }));
-        logActivity("REMOVE COURSE", { index });
-    };
 
     const deleteEducation = (index) => {
         if (!canUpdate) {
@@ -461,17 +477,11 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, educationDetails: prev.educationDetails.filter((_, i) => i !== index) }));
-        logActivity("DELETE EDUCATION", { index });
+        logActivity("Educational details added", { index });
     };
 
-    const deleteInstallment = (index) => {
-        if (!canUpdate) {
-            toast.error("You don't have permission to update student details");
-            return;
-        }
-        setStudent(prev => ({ ...prev, installmentDetails: prev.installmentDetails.filter((_, i) => i !== index) }));
-        logActivity("DELETE INSTALLMENT", { index });
-    };
+
+
 
     const deleteExperience = (index) => {
         if (!canUpdate) {
@@ -479,7 +489,7 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, experienceDetails: prev.experienceDetails.filter((_, i) => i !== index) }));
-        logActivity("DELETE EXPERIENCE", { index });
+        logActivity("Experience details deleted", { index });
     };
 
     const handleAddCenter = () => {
@@ -490,7 +500,7 @@ export default function EditStudent() {
         if (selectedCenter && !student.preferred_centers.includes(selectedCenter)) {
             setStudent(prev => ({ ...prev, preferred_centers: [...prev.preferred_centers, selectedCenter] }));
             setSelectedCenter("");
-            logActivity("ADD CENTER", { centerId: selectedCenter });
+            logActivity("crenter added", { centerId: selectedCenter });
         }
     };
 
@@ -500,7 +510,7 @@ export default function EditStudent() {
             return;
         }
         setStudent(prev => ({ ...prev, preferred_centers: prev.preferred_centers.filter(id => id !== centerId) }));
-        logActivity("REMOVE CENTER", { centerId });
+        logActivity("Center removed", { centerId });
     };
 
     // Validate and format date for Firestore Timestamp
@@ -558,7 +568,7 @@ export default function EditStudent() {
             });
 
             toast.success("Student updated successfully!");
-            logActivity("UPDATE STUDENT SUCCESS", { updatedFields: Object.keys(student) });
+            logActivity("Student updated", student.Name);
             navigate("/studentdetails");
         } catch (error) {
             //console.error("Error updating student:", error);
@@ -576,14 +586,14 @@ export default function EditStudent() {
             try {
                 await deleteDoc(doc(db, "student", studentId));
                 toast.success("Student deleted successfully!");
-                logActivity("DELETE STUDENT SUCCESS", {});
+                logActivity("Student deleted", student.Name);
                 navigate("/studentdetails");
             } catch (error) {
                 //console.error("Error deleting student:", error);
                 toast.error("Failed to delete student");
             }
         } else {
-            logActivity("CANCEL DELETE STUDENT", {});
+            // logActivity("CANCEL DELETE STUDENT", {});
         }
     };
 
@@ -610,26 +620,7 @@ export default function EditStudent() {
         setStudent(prev => ({ ...prev, total: finalTotal }));
     };
 
-    const handleTemplateChange = async (e) => {
-        if (!canUpdate) {
-            toast.error("You don't have permission to update student details");
-            return;
-        }
-        const templateId = e.target.value;
-        setSelectedTemplate(templateId);
 
-        try {
-            const templateSnapshot = await getDocs(collection(db, "feeTemplates"));
-            const templateData = templateSnapshot.docs.find(doc => doc.id === templateId)?.data();
-            if (templateData && templateData.installments) {
-                setStudent(prev => ({ ...prev, installmentDetails: templateData.installments }));
-                logActivity("APPLY FEE TEMPLATE", { templateId });
-            }
-        } catch (error) {
-            //console.error("Error applying fee template:", error);
-            toast.error("Failed to apply fee template");
-        }
-    };
 
     if (!canDisplay) return null;
 
@@ -696,7 +687,7 @@ export default function EditStudent() {
                                             value={countryCode}
                                             onChange={(e) => {
                                                 setCountryCode(e.target.value);
-                                                logActivity("CHANGE COUNTRY CODE", { field: "phone", value: e.target.value });
+                                                logActivity("Country code changed", { field: "phone", value: e.target.value });
                                             }}
                                             disabled={!canUpdate}
                                             className="w-1/3 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -768,7 +759,7 @@ export default function EditStudent() {
                                             value={guardianCountryCode}
                                             onChange={(e) => {
                                                 setGuardianCountryCode(e.target.value);
-                                                logActivity("CHANGE COUNTRY CODE", { field: "guardian_phone", value: e.target.value });
+                                                logActivity("Country Code changed", { field: "guardian_phone", value: e.target.value });
                                             }}
                                             disabled={!canUpdate}
                                             className="w-1/3 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1229,7 +1220,7 @@ export default function EditStudent() {
                                             value={selectedCenter}
                                             onChange={(e) => {
                                                 setSelectedCenter(e.target.value);
-                                                logActivity("SELECT CENTER", { centerId: e.target.value });
+                                                // logActivity("SELECT CENTER", { centerId: e.target.value });
                                             }}
                                             disabled={!canUpdate}
                                             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

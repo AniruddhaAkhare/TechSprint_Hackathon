@@ -729,7 +729,7 @@ const Notes = ({
                 toast.warn('Notification permission not granted for call reminder.');
               }
               await reminderAudio.play();
-              logActivity('TRIGGER_CALL_REMINDER', {
+              logActivity('Call remainder triggered', {
                 companyId: companyData.id,
                 callDate,
                 callTime,

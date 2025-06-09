@@ -4,6 +4,7 @@ import { db } from '../config/firebase';
 import { collection, addDoc, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { runTransaction } from 'firebase/firestore';
 
 export default function Attendance() {
   const navigate = useNavigate();
@@ -26,23 +27,48 @@ export default function Attendance() {
   // const canDelete = rolePermissions?.attendance?.delete || false; // Reserved for future use
   // const canViewAnalytics = rolePermissions?.attendance?.viewAnalytics || false;
 
-  const logActivity = async (action, details) => {
-    if (!user) return;
+const logActivity = async (action, details) => {
+    if (!user?.email) {
+      console.warn("No user email found, skipping activity log");
+      return;
+    }
+
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section:"Attendance"
+      // adminId: adminId || "N/A",
+    };
+
     try {
-      const activityLog = {
-        action,
-        details,
-        timestamp: new Date().toISOString(),
-        userId: user?.uid,
-        userEmail: user?.email || 'currentUser@example.com',
-        centerId: selectedCenter || 'All',
-        batchId: expandedBatch || 'N/A',
-      };
-      await addDoc(collection(db, 'activityLogs'), activityLog);
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        logs.push(logEntry);
+
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully:", action);
     } catch (error) {
-      //console.error('Error logging activity:', error);
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+
 
   const fetchCenters = async () => {
     if (!canView) return;
@@ -207,7 +233,7 @@ export default function Attendance() {
     XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
     XLSX.writeFile(wb, `Attendance_${batch.batchName || 'Batch'}.xlsx`);
 
-    logActivity('Download Template', { batchId, batchName: batch.batchName, studentCount: students.length });
+    logActivity('Template downloaded', { batchId, batchName: batch.batchName, studentCount: students.length });
   };
 
   const handleFileChange = (event) => {
@@ -308,7 +334,7 @@ export default function Attendance() {
         })
       );
 
-      logActivity('Upload Attendance', {
+      logActivity('Attendance uploaded', {
         batchId: expandedBatch,
         batchName: batchDetails[expandedBatch]?.batchName || 'Unknown',
         recordCount: validRecords.length,
@@ -357,7 +383,7 @@ export default function Attendance() {
     }
     const centerId = e.target.value;
     setSelectedCenter(centerId);
-    logActivity('Change Center Filter', { centerId });
+    // logActivity('Change Center Filter', { centerId });
   };
 
   const toggleBatch = (batchId) => {
@@ -399,7 +425,7 @@ export default function Attendance() {
     //   return;
     // }
     navigate('/attendance-dashboard');
-    logActivity('Navigate to Analytics', { destination: 'attendance-dashboard' });
+    // logActivity('Navigate to Analytics', { destination: 'attendance-dashboard' });
   };
 
   if (!canView) {
@@ -459,7 +485,7 @@ export default function Attendance() {
       value={batchStatusFilter}
       onChange={(e) => {
         setBatchStatusFilter(e.target.value);
-        logActivity('Change Batch Status Filter', { status: e.target.value });
+        // logActivity('Change Batch Status Filter', { status: e.target.value });
       }}
       className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm 
                  transition duration-200 ease-in-out
@@ -482,7 +508,7 @@ export default function Attendance() {
       value={startDateFilter}
       onChange={(e) => {
         setStartDateFilter(e.target.value);
-        logActivity('Change Start Date Filter', { startDate: e.target.value });
+        // logActivity('Change Start Date Filter', { startDate: e.target.value });
       }}
       className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm 
                  transition duration-200 ease-in-out

@@ -25,6 +25,8 @@ import Notes from "./Notes.jsx";
 import PointsOfContact from "./PointsOfContact.jsx";
 import History from "./History.jsx";
 import { Timestamp, serverTimestamp } from "firebase/firestore";
+import { runTransaction } from "firebase/firestore";
+import { useCallback } from "react";
 
 Modal.setAppElement("#root");
 
@@ -163,20 +165,71 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
     return format(date, formatString);
   };
 
-  const logActivity = async (action, details) => {
-    try {
-      const activityLog = {
-        action,
-        details: { companyId: company.id || null, ...details },
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email || "anonymous",
-        userId: user.uid,
-      };
-      await addDoc(collection(db, "activityLogs"), activityLog);
-    } catch (error) {
-      //console.error("Error logging activity:", error);
-    }
+const logActivity = async (action, details) => {
+  if (!user?.email) return;
+
+  const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+  const logEntry = {
+    action,
+    details,
+    timestamp: new Date().toISOString(),
+    userEmail: user.email,
+    userId: user.uid,
+    section: "Company",
+    // adminId: adminId || "N/A",
   };
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const logDoc = await transaction.get(activityLogRef);
+      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+      // Ensure logs is an array and contains only valid data
+      if (!Array.isArray(logs)) {
+        logs = [];
+      }
+
+      // Append the new log entry
+      logs.push(logEntry);
+
+      // Trim to the last 1000 entries if necessary
+      if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+      }
+
+      // Update the document with the new logs array
+      transaction.set(activityLogRef, { logs }, { merge: true });
+    });
+    console.log("Activity logged successfully");
+  } catch (error) {
+    console.error("Error logging activity:", error);
+    // toast.error("Failed to log activity");
+  }
+};
+  
+  // const fetchLogs = useCallback(() => {
+  //   if (!isAdmin) return;
+  //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+  //   const unsubscribe = onSnapshot(
+  //     q,
+  //     (snapshot) => {
+  //       const allLogs = [];
+  //       snapshot.docs.forEach((doc) => {
+  //         const data = doc.data();
+  //         (data.logs || []).forEach((log) => {
+  //           allLogs.push({ id: doc.id, ...log });
+  //         });
+  //       });
+  //       allLogs.sort(
+  //         (a, b) =>
+  //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+  //       );
+  //       setLogs(allLogs);
+  //     },
+  //   );
+  //   return unsubscribe;
+  // }, [isAdmin]);
 
   const validateEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -329,7 +382,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
       }
       setPointsOfContact(updatedPOCs);
       setNewPOC({ name: "", countryCode: "+91", mobile: "", email: "", linkedinProfile: "", designation: "" });
-      logActivity("ADD_POC", { pocName: newPOC.name });
+      logActivity("POC added", { pocName: newPOC.name });
       toast.success("Point of contact added successfully!");
     } catch (error) {
       //console.error("Error adding POC:", error);
@@ -367,7 +420,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
         pointsOfContact: updatedPOCs,
         history: updatedHistory,
       }));
-      logActivity("UPDATE_POC", { updatedPOCs });
+      logActivity("POC updated", { updatedPOCs });
       toast.success("Point of contact updated successfully!");
     } catch (error) {
       toast.error(`Failed to update point of contact: ${error.message}`);
@@ -405,7 +458,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
         pointsOfContact: updatedPOCs,
         history: updatedHistory,
       }));
-      logActivity("REMOVE_POC", { pocName });
+      logActivity("POC removed", { pocName });
       toast.success("Point of contact removed successfully!");
     } catch (error) {
       toast.error(`Failed to remove point of contact: ${error.message}`);
@@ -426,7 +479,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
     }
     setNewPOC((prev) => {
       const updated = { ...prev, [field]: value };
-      logActivity("CHANGE_NEW_POC", { field, value });
+      logActivity("POC changed", { field, value });
       return updated;
     });
   };
@@ -541,7 +594,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
         ...prev,
         history: updatedHistory,
       }));
-      logActivity("DELETE_JOB", { jobTitle });
+      logActivity("Job deleted", { jobTitle });
       toast.success("Job opening deleted successfully!");
     } catch (error) {
       toast.error(`Failed to delete job opening: ${error.message}`);

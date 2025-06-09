@@ -19,6 +19,9 @@ const Batches = () => {
     const [loading, setLoading] = useState(true);
     const [instituteId, setInstituteId] = useState();
 
+
+    
+
     useEffect(() => {
         const fetchData = async () => {
             if (!user) {

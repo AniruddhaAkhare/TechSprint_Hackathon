@@ -10,6 +10,7 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../../context/AuthContext";
+import { runTransaction } from "firebase/firestore";
 
 export default function AddStaff() {
   const { currentUser, rolePermissions } = useAuth();
@@ -94,23 +95,47 @@ export default function AddStaff() {
 
   // Activity Logging
   const logActivity = async (action, details) => {
-    if (!currentUser) {
-      //console.error("No current user available for logging");
-      return;
-    }
-    try {
-      const logData = {
-        userId: currentUser.uid,
-        userEmail: currentUser.email || "Unknown",
-        timestamp: Timestamp.now(),
-        action,
-        details,
-      };
-      await addDoc(collection(db, "activityLogs"), logData);
-    } catch (error) {
-      //console.error("Error logging activity:", error);
-    }
+  if (!user?.email) return;
+
+  const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+  const logEntry = {
+    action,
+    details,
+    timestamp: new Date().toISOString(),
+    userEmail: user.email,
+    userId: user.uid,
+    section: "Staff",
+    // adminId: adminId || "N/A",
   };
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const logDoc = await transaction.get(activityLogRef);
+      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+      // Ensure logs is an array and contains only valid data
+      if (!Array.isArray(logs)) {
+        logs = [];
+      }
+
+      // Append the new log entry
+      logs.push(logEntry);
+
+      // Trim to the last 1000 entries if necessary
+      if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+      }
+
+      // Update the document with the new logs array
+      transaction.set(activityLogRef, { logs }, { merge: true });
+    });
+    console.log("Activity logged successfully");
+  } catch (error) {
+    console.error("Error logging activity:", error);
+    // toast.error("Failed to log activity");
+  }
+};
 
   // File Handling
   const handleFileChange = (e, docType) => {
@@ -276,7 +301,7 @@ export default function AddStaff() {
       }
 
       // Log Activity
-      await logActivity("Created staff", {
+      await logActivity("Staff created", {
         userId: authUser.uid,
         email,
         name: displayName,

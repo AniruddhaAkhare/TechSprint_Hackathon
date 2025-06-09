@@ -4,6 +4,7 @@ import { db } from '../../../config/firebase';
 import { collection, getDocs, doc, setDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from '@material-tailwind/react';
+import { runTransaction } from 'firebase/firestore';
 
 export default function Roles() {
   const { user, rolePermissions } = useAuth();
@@ -29,7 +30,7 @@ export default function Roles() {
     FinancePartner: { create: false, update: false, display: false, delete: false },
     Holidays: { create: false, update: false, display: false, delete: false },
     Leaves: { create: false, update: false, display: false, delete: false },
-    JopOpenings: { create: false, update: false, display: false, delete: false },
+    JobOpenings: { create: false, update: false, display: false, delete: false },
     Companies: { create: false, update: false, display: false, delete: false },
     templates: { create: false, update: false, display: false, delete: false },
     invoices: { create: false, update: false, display: false, delete: false },
@@ -62,21 +63,47 @@ export default function Roles() {
 
   // Activity logging function
   const logActivity = async (action, details) => {
-    if (!user) {
-      //console.error("No current user available for logging");
+    if (!user?.email) {
+      console.warn("No user email found, skipping activity log");
       return;
     }
+
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section:"Roles",
+      // adminId: adminId || "N/A",
+    };
+
     try {
-      const logRef = await addDoc(collection(db, "activityLogs"), {
-        timestamp: serverTimestamp(),
-        userId: user.uid,
-        userEmail: user.email || 'Unknown',
-        action,
-        details,
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        logs.push(logEntry);
+
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        transaction.set(activityLogRef, { logs }, { merge: true });
       });
-    } catch (err) {
+      console.log("Activity logged successfully:", action);
+    } catch (error) {
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+
 
   const handlePermissionChange = (section, action, permissions) => {
     if (editingRole) {
@@ -142,7 +169,7 @@ export default function Roles() {
       setRoles([...roles, { id: newRoleId, ...newRole }]);
 
       // Log the creation
-      await logActivity("Created role", {
+      await logActivity("Role created", {
         roleId: newRoleId,
         name: newRoleName,
         permissions: newRolePermissions,
@@ -170,7 +197,7 @@ export default function Roles() {
         FinancePartner: { create: false, update: false, display: false, delete: false },
         Holidays: { create: false, update: false, display: false, delete: false },
         Leaves: { create: false, update: false, display: false, delete: false },
-        JopOpenings: { create: false, update: false, display: false, delete: false },
+        JobOpenings: { create: false, update: false, display: false, delete: false },
         Companies: { create: false, update: false, display: false, delete: false },
         templates: { create: false, update: false, display: false, delete: false },
         invoices: { create: false, update: false, display: false, delete: false },
@@ -204,7 +231,7 @@ export default function Roles() {
       setRoles(roles.map(r => (r.id === editingRole.id ? { ...r, permissions: editingRole.permissions } : r)));
 
       // Log the update
-      await logActivity("Updated role", {
+      await logActivity("Role updated", {
         roleId: editingRole.id,
         name: editingRole.name,
         changes: {
@@ -237,7 +264,7 @@ export default function Roles() {
       await deleteDoc(doc(db, 'roles', deleteId));
 
       // Log the deletion
-      await logActivity("Deleted role", {
+      await logActivity("Role deleted", {
         roleId: deleteId,
         name: roleToDelete.name,
         permissions: roleToDelete.permissions,
