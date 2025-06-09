@@ -72,6 +72,8 @@ export default function StudentDetails() {
     setDialogOpen(true);
   };
 
+
+
   const debouncedSetSearchQuery = useMemo(
     () => debounce((value) => setSearchQuery(value), 300),
     []
@@ -132,34 +134,6 @@ export default function StudentDetails() {
       toast.error("Failed to log activity");
     }
   };
-
-  try {
-    await runTransaction(db, async (transaction) => {
-      const logDoc = await transaction.get(activityLogRef);
-      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
-
-      // Ensure logs is an array and contains only valid data
-      if (!Array.isArray(logs)) {
-        logs = [];
-      }
-
-      // Append the new log entry
-      logs.push(logEntry);
-
-      // Trim to the last 1000 entries if necessary
-      if (logs.length > 1000) {
-        logs = logs.slice(-1000);
-      }
-
-      // Update the document with the new logs array
-      transaction.set(activityLogRef, { logs }, { merge: true });
-    });
-    console.log("Activity logged successfully");
-  } catch (error) {
-    console.error("Error logging activity:", error);
-    // toast.error("Failed to log activity");
-  }
-};
 
   useEffect(() => {
     if (!canDisplay) {
@@ -664,16 +638,17 @@ export default function StudentDetails() {
                                   View Application
                                 </button>
                               </Link> :
-                              <button
-                                onClick={() => openDialog(student)}
-                                disabled={disabledStudentId === student.id}
-                                className={`${disabledStudentId === student.id
-                                  ? "bg-gray-400 cursor-not-allowed"
-                                  : "bg-gray-600 hover:bg-gray-700"
-                                  } text-white text-sm px-4 py-2 rounded-lg transition whitespace-nowrap`}
-                              >
-                                Send Enrollment Form
-                              </button>
+                              
+                                <button
+                                  onClick={() => openDialog(student)}
+                                  disabled={disabledStudentId === student.id}
+                                  className={`${disabledStudentId === student.id
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-purple-600 hover:bg-purple-700"
+                                    } text-white text-sm px-4 py-2 rounded-lg transition whitespace-nowrap`}
+                                >
+                                  Send Enrollment Form
+                                </button>
                             }
                           </td>
                         )}

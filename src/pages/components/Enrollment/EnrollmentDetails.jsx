@@ -324,7 +324,7 @@ const EnrollmentDetails = () => {
     try {
       await deleteDoc(doc(db, "enrollments", id));
       toast.success("Enrollment deleted successfully.");
-      navigate("/admin/enrollments");
+      navigate("/studentdetails");
     } catch (error) {
       console.error("Delete failed:", error);
       toast.error("Failed to delete enrollment.");
@@ -374,7 +374,7 @@ const EnrollmentDetails = () => {
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Enrollment Not Found</h2>
           <p className="text-gray-600 mb-4">The enrollment you're looking for doesn't exist.</p>
           <button
-            onClick={() => navigate("/admin/enrollments")}
+            onClick={() => navigate("/studentdetails")}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
           >
             Back to Enrollments
@@ -385,14 +385,14 @@ const EnrollmentDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen w-[75vw] ml-[20%] bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate("/admin/enrollments")}
+                onClick={() => navigate("/studentdetails")}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
