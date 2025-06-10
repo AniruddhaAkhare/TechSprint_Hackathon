@@ -108,6 +108,7 @@ import AttendanceEmployee from  './pages/components/HRManagement/AttendanceDashb
 import LeaveManagement from './pages/components/HRManagement/Lmanagement.jsx'
 import MyLeaveSummery from './pages/components/HRManagement/MyLeaveSummery.jsx'
 import LeaveCalendre from './pages/components/HRManagement/LeaveCalendre.jsx'
+import EnrollmentDetails from './pages/components/Enrollment/EnrollmentDetails.jsx';
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
   const auth = getAuth();
@@ -294,6 +295,9 @@ export default function App() {
                 <Route path="/companies" element={<Companies />} />
                 <Route path="/job-openings" element={<JobOpenings />} />
                 <Route path="/recruiter-view/:id" element={<RecruiterView />} />
+
+
+                <Route path="/enrollment/:id" element={<EnrollmentDetails/>}/>
               </Routes>
             </div>
           </div>
