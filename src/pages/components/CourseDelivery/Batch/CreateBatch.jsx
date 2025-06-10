@@ -57,7 +57,7 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user
         // Fetch Centers using hardcoded instituteId
         const instituteId = "RDJ9wMXGrIUk221MzDxP";
         console.log("Fetching centers for instituteId:", instituteId);
-        const centerCollection = collection(db, "instituteSetup", instituteId, "Center");
+        const centerCollection = collection(db, "Branch");
         const centerSnapshot = await getDocs(centerCollection);
         const centersList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         console.log("Fetched centers:", centersList);

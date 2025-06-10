@@ -37,7 +37,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
           const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
           if (!instituteSnapshot.empty) {
             const instituteId = instituteSnapshot.docs[0].id;
-            const centerSnapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
+            const centerSnapshot = await getDocs(collection(db, "Branch"));
             const activeCenters = centerSnapshot.docs
               .map((doc) => ({
                 id: doc.id,

@@ -284,7 +284,7 @@ const KanbanBoard = () => {
     });
 
     const unsubscribeBranches = onSnapshot(
-      collection(db, "instituteSetup", "RDJ9wMXGrIUk221MzDxP", "Center"),
+      collection(db, "Branch"),
       (snapshot) => {
         const branchesData = snapshot.docs.map((doc) => ({ id: doc.id, name: doc.data().name }));
         setBranches(branchesData);

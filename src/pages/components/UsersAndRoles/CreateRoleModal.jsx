@@ -161,7 +161,8 @@ const CreateRoleModal = ({ isOpen, onClose, fetchRoles, roleToEdit }) => {
     "templates",
     "invoices",
     "activityLogs",
-    "enquiryForms"
+    "enquiryForms",
+    "Submissions",
   ];
 
   return (

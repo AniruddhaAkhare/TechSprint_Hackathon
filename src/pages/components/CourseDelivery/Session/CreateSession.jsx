@@ -68,10 +68,8 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         }
 
         const centerPromises = institutesSnapshot.docs.map(async (instituteDoc) => {
-          const centersQuery = query(
-            collection(db, "instituteSetup", instituteDoc.id, "Center"),
-            where("isActive", "==", true)
-          );
+          const centersQuery =
+            collection(db, "Branch");
           const centersSnapshot = await getDocs(centersQuery);
           return centersSnapshot.docs.map(doc => ({
             id: doc.id,

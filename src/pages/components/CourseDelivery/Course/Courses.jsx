@@ -57,7 +57,7 @@ export default function Courses() {
   const EnrollmentsCollectionRef = collection(db, "enrollments");
   const LogsCollectionRef = collection(db, "activityLogs");
   const instituteId = "RDJ9wMXGrIUk221MzDxP";
-  const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+  const CenterCollectionRef = collection(db, "Branch");
 
   const toggleSidebar = () => setIsOpen((prev) => !prev);
 
@@ -109,28 +109,28 @@ export default function Courses() {
   }
 };
   
-  const fetchLogs = useCallback(() => {
-    if (!isAdmin) return;
-    const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const allLogs = [];
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data();
-          (data.logs || []).forEach((log) => {
-            allLogs.push({ id: doc.id, ...log });
-          });
-        });
-        allLogs.sort(
-          (a, b) =>
-            (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
-        );
-        setLogs(allLogs);
-      },
-    );
-    return unsubscribe;
-  }, [isAdmin]);
+  // const fetchLogs = useCallback(() => {
+  //   if (!isAdmin) return;
+  //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+  //   const unsubscribe = onSnapshot(
+  //     q,
+  //     (snapshot) => {
+  //       const allLogs = [];
+  //       snapshot.docs.forEach((doc) => {
+  //         const data = doc.data();
+  //         (data.logs || []).forEach((log) => {
+  //           allLogs.push({ id: doc.id, ...log });
+  //         });
+  //       });
+  //       allLogs.sort(
+  //         (a, b) =>
+  //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+  //       );
+  //       setLogs(allLogs);
+  //     },
+  //   );
+  //   return unsubscribe;
+  // }, [isAdmin]);
 
   const fetchCenters = useCallback(async () => {
     if (!canDisplay) {
@@ -148,7 +148,7 @@ export default function Courses() {
       }
       const instituteId = 'RDJ9wMXGrIUk221MzDxP';
 
-      const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+      const CenterCollectionRef = collection(db, "Branch");
       const q = query(CenterCollectionRef, where("isActive", "==", true));
       const snapshot = await getDocs(q);
       const centerData = snapshot.docs
@@ -245,10 +245,10 @@ export default function Courses() {
     }
     const unsubscribeCourses = fetchCourses();
     fetchCenters().then(() => {
-      if (isAdmin) fetchLogs();
+      // if (isAdmin) fetchLogs();
     });
     return () => unsubscribeCourses && unsubscribeCourses();
-  }, [fetchCourses, fetchCenters, fetchLogs, canDisplay, isAdmin]);
+  }, [fetchCourses, fetchCenters, canDisplay]);
   
   const debouncedSearch = useCallback(
     debounce((term) => {
@@ -276,10 +276,10 @@ export default function Courses() {
     }
     const unsubscribeCourses = fetchCourses();
     fetchCenters().then(() => {
-      if (isAdmin) fetchLogs();
+      // if (isAdmin) fetchLogs();
     });
     return () => unsubscribeCourses && unsubscribeCourses();
-  }, [fetchCourses, fetchCenters, fetchLogs, canDisplay, isAdmin]);
+  }, [fetchCourses, fetchCenters, canDisplay, isAdmin]);
 
   // useEffect(() => {
   //   if (!canDisplay) return;
@@ -288,7 +288,7 @@ export default function Courses() {
   //     if (isAdmin) fetchLogs();
   //   });
   //   return () => unsubscribeCourses && unsubscribeCourses();
-  // }, [fetchCourses, fetchCenters, fetchLogs, canDisplay, isAdmin]);
+  // }, [fetchCourses, fetchCenters, S, canDisplay, isAdmin]);
 
   const handleCreateCourseClick = () => {
     if (!canCreate) {

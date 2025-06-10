@@ -65,7 +65,7 @@
 //       try {
 //         const [courseSnapshot, centerSnapshot, roleSnapshot, userSnapshot] = await Promise.all([
 //           getDocs(collection(db, "Course")),
-//           getDocs(collection(db, "instituteSetup", "Center")),
+//           getDocs(collection(db, "Branch")),
 //           getDocs(query(collection(db, "roles"), where("name", "==", "Sales"))),
 //           getDocs(collection(db, "Users")),
 //         ]);
@@ -1020,7 +1020,7 @@ const CreateEnquiryForm = ({ isOpen, toggleSidebar, form, logActivity }) => {
         const [courseSnapshot, centerSnapshot, roleSnapshot, userSnapshot] = await Promise.all([
           getDocs(collection(db, "Course")),
           instituteSetupDocId
-            ? getDocs(collection(db, "instituteSetup", instituteSetupDocId, "Center"))
+            ? getDocs(collection(db, "Branch"))
             : Promise.resolve({ docs: [] }),
           getDocs(query(collection(db, "roles"), where("name", "==", "Sales"))),
           getDocs(collection(db, "Users")),

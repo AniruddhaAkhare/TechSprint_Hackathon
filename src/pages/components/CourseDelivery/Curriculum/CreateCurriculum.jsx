@@ -29,10 +29,8 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
           return;
         }
         const instituteId = "RDJ9wMXGrIUk221MzDxP";
-        const centerQuery = query(
-          collection(db, 'instituteSetup', instituteId, 'Center'),
-          where('isActive', '==', true)
-        );
+        const centerQuery =
+          collection(db, 'Branch');
         const centerSnapshot = await getDocs(centerQuery);
         const centersList = centerSnapshot.docs.map((doc) => ({
           id: doc.id,

@@ -35,7 +35,7 @@ export default function StudentProfile() {
 
                 // Fetch only active centers from the Center subcollection
                 const centerQuery = query(
-                    collection(db, "instituteSetup", instituteId, "Center"),
+                    collection(db, "Branch"),
                     where("isActive", "==", true)
                 );
                 const centerSnapshot = await getDocs(centerQuery);

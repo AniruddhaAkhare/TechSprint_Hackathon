@@ -51,7 +51,7 @@ import Invoices from './pages/components/Invoices/Invoices.jsx';
 import CreateInvoice from './pages/components/Invoices/CreateInvoice.jsx';
 import UpdateInvoice from './pages/components/Invoices/UpdateInvoice.jsx';
 import Role from './pages/components/UsersAndRoles/Roles.jsx';
-import Assignments from './pages/components/CourseDelivery/Assignment/Assignment.jsx';
+import Assignment from './pages/components/CourseDelivery/Assignment/Assignment.jsx';
 import StudentInfo from './StudentInformation/StudentInfo.jsx';
 import AddCourse from './pages/components/Students/AddStudent/AddCourse.jsx';
 import FinancePartner from './pages/components/FinancePartner/FinancePartner.jsx';
@@ -195,7 +195,7 @@ export default function App() {
                 <Route path="/createSession" element={<ProtectedRoute permissionSection="Sessions" action="create"><CreateSession /></ProtectedRoute>} />
                 <Route path="/subjects" element={<ProtectedRoute permissionSection="Sessions"><Subjects /></ProtectedRoute>} />
                 <Route path="/createSubjects" element={<ProtectedRoute permissionSection="Sessions" action="create"><CreateSubjects /></ProtectedRoute>} />
-                <Route path="/assignment" element={<ProtectedRoute permissionSection="assignments"><Assignments /></ProtectedRoute>} />
+                <Route path="/assignment" element={<ProtectedRoute permissionSection="assignments"><Assignment /></ProtectedRoute>} />
                 <Route path="/feedback" element={<ProtectedRoute permissionSection="feedback"><Feedback /></ProtectedRoute>} />
 
                 {/* Instructor Routes */}

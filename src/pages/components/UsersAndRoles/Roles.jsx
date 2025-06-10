@@ -36,6 +36,7 @@ export default function Roles() {
     invoices: { create: false, update: false, display: false, delete: false },
     activityLogs: { create: false, update: false, display: false, delete: false },
     enquiryForms: { create: false, update: false, display: false, delete: false },
+    Submissions: { create: false, update: false, display: false, delete: false },
   });
   const [editingRole, setEditingRole] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -203,6 +204,8 @@ export default function Roles() {
         invoices: { create: false, update: false, display: false, delete: false },
         activityLogs: { create: false, update: false, display: false, delete: false },
         enquiryForms: { create: false, update: false, display: false, delete: false },
+        Submissions: { create: false, update: false, display: false, delete: false },
+        // assignments: { create: false, update: false, display: false, delete: false },
       });
       alert('Role created successfully!');
     } catch (error) {

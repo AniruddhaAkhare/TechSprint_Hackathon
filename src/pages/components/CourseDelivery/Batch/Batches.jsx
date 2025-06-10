@@ -56,7 +56,7 @@ export default function Batches() {
   const BatchCollectionRef = collection(db, "Batch");
   const StudentCollectionRef = collection(db, "student");
   const instituteId = "RDJ9wMXGrIUk221MzDxP"; // Hardcoded institute ID
-  const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+  const CenterCollectionRef = collection(db, "Branch");
 
   const toggleSidebar = () => setIsOpen((prev) => !prev);
 

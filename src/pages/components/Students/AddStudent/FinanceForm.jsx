@@ -1430,7 +1430,7 @@ const FinanceForm = ({
                     <TableCell colSpan={9}>
                       <Accordion>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          <Typography>Loan Downpayment</Typography>
+                          <Typography>Loan Payment</Typography>
                         </AccordionSummary>
                         <AccordionDetails>
                           <TableContainer>
@@ -1538,7 +1538,7 @@ const FinanceForm = ({
                               disabled={!canUpdate}
                               className="mt-2"
                             >
-                              Add Loan Downpayment
+                              Add Loan Payment
                             </Button>
                           </TableContainer>
                         </AccordionDetails>
@@ -1769,7 +1769,7 @@ const FinanceForm = ({
                           />
                         </label>
                       </>
-                      
+
                     ) : (
                       <>
                         <Button
@@ -1806,7 +1806,7 @@ const FinanceForm = ({
                           {financeDetails[`${doc.type}Name`]}
                         </Typography>
                       </>
-                      
+
                     )}
                   </div>
                   {/* {attachmentError[doc.type] && (
@@ -1832,6 +1832,3 @@ const FinanceForm = ({
 };
 
 export default FinanceForm;
-
-
-

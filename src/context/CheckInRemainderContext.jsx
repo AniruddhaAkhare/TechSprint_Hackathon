@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { doc, onSnapshot, collection, getDocs } from "firebase/firestore";
+import { doc, onSnapshot, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { useAuth } from "./AuthContext";
 import { toast } from "react-toastify";
@@ -18,8 +18,8 @@ export const CheckInReminderProvider = ({ children }) => {
     lastCheckOut: null,
     dailyDurations: [],
   });
-  const CHECK_IN_RADIUS = 100;
-  const CHECK_IN_REMINDER_INTERVAL = 300000;
+  const CHECK_IN_RADIUS = 100; // in meters
+  const CHECK_IN_REMINDER_INTERVAL = 300000; // 5 minutes in milliseconds
 
   useEffect(() => {
     if (!user) return;
@@ -50,25 +50,22 @@ export const CheckInReminderProvider = ({ children }) => {
       }
     );
 
-    // Fetch branches
+    // Fetch branches from Branch collection
     const fetchBranches = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "instituteSetup"));
-        if (!querySnapshot.empty) {
-          const instituteId = "RDJ9wMXGrIUk221MzDxP";
-          const branchesSnapshot = await getDocs(
-            collection(db, "instituteSetup", instituteId, "Center")
-          );
-          const branchList = branchesSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setBranches(
-            branchList.filter(
-              (branch) => branch.isActive && branch.latitude && branch.longitude
-            )
-          );
-        }
+        const instituteId = "RDJ9wMXGrIUk221MzDxP"; // Hardcoded instituteId
+        // Query the Branch collection, filter by instituteId
+        const branchesQuery =collection(db, "Branch")
+        const branchesSnapshot = await getDocs(branchesQuery);
+        const branchList = branchesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setBranches(
+          branchList.filter(
+            (branch) => branch.isActive && branch.latitude && branch.longitude
+          )
+        );
       } catch (error) {
         console.error("Error fetching branches:", error);
         toast.error("Failed to load branches.");
@@ -121,27 +118,12 @@ export const CheckInReminderProvider = ({ children }) => {
       );
     };
 
-    // const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    //   const R = 6371e3;
-    //   const φ1 = (lat1 * Math.PI) / 180;
-    //   const φ2 = (lat2 * Math.PI) / 180;
-    //   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    //   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-    //   const a =
-    //     Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    //     Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    //   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    //   return R * c;
-    // };
-
-
     const calculateDistance = (lat1, lon1, lat2, lon2) => {
       if (!lat1 || !lon1 || !lat2 || !lon2) {
         console.error("Invalid coordinates:", { lat1, lon1, lat2, lon2 });
         return Infinity; // Prevent invalid calculations
       }
-      const R = 6371e3;
+      const R = 6371e3; // Earth's radius in meters
       const φ1 = (lat1 * Math.PI) / 180;
       const φ2 = (lat2 * Math.PI) / 180;
       const Δφ = ((lat2 - lat1) * Math.PI) / 180;

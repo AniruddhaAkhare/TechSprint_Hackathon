@@ -199,7 +199,7 @@ const AddCourse = () => {
         // Fetch centers
         const instituteId = "RDJ9wMXGrIUk221MzDxP";
         const centerQuery = query(
-          collection(db, "instituteSetup", instituteId, "Center"),
+          collection(db, "Branch"),
           where("isActive", "==", true)
         );
         const centerSnapshot = await getDocs(centerQuery);

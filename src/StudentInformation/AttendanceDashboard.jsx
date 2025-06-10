@@ -83,28 +83,28 @@ export default function AttendanceDashboard() {
     }
   };
     
-    const fetchLogs = useCallback(() => {
-      if (!isAdmin) return;
-      const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const allLogs = [];
-          snapshot.docs.forEach((doc) => {
-            const data = doc.data();
-            (data.logs || []).forEach((log) => {
-              allLogs.push({ id: doc.id, ...log });
-            });
-          });
-          allLogs.sort(
-            (a, b) =>
-              (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
-          );
-          setLogs(allLogs);
-        },
-      );
-      return unsubscribe;
-    }, [isAdmin]);
+    // const fetchLogs = useCallback(() => {
+    //   if (!isAdmin) return;
+    //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    //   const unsubscribe = onSnapshot(
+    //     q,
+    //     (snapshot) => {
+    //       const allLogs = [];
+    //       snapshot.docs.forEach((doc) => {
+    //         const data = doc.data();
+    //         (data.logs || []).forEach((log) => {
+    //           allLogs.push({ id: doc.id, ...log });
+    //         });
+    //       });
+    //       allLogs.sort(
+    //         (a, b) =>
+    //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+    //       );
+    //       setLogs(allLogs);
+    //     },
+    //   );
+    //   return unsubscribe;
+    // }, [isAdmin]);
 
   // Fetch centers
   const fetchCenters = async () => {
@@ -114,7 +114,7 @@ export default function AttendanceDashboard() {
       const centersSnapshot = await getDocs(centersCollection);
       const centersData = await Promise.all(
         centersSnapshot.docs.map(async (doc) => {
-          const branchesCollection = collection(db, 'instituteSetup', doc.id, 'Center');
+          const branchesCollection = collection(db, 'Branch');
           const branchesSnapshot = await getDocs(branchesCollection);
           return branchesSnapshot.docs.map((branchDoc) => ({
             id: branchDoc.id,

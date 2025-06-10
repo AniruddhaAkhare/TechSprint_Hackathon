@@ -79,7 +79,7 @@
 //         const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
 //         if (!instituteSnapshot.empty) {
 //           const instituteId = instituteSnapshot.docs[0].id; // Use the first institute document
-//           const snapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
+//           const snapshot = await getDocs(collection(db, "Branch"));
 //           const centerData = snapshot.docs.map((doc) => ({
 //             id: doc.id,
 //             ...doc.data(),
@@ -700,7 +700,7 @@
 //         const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
 //         if (!instituteSnapshot.empty) {
 //           const instituteId = instituteSnapshot.docs[0].id;
-//           const snapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
+//           const snapshot = await getDocs(collection(db, "Branch"));
 //           const centerData = snapshot.docs.map((doc) => ({
 //             id: doc.id,
 //             ...doc.data(),
@@ -1303,28 +1303,28 @@ const logActivity = async (action, details) => {
   }
 };
   
-  const fetchLogs = useCallback(() => {
-    if (!isAdmin) return;
-    const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const allLogs = [];
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data();
-          (data.logs || []).forEach((log) => {
-            allLogs.push({ id: doc.id, ...log });
-          });
-        });
-        allLogs.sort(
-          (a, b) =>
-            (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
-        );
-        setLogs(allLogs);
-      },
-    );
-    return unsubscribe;
-  }, [isAdmin]);
+  // const fetchLogs = useCallback(() => {
+  //   if (!isAdmin) return;
+  //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+  //   const unsubscribe = onSnapshot(
+  //     q,
+  //     (snapshot) => {
+  //       const allLogs = [];
+  //       snapshot.docs.forEach((doc) => {
+  //         const data = doc.data();
+  //         (data.logs || []).forEach((log) => {
+  //           allLogs.push({ id: doc.id, ...log });
+  //         });
+  //       });
+  //       allLogs.sort(
+  //         (a, b) =>
+  //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+  //       );
+  //       setLogs(allLogs);
+  //     },
+  //   );
+  //   return unsubscribe;
+  // }, [isAdmin]);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -1359,7 +1359,7 @@ const logActivity = async (action, details) => {
         const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
         if (!instituteSnapshot.empty) {
           const instituteId = instituteSnapshot.docs[0].id;
-          const snapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
+          const snapshot = await getDocs(collection(db, "Branch"));
           const centerData = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),

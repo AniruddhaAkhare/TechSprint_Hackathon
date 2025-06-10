@@ -40,6 +40,7 @@ const Sidebar = () => {
     home: false,
     analytics: false,
     learners: false,
+    task: false,
   });
 
   // Permission checks
@@ -226,12 +227,12 @@ const Sidebar = () => {
 
 
         {/* <ul className="nav-list"> */}
-        <Link to="/tasks">
+        {/* <Link to="/tasks">
           <li className="nav-item mt-3 mb-3">
             <i class="fa-solid fa-list-check"></i>
             <span>&nbsp;&nbsp;Tasks</span>
           </li>
-        </Link>
+        </Link> */}
 
 
 
@@ -245,11 +246,11 @@ const Sidebar = () => {
         </>
         } */}
 
-        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("enquiry")}>
+        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("task")}>
           Activity
-          {accordionState.enquiry ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
+          {accordionState.task ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
         </li>
-        {accordionState.enquiry && (
+        {accordionState.task && (
           <>
             <Link to="/my-activities?view=all" className="nav-link">
               <li className="nav-item">

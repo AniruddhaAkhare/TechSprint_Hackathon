@@ -71,28 +71,28 @@ const Curriculum = () => {
     }
   };
     
-    const fetchLogs = useCallback(() => {
-      if (!isAdmin) return;
-      const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const allLogs = [];
-          snapshot.docs.forEach((doc) => {
-            const data = doc.data();
-            (data.logs || []).forEach((log) => {
-              allLogs.push({ id: doc.id, ...log });
-            });
-          });
-          allLogs.sort(
-            (a, b) =>
-              (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
-          );
-          setLogs(allLogs);
-        },
-      );
-      return unsubscribe;
-    }, [isAdmin]);
+    // const fetchLogs = useCallback(() => {
+    //   // if (!isAdmin) return;
+    //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    //   const unsubscribe = onSnapshot(
+    //     q,
+    //     (snapshot) => {
+    //       const allLogs = [];
+    //       snapshot.docs.forEach((doc) => {
+    //         const data = doc.data();
+    //         (data.logs || []).forEach((log) => {
+    //           allLogs.push({ id: doc.id, ...log });
+    //         });
+    //       });
+    //       allLogs.sort(
+    //         (a, b) =>
+    //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+    //       );
+    //       setLogs(allLogs);
+    //     },
+    //   );
+    //   return unsubscribe;
+    // }, [isAdmin]);
 
   useEffect(() => {
     if (!canDisplay) return;

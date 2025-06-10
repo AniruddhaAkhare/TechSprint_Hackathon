@@ -102,7 +102,7 @@ const EnquiryAnalyticsPage = () => {
   // Fetch Branches
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      collection(db, "instituteSetup", 'RDJ9wMXGrIUk221MzDxP', "Center"),
+      collection(db, "Branch"),
       (snapshot) => {
         const branchesData = snapshot.docs.map((doc) => ({
           id: doc.id,

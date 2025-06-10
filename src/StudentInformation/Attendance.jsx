@@ -77,7 +77,7 @@ const logActivity = async (action, details) => {
       const centersSnapshot = await getDocs(centersCollection);
       const centersData = await Promise.all(
         centersSnapshot.docs.map(async (doc) => {
-          const branchesCollection = collection(db, 'instituteSetup', doc.id, 'Center');
+          const branchesCollection = collection(db, 'Branch');
           const branchesSnapshot = await getDocs(branchesCollection);
           return branchesSnapshot.docs.map((branchDoc) => ({
             id: branchDoc.id,

@@ -77,7 +77,7 @@ export default function StaffAndUsers() {
         if (!instituteSnapshot.empty) {
           const instituteId = instituteSnapshot.docs[0].id;
           const centerQuery = query(
-            collection(db, "instituteSetup", instituteId, "Center"),
+            collection(db, "Branch"),
             where("isActive", "==", true)
           );
           const centerData = await getDocs(centerQuery);

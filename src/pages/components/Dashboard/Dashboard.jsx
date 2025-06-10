@@ -74,7 +74,7 @@ const Dashboard = () => {
         const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
         if (!instituteSnapshot.empty) {
           const instituteId = instituteSnapshot.docs[0].id;
-          const centersQuery = query(collection(db, "instituteSetup", instituteId, "Center"));
+          const centersQuery = query(collection(db, "Branch"));
 
           const unsubscribeCenters = onSnapshot(
             centersQuery,
