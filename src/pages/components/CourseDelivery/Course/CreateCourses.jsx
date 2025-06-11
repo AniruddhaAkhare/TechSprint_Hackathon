@@ -6,20 +6,34 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
   const [instructors, setInstructors] = useState([]);
   const [centers, setCenters] = useState([]);
   const [owners, setOwners] = useState([]);
-  const [curriculums, setCurriculums] = useState([]); // feature/student-update
+  const [curriculums, setCurriculums] = useState([]);
+  const [coupons, setCoupons] = useState([]);
   const [courseName, setCourseName] = useState("");
   const [courseDescription, setCourseDescription] = useState("");
   const [courseFee, setCourseFee] = useState("");
   const [courseDuration, setCourseDuration] = useState("");
   const [courseMode, setCourseMode] = useState("");
+  const [courseVisibility, setCourseVisibility] = useState("everyone");
   const [courseStatus, setCourseStatus] = useState("Active");
-  const [centerIds, setCenterIds] = useState([]); // Changed from centerAssignments
+  const [centerIds, setCenterIds] = useState([]);
   const [selectedOwners, setSelectedOwners] = useState([]);
-  const [selectedCurriculums, setSelectedCurriculums] = useState([]); //set curriculums feature/student-update
+  const [selectedCurriculums, setSelectedCurriculums] = useState([]);
+  const [selectedCoupons, setSelectedCoupons] = useState([]);
   const [totalStudentCount, setTotalStudentCount] = useState(0);
   const [availableCenters, setAvailableCenters] = useState([]);
   const [availableOwners, setAvailableOwners] = useState([]);
-  const [availableCurriculums, setAvailableCurriculums] = useState([]); //set available curriculums feature/student-update
+  const [availableCurriculums, setAvailableCurriculums] = useState([]);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+
+
+  // Coupon creation states
+  const [showCouponForm, setShowCouponForm] = useState(false);
+  const [newCouponCode, setNewCouponCode] = useState("");
+  const [newCouponDiscount, setNewCouponDiscount] = useState("");
+  const [newCouponType, setNewCouponType] = useState("percentage");
+  const [newCouponExpiryDate, setNewCouponExpiryDate] = useState("");
+  const [newCouponMaxUses, setNewCouponMaxUses] = useState("");
+  const [newCouponDescription, setNewCouponDescription] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,7 +75,12 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
         const curriculumList = curriculumSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setCurriculums(curriculumList);
         setAvailableCurriculums(curriculumList);
-        // console.log(selectedCurriculums, availableCurriculums);
+
+        // Fetch Coupons
+        const couponSnapshot = await getDocs(collection(db, "coupons"));
+        const couponList = couponSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setCoupons(couponList);
+        setAvailableCoupons(couponList);
 
         // Fetch student count if editing a course
         if (course) {
@@ -77,6 +96,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
           setTotalStudentCount(matchedLearners.length);
         }
       } catch (err) {
+        console.error("Error fetching data:", err);
       }
     };
     fetchData();
@@ -89,8 +109,11 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
       setCourseFee(course.fee || "");
       setCourseDuration(course.duration || "");
       setCourseMode(course.mode || "");
+
+      
       setCourseStatus(course.status || "Active");
-      // Handle centers, centerIds, or centerId
+      setCourseVisibility(course.visibility || "everyone");
+
       setCenterIds(
         course.centerIds ||
         (course.centers?.map((c) => c.centerId) || []) ||
@@ -98,13 +121,16 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
       );
       setSelectedOwners(course.owners || []);
       setSelectedCurriculums(course.curriculums || []);
+      setSelectedCoupons(course.coupons || []);
       setAvailableCenters(centers.filter((c) => !course.centerIds?.includes(c.id) && !course.centers?.some((ca) => ca.centerId === c.id)));
       setAvailableOwners(owners.filter((o) => !course.owners?.includes(o.id)));
-      setAvailableCurriculums(curriculums.filter((c)=> !course.curriculums?.includes(c.id)));
+      setAvailableCurriculums(curriculums.filter((c) => !course.curriculums?.includes(c.id)));
+      setAvailableCoupons(coupons.filter((c) => !course.coupons?.includes(c.id)));
+
     } else {
       resetForm();
     }
-  }, [course, centers, owners, curriculums]);
+  }, [course, centers, owners, curriculums, coupons]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,20 +142,20 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
       duration: courseDuration,
       mode: courseMode,
       status: courseStatus,
-      centerIds, // Save as array of strings
+      centerIds,
       owners: selectedOwners,
       curriculums: selectedCurriculums,
+      coupons: selectedCoupons,
+      visibility: courseVisibility,
       createdAt: serverTimestamp(),
     };
-
 
     try {
       if (course) {
         const courseRef = doc(db, "Course", course.id);
         const oldData = (await getDoc(courseRef)).data() || {};
 
-
-        await updateDoc(courseRef, { ...courseData, centers: deleteField() }); // Remove old centers field
+        await updateDoc(courseRef, { ...courseData, centers: deleteField() });
         const changes = Object.keys(courseData).reduce((acc, key) => {
           if (key !== "createdAt" && JSON.stringify(oldData[key]) !== JSON.stringify(courseData[key])) {
             acc[key] = { oldValue: oldData[key], newValue: courseData[key] };
@@ -152,6 +178,48 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
     }
   };
 
+  const handleCreateCoupon = async (e) => {
+    e.preventDefault();
+
+    if (!newCouponCode || !newCouponDiscount) {
+      alert("Please fill in all required coupon fields");
+      return;
+    }
+
+    const couponData = {
+      code: newCouponCode.toUpperCase(),
+      discount: parseFloat(newCouponDiscount),
+      type: newCouponType,
+      description: newCouponDescription,
+      expiryDate: newCouponExpiryDate ? new Date(newCouponExpiryDate) : null,
+      maxUses: newCouponMaxUses ? parseInt(newCouponMaxUses) : null,
+      currentUses: 0,
+      isActive: true,
+      createdAt: serverTimestamp(),
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, "coupons"), couponData);
+      const newCoupon = { id: docRef.id, ...couponData };
+
+      setCoupons([...coupons, newCoupon]);
+      setAvailableCoupons([...availableCoupons, newCoupon]);
+
+      // Reset coupon form
+      setNewCouponCode("");
+      setNewCouponDiscount("");
+      setNewCouponType("percentage");
+      setNewCouponExpiryDate("");
+      setNewCouponMaxUses("");
+      setNewCouponDescription("");
+      setShowCouponForm(false);
+
+      alert("Coupon created successfully!");
+    } catch (error) {
+      alert(`Failed to create coupon: ${error.message}`);
+    }
+  };
+
   const resetForm = () => {
     setCourseName("");
     setCourseDescription("");
@@ -161,10 +229,14 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
     setCourseStatus("Active");
     setCenterIds([]);
     setSelectedOwners([]);
+    setSelectedCurriculums([]);
+    setSelectedCoupons([]);
     setTotalStudentCount(0);
     setAvailableCenters(centers);
     setAvailableOwners(owners);
     setAvailableCurriculums(curriculums);
+    setAvailableCoupons(coupons);
+    setCourseVisibility("everyone")
   };
 
   const handleAddCenter = (centerId) => {
@@ -193,7 +265,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
     if (removedOwner) setAvailableOwners([...availableOwners, removedOwner]);
   };
 
-   const handleAddCurriculum = (curriculumId) => {
+  const handleAddCurriculum = (curriculumId) => {
     if (curriculumId && !selectedCurriculums.includes(curriculumId)) {
       setSelectedCurriculums([...selectedCurriculums, curriculumId]);
       setAvailableCurriculums(availableCurriculums.filter((c) => c.id !== curriculumId));
@@ -205,6 +277,22 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
     const removedCurriculum = curriculums.find((c) => c.id === curriculumId);
     if (removedCurriculum) setAvailableCurriculums([...availableCurriculums, removedCurriculum]);
   };
+
+  const handleAddCoupon = (couponId) => {
+    if (couponId && !selectedCoupons.includes(couponId)) {
+      setSelectedCoupons([...selectedCoupons, couponId]);
+      setAvailableCoupons(availableCoupons.filter((c) => c.id !== couponId));
+    }
+  };
+
+  const handleRemoveCoupon = (couponId) => {
+    setSelectedCoupons(selectedCoupons.filter((id) => id !== couponId));
+    const removedCoupon = coupons.find((c) => c.id === couponId);
+    if (removedCoupon) setAvailableCoupons([...availableCoupons, removedCoupon]);
+  };
+
+
+
 
   return (
     <div
@@ -220,10 +308,8 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
           onClick={toggleSidebar}
           className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
         >
-
           Back
         </button>
-
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-xl shadow-lg">
@@ -366,7 +452,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
                         <td className="px-4 py-2">{index + 1}</td>
                         <td className="px-4 py-2">{center?.name || `Center ${centerId}`}</td>
                         <td className="px-4 py-2">
-                          <button onClick={() => handleRemoveCenter(centerId)} className="text-red-500 hover:text-red-700">✕</button>
+                          <button type="button" onClick={() => handleRemoveCenter(centerId)} className="text-red-500 hover:text-red-700">✕</button>
                         </td>
                       </tr>
                     );
@@ -409,7 +495,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
                         <td className="px-4 py-2">{index + 1}</td>
                         <td className="px-4 py-2">{owner?.displayName}</td>
                         <td className="px-4 py-2">
-                          <button onClick={() => handleRemoveOwner(ownerId)} className="text-red-500 hover:text-red-700">✕</button>
+                          <button type="button" onClick={() => handleRemoveOwner(ownerId)} className="text-red-500 hover:text-red-700">✕</button>
                         </td>
                       </tr>
                     );
@@ -419,7 +505,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
             </div>
           )}
         </div>
-        
+
         {/* Curriculums Section */}
         <div>
           <label htmlFor="curriculums" className="block text-sm font-medium text-gray-700 mb-1">Curriculums</label>
@@ -452,7 +538,7 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
                         <td className="px-4 py-2">{index + 1}</td>
                         <td className="px-4 py-2">{curriculum?.name}</td>
                         <td className="px-4 py-2">
-                          <button onClick={() => handleRemoveCurriculum(curriculumId)} className="text-red-500 hover:text-red-700">✕</button>
+                          <button type="button" onClick={() => handleRemoveCurriculum(curriculumId)} className="text-red-500 hover:text-red-700">✕</button>
                         </td>
                       </tr>
                     );
@@ -463,6 +549,178 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
           )}
         </div>
 
+         <div>
+            <label htmlFor="courseVisibility" className="block text-sm font-medium text-gray-700 mb-1">
+              Course Visibility <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="courseVisibility"
+              value={courseVisibility}
+              onChange={(e) => setCourseVisibility(e.target.value)}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+            >
+              <option value="everyone">Everyone</option>
+              <option value="learners">Learners Only</option>
+            </select>
+          </div>
+
+        {/* Coupons Section */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <label htmlFor="coupons" className="block text-sm font-medium text-gray-700">Coupons</label>
+            <button
+              type="button"
+              onClick={() => setShowCouponForm(!showCouponForm)}
+              className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm"
+            >
+              {showCouponForm ? "Cancel" : "Create New Coupon"}
+            </button>
+          </div>
+
+          {/* Create Coupon Form */}
+          {showCouponForm && (
+            <div className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-50">
+              <h4 className="text-lg font-semibold mb-3">Create New Coupon</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Coupon Code <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newCouponCode}
+                    onChange={(e) => setNewCouponCode(e.target.value)}
+                    placeholder="e.g., SAVE20"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Discount <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={newCouponDiscount}
+                    onChange={(e) => setNewCouponDiscount(e.target.value)}
+                    placeholder="e.g., 20"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
+                  <select
+                    value={newCouponType}
+                    onChange={(e) => setNewCouponType(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="fixed">Fixed Amount</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                  <input
+                    type="date"
+                    value={newCouponExpiryDate}
+                    onChange={(e) => setNewCouponExpiryDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Uses</label>
+                  <input
+                    type="number"
+                    value={newCouponMaxUses}
+                    onChange={(e) => setNewCouponMaxUses(e.target.value)}
+                    placeholder="Leave empty for unlimited"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <input
+                    type="text"
+                    value={newCouponDescription}
+                    onChange={(e) => setNewCouponDescription(e.target.value)}
+                    placeholder="e.g., Early bird discount"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleCreateCoupon}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                >
+                  Create Coupon
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCouponForm(false)}
+                  className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          <select
+            id="coupons"
+            onChange={(e) => handleAddCoupon(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+          >
+            <option value="">Select a Coupon</option>
+            {availableCoupons.map((coupon) => (
+              <option key={coupon.id} value={coupon.id}>
+                {coupon.code} - {coupon.discount}{coupon.type === 'percentage' ? '%' : ' Fixed'}
+                {coupon.description && ` (${coupon.description})`}
+              </option>
+            ))}
+          </select>
+
+          {selectedCoupons.length > 0 && (
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Sr No</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Coupon Code</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Discount</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Type</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Description</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {selectedCoupons.map((couponId, index) => {
+                    const coupon = coupons.find((c) => c.id === couponId);
+                    return (
+                      <tr key={couponId}>
+                        <td className="px-4 py-2">{index + 1}</td>
+                        <td className="px-4 py-2 font-semibold text-blue-600">{coupon?.code}</td>
+                        <td className="px-4 py-2">{coupon?.discount}{coupon?.type === 'percentage' ? '%' : ''}</td>
+                        <td className="px-4 py-2 capitalize">{coupon?.type}</td>
+                        <td className="px-4 py-2">{coupon?.description || 'N/A'}</td>
+                        <td className="px-4 py-2">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCoupon(couponId)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
         {/* Submit Button */}
         <div className="flex justify-end pt-4">
@@ -473,9 +731,8 @@ const CreateCourses = ({ isOpen, toggleSidebar, course, logActivity, centers: pr
             {course ? "Update Course" : "Create Course"}
           </button>
         </div>
-      </form>
-
-    </div>
+      </form >
+    </div >
   );
 };
 
