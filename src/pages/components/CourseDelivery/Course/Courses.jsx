@@ -36,6 +36,9 @@ export default function Courses() {
   const [openDelete, setOpenDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [loadingCenters, setLoadingCenters] = useState(true);
+
+
+
   const [deleteMessage, setDeleteMessage] = useState(
     "Are you sure you want to delete this course? This action cannot be undone."
   );
