@@ -72,25 +72,10 @@ export default function StudentDetails() {
     setDialogOpen(true);
   };
 
-
-
   const debouncedSetSearchQuery = useMemo(
     () => debounce((value) => setSearchQuery(value), 300),
     []
   );
-
-  // Activity logging with batch support
-  // const logActivity = async (batch, action, details) => {
-  //   if (!user?.email) return;
-  //   batch.set(doc(collection(db, "activityLogs")), {
-  //     action,
-  //     details,
-  //     timestamp: new Date().toISOString(),
-  //     userEmail: user.email,
-  //     userId: user.uid,
-  //     adminId: adminId || "N/A",
-  //   });
-  // };
 
   const logActivity = async (action, details) => {
     if (!user?.email) return;
@@ -185,7 +170,7 @@ export default function StudentDetails() {
             return {
               id: userDoc.id,
               ...userData,
-              enquiryInfo, // Attach enquiryInfo to user object
+              enquiryInfo, 
             };
           })
         );
@@ -555,28 +540,7 @@ export default function StudentDetails() {
         <h2 className="text-3xl font-bold mt-12 text-gray-800">Not Enrolled Students</h2>
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg flex flex-col min-h-[70vh] mt-4 border border-gray-100">
           {/* Search Bar */}
-          <div className="mb-6">
-            <div className="relative max-w-xl mx-auto sm:mx-0 w-full">
-              <svg
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                viewBox="0 0 24 24"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                onChange={(e) => debouncedSetSearchQuery(e.target.value)}
-                placeholder="Search by name, email, or phone..."
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 text-gray-700 placeholder-gray-400"
-              />
-            </div>
-          </div>
+          
 
           {/* Table Container */}
           <div className="overflow-auto max-h-[calc(100vh-350px)] rounded-xl border border-gray-200 shadow-inner">

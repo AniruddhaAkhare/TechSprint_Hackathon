@@ -1,78 +1,42 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "./Sidebar.css";
 import {
-  FaTachometerAlt,
-  FaBook,
-  FaClipboardList,
-  FaCalendarAlt,
-  FaUsers,
-  FaUserGraduate,
-  FaQuestionCircle,
-  FaMoneyBillAlt,
-  FaChevronDown,
-  FaChevronUp,
-} from "react-icons/fa";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc, collection, getDocs, query, where, setDoc } from "firebase/firestore";
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  where,
+  setDoc,
+} from "firebase/firestore";
+import { db, auth } from "../../config/firebase";
 import { useAuth } from "../../context/AuthContext";
-import UserProfile from "./UserProfile";
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const auth = getAuth();
-  const db = getFirestore();
-  const { user: authUser, rolePermissions } = useAuth();
-  const [user, setUser] = useState(null);
+  const { user, rolePermissions } = useAuth();
+  const [currentUser, setCurrentUser] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [instituteLogo, setInstituteLogo] = useState("/img/fireblaze.jpg");
   const [logoError, setLogoError] = useState(null);
-  // const [trialStatus, setTrialStatus] = useState({ trialActive: false, daysRemaining: 0 });
   const [error, setError] = useState(null);
-  const [accordionState, setAccordionState] = useState({
-    enquiry: false,
-    academic: false,
-    finance: false,
-    placement: false,
-    users: false,
-    settings: false,
-    hr: false,
-    home: false,
-    analytics: false,
-    learners: false,
-    task: false,
-  });
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [accordionState, setAccordionState] = useState({});
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Permission checks
-  const canViewCourses = rolePermissions?.Course?.display || false;
-  const canViewEnrollment = rolePermissions?.enrollments?.display || false;
-  const canViewInstitute = rolePermissions?.instituteSetup?.display || false;
-  const canViewCurriculum = rolePermissions?.curriculums?.display || false;
-  const canViewBatches = rolePermissions?.Batch?.display || false;
-  const canViewSessions = rolePermissions?.Sessions?.display || false;
-  const canViewAttendance = rolePermissions?.attendance?.display || false;
-  const canViewAssignments = rolePermissions?.assignments?.display || false;
-  const canViewPerformance = rolePermissions?.performance?.display || false;
-  const canViewUsers = rolePermissions?.Users?.display || false;
-  const canViewStudents = rolePermissions?.student?.display || false;
-  const canViewInstructors = rolePermissions?.Instructor?.display || false;
-  const canViewRoles = rolePermissions?.roles?.display || false;
-  const canViewQuestionBank = rolePermissions?.questions?.display || false;
-  const canViewQuestionTemplate = rolePermissions?.templates?.display || false;
-  const canViewInvoices = rolePermissions?.invoice?.display || false;
-  const canViewFee = rolePermissions?.fee?.display || false;
-  const canViewEnquiry = rolePermissions?.enquiries?.display || false;
-  const canAddEnquiryForm = rolePermissions?.enquiries?.display || false;
-  const canViewFinancePartners = rolePermissions?.FinancePartner?.display || false;
-  const canViewactivityLogs = rolePermissions?.activityLogs?.display || false;
-  const canViewLeaves = rolePermissions?.Leaves?.display || false;
-  const canViewCompanies = rolePermissions?.Companies?.display || false;
-  const canViewJobOpenings = rolePermissions?.JobOpenings?.display || false;
-  const canViewEnquiryForms = rolePermissions?.enquiryForms?.display || false;
-  const canViewHolidays = rolePermissions?.Holidays?.display || false;
-  const canViewLearners = rolePermissions?.student?.display || false;
+  // Permission Checks
+  const canViewSection = (section) => rolePermissions?.[section]?.display || false;
 
-
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -81,18 +45,16 @@ const Sidebar = () => {
           const userDocRef = doc(db, "Users", currentUser.email);
           const userDocSnap = await getDoc(userDocRef);
           if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            setUser({
-              name: userData.displayname || "",
-              // initials: `${userData.f_name?.charAt(0) || ""}${userData.l_name?.charAt(0) || ""}`.toUpperCase(),
+            setCurrentUser({
+              name: userDocSnap.data().displayname || "",
             });
           } else {
-            setUser({ name: "User" });
+            setCurrentUser({ name: "User" });
           }
         } catch (err) {
-          //console.error("Error fetching user data:", err);
+          console.error("Error fetching user data:", err);
           setError("Failed to fetch user data: " + err.message);
-          setUser({ name: "User" });
+          setCurrentUser({ name: "User" });
         }
 
         try {
@@ -102,7 +64,7 @@ const Sidebar = () => {
             if (instituteData.logoUrl) setInstituteLogo(instituteData.logoUrl);
           }
         } catch (err) {
-          //console.error("Error fetching institute logo:", err);
+          console.error("Error fetching institute logo:", err);
           setLogoError("Failed to fetch institute logo.");
         }
 
@@ -112,79 +74,46 @@ const Sidebar = () => {
             where("superAdminId", "==", currentUser.uid)
           );
           const instituteSnapshot = await getDocs(instituteQuery);
-
-          // if (!instituteSnapshot.empty) {
-          //   const instituteData = instituteSnapshot.docs[0].data();
-          //   // const trialEndDate = new Date(instituteData.trialEndDate);
-          //   const currentDate = new Date();
-
-          //   // if (isNaN(trialEndDate.getTime())) {
-          //   //   setTrialStatus({ trialActive: false, daysRemaining: 0 });
-          //   //   setError("Invalid trialEndDate format.");
-          //   //   return;
-          //   // }
-
-          //   // const timeDiff = trialEndDate - currentDate;
-          //   // const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-          //   // // const isTrialActive = instituteData.trialActive && timeDiff > 0;
-
-          //   // setTrialStatus({
-          //   //   trialActive: isTrialActive,
-          //   //   daysRemaining: daysRemaining > 0 ? daysRemaining : 0,
-          //   // });
-
-            
-          // }
-          //  else {
-          //   const trialStartDate = new Date();
-          //   const trialEndDate = new Date(trialStartDate);
-          //   trialEndDate.setDate(trialStartDate.getDate() + 7);
-
-          //   const newInstituteData = {
-          //     instituteName: `${currentUser.email}'s Institute`,
-          //     superAdminId: currentUser.uid,
-          //     trialStartDate: trialStartDate.toISOString(),
-          //     trialEndDate: trialEndDate.toISOString(),
-          //     trialActive: true,
-          //     createdAt: new Date().toISOString(),
-          //   };
-
-            await setDoc(doc(db, "instituteSetup", currentUser.uid), newInstituteData);
-            // const timeDiff = trialEndDate - new Date();
-            // const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-            // setTrialStatus({ trialActive: true, daysRemaining });
-          // }
-        } 
-        catch (err) {
-        //   //console.error("Error fetching trial status:", err);
-        //   setError("Failed to fetch trial status: " + err.message);
-        //   setTrialStatus({ trialActive: false, daysRemaining: 0 });
+          if (instituteSnapshot.empty) {
+            const trialStartDate = new Date();
+            const trialEndDate = new Date(trialStartDate);
+            trialEndDate.setDate(trialStartDate.getDate() + 7);
+            await setDoc(doc(db, "instituteSetup", currentUser.uid), {
+              instituteName: `${currentUser.email}'s Institute`,
+              superAdminId: currentUser.uid,
+              trialStartDate: trialStartDate.toISOString(),
+              trialEndDate: trialEndDate.toISOString(),
+              trialActive: true,
+              createdAt: new Date().toISOString(),
+            });
+          }
+        } catch (err) {
+          console.error("Error setting trial status:", err);
+          setError("Failed to set trial status: " + err.message);
         }
+      } else {
+        setCurrentUser(null);
       }
-       else {
-        setUser(null);
-        // setTrialStatus({ trialActive: false, daysRemaining: 0 });
-      }
-  });
+    });
 
     return () => unsubscribe();
-  }, [auth, db, navigate, authUser]);
+  }, [auth, db]);
 
   const toggleMenu = () => setShowMenu(!showMenu);
-
+  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      setShowMenu(false);
       navigate("/login");
     } catch (err) {
-      //console.error("Error logging out: ", err);
+      console.error("Error logging out:", err);
+      setError("Failed to log out: " + err.message);
     }
   };
 
   const handleImageError = (e) => {
     setLogoError("Failed to load logo image.");
-    e.target.src = "/img/fireblaze.jpg";
+    e.target.src = "https://placehold.co/100x100/A0B2C3/FFFFFF?text=Logo";
   };
 
   const toggleAccordion = (section) => {
@@ -194,386 +123,183 @@ const Sidebar = () => {
     }));
   };
 
-  if (!authUser) return null;
+  const renderNavItem = (to, icon, label, condition = true) => {
+    if (!condition) return null;
+    return (
+      <Link to={to} className="block">
+        <li
+          className={`flex items-center py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200 rounded-md ${isCollapsed || isMobile ? "justify-center" : ""
+            }`}
+        >
+          <i className={`${icon} text-base`}></i>
+          {!isCollapsed && !isMobile && <span className="ml-3 text-sm">{label}</span>}
+        </li>
+      </Link>
+    );
+  };
+
+  const renderSection = (title, sectionKey, children) => {
+    if (!children.some((child) => child)) return null;
+
+    return (
+      <>
+        <li
+          className={`flex items-center justify-between py-3 px-4 my-1 bg-gray-100 rounded-md font-semibold text-gray-800 cursor-pointer hover:bg-gray-200 transition-colors duration-200 ${isCollapsed || isMobile ? "justify-center" : ""
+            }`}
+          onClick={() => toggleAccordion(sectionKey)}
+        >
+          {!isCollapsed && !isMobile && <span>{title}</span>}
+          <div className={`${isCollapsed || isMobile ? "hidden" : "block"}`}>
+            {accordionState[sectionKey] ? (
+              <i className="fas fa-chevron-up text-sm"></i>
+            ) : (
+              <i className="fas fa-chevron-down text-sm"></i>
+            )}
+          </div>
+        </li>
+        {accordionState[sectionKey] && (
+          <div className={`${isCollapsed || isMobile ? "hidden" : "block"}`}>{children}</div>
+        )}
+      </>
+    );
+  };
+
+  if (!user) return null;
 
   return (
-    <div className="sidebar fixed">
-      <div className="logo">
-        <img
-          src={instituteLogo}
-          alt="Institute Logo"
-          className="logo-icon"
-          onError={handleImageError}
-          onLoad={() => setLogoError(null)}
-        />
-        <span>Fireblaze</span>
-        {logoError && <div style={{ color: "red", fontSize: "12px" }}>{logoError}</div>}
+    <div
+      className={`fixed h-full bg-white transition-all duration-300 ease-in-out shadow-lg z-50 flex flex-col rounded-lg ${isCollapsed || isMobile ? "w-20" : "w-[20vw]"
+        }`}
+    >
+      {/* Header */}
+      <div
+        className={`flex items-center justify-between p-4 border-b border-gray-200 ${isCollapsed || isMobile ? "px-2 py-4" : "px-4 py-4"
+          }`}
+      >
+        {!isCollapsed && !isMobile && (
+          <div className="flex items-center space-x-2">
+            <img
+              src={instituteLogo}
+              alt="Institute Logo"
+              className="w-8 h-8 rounded-full object-cover"
+              onError={handleImageError}
+              onLoad={() => setLogoError(null)}
+            />
+            <span className="text-xl font-semibold text-gray-800">Fireblaze</span>
+          </div>
+        )}
+        <button
+          onClick={toggleSidebar}
+          className="p-2 rounded-full text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out"
+        >
+          {isCollapsed || isMobile ? (
+            <i className="fas fa-bars text-xl"></i>
+          ) : (
+            <i className="fas fa-times text-xl"></i>
+          )}
+        </button>
       </div>
 
+      {/* Error Messages */}
+      {logoError && (
+        <div className="text-red-500 text-xs p-2 text-center">{logoError}</div>
+      )}
       {error && (
-        <div className="error-message" style={{ color: "red", padding: "10px", fontSize: "14px" }}>
-          {error}
-        </div>
+        <div className="text-red-500 text-sm p-2 text-center">{error}</div>
       )}
 
-      <ul className="nav-list">
-        <Link to="/my-profile">
-          <li className="nav-item mt-3 mb-3">
-            {/* <FaTachometerAlt className="nav-icon" /> */}
-            <i class="fa fa-home" aria-hidden="true"></i>
-            <span>&nbsp;&nbsp;Home</span>
-          </li>
-        </Link>
+      {/* Navigation List */}
+      <ul
+        className="flex-grow overflow-y-auto custom-scrollbar"
+        style={{
+          scrollbarWidth: "none", // For Firefox
+          msOverflowStyle: "none", // For IE and Edge
+        }}
+      >
+        {/* Hide scrollbar for WebKit browsers */}
+        <style jsx>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            display: none; /* Hide scrollbar */
+          }
+        `}</style>
 
-
-        {/* <ul className="nav-list"> */}
-        {/* <Link to="/tasks">
-          <li className="nav-item mt-3 mb-3">
-            <i class="fa-solid fa-list-check"></i>
-            <span>&nbsp;&nbsp;Tasks</span>
-          </li>
-        </Link> */}
-
-
-
-        {/* <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("home")}>
-          Home
-          {accordionState.home ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
-        </li> */}
-        {/* {accordionState.home &&
-        <>
-          
-        </>
-        } */}
-
-        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("task")}>
-          Activity
-          {accordionState.task ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
-        </li>
-        {accordionState.task && (
-          <>
-            <Link to="/my-activities?view=all" className="nav-link">
-              <li className="nav-item">
-                <i className="fa fa-home" aria-hidden="true"></i>
-                <span>&nbsp;&nbsp; All Activities</span>
-              </li>
-            </Link>
-            <Link to="/my-activities?view=my" className="nav-link">
-              <li className="nav-item">
-                <i className="fa-brands fa-wpforms"></i>
-                <span>&nbsp;&nbsp; My Activities</span>
-              </li>
-            </Link>
-            <Link to="/my-activities?view=dueToday" className="nav-link">
-              <li className="nav-item">
-                <i className="fa-brands fa-wpforms"></i>
-                <span>&nbsp;&nbsp; Due Today</span>
-              </li>
-            </Link>
-          </>
-        )}
-
-        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("enquiry")}>
-          Sales And Marketing
-          {accordionState.enquiry ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
-        </li>
-        {accordionState.enquiry &&
-          <>
-            {canViewEnquiry && (
-              <Link to="/enquiry" className="nav-link" >
-                <li className="nav-item">
-                  <i class="fa-solid fa-circle-question"></i>
-                  <span>&nbsp;&nbsp;Enquiry Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewEnquiryForms && (
-              <Link to="/addFormForEnquiry" className="nav-link" >
-                <li className="nav-item">
-                  <i class="fa-brands fa-wpforms"></i>
-                  <span>&nbsp;&nbsp;Enquiry Form</span>
-                </li>
-              </Link>
-            )}
-
-          </>
-        }
-        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("academic")}>
-          Academics
-          {accordionState.academic ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
-        </li>
-        {accordionState.academic && (
-          <>
-            {canViewCourses && (
-              <Link to="/courses" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-book"></i>
-                  <span>&nbsp;&nbsp;Course Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewCurriculum && (
-              <Link to="/curriculum" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-clipboard-list"></i>
-                  <span>&nbsp;&nbsp;Curriculum Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewBatches && (
-              <Link to="/batches" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-calendar-week"></i>
-                  <span>&nbsp;&nbsp;Batch Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewSessions && (
-              <Link to="/sessions" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-calendar"></i>
-                  <span>&nbsp;&nbsp;Session Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewAttendance && (
-              <Link to="/attendance" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-clipboard-user"></i>
-                  <span>&nbsp;&nbsp;Attendance Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewAssignments && (
-              <Link to="/assignment" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-book"></i>
-                  <span> &nbsp;&nbsp;Assignment Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewQuestionBank && (
-              <Link to="/question-bank" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-book"></i>
-                  <span> &nbsp;&nbsp;Question Bank</span>
-                </li>
-              </Link>
-            )}
-            {canViewQuestionTemplate && (
-              <Link to="/question-template" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-file-lines"></i>
-                  <span>&nbsp;&nbsp;Question Template</span>
-                </li>
-              </Link>
-            )}
-            {canViewPerformance && (
-              <Link to="/addPerformance" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-chart-simple"></i>
-                  <span>&nbsp;&nbsp;Performance Management</span>
-                </li>
-              </Link>
-            )}
-          </>
-        )}
-
-        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("learners")}>
-          Learners
-          {accordionState.learners ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
-        </li>
-        {accordionState.learners && (
-          <>
-            {canViewLearners && (
-              <Link to="/studentdetails" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-user-graduate"></i>
-                  <span>&nbsp;&nbsp;Learners</span>
-                </li>
-              </Link>
-            )}
-
-          </>
-        )}
-
-        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("finance")}>
-          Finance
-          {accordionState.finance ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
-        </li>
-        {accordionState.finance && (
-          <>
-            {canViewFee && (
-              <Link to="/reports" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-money-bill"></i>
-                  <span>&nbsp;&nbsp;Fee Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewInvoices && (
-              <Link to="/invoices" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-money-bill-trend-up"></i>
-                  <span>&nbsp;&nbsp;Invoice Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewFinancePartners && (
-              <Link to="/financePartners" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-money-check-dollar"></i>
-                  <span>&nbsp;&nbsp;Finance Partner</span>
-                </li>
-              </Link>
-            )}
-          </>
-        )}
-
-        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("placement")}>
-          Placement Cell
-          {accordionState.placement ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
-        </li>
-        {accordionState.placement && (
-          <>
-            {canViewCompanies && (
-              <Link to="/companies" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-building"></i>
-                  <span>&nbsp;&nbsp;Companies</span>
-                </li>
-              </Link>
-            )}
-            {canViewJobOpenings && (
-              <Link to="/job-openings" className="nav-link">
-                <li className="nav-item">
-                  <i class="fa-solid fa-envelope-open"></i>
-                  <span>&nbsp;&nbsp;Job Openings</span>
-                </li>
-              </Link>
-            )}
-          </>
-        )}
-
-        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("hr")}>
-          Human Resource
-          {accordionState.hr ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
-        </li>
-     {accordionState.hr && (
-  <>
-    <Link to="/operations-dashboard" className="nav-link">
-      <li className="nav-item">
-        <i className="fa-solid fa-gears"></i>
-        <span>&nbsp;&nbsp;Operation</span>
-      </li>
-    </Link>
-    <Link to="/operations" className="nav-link">
-      <li className="nav-item">
-        <i className="fa-solid fa-database"></i>
-        <span>&nbsp;&nbsp;My Data</span>
-      </li>
-    </Link>
-    
-  </>
-)}
-
-        <li className="nav-section mt-3 mb-3 bg-white" onClick={() => toggleAccordion("analytics")}>
-          Analytics
-          {accordionState.analytics ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
-        </li>
-        {accordionState.analytics && (
-          <>
-            <Link to="/dashboard" className="nav-link" >
-              <li className="nav-item">
-                <i class="fa-solid fa-table-columns"></i>
-                <span>&nbsp;&nbsp;Organisational Dashboard</span>
-              </li>
-            </Link>
-            {canViewCourses && (
-              <Link to="/course-analytics-dashboard" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-building-columns"></i>
-                  <span>&nbsp;&nbsp;Course Dashboard</span>
-                </li>
-              </Link>
-            )}
-            {canViewEnquiry && (
-              <Link to="/enquiry-analytics" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-building-columns"></i>
-                  <span>&nbsp;&nbsp;Enquiry Dashboard</span>
-                </li>
-              </Link>
-            )}
-            {canViewAttendance && (
-              <Link to="/attendance-dashboard" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-building-columns"></i>
-                  <span>&nbsp;&nbsp;Attendance Dashboard</span>
-                </li>
-              </Link>
-            )}
-            {canViewEnrollment && (
-              <Link to="/reports-dashboard" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-building-columns"></i>
-                  <span>&nbsp;&nbsp;Fees Dashboard</span>
-                </li>
-              </Link>
-            )}
-          </>
-        )}
-
-        <li className="nav-section bg-white" onClick={() => toggleAccordion("settings")}>
-          Settings
-          {accordionState.settings ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
-        </li>
-        {accordionState.settings && (
-          <>
-            {canViewInstitute && (
-              <Link to="/instituteSetup" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-building-columns"></i>
-                  <span>&nbsp;&nbsp;Institute Setup</span>
-                </li>
-              </Link>
-            )}
-            {canViewRoles && (
-              <Link to="/roles" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-user"></i>
-                  <span>&nbsp;&nbsp;Roles Management</span>
-                </li>
-              </Link>
-            )}
-            {canViewactivityLogs && (
-              <Link to="/activity-logs" className="nav-link">
-                <li className="nav-item">
-                  <i className="fa-solid fa-history"></i>
-                  <span>&nbsp;&nbsp;Activity Logs</span>
-                </li>
-              </Link>
-            )}
-          </>
-        )}
-
-        {/* {trialStatus.trialActive && (
-          <div className="trial-banner">
-            <span>Trial expires in {trialStatus.daysRemaining} days</span>
-            <Link to="/subscribe" className="choose-plan-link">
-              Choose a plan
-            </Link>
-          </div>
-        )} */}
+        {renderNavItem("/my-profile", "fa fa-home", "Home")}
+        {renderSection("Sales And Marketing", "enquiry", [
+          renderNavItem("/enquiry", "fa-solid fa-circle-question", "Enquiry Management", canViewSection("enquiries")),
+          renderNavItem("/addFormForEnquiry", "fa-brands fa-wpforms", "Enquiry Form", canViewSection("enquiryForms")),
+        ])}
+        {renderSection("Academics", "academic", [
+          renderNavItem("/courses", "fa-solid fa-book", "Course Management", canViewSection("Course")),
+          renderNavItem("/curriculum", "fa-solid fa-clipboard-list", "Curriculum Management", canViewSection("curriculums")),
+          renderNavItem("/batches", "fa-solid fa-calendar-week", "Batch Management", canViewSection("Batch")),
+          renderNavItem("/sessions", "fa-solid fa-calendar", "Session Management", canViewSection("Sessions")),
+          renderNavItem("/attendance", "fa-solid fa-clipboard-user", "Attendance Management", canViewSection("attendance")),
+          renderNavItem("/assignment", "fa-solid fa-book", "Assignment Management", canViewSection("assignments")),
+          renderNavItem("/question-bank", "fa-solid fa-book", "Question Bank", canViewSection("questions")),
+          renderNavItem("/question-template", "fa-solid fa-file-lines", "Question Template", canViewSection("templates")),
+          renderNavItem("/addPerformance", "fa-solid fa-chart-simple", "Performance Management", canViewSection("performance")),
+        ])}
+        {renderSection("Learners", "learners", [
+          renderNavItem("/studentdetails", "fa-solid fa-user-graduate", "Learners", canViewSection("student")),
+        ])}
+        {renderSection("Finance", "finance", [
+          renderNavItem("/reports", "fa-solid fa-money-bill", "Fee Management", canViewSection("fee")),
+          renderNavItem("/invoices", "fa-solid fa-money-bill-trend-up", "Invoice Management", canViewSection("invoice")),
+          renderNavItem("/financePartners", "fa-solid fa-money-check-dollar", "Finance Partner", canViewSection("FinancePartner")),
+        ])}
+        {renderSection("Placement Cell", "placement", [
+          renderNavItem("/companies", "fa-solid fa-building", "Companies", canViewSection("Companies")),
+          renderNavItem("/job-openings", "fa-solid fa-envelope-open", "Job Openings", canViewSection("JobOpenings")),
+        ])}
+        {renderSection("Human Resource", "hr", [
+          renderNavItem("/operations-dashboard", "fa-solid fa-gears", "Operation"),
+          renderNavItem("/operations", "fa-solid fa-database", "My Data"),
+        ])}
+        {renderSection("Analytics", "analytics", [
+          renderNavItem("/dashboard", "fa-solid fa-table-columns", "Organisational Dashboard"),
+          renderNavItem("/course-analytics-dashboard", "fa-solid fa-building-columns", "Course Dashboard", canViewSection("Course")),
+          renderNavItem("/enquiry-analytics", "fa-solid fa-building-columns", "Enquiry Dashboard", canViewSection("enquiries")),
+          renderNavItem("/attendance-dashboard", "fa-solid fa-building-columns", "Attendance Dashboard", canViewSection("attendance")),
+          renderNavItem("/reports-dashboard", "fa-solid fa-building-columns", "Fees Dashboard", canViewSection("enrollments")),
+        ])}
+        {renderSection("Settings", "settings", [
+          renderNavItem("/instituteSetup", "fa-solid fa-building-columns", "Institute Setup", canViewSection("instituteSetup")),
+          renderNavItem("/roles", "fa-solid fa-user", "Roles Management", canViewSection("roles")),
+          renderNavItem("/activity-logs", "fa-solid fa-history", "Activity Logs", canViewSection("activityLogs")),
+        ])}
       </ul>
 
-      <UserProfile
-        user={user}
-        authUser={authUser}
-        handleLogout={handleLogout}
-        toggleMenu={toggleMenu}
-        showMenu={showMenu}
-      />
+      {/* User Profile */}
+      <div className="mt-auto p-4 border-t border-gray-200">
+        <div className="flex items-center space-x-2">
+          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+            {user.displayName ? user.displayName.charAt(0).toUpperCase() : "U"}
+          </div>
+          {!isCollapsed || !isMobile ? 
+            <div className="flex-grow">
+              <p className="text-sm font-medium">{user.displayName}</p>
+              <p className="text-xs text-gray-500">{user.email}</p>
+            </div>
+          :" "}
+          <button onClick={toggleMenu} className="focus:outline-none">
+            {showMenu ? (
+              <i className="fas fa-chevron-up"></i>
+            ) : (
+              <i className="fas fa-chevron-down"></i>
+            )}
+          </button>
+        </div>
+        {showMenu && (
+          <div className="mt-2">
+            <button
+              onClick={handleLogout}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

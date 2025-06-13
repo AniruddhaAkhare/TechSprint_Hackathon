@@ -1,232 +1,225 @@
-// import { useState } from 'react';
-// import { useAuth } from '../../context/AuthContext'; // Make sure this path is correct
-// import { Navigate, useNavigate } from 'react-router-dom';
-// import { signInWithEmailAndPassword } from 'firebase/auth';
-// import { auth } from '../../config/firebase';
-// import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import icons from react-icons
+// Login.jsx or Login.js
 
-// export default function LoginForm() {
-//     const { user, login } = useAuth();
-//     const [email, setEmail] = useState('');
-//     const [password, setPassword] = useState('');
-//     const [error, setError] = useState('');
-//     const [isLoading, setIsLoading] = useState(false);
-//     const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
-//     const navigate = useNavigate();
-
-//     const handleSubmit = async (e) => {
-//         e.preventDefault();
-//         setError('');
-//         setIsLoading(true);
-
-//         try {
-//             await signInWithEmailAndPassword(auth, email, password);
-//             navigate('/dashboard');
-//         } catch (error) {
-//             console.error('Login error:', error);
-//             setError(error.message || 'Failed to log in. Please check your credentials and try again.');
-//         } finally {
-//             setIsLoading(false);
-//         }
-//     };
-
-//     // Toggle password visibility
-//     const togglePasswordVisibility = () => {
-//         setShowPassword(!showPassword);
-//     };
-
-//     if (user) {
-//         return <Navigate to="/dashboard" replace />;
-//     }
-
-//     return (
-//         <div className="min-h-screen flex items-center justify-center bg-gray-100">
-//             <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-//                 <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
-//                     Sign In
-//                 </h2>
-                
-//                 {error && (
-//                     <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
-//                         {error}
-//                     </div>
-//                 )}
-
-//                 <form onSubmit={handleSubmit} className="space-y-6">
-//                     <div>
-//                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-//                             Email
-//                         </label>
-//                         <input
-//                             id="email"
-//                             name="email"
-//                             type="email"
-//                             value={email}
-//                             onChange={(e) => setEmail(e.target.value)}
-//                             required
-//                             className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-//                             placeholder="Enter your email"
-//                         />
-//                     </div>
-
-//                     <div>
-//                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-//                             Password
-//                         </label>
-//                         <div className="relative">
-//                             <input
-//                                 id="password"
-//                                 name="password"
-//                                 type={showPassword ? 'text' : 'password'} // Toggle between text and password
-//                                 value={password}
-//                                 onChange={(e) => setPassword(e.target.value)}
-//                                 required
-//                                 className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-//                                 placeholder="Enter your password"
-//                             />
-//                             <button
-//                                 type="button"
-//                                 onClick={togglePasswordVisibility}
-//                                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
-//                             >
-//                                 {showPassword ? <FaEyeSlash /> : <FaEye />} {/* Toggle eye icon */}
-//                             </button>
-//                         </div>
-//                     </div>
-
-//                     <button
-//                         type="submit"
-//                         disabled={isLoading}
-//                         className={`w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
-//                     >
-//                         {isLoading ? 'Signing In...' : 'Sign In'}
-//                     </button>
-//                 </form>
-
-//                 <div className="mt-4 text-center">
-//                     <p className="text-sm text-gray-600">
-//                         Don't have an account?{' '}
-//                         <a href="/register" className="text-blue-500 hover:underline">Register</a>
-//                     </p>
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// }
+import React, { useState } from 'react';
+import { Mail, ArrowRight, Building2, Shield, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
+import { auth } from "../../config/firebase"; // Make sure this path is correct
+import logo from "/img/fireblaze.jpg"
 
 
-import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext'; // Make sure this path is correct
-import { Navigate, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../config/firebase';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import icons from react-icons
-
-export default function LoginForm() {
-    const { user, login } = useAuth();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+export default function Login() {
+    const [formData, setFormData] = useState({ email: '' });
     const [isLoading, setIsLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
+    const [step, setStep] = useState("input");
     const navigate = useNavigate();
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setIsLoading(true);
+        if (!formData.email) {
+            alert("Please enter your email");
+            return;
+        }
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-                navigate('/dashboard');
-        
+            setIsLoading(true);
+
+            const email = formData.email.trim().toLowerCase();
+            const actionCodeSettings = {
+                url: `${window.location.origin}/login`,
+                handleCodeInApp: true,
+            };
+
+            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+            window.localStorage.setItem('emailForSignIn', email);
+            setStep("email-sent");
+
         } catch (error) {
-            //console.error('Login error:', error);
-            setError(error.message || 'Failed to log in. Please check your credentials and try again.');
+            console.error("Error sending email link:", error.message);
+            alert(error.message || "Failed to send sign-in link.");
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Toggle password visibility
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
+    const handleEmailLinkSignIn = async () => {
+        if (!isSignInWithEmailLink(auth, window.location.href)) return;
+
+        try {
+            let email = window.localStorage.getItem('emailForSignIn');
+            if (!email) {
+                email = window.prompt("Please provide your email for confirmation");
+            }
+
+            if (!email) {
+                alert("Email not provided. Please try again.");
+                return;
+            }
+
+            const result = await signInWithEmailLink(auth, email, window.location.href);
+            window.localStorage.removeItem('emailForSignIn');
+            navigate("/dashboard");
+        } catch (error) {
+            console.error("Email link sign-in error:", error.message);
+            alert("Invalid or expired sign-in link.");
+            setStep("input");
+        }
     };
 
-    if (user) {
-        return <Navigate to="/dashboard" replace />;
-    }
+    const resetForm = () => {
+        setStep("input");
+        setFormData({ email: "" });
+    };
+
+    // Auto-sign in if coming from email link
+    React.useEffect(() => {
+        handleEmailLinkSignIn();
+    }, []);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-                <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
-                    Sign In
-                </h2>
-                
-                {error && (
-                    <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
-                        Account doesn't exist
-                    </div>
-                )}
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-6xl mx-auto">
+                <div className="grid lg:grid-cols-2 gap-12 items-center">
+                    {/* Left Side - Branding */}
+                    <div className="hidden lg:block">
+                        <div className="space-y-8">
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-12 h-12 bg-gradient-to-r from-amber-600 to-red-600 rounded-xl flex items-center justify-center">
+                                        <img src={logo} alt="" className='rounded-md' />
+                                    </div>
+                                    <h1 className="text-3xl font-bold text-gray-900">FireBlaze</h1>
+                                </div>
+                                <h2 className="text-4xl font-bold text-gray-900 leading-tight">
+                                    Welcome to your<br />
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-red-600">
+                                        digital workspace
+                                    </span>
+                                </h2>
+                                <p className="text-lg text-gray-600 max-w-md">
+                                    Access your company resources, collaborate with your team, and stay productive from anywhere.
+                                </p>
+                            </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                            Email
-                        </label>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Enter your email"
-                        />
-                    </div>
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                        <CheckCircle className="w-4 h-4 text-green-600" />
+                                    </div>
+                                    <span className="text-gray-700">Secure single sign-on</span>
+                                </div>
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+                                        <Shield className="w-4 h-4 text-amber-600" />
+                                    </div>
+                                    <span className="text-gray-700">Enterprise-grade security</span>
+                                </div>
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                        <Building2 className="w-4 h-4 text-red-600" />
+                                    </div>
+                                    <span className="text-gray-700">Seamless team collaboration</span>
+                                </div>
+                            </div>
 
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                            Password
-                        </label>
-                        <div className="relative">
-                            <input
-                                id="password"
-                                name="password"
-                                type={showPassword ? 'text' : 'password'} // Toggle between text and password
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Enter your password"
-                            />
-                            <button
-                                type="button"
-                                onClick={togglePasswordVisibility}
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
-                            >
-                                {showPassword ? <FaEyeSlash /> : <FaEye />} {/* Toggle eye icon */}
-                            </button>
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className={`w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
-                    >
-                        {isLoading ? 'Signing In...' : 'Sign In'}
-                    </button>
-                </form>
+                    {/* Right Side - Form */}
+                    <div className="w-full max-w-md mx-auto lg:mx-0">
+                        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+                            <div className="bg-gradient-to-r from-amber-600 to-red-600 px-8 py-6">
+                                <h2 className="text-2xl font-bold text-white text-center">Employee Portal</h2>
+                                <p className="text-amber-100 text-center mt-1">
+                                    {step === "input" && "Sign in to your account"}
+                                    {step === "email-sent" && "Check your inbox"}
+                                </p>
+                            </div>
+                            <div className="p-8">
+                                {step === "input" && (
+                                    <form onSubmit={handleSubmit} className="space-y-6">
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-semibold text-gray-700">
+                                                Work Email Address
+                                            </label>
+                                            <div className="relative group">
+                                                <input
+                                                    type="email"
+                                                    name="email"
+                                                    value={formData.email}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Enter Your Company Mail"
+                                                    className="w-full px-4 py-3 pl-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                                                    required
+                                                />
 
-                <div className="mt-4 text-center">
-                    <p className="text-sm text-gray-600">
-                        Don't have an account?{' '}
-                        <a href="/login" className="text-blue-500 hover:underline">Register</a> or <span> </span>
-                        <a href="/employee-registration" className="text-blue-500 hover:underline">Register as Employee</a>
-                    </p>
+                                            </div>
+                                            <p className="text-xs text-gray-500">
+                                                We'll send you a secure sign-in link
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            disabled={isLoading}
+                                            className="w-full bg-gradient-to-r from-amber-600 to-red-600 text-white font-semibold py-3 px-4 rounded-xl hover:from-amber-700 hover:to-red-700 focus:ring-4 focus:ring-amber-200 transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isLoading ? (
+                                                <>
+                                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                    <span>Sending Link...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span>Send Sign-in Link</span>
+                                                    <ArrowRight className="w-4 h-4" />
+                                                </>
+                                            )}
+                                        </button>
+                                    </form>
+                                )}
+
+                                {step === "email-sent" && (
+                                    <div className="text-center space-y-4">
+                                        <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
+                                            <Mail className="w-8 h-8 text-amber-600" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <h3 className="text-lg font-semibold text-gray-900">Check your email</h3>
+                                            <p className="text-sm text-gray-600">
+                                                We've sent a secure sign-in link to
+                                            </p>
+                                            <p className="text-sm font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-lg inline-block">
+                                                {formData.email}
+                                            </p>
+                                        </div>
+                                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                            <p className="text-xs text-amber-700">
+                                                <strong>Note:</strong> The link will expire in 15 minutes for security purposes.
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={resetForm}
+                                            className="w-full border-2 border-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-xl hover:bg-gray-50 focus:ring-4 focus:ring-gray-200 transition-all duration-200"
+                                        >
+                                            Use Different Email
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mt-6 text-center">
+                            <p className="text-xs text-gray-500">
+                                🔒 This is a secure company portal. Your data is protected by enterprise-grade encryption.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

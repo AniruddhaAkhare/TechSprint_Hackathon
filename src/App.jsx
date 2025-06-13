@@ -5,7 +5,6 @@ import { useAuth } from './context/AuthContext.jsx';
 // Home Pages
 import Sidebar from './pages/home/Sidebar.jsx';
 import LoginForm from './pages/home/LoginForm.jsx';
-// import RegisterForm from './pages/home/RegisterForm.jsx';
 import Welcome from './pages/home/Welcome.jsx';
 import ForgetPasswordForm from './pages/home/ForgetPasswordForm.jsx';
 import InstituteSetup from './pages/components/InstituteSetup/InstituteSetup.jsx';
@@ -59,14 +58,12 @@ import AddFinancePartner from './pages/components/FinancePartner/AddFinancePartn
 import Attendance from './StudentInformation/Attendance.jsx';
 import LandingPage from './pages/Landing/LandingPage.jsx';
 import KanbanBoard from './pages/components/EnquiryManagement/kanbanBoard.jsx';
-// import Subscribe from './pages/home/Subscribe.jsx';
 import QuestionBank from './pages/components/QuestionBank/QuestionBank.jsx';
 import QuestionTemplate from './pages/components/QuestionBank/QuestionTemplate.jsx';
 import AdminLogs from './pages/components/AdminLogs.jsx';
 import CourseAnalyticsDashboard from './pages/components/CourseDelivery/Course/CourseAnalyticsDashboard.jsx';
 import InstallmentDashboard from './pages/components/reports/InstallmentDashboard';
 import AttendanceDashboard from './StudentInformation/AttendanceDashboard.jsx';
-// import EnquiryDashboard from './pages/components/EnquiryManagement/EnquiryDashboard.jsx';
 import EnquiryAnalyticsPage from './pages/components/EnquiryManagement/EnquiryAnalyticsPage.jsx';
 import EnquiryForms from './pages/components/EnquiryForm/EnquiryForm.jsx';
 import SubmitEnquiryForm from './pages/components/EnquiryForm/SubmitEnquiryForm.jsx';
@@ -154,8 +151,6 @@ export default function App() {
                 <Route path="/employee-registration" element={!user ? <EmployeeRegistrationForm /> : <Navigate to="/my-profile" />} />
 
                 <Route path="/my-activities" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
-
-
                 
                 <Route path="/" element={<ProtectedRoute permissionSection="Users"><StaffAndUsers /></ProtectedRoute>} />
 
@@ -207,8 +202,7 @@ export default function App() {
 
               {/* Enquiry */}
               <Route path="/enquiries/:formId" element={<ProtectedRoute permissionSection="enquiries"><ViewEnquiries /></ProtectedRoute>} />
-              {/* <Route path="/enquiry/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} /> */}
-              {/* <Route path="/enquiry-form/:formId" element={<ProtectedRoute permissionSection="enquiries"><SubmitEnquiryForm /></ProtectedRoute>} /> */}
+           
               <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><KanbanBoard /></ProtectedRoute>} />
               {/* <Route path="/enquiry" element={<ProtectedRoute permissionSection="enquiries"><EnquiryDashboard /></ProtectedRoute>} /> */}
               <Route path="/enquiry-analytics" element={<ProtectedRoute permissionSection="enquiries"><EnquiryAnalyticsPage /></ProtectedRoute>} />
