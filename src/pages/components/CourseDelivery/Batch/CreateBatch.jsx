@@ -62,12 +62,13 @@ const CreateBatch = ({ isOpen, toggleSidebar, batch, onSubmit, logActivity, user
         const centersList = centerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         console.log("Fetched centers:", centersList);
         if (centersList.length === 0) {
-          console.warn("No centers found at /instituteSetup/RDJ9wMXGrIUk221MzDxP/Center");
-          alert("No centers found. Please check Firestore data at /instituteSetup/RDJ9wMXGrIUk221MzDxP/Center.");
-        } else if (!centersList.some((center) => center.id === "8qQ8wfp9QLCt8m67OH7t")) {
-          console.warn("Center with ID 8qQ8wfp9QLCt8m67OH7t not found in fetched centers");
-          alert("Center with ID 8qQ8wfp9QLCt8m67OH7t not found. Please verify the center ID.");
-        }
+          console.warn("No centers found at Institute");
+          alert("No centers found");
+        } 
+        // else if (!centersList.some((center) => center.id === "8qQ8wfp9QLCt8m67OH7t")) {
+        //   console.warn("Center with ID 8qQ8wfp9QLCt8m67OH7t not found in fetched centers");
+        //   alert("Center with ID 8qQ8wfp9QLCt8m67OH7t not found. Please verify the center ID.");
+        // }
         setCenters(centersList);
         setAvailableCenters(centersList);
 
