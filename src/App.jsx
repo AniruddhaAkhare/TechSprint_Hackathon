@@ -100,6 +100,8 @@ import MyShift from './pages/components/HRManagement/myShift.jsx'
 import ShiftDisplay from  './pages/components/HRManagement/ShiftManagement.jsx'
 import EmployeeManagement from './pages/components/HRManagement/Emanagement.jsx'
 import AttendanceManagement from './pages/components/HRManagement/Amanagement.jsx'
+import RecruiterLogin from './pages/components/PlacementManagement/JobOpenings/RecruiterLogin.jsx';
+import RecruiterJobOpenings from './pages/components/PlacementManagement/JobOpenings/RecruiterJobOpenings.jsx';
 
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
@@ -290,6 +292,8 @@ export default function App() {
                 <Route path="/companies" element={<Companies />} />
                 <Route path="/job-openings" element={<JobOpenings />} />
                 <Route path="/recruiter-view/:id" element={<RecruiterView />} />
+                <Route path="/recruiter-login" element={<RecruiterLogin />} />
+                <Route path="/recruiter/job-openings" element={<RecruiterJobOpenings />} />
               </Routes>
             </div>
           </div>

@@ -1,7 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../../../config/firebase";
-import { getDocs, collection, deleteDoc, doc, query, orderBy, addDoc, updateDoc, getDoc, arrayUnion, serverTimestamp, where, writeBatch } from "firebase/firestore";
-import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
+import {
+  getDocs,
+  collection,
+  deleteDoc,
+  doc,
+  query,
+  orderBy,
+  addDoc,
+  updateDoc,
+  getDoc,
+  arrayUnion,
+  serverTimestamp,
+  where,
+  writeBatch,
+} from "firebase/firestore";
+import {
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  Button,
+} from "@material-tailwind/react";
 import { useAuth } from "../../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
@@ -23,40 +43,62 @@ export default function JobOpenings() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [deleteMessage, setDeleteMessage] = useState("Are you sure you want to delete this job opening? This action cannot be undone.");
+  const [deleteMessage, setDeleteMessage] = useState(
+    "Are you sure you want to delete this job opening? This action cannot be undone."
+  );
   const [userDisplayName, setUserDisplayName] = useState("");
   const [migrationInProgress, setMigrationInProgress] = useState(false);
 
   const JobCollectionRef = collection(db, "JobOpenings");
 
-  const canCreate = rolePermissions?.JobOpenings?.create || false;
-  const canUpdate = rolePermissions?.JobOpenings?.update || false;
-  const canDelete = rolePermissions?.JobOpenings?.delete || false;
-  const canDisplay = rolePermissions?.JobOpenings?.display || false;
+  const canExport = rolePermissions?.JobOpenings?.export || false;
+  // const canDisplay = rolePermissions?.JobOpenings?.display || false;
+  // Allow display for admins or users with permissions
+  
 
   // Check if user is a recruiter using the correct role ID
   const RECRUITER_ROLE_ID = "sTRunlCqsvQ8PJRyRuPg";
-  const isRecruiter = userRole === RECRUITER_ROLE_ID;
+  const isRecruiter =
+    userRole === RECRUITER_ROLE_ID || (!user?.uid && user?.email); // OTP-based login doesn't have UID yet
   const isAdmin = userRole === "admin" || rolePermissions?.isAdmin;
 
-  // Fetch user displayName from Users collection
+  const canDisplay =
+    isAdmin || isRecruiter || (rolePermissions?.JobOpenings?.display ?? false);
+
+  const canCreate = isRecruiter
+    ? false
+    : rolePermissions?.JobOpenings?.create || false;
+  const canUpdate = isRecruiter
+    ? false
+    : rolePermissions?.JobOpenings?.update || false;
+  const canDelete = isRecruiter
+    ? false
+    : rolePermissions?.JobOpenings?.delete || false;
+
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.email) return; // Use email instead of uid
 
     const fetchUserDisplayName = async () => {
       try {
-        const userDocRef = doc(db, "Users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUserDisplayName(userData.displayName || user.email || "Unknown User");
+        if (user.uid) {
+          // If user has UID, fetch from Users collection
+          const userDocRef = doc(db, "Users", user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setUserDisplayName(
+              userData.displayName || user.email || "Unknown User"
+            );
+          } else {
+            setUserDisplayName(user.email || "Unknown User");
+          }
         } else {
-          console.warn("User document not found in Users collection");
-          setUserDisplayName(user.email || "Unknown User");
+          // For OTP-based recruiters without UID
+          setUserDisplayName(user.email.split("@")[0]);
         }
       } catch (error) {
         toast.error(`Failed to fetch user data: ${error.message}`);
-        setUserDisplayName(user.email || "Unknown User");
+        setUserDisplayName(user.email.split("@")[0]);
       }
     };
 
@@ -81,34 +123,39 @@ export default function JobOpenings() {
   // Helper function to check if current user performed the job creation
   const isJobPerformedByCurrentUser = (job) => {
     if (!job.history || !Array.isArray(job.history)) return false;
-    
+
     // Find the "Created" action in history
-    const createdAction = job.history.find(historyItem => 
-      historyItem.action === "Created" && historyItem.performedBy === userDisplayName
+    const createdAction = job.history.find(
+      (historyItem) =>
+        historyItem.action === "Created" &&
+        historyItem.performedBy === userDisplayName
     );
-    
+
     return !!createdAction;
   };
 
   // Auto-migration function to add createdBy field to existing jobs (keeping for backward compatibility)
   const autoMigrateJobOpenings = async () => {
     if (!user?.uid || migrationInProgress) return;
-    
+
     try {
       setMigrationInProgress(true);
       console.log("Checking for jobs without createdBy field...");
-      
+
       // Get all job openings
-      const allJobsQuery = query(JobCollectionRef, orderBy("createdAt", "desc"));
+      const allJobsQuery = query(
+        JobCollectionRef,
+        orderBy("createdAt", "desc")
+      );
       const snapshot = await getDocs(allJobsQuery);
-      
+
       const jobsWithoutCreatedBy = [];
       snapshot.docs.forEach((doc) => {
         const data = doc.data();
         if (!data.createdBy) {
           jobsWithoutCreatedBy.push({
             id: doc.id,
-            ...data
+            ...data,
           });
         }
       });
@@ -118,32 +165,39 @@ export default function JobOpenings() {
         return;
       }
 
-      console.log(`Found ${jobsWithoutCreatedBy.length} jobs without createdBy field`);
-      
+      console.log(
+        `Found ${jobsWithoutCreatedBy.length} jobs without createdBy field`
+      );
+
       // AUTO-ASSIGN TO CURRENT USER (works for both admins and recruiters)
       const batch = writeBatch(db);
-      
+
       jobsWithoutCreatedBy.forEach((job) => {
         const jobRef = doc(db, "JobOpenings", job.id);
         batch.update(jobRef, {
           createdBy: user.uid,
           updatedAt: serverTimestamp(),
-          migrationNote: `Auto-assigned to ${isAdmin ? 'admin' : 'recruiter'} ${user.email} on ${new Date().toISOString()}`
+          migrationNote: `Auto-assigned to ${isAdmin ? "admin" : "recruiter"} ${
+            user.email
+          } on ${new Date().toISOString()}`,
         });
       });
 
       await batch.commit();
-      console.log(`Successfully updated ${jobsWithoutCreatedBy.length} jobs with createdBy field`);
-      toast.success(`Migration completed! Assigned ${jobsWithoutCreatedBy.length} legacy job openings to you.`);
-      
+      console.log(
+        `Successfully updated ${jobsWithoutCreatedBy.length} jobs with createdBy field`
+      );
+      toast.success(
+        `Migration completed! Assigned ${jobsWithoutCreatedBy.length} legacy job openings to you.`
+      );
+
       // Log the migration activity
       await logActivity("AUTO_MIGRATION", {
         updatedJobs: jobsWithoutCreatedBy.length,
         assignedTo: user.uid,
         userEmail: user.email,
-        userRole: isAdmin ? 'admin' : 'recruiter'
+        userRole: isAdmin ? "admin" : "recruiter",
       });
-      
     } catch (error) {
       console.error("Error during auto-migration:", error);
       toast.error(`Migration failed: ${error.message}`);
@@ -164,7 +218,9 @@ export default function JobOpenings() {
       (job) =>
         job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         job.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.skills.some((skill) => skill.toLowerCase().includes(searchTerm.toLowerCase()))
+        job.skills.some((skill) =>
+          skill.toLowerCase().includes(searchTerm.toLowerCase())
+        )
     );
     setSearchResults(results);
   };
@@ -177,7 +233,7 @@ export default function JobOpenings() {
   const fetchJobOpenings = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch all job openings first
       const q = query(JobCollectionRef, orderBy("createdAt", "desc"));
       const snapshot = await getDocs(q);
@@ -185,37 +241,47 @@ export default function JobOpenings() {
         id: doc.id,
         ...doc.data(),
       }));
-      
+
       console.log(`Fetched ${allJobData.length} total job openings`);
-      
+
       let filteredJobData = allJobData;
-      
+
       // If user is a recruiter, filter by performedBy in history
-      if (isRecruiter && userDisplayName) {
-        console.log("Filtering jobs for recruiter:", userDisplayName);
-        filteredJobData = allJobData.filter(job => isJobPerformedByCurrentUser(job));
-        console.log(`After performedBy filtering: ${filteredJobData.length} jobs for recruiter ${userDisplayName}`);
+      if (isRecruiter && user?.email) {
+        console.log("Filtering jobs for recruiter by poc.email:", user.email);
+        filteredJobData = allJobData.filter(
+          (job) => job.poc?.email?.toLowerCase() === user.email.toLowerCase()
+        );
+        console.log(
+          `Found ${filteredJobData.length} jobs for recruiter ${user.email}`
+        );
       } else if (!isAdmin) {
         // For non-admin, non-recruiter roles, also filter by performedBy
-        filteredJobData = allJobData.filter(job => isJobPerformedByCurrentUser(job));
-        console.log(`After performedBy filtering: ${filteredJobData.length} jobs for user ${userDisplayName}`);
+        filteredJobData = allJobData.filter((job) =>
+          isJobPerformedByCurrentUser(job)
+        );
+        console.log(
+          `After performedBy filtering: ${filteredJobData.length} jobs for user ${userDisplayName}`
+        );
       }
       // Admins see all jobs
-      
+
       setJobOpenings(filteredJobData);
-      
+
       // Reset selected job if it's not in the filtered results
-      if (selectedJob && !filteredJobData.find(job => job.id === selectedJob.id)) {
+      if (
+        selectedJob &&
+        !filteredJobData.find((job) => job.id === selectedJob.id)
+      ) {
         setSelectedJob(null);
       } else if (filteredJobData.length > 0 && !selectedJob) {
         setSelectedJob(filteredJobData[0]);
       }
 
       // Run auto-migration for both admins AND recruiters to assign legacy jobs
-      if ((isAdmin || isRecruiter) && !migrationInProgress) {
+      if (isAdmin && !migrationInProgress) {
         await autoMigrateJobOpenings();
       }
-      
     } catch (err) {
       console.error("Error fetching job openings:", err);
       toast.error("Failed to fetch job openings: " + err.message);
@@ -229,7 +295,7 @@ export default function JobOpenings() {
       navigate("/unauthorized");
       return;
     }
-    
+
     // Only fetch if user is loaded and userDisplayName is available
     if (user?.uid && userDisplayName) {
       fetchJobOpenings();
@@ -251,13 +317,13 @@ export default function JobOpenings() {
       toast.error("You don't have permission to edit job openings.");
       return;
     }
-    
+
     // CRITICAL: Check if recruiter is trying to edit a job they didn't perform
     if (isRecruiter && !isJobPerformedByCurrentUser(job)) {
       toast.error("You can only edit job openings created by you.");
       return;
     }
-    
+
     setSelectedJob(job);
     setIsAddOpen(true);
     logActivity("OPEN_EDIT_JOB", { jobId: job.id, title: job.title });
@@ -268,14 +334,14 @@ export default function JobOpenings() {
       toast.error("You don't have permission to delete job openings.");
       return;
     }
-    
+
     // CRITICAL: Check if recruiter is trying to delete a job they didn't perform
-    const jobToDelete = jobOpenings.find(job => job.id === jobId);
+    const jobToDelete = jobOpenings.find((job) => job.id === jobId);
     if (isRecruiter && !isJobPerformedByCurrentUser(jobToDelete)) {
       toast.error("You can only delete job openings created by you.");
       return;
     }
-    
+
     console.log("Setting deleteId:", jobId);
     setDeleteId(jobId);
     setOpenDelete(true);
@@ -289,30 +355,35 @@ export default function JobOpenings() {
 
   const deleteJob = async () => {
     if (!canDelete || !deleteId) {
-      console.log("Cannot delete: canDelete:", canDelete, "deleteId:", deleteId);
+      console.log(
+        "Cannot delete: canDelete:",
+        canDelete,
+        "deleteId:",
+        deleteId
+      );
       toast.error("Cannot delete job: Missing permissions or job ID.");
       return;
     }
-    
+
     try {
       console.log("Attempting to delete job with ID:", deleteId);
       const jobRef = doc(db, "JobOpenings", deleteId);
       const jobDoc = await getDoc(jobRef);
-      
+
       if (!jobDoc.exists()) {
         throw new Error("Job not found");
       }
-      
+
       const jobData = jobDoc.data();
-      
+
       // CRITICAL: Additional security check for recruiters
       if (isRecruiter && !isJobPerformedByCurrentUser(jobData)) {
         throw new Error("You can only delete job openings created by you.");
       }
-      
+
       const jobTitle = jobData.title;
       const companyId = jobData.companyId;
-  
+
       // Add history entry to company document if company exists
       if (companyId) {
         const companyHistoryEntry = {
@@ -320,12 +391,14 @@ export default function JobOpenings() {
           performedBy: userDisplayName,
           timestamp: new Date().toISOString(),
         };
-        
+
         const companyRef = doc(db, "Companies", companyId);
         const companyDoc = await getDoc(companyRef);
-        
+
         if (companyDoc.exists()) {
-          const currentCompanyHistory = Array.isArray(companyDoc.data().history) ? companyDoc.data().history : [];
+          const currentCompanyHistory = Array.isArray(companyDoc.data().history)
+            ? companyDoc.data().history
+            : [];
           await updateDoc(companyRef, {
             history: [...currentCompanyHistory, companyHistoryEntry],
             updatedAt: serverTimestamp(),
@@ -335,23 +408,27 @@ export default function JobOpenings() {
           console.warn("Company document not found, skipping history update");
         }
       }
-  
+
       // Delete the job
       await deleteDoc(jobRef);
       console.log("Job deleted successfully");
-      
+
       // Refresh the job openings list
       await fetchJobOpenings();
-      
+
       setSelectedJob(null);
       setOpenDelete(false);
       setDeleteId(null);
-      setDeleteMessage("Are you sure you want to delete this job opening? This action cannot be undone.");
+      setDeleteMessage(
+        "Are you sure you want to delete this job opening? This action cannot be undone."
+      );
       toast.success("Job opening deleted successfully!");
       logActivity("DELETE_JOB", { jobId: deleteId, title: jobTitle });
     } catch (err) {
       console.error("Error deleting job:", err);
-      setDeleteMessage("An error occurred while trying to delete the job opening.");
+      setDeleteMessage(
+        "An error occurred while trying to delete the job opening."
+      );
       toast.error(`Failed to delete job opening: ${err.message}`);
     }
   };
@@ -359,13 +436,17 @@ export default function JobOpenings() {
   const exportToExcel = async (jobId) => {
     try {
       // CRITICAL: Check if recruiter can export this job's applications
-      const jobToExport = jobOpenings.find(job => job.id === jobId);
+      const jobToExport = jobOpenings.find((job) => job.id === jobId);
       if (isRecruiter && !isJobPerformedByCurrentUser(jobToExport)) {
-        toast.error("You can only export applications for job openings created by you.");
+        toast.error(
+          "You can only export applications for job openings created by you."
+        );
         return;
       }
-      
-      const snapshot = await getDocs(collection(db, `JobOpenings/${jobId}/Applications`));
+
+      const snapshot = await getDocs(
+        collection(db, `JobOpenings/${jobId}/Applications`)
+      );
       const applications = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -387,7 +468,7 @@ export default function JobOpenings() {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Applications");
       XLSX.writeFile(wb, `Applications_${jobId}.xlsx`);
-      
+
       logActivity("EXPORT_EXCEL", { jobId });
       toast.success("Applications exported to Excel!");
     } catch (error) {
@@ -399,13 +480,17 @@ export default function JobOpenings() {
   const exportToPDF = async (jobId) => {
     try {
       // CRITICAL: Check if recruiter can export this job's applications
-      const jobToExport = jobOpenings.find(job => job.id === jobId);
+      const jobToExport = jobOpenings.find((job) => job.id === jobId);
       if (isRecruiter && !isJobPerformedByCurrentUser(jobToExport)) {
-        toast.error("You can only export applications for job openings created by you.");
+        toast.error(
+          "You can only export applications for job openings created by you."
+        );
         return;
       }
-      
-      const snapshot = await getDocs(collection(db, `JobOpenings/${jobId}/Applications`));
+
+      const snapshot = await getDocs(
+        collection(db, `JobOpenings/${jobId}/Applications`)
+      );
       const applications = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -429,7 +514,7 @@ export default function JobOpenings() {
         ]),
       });
       doc.save(`Applications_${jobId}.pdf`);
-      
+
       logActivity("EXPORT_PDF", { jobId });
       toast.success("Applications exported to PDF!");
     } catch (error) {
@@ -459,7 +544,12 @@ export default function JobOpenings() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#333333] font-sans">
-            Job Openings {isRecruiter && <span className="text-sm font-normal text-gray-600">(Your Jobs Only)</span>}
+            Job Openings{" "}
+            {isRecruiter && (
+              <span className="text-sm font-normal text-gray-600">
+                (Your Jobs Only)
+              </span>
+            )}
           </h1>
           <p className="text-sm text-gray-600 mt-2">
             Total Job Openings: {jobOpenings.length}
@@ -490,57 +580,72 @@ export default function JobOpenings() {
             />
           </div>
           <div className="max-h-[70vh] overflow-y-auto">
-            {(searchResults.length > 0 ? searchResults : jobOpenings).map((job) => (
-              <div
-                key={job.id}
-                onClick={() => setSelectedJob(job)}
-                className={`p-4 mb-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-150 ${
-                  selectedJob?.id === job.id ? "bg-blue-50 border-blue-200" : "bg-white"
-                } border border-gray-200 shadow-sm`}
-              >
-                <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
-                <p className="text-sm text-gray-600">{job.companyName}</p>
-                <p className="text-sm text-gray-500">{job.locationType} | {job.jobType}</p>
-                <p className="text-sm text-gray-500">Status: {job.status}</p>
-                {isRecruiter && isJobPerformedByCurrentUser(job) && (
-                  <p className="text-xs text-blue-600 mt-1 font-medium">✓ Created by you</p>
-                )}
-                {job.migrationNote && (
-                  <p className="text-xs text-orange-600 mt-1 font-medium">📝 Migrated job</p>
-                )}
+            {(searchResults.length > 0 ? searchResults : jobOpenings).map(
+              (job) => (
+                <div
+                  key={job.id}
+                  onClick={() => setSelectedJob(job)}
+                  className={`p-4 mb-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-150 ${
+                    selectedJob?.id === job.id
+                      ? "bg-blue-50 border-blue-200"
+                      : "bg-white"
+                  } border border-gray-200 shadow-sm`}
+                >
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {job.title}
+                  </h3>
+                  <p className="text-sm text-gray-600">{job.companyName}</p>
+                  <p className="text-sm text-gray-500">
+                    {job.locationType} | {job.jobType}
+                  </p>
+                  <p className="text-sm text-gray-500">Status: {job.status}</p>
+                  {isRecruiter && isJobPerformedByCurrentUser(job) && (
+                    <p className="text-xs text-blue-600 mt-1 font-medium">
+                      ✓ Created by you
+                    </p>
+                  )}
+                  {job.migrationNote && (
+                    <p className="text-xs text-orange-600 mt-1 font-medium">
+                      📝 Migrated job
+                    </p>
+                  )}
 
-                {(canUpdate || canDelete) && (
-                  <div className="mt-3 flex gap-2">
-                    {canUpdate && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditClick(job);
-                        }}
-                        className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition duration-150"
-                      >
-                        Edit
-                      </button>
-                    )}
-                    {canDelete && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteClick(job.id);
-                        }}
-                        className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition duration-150"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-            {(searchResults.length > 0 ? searchResults : jobOpenings).length === 0 && (
+                  {(canUpdate || canDelete) && (
+                    <div className="mt-3 flex gap-2">
+                      {canUpdate && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditClick(job);
+                          }}
+                          className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition duration-150"
+                        >
+                          Edit
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(job.id);
+                          }}
+                          className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition duration-150"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            )}
+            {(searchResults.length > 0 ? searchResults : jobOpenings).length ===
+              0 && (
               <div className="text-center py-8">
                 <p className="text-sm text-gray-500">
-                  {isRecruiter ? "No job openings created by you yet." : "No job openings found."}
+                  {isRecruiter
+                    ? "No job openings created by you yet."
+                    : "No job openings found."}
                 </p>
                 {isRecruiter && canCreate && (
                   <button
@@ -560,7 +665,9 @@ export default function JobOpenings() {
           {selectedJob ? (
             <>
               <div className="mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">{selectedJob.title}</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  {selectedJob.title}
+                </h2>
                 {isRecruiter && isJobPerformedByCurrentUser(selectedJob) && (
                   <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
                     Your Job Opening
@@ -572,23 +679,60 @@ export default function JobOpenings() {
                   </span>
                 )}
               </div>
-              
+
               <div className="mb-6 space-y-2 text-sm text-gray-700">
-                <p><span className="font-medium text-gray-900">Company:</span> {selectedJob.companyName}</p>
-                <p><span className="font-medium text-gray-900">Job Type:</span> {selectedJob.jobType}</p>
-                <p><span className="font-medium text-gray-900">Status:</span> {selectedJob.status}</p>
-                <p><span className="font-medium text-gray-900">Experience:</span> {selectedJob.experience}</p>
-                <p><span className="font-medium text-gray-900">Salary/Stipend:</span> {selectedJob.salary} {selectedJob.currency}</p>
-                {selectedJob.duration && <p><span className="font-medium text-gray-900">Duration:</span> {selectedJob.duration}</p>}
-                <p><span className="font-medium text-gray-900">Location:</span> {selectedJob.locationType} {selectedJob.city ? `(${selectedJob.city})` : ""}</p>
-                <p><span className="font-medium text-gray-900">Skills:</span> {selectedJob.skills.join(", ")}</p>
-                <p><span className="font-medium text-gray-900">POC:</span> {selectedJob.poc.name} ({selectedJob.poc.email})</p>
+                <p>
+                  <span className="font-medium text-gray-900">Company:</span>{" "}
+                  {selectedJob.companyName}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-900">Job Type:</span>{" "}
+                  {selectedJob.jobType}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-900">Status:</span>{" "}
+                  {selectedJob.status}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-900">Experience:</span>{" "}
+                  {selectedJob.experience}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-900">
+                    Salary/Stipend:
+                  </span>{" "}
+                  {selectedJob.salary} {selectedJob.currency}
+                </p>
+                {selectedJob.duration && (
+                  <p>
+                    <span className="font-medium text-gray-900">Duration:</span>{" "}
+                    {selectedJob.duration}
+                  </p>
+                )}
+                <p>
+                  <span className="font-medium text-gray-900">Location:</span>{" "}
+                  {selectedJob.locationType}{" "}
+                  {selectedJob.city ? `(${selectedJob.city})` : ""}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-900">Skills:</span>{" "}
+                  {selectedJob.skills.join(", ")}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-900">POC:</span>{" "}
+                  {selectedJob.poc.name} ({selectedJob.poc.email})
+                </p>
                 <div className="mt-4">
                   <p className="font-medium text-gray-900">Job Description:</p>
-                  <div dangerouslySetInnerHTML={{ __html: selectedJob.description }} className="prose prose-sm text-gray-700 mt-2" />
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: selectedJob.description,
+                    }}
+                    className="prose prose-sm text-gray-700 mt-2"
+                  />
                 </div>
               </div>
-              
+
               <div className="flex gap-4 mb-6">
                 <button
                   onClick={() => exportToExcel(selectedJob.id)}
@@ -603,16 +747,20 @@ export default function JobOpenings() {
                   Export to PDF
                 </button>
               </div>
-              
-              <ApplicationManagement jobId={selectedJob.id} jobSkills={selectedJob.skills} />
+
+              <ApplicationManagement
+                jobId={selectedJob.id}
+                jobSkills={selectedJob.skills}
+              />
             </>
           ) : (
             <div className="text-center py-12">
               <p className="text-sm text-gray-500">
-                {jobOpenings.length === 0 
-                  ? (isRecruiter ? "Create your first job opening to get started" : "No job openings available") 
-                  : "Select a job opening to view details and applications"
-                }
+                {jobOpenings.length === 0
+                  ? isRecruiter
+                    ? "Create your first job opening to get started"
+                    : "No job openings available"
+                  : "Select a job opening to view details and applications"}
               </p>
             </div>
           )}
@@ -640,20 +788,25 @@ export default function JobOpenings() {
       {canDelete && openDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Confirm Deletion</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Confirm Deletion
+            </h2>
             <p className="text-sm text-gray-600 mb-6">{deleteMessage}</p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
                   setOpenDelete(false);
                   setDeleteId(null);
-                  setDeleteMessage("Are you sure you want to delete this job opening? This action cannot be undone.");
+                  setDeleteMessage(
+                    "Are you sure you want to delete this job opening? This action cannot be undone."
+                  );
                 }}
                 className="px-5 py-2.5 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition duration-200 font-medium"
               >
                 Cancel
               </button>
-              {deleteMessage === "Are you sure you want to delete this job opening? This action cannot be undone." && (
+              {deleteMessage ===
+                "Are you sure you want to delete this job opening? This action cannot be undone." && (
                 <button
                   onClick={deleteJob}
                   className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:from-red-700 hover:to-red-800 transition duration-200 font-medium"

@@ -1381,30 +1381,34 @@ const ApplicationManagement = ({ jobId }) => {
       toast.error("Please select at least one student");
       return;
     }
-    
+
     try {
       // Filter out students who already have applications
-      const existingStudentIds = applications.map(app => app.studentId);
-      const newStudentIds = selectedStudents.filter(studentId => 
-        !existingStudentIds.includes(studentId)
+      const existingStudentIds = applications.map((app) => app.studentId);
+      const newStudentIds = selectedStudents.filter(
+        (studentId) => !existingStudentIds.includes(studentId)
       );
-      
+
       if (newStudentIds.length === 0) {
-        toast.warning("All selected students already have applications for this job");
+        toast.warning(
+          "All selected students already have applications for this job"
+        );
         return;
       }
-      
+
       // Show warning if some students are already applied
       if (newStudentIds.length < selectedStudents.length) {
         const duplicateCount = selectedStudents.length - newStudentIds.length;
-        toast.warning(`${duplicateCount} student(s) already have applications and were skipped`);
+        toast.warning(
+          `${duplicateCount} student(s) already have applications and were skipped`
+        );
       }
-      
+
       const newApplications = [];
       for (const studentId of newStudentIds) {
         const student = students.find((s) => s.id === studentId);
         if (!student) continue;
-  
+
         const appData = {
           studentId,
           studentName: `${student.firstName} ${student.lastName}`,
@@ -1412,14 +1416,15 @@ const ApplicationManagement = ({ jobId }) => {
           status: "Pending",
           remarks: "",
           createdAt: serverTimestamp(),
+          source: "admin",
         };
-  
+
         const docRef = await addDoc(
           collection(db, `JobOpenings/${jobId}/Applications`),
           appData
         );
         newApplications.push({ id: docRef.id, ...appData });
-  
+
         // Add placement record to Placements collection
         const placementData = {
           studentId,
@@ -1429,9 +1434,9 @@ const ApplicationManagement = ({ jobId }) => {
           status: "Pending",
           createdAt: serverTimestamp(),
         };
-  
+
         await addDoc(collection(db, "Placements"), placementData);
-  
+
         logActivity("CREATE_APPLICATION", {
           studentId,
           studentName: appData.studentName,
@@ -1442,10 +1447,12 @@ const ApplicationManagement = ({ jobId }) => {
           applicationId: docRef.id,
         });
       }
-  
+
       setApplications([...applications, ...newApplications]);
       setSelectedStudents([]);
-      toast.success(`${newApplications.length} application(s) and placement(s) added successfully!`);
+      toast.success(
+        `${newApplications.length} application(s) and placement(s) added successfully!`
+      );
     } catch (err) {
       console.error("Error adding applications or placements:", err);
       toast.error("Failed to add applications or placements.");
@@ -1458,25 +1465,29 @@ const ApplicationManagement = ({ jobId }) => {
       toast.error("No students to add");
       return;
     }
-    
+
     try {
       // Filter out students who already have applications
-      const existingStudentIds = applications.map(app => app.studentId);
-      const newStudents = filteredStudents.filter(student => 
-        !existingStudentIds.includes(student.id)
+      const existingStudentIds = applications.map((app) => app.studentId);
+      const newStudents = filteredStudents.filter(
+        (student) => !existingStudentIds.includes(student.id)
       );
-      
+
       if (newStudents.length === 0) {
-        toast.warning("All filtered students already have applications for this job");
+        toast.warning(
+          "All filtered students already have applications for this job"
+        );
         return;
       }
-      
+
       // Show info about how many students will be added
       if (newStudents.length < filteredStudents.length) {
         const duplicateCount = filteredStudents.length - newStudents.length;
-        toast.info(`Adding ${newStudents.length} new students. ${duplicateCount} student(s) already have applications and were skipped.`);
+        toast.info(
+          `Adding ${newStudents.length} new students. ${duplicateCount} student(s) already have applications and were skipped.`
+        );
       }
-      
+
       const newApplications = [];
       for (const student of newStudents) {
         const appData = {
@@ -1487,13 +1498,13 @@ const ApplicationManagement = ({ jobId }) => {
           remarks: "",
           createdAt: serverTimestamp(),
         };
-  
+
         const docRef = await addDoc(
           collection(db, `JobOpenings/${jobId}/Applications`),
           appData
         );
         newApplications.push({ id: docRef.id, ...appData });
-  
+
         // Add placement record to Placements collection
         const placementData = {
           studentId: student.id,
@@ -1503,9 +1514,9 @@ const ApplicationManagement = ({ jobId }) => {
           status: "Pending",
           createdAt: serverTimestamp(),
         };
-  
+
         await addDoc(collection(db, "Placements"), placementData);
-  
+
         logActivity("CREATE_APPLICATION", {
           studentId: student.id,
           studentName: appData.studentName,
@@ -1516,7 +1527,7 @@ const ApplicationManagement = ({ jobId }) => {
           applicationId: docRef.id,
         });
       }
-  
+
       setApplications([...applications, ...newApplications]);
       setSelectedStudents([]);
       toast.success(`${newApplications.length} student(s) added successfully!`);
@@ -1525,7 +1536,6 @@ const ApplicationManagement = ({ jobId }) => {
       toast.error("Failed to add all students");
     }
   };
-  
 
   const handleUpdateApplication = async (id, updates) => {
     try {
@@ -1718,12 +1728,12 @@ const ApplicationManagement = ({ jobId }) => {
               </button>
 
               <button
-            type="button"
-            onClick={handleAddAllStudents}
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-          >
-            Add All Students
-          </button>
+                type="button"
+                onClick={handleAddAllStudents}
+                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+              >
+                Add All Students
+              </button>
             </div>
           </div>
           <div className="mb-4">
@@ -1744,7 +1754,9 @@ const ApplicationManagement = ({ jobId }) => {
                       );
                     }}
                   />
-                  <span>{`${student.firstName} ${student.lastName} (${student.email || student.phone || student.username})`}</span>
+                  <span>{`${student.firstName} ${student.lastName} (${
+                    student.email || student.phone || student.username
+                  })`}</span>
                 </div>
               ))}
               {filteredStudents.length === 0 && (
@@ -1760,8 +1772,6 @@ const ApplicationManagement = ({ jobId }) => {
             Add Selected Students
           </button>
         </div>
-         
-        
 
         {/* Status Filter */}
         <select
@@ -1846,7 +1856,13 @@ const ApplicationManagement = ({ jobId }) => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">All Locations</option>
-                    {[...new Set(students.map(student => student.location).filter(Boolean))].map((location) => (
+                    {[
+                      ...new Set(
+                        students
+                          .map((student) => student.location)
+                          .filter(Boolean)
+                      ),
+                    ].map((location) => (
                       <option key={location} value={location}>
                         {location}
                       </option>
@@ -1944,6 +1960,9 @@ const ApplicationManagement = ({ jobId }) => {
                 <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
                   Actions
                 </th>
+                <th className="px-4 py-3 text-left text-base font-semibold text-gray-700">
+                  Resume
+                </th>
               </tr>
             </thead>
             <DragDropContext onDragEnd={onDragEnd}>
@@ -2021,6 +2040,20 @@ const ApplicationManagement = ({ jobId }) => {
                                 Delete
                               </button>
                             </td>
+                            <td className="px-4 py-3 text-gray-800">
+                              {app.resumeUrl ? (
+                                <a
+                                  href={`${app.resumeUrl}?response-content-disposition=attachment`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
+                                >
+                                  View Resume
+                                </a>
+                              ) : (
+                                <span className="text-gray-400">No Resume</span>
+                              )}
+                            </td>
                           </tr>
                         )}
                       </Draggable>
@@ -2053,5 +2086,5 @@ const ApplicationManagement = ({ jobId }) => {
     </>
   );
 };
-  
+
 export default ApplicationManagement;
