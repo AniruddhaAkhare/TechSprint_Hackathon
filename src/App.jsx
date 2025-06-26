@@ -144,7 +144,7 @@ export default function App() {
                 <Route path="/registration-welcome" element={<AfterEmployeeRegistration/>} />
                 <Route path="/employee-registration" element={!user ? <EmployeeRegistrationForm /> : <Navigate to="/my-profile" />} />
 
-                <Route path="/my-activities" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
+                {/* <Route path="/my-activities" element={<ProtectedRoute><Activity /></ProtectedRoute>} /> */}
                 
                 <Route path="/" element={<ProtectedRoute permissionSection="Users"><StaffAndUsers /></ProtectedRoute>} />
 
@@ -274,11 +274,11 @@ export default function App() {
                 <Route path="/employee-profile/:employeeId" element={<EmployeeProfile />} />
                  <Route path="/employeeManagemnet" element={<EmployeeManagement />} />
                 <Route path="/attendanceManagemnet" element={<AttendanceManagement/>} />
-                <Route path="/EmployeeAttendance" element={<EmployeeAttendanceManagement/>} />
+                {/* <Route path="/EmployeeAttendance" element={<EmployeeAttendanceManagement/>} />
                 <Route path="/AttendanceDashboard" element={<AttendanceEmployee/>} />
                 <Route path="/LeaveManagement" element={<LeaveManagement/>} />
                 <Route path="/LeaveSummery" element={<MyLeaveSummery />} />
-                <Route path="/LeaveCalendre" element={< LeaveCalendre />} />
+                <Route path="/LeaveCalendre" element={< LeaveCalendre />} /> */}
                 {/* Placement */}
                 <Route path="/companies" element={<Companies />} />
                 <Route path="/job-openings" element={<JobOpenings />} />
