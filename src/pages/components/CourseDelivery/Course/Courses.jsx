@@ -23,6 +23,7 @@ import LearnerList from "./LearnerList";
 import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import { useAuth } from "../../../../context/AuthContext";
 import debounce from "lodash/debounce";
+import { runTransaction } from "firebase/firestore";
 
 export default function Courses() {
   const { user, rolePermissions } = useAuth();
@@ -35,6 +36,9 @@ export default function Courses() {
   const [openDelete, setOpenDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [loadingCenters, setLoadingCenters] = useState(true);
+
+
+
   const [deleteMessage, setDeleteMessage] = useState(
     "Are you sure you want to delete this course? This action cannot be undone."
   );
@@ -56,7 +60,7 @@ export default function Courses() {
   const EnrollmentsCollectionRef = collection(db, "enrollments");
   const LogsCollectionRef = collection(db, "activityLogs");
   const instituteId = "RDJ9wMXGrIUk221MzDxP";
-  const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+  const CenterCollectionRef = collection(db, "Branch");
 
   const toggleSidebar = () => setIsOpen((prev) => !prev);
 
@@ -66,52 +70,70 @@ export default function Courses() {
   };
 
   const logActivity = async (action, details) => {
-    if (!user) return;
-    try {
-      const logDocRef = doc(db, "activityLogs", "currentLog");
-      const logEntry = {
-        timestamp: serverTimestamp(),
-        userId: user.uid,
-        userEmail: user.email,
-        action,
-        details,
-      };
-      await updateDoc(logDocRef, {
-        logs: arrayUnion(logEntry),
-        count: increment(1),
-      }).catch(async (err) => {
-        if (err.code === "not-found") {
-          await setDoc(logDocRef, { logs: [logEntry], count: 1 });
-        } else {
-          throw err;
-        }
-      });
-    } catch (err) {
-    }
+  if (!user?.email) return;
+
+  const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+  const logEntry = {
+    action,
+    details,
+    timestamp: new Date().toISOString(),
+    userEmail: user.email,
+    userId: user.uid,
+    section: "Course",
+    // adminId: adminId || "N/A",
   };
 
-  const fetchLogs = useCallback(() => {
-    if (!isAdmin) return;
-    const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const allLogs = [];
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data();
-          (data.logs || []).forEach((log) => {
-            allLogs.push({ id: doc.id, ...log });
-          });
-        });
-        allLogs.sort(
-          (a, b) =>
-            (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
-        );
-        setLogs(allLogs);
-      },
-    );
-    return unsubscribe;
-  }, [isAdmin]);
+  try {
+    await runTransaction(db, async (transaction) => {
+      const logDoc = await transaction.get(activityLogRef);
+      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+      // Ensure logs is an array and contains only valid data
+      if (!Array.isArray(logs)) {
+        logs = [];
+      }
+
+      // Append the new log entry
+      logs.push(logEntry);
+
+      // Trim to the last 1000 entries if necessary
+      if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+      }
+
+      // Update the document with the new logs array
+      transaction.set(activityLogRef, { logs }, { merge: true });
+    });
+    console.log("Activity logged successfully");
+  } catch (error) {
+    console.error("Error logging activity:", error);
+    // toast.error("Failed to log activity");
+  }
+};
+  
+  // const fetchLogs = useCallback(() => {
+  //   if (!isAdmin) return;
+  //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+  //   const unsubscribe = onSnapshot(
+  //     q,
+  //     (snapshot) => {
+  //       const allLogs = [];
+  //       snapshot.docs.forEach((doc) => {
+  //         const data = doc.data();
+  //         (data.logs || []).forEach((log) => {
+  //           allLogs.push({ id: doc.id, ...log });
+  //         });
+  //       });
+  //       allLogs.sort(
+  //         (a, b) =>
+  //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+  //       );
+  //       setLogs(allLogs);
+  //     },
+  //   );
+  //   return unsubscribe;
+  // }, [isAdmin]);
 
   const fetchCenters = useCallback(async () => {
     if (!canDisplay) {
@@ -129,7 +151,7 @@ export default function Courses() {
       }
       const instituteId = 'RDJ9wMXGrIUk221MzDxP';
 
-      const CenterCollectionRef = collection(db, "instituteSetup", instituteId, "Center");
+      const CenterCollectionRef = collection(db, "Branch");
       const q = query(CenterCollectionRef, where("isActive", "==", true));
       const snapshot = await getDocs(q);
       const centerData = snapshot.docs
@@ -226,10 +248,10 @@ export default function Courses() {
     }
     const unsubscribeCourses = fetchCourses();
     fetchCenters().then(() => {
-      if (isAdmin) fetchLogs();
+      // if (isAdmin) fetchLogs();
     });
     return () => unsubscribeCourses && unsubscribeCourses();
-  }, [fetchCourses, fetchCenters, fetchLogs, canDisplay, isAdmin]);
+  }, [fetchCourses, fetchCenters, canDisplay]);
   
   const debouncedSearch = useCallback(
     debounce((term) => {
@@ -257,10 +279,10 @@ export default function Courses() {
     }
     const unsubscribeCourses = fetchCourses();
     fetchCenters().then(() => {
-      if (isAdmin) fetchLogs();
+      // if (isAdmin) fetchLogs();
     });
     return () => unsubscribeCourses && unsubscribeCourses();
-  }, [fetchCourses, fetchCenters, fetchLogs, canDisplay, isAdmin]);
+  }, [fetchCourses, fetchCenters, canDisplay, isAdmin]);
 
   // useEffect(() => {
   //   if (!canDisplay) return;
@@ -269,7 +291,7 @@ export default function Courses() {
   //     if (isAdmin) fetchLogs();
   //   });
   //   return () => unsubscribeCourses && unsubscribeCourses();
-  // }, [fetchCourses, fetchCenters, fetchLogs, canDisplay, isAdmin]);
+  // }, [fetchCourses, fetchCenters, S, canDisplay, isAdmin]);
 
   const handleCreateCourseClick = () => {
     if (!canCreate) {
@@ -324,7 +346,7 @@ export default function Courses() {
       const courseSnapshot = await getDoc(courseRef);
       const courseData = courseSnapshot.exists() ? courseSnapshot.data() : {};
       await deleteDoc(courseRef);
-      await logActivity("Deleted course", { name: courseData.name || "Unknown" });
+      await logActivity("Course deleted", { name: courseData.name || "Unknown" });
       setOpenDelete(false);
       setDeleteMessage(
         "Are you sure you want to delete this course? This action cannot be undone."

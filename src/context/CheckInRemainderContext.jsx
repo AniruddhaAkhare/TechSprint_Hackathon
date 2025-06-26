@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { doc, onSnapshot, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../config/firebase";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { useAuth } from "./AuthContext";
 import { toast } from "react-toastify";
 
@@ -15,50 +15,66 @@ export const CheckInReminderProvider = ({ children }) => {
     branchName: null,
     active: false,
     lastCheckIn: null,
+    lastCheckOut: null,
+    dailyDurations: [],
   });
-  const CHECK_IN_RADIUS = 300;
-  const CHECK_IN_REMINDER_INTERVAL = 300000;
+  const CHECK_IN_RADIUS = 100; // in meters
+  const CHECK_IN_REMINDER_INTERVAL = 300000; // 5 minutes in milliseconds
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (user) {
-          const userRef = doc(db, "Users", user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
-            setUserStatus({
-              checkedIn: userData.checkedIn || false,
-              branchId: userData.branchId || null,
-              branchName: userData.branchName || null,
-              active: userData.active || false,
-              lastCheckIn: userData.lastCheckIn || null,
-            });
-          }
+    if (!user) return;
 
-          const querySnapshot = await getDocs(collection(db, "instituteSetup"));
-          if (!querySnapshot.empty) {
-            const instituteId = 'RDJ9wMXGrIUk221MzDxP';
-            const branchesSnapshot = await getDocs(
-              collection(db, "instituteSetup", instituteId, "Center")
-            );
-            const branchList = branchesSnapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
-            setBranches(
-              branchList.filter(
-                (branch) => branch.isActive && branch.latitude && branch.longitude
-              )
-            );
-          }
+    // Real-time listener for user status
+    const userRef = doc(db, "Users", user.uid);
+    const unsubscribe = onSnapshot(
+      userRef,
+      (doc) => {
+        if (doc.exists()) {
+          setUserStatus(doc.data());
+        } else {
+          // Initialize default user status if document doesn't exist
+          setUserStatus({
+            checkedIn: false,
+            branchId: null,
+            branchName: null,
+            active: false,
+            lastCheckIn: null,
+            lastCheckOut: null,
+            dailyDurations: [],
+          });
         }
+      },
+      (error) => {
+        console.error("Error listening to user status:", error);
+        toast.error("Failed to load user status.");
+      }
+    );
+
+    // Fetch branches from Branch collection
+    const fetchBranches = async () => {
+      try {
+        const instituteId = "RDJ9wMXGrIUk221MzDxP"; // Hardcoded instituteId
+        // Query the Branch collection, filter by instituteId
+        const branchesQuery =collection(db, "Branch")
+        const branchesSnapshot = await getDocs(branchesQuery);
+        const branchList = branchesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setBranches(
+          branchList.filter(
+            (branch) => branch.isActive && branch.latitude && branch.longitude
+          )
+        );
       } catch (error) {
-        toast.error("Failed to load check-in data.");
+        console.error("Error fetching branches:", error);
+        toast.error("Failed to load branches.");
       }
     };
 
-    fetchData();
+    fetchBranches();
+
+    return () => unsubscribe();
   }, [user]);
 
   useEffect(() => {
@@ -92,17 +108,22 @@ export const CheckInReminderProvider = ({ children }) => {
           }
         },
         (error) => {
+          // Silent error handling to avoid spamming user
         },
         {
-          enableHighAccuracy: false,
+          enableHighAccuracy: true,
           timeout: 30000,
-          maximumAge: 60000,
+          maximumAge: 0,
         }
       );
     };
 
     const calculateDistance = (lat1, lon1, lat2, lon2) => {
-      const R = 6371e3;
+      if (!lat1 || !lon1 || !lat2 || !lon2) {
+        console.error("Invalid coordinates:", { lat1, lon1, lat2, lon2 });
+        return Infinity; // Prevent invalid calculations
+      }
+      const R = 6371e3; // Earth's radius in meters
       const φ1 = (lat1 * Math.PI) / 180;
       const φ2 = (lat2 * Math.PI) / 180;
       const Δφ = ((lat2 - lat1) * Math.PI) / 180;

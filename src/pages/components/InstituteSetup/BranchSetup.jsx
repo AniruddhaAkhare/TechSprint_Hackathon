@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect } from "react";
 import { db } from "../../../config/firebase";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, query, where } from "firebase/firestore";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import BranchFormModal from "./BranchFormModal";
 
@@ -14,7 +14,9 @@ const BranchSetup = ({ instituteId, canCreate, canUpdate, canDelete, setActiveSt
     if (instituteId) {
       const fetchBranches = async () => {
         try {
-          const branchesSnapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
+          // Query the Branch collection, filter by instituteId
+          const branchesQuery = collection(db, "Branch")
+          const branchesSnapshot = await getDocs(branchesQuery);
           const branchList = branchesSnapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
@@ -23,6 +25,7 @@ const BranchSetup = ({ instituteId, canCreate, canUpdate, canDelete, setActiveSt
           setBranches(branchList);
         } catch (error) {
           console.error("Error fetching branches:", error);
+          alert("Failed to fetch branches. Please try again.");
         }
       };
       fetchBranches();
@@ -42,7 +45,8 @@ const BranchSetup = ({ instituteId, canCreate, canUpdate, canDelete, setActiveSt
     if (!canDelete) return;
     if (window.confirm("Are you sure you want to delete this branch?")) {
       try {
-        await deleteDoc(doc(db, "instituteSetup", instituteId, "Center", branchId));
+        // Delete from the Branch collection
+        await deleteDoc(doc(db, "Branch", branchId));
         setBranches(branches.filter((branch) => branch.id !== branchId));
         alert("Branch deleted successfully!");
       } catch (error) {

@@ -3,6 +3,7 @@ import { db } from "../config/firebase";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // Adjust path as per your project structure
+import { runTransaction } from "firebase/firestore";
 
 const CurriculumDetails = () => {
   const { curriculumId } = useParams();
@@ -48,22 +49,70 @@ const CurriculumDetails = () => {
   }, [curriculumId, canDisplay, user]);
 
   const logActivity = async (action, details) => {
-    if (!user) {
-      // //console.error("No user logged in for logging activity");
-      return;
-    }
+    if (!user?.email) return;
+  
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+  
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Curriculum",
+      // adminId: adminId || "N/A",
+    };
+  
     try {
-      await addDoc(collection(db, "activityLogs"), {
-        timestamp: serverTimestamp(),
-        userId: user.uid,
-        userEmail: user.email,
-        action,
-        details
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+  
+        // Ensure logs is an array and contains only valid data
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+  
+        // Append the new log entry
+        logs.push(logEntry);
+  
+        // Trim to the last 1000 entries if necessary
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+  
+        // Update the document with the new logs array
+        transaction.set(activityLogRef, { logs }, { merge: true });
       });
-    } catch (err) {
-      // //console.error("Error logging activity:", err.message);
+      console.log("Activity logged successfully");
+    } catch (error) {
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+    
+    // const fetchLogs = useCallback(() => {
+    //   if (!isAdmin) return;
+    //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    //   const unsubscribe = onSnapshot(
+    //     q,
+    //     (snapshot) => {
+    //       const allLogs = [];
+    //       snapshot.docs.forEach((doc) => {
+    //         const data = doc.data();
+    //         (data.logs || []).forEach((log) => {
+    //           allLogs.push({ id: doc.id, ...log });
+    //         });
+    //       });
+    //       allLogs.sort(
+    //         (a, b) =>
+    //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+    //       );
+    //       setLogs(allLogs);
+    //     },
+    //   );
+    //   return unsubscribe;
+    // }, [isAdmin]);
 
   const handleAddMaterialClick = async (sectionId) => {
     if (!canUpdate) {

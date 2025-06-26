@@ -45,7 +45,7 @@ const EnquiryFormPage = () => {
             return { docs: [] };
           }),
           instituteSetupDocId
-            ? getDocs(collection(db, "instituteSetup", instituteSetupDocId, "Center")).catch(err => {
+            ? getDocs(collection(db, "Branch")).catch(err => {
                 // //console.error(`Error fetching Center for instituteSetup/${instituteSetupDocId}:`, err);
                 return { docs: [] };
               })

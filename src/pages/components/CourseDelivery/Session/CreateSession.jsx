@@ -68,10 +68,8 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         }
 
         const centerPromises = institutesSnapshot.docs.map(async (instituteDoc) => {
-          const centersQuery = query(
-            collection(db, "instituteSetup", instituteDoc.id, "Center"),
-            where("isActive", "==", true)
-          );
+          const centersQuery =
+            collection(db, "Branch");
           const centersSnapshot = await getDocs(centersQuery);
           return centersSnapshot.docs.map(doc => ({
             id: doc.id,
@@ -216,7 +214,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         await updateDoc(sessionRef, sessionData);
         sessionIdResult = sessionId;
         // Log update activity
-        await logActivity("Updated session", {
+        await logActivity("Session updated", {
           // sessionId: sessionId,
           name: sessionData.name,
           changes: {
@@ -236,7 +234,7 @@ const CreateSession = ({ isOpen, toggleSidebar, sessionToEdit = null, onSubmit, 
         const docRef = await addDoc(collection(db, "Sessions"), sessionData);
         sessionIdResult = docRef.id;
         // Log create activity
-        await logActivity("Created session", {
+        await logActivity("Session created", {
           // sessionId: docRef.id,
           name: sessionData.name,
           // preFeedbackForm: sessionData.preFeedbackForm,

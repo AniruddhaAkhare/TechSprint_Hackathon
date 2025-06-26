@@ -4083,6 +4083,8 @@ import { getDocs, collection, query, orderBy, addDoc, updateDoc, doc, arrayUnion
 import Notes from "../Notes.jsx";
 import { useAuth } from "../../../../context/AuthContext.jsx";
 import { toast } from "react-toastify";
+import { runTransaction } from "firebase/firestore";
+import { useCallback } from "react";
 
 const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, callSchedules, handleDeleteSchedule }) => {
   const { user } = useAuth();
@@ -4131,18 +4133,70 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, callSc
   }, [user?.uid, user?.email]);
 
   const logActivity = async (action, details) => {
+    if (!user?.email) return;
+  
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+  
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Company",
+      // adminId: adminId || "N/A",
+    };
+  
     try {
-      await addDoc(collection(db, "activityLogs"), {
-        action,
-        details,
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email || "anonymous",
-        userId: user.uid,
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+  
+        // Ensure logs is an array and contains only valid data
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+  
+        // Append the new log entry
+        logs.push(logEntry);
+  
+        // Trim to the last 1000 entries if necessary
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+  
+        // Update the document with the new logs array
+        transaction.set(activityLogRef, { logs }, { merge: true });
       });
+      console.log("Activity logged successfully");
     } catch (error) {
-      //console.error("Error logging activity:", error);
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+    
+    // const fetchLogs = useCallback(() => {
+    //   if (!isAdmin) return;
+    //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    //   const unsubscribe = onSnapshot(
+    //     q,
+    //     (snapshot) => {
+    //       const allLogs = [];
+    //       snapshot.docs.forEach((doc) => {
+    //         const data = doc.data();
+    //         (data.logs || []).forEach((log) => {
+    //           allLogs.push({ id: doc.id, ...log });
+    //         });
+    //       });
+    //       allLogs.sort(
+    //         (a, b) =>
+    //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+    //       );
+    //       setLogs(allLogs);
+    //     },
+    //   );
+    //   return unsubscribe;
+    // }, [isAdmin]);
 
   const formatDateSafely = (date, format) => {
     try {
@@ -4201,7 +4255,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, callSc
 
       setNotes([{ id: noteRef.id, ...noteToSave }, ...notes]);
       toast.success("Note added successfully!");
-      logActivity("ADD_NOTE", { companyId: company.id, noteType: noteData.noteType });
+      logActivity("Note Added", { companyId: company.id, noteType: noteData.noteType });
 
       // Schedule reminder for call-schedule
       if (noteData.noteType === "call-schedule") {
@@ -4231,7 +4285,7 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, callSc
               toast.error("Failed to play reminder sound.");
             });
             toast.info(`Call Reminder: ${company.name} at ${noteData.callTime}`);
-            logActivity("TRIGGER_CALL_REMINDER", { companyId: company.id, callDate: noteData.callDate, callTime: noteData.callTime });
+            // logActivity("TRIGGER_CALL_REMINDER", { companyId: company.id, callDate: noteData.callDate, callTime: noteData.callTime });
           }, timeout);
         }
       }

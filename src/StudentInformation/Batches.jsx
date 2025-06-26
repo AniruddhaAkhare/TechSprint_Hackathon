@@ -19,6 +19,9 @@ const Batches = () => {
     const [loading, setLoading] = useState(true);
     const [instituteId, setInstituteId] = useState();
 
+
+    
+
     useEffect(() => {
         const fetchData = async () => {
             if (!user) {
@@ -70,7 +73,7 @@ const Batches = () => {
                 }
                 await Promise.all([
                     fetchBatches(instituteId),
-                    fetchCenters(instituteId),
+                    fetchCenters(),
                     fetchCourses(),
                     fetchInstructors(),
                     fetchCurriculum(),
@@ -133,10 +136,10 @@ const Batches = () => {
         }
     };
 
-    const fetchCenters = async (instituteId) => {
+    const fetchCenters = async () => {
         try {
             const snapshot = await getDocs(
-                collection(db, `instituteSetup/${instituteId}/Center`)
+                collection(db, "Branch")
             );
             const centersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setCenters(centersList);

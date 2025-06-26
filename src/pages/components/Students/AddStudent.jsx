@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { collection, addDoc, Timestamp, getDocs, query, where } from "firebase/firestore";
+import { useNavigate, useParams } from "react-router-dom";
+import { collection, addDoc, getDocs, query, where, doc, runTransaction } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import sendWelcomeEmail from "../../../services/sendWelcomeEmail.jsx";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function AddStudent() {
+  const { adminId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(true);
   const [Name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("+91"); 
-  const [guardianCountryCode, setGuardianCountryCode] = useState("+91"); 
+  const [countryCode, setCountryCode] = useState("+91");
+  const [guardianCountryCode, setGuardianCountryCode] = useState("+91");
   const [address, setAddress] = useState({ street: "", area: "", city: "", state: "", zip: "", country: "" });
   const [billingAddress, setBillingAddress] = useState({ name: "", street: "", area: "", city: "", state: "", zip: "", country: "", gstNo: "" });
   const [copyAddress, setCopyAddress] = useState(false);
@@ -36,9 +42,49 @@ export default function AddStudent() {
   const [feeTemplates, setFeeTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
 
-  // List of country codes (same as provided)
+  const logActivity = async (action, details) => {
+    if (!user?.email) {
+      console.warn("No user email found, skipping activity log");
+      return;
+    }
+
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Student",
+      // adminId: adminId || "N/A",
+    };
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        logs.push(logEntry);
+
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully:", action);
+    } catch (error) {
+      console.error("Error logging activity:", error);
+      toast.error("Failed to log activity");
+    }
+  };
+
   const countryCodes = [
     { code: "+1", label: "USA (+1)" },
     { code: "+1", label: "Canada (+1)" },
@@ -120,7 +166,7 @@ export default function AddStudent() {
     { code: "+269", label: "Comoros (+269)" },
     { code: "+291", label: "Eritrea (+291)" },
     { code: "+297", label: "Aruba (+297)" },
-    { code: "+298", label: "Far deviance (+298)" },
+    { code: "+298", label: "Faroe Islands (+298)" },
     { code: "+299", label: "Greenland (+299)" },
     { code: "+351", label: "Portugal (+351)" },
     { code: "+352", label: "Luxembourg (+352)" },
@@ -223,16 +269,15 @@ export default function AddStudent() {
     { code: "+998", label: "Uzbekistan (+998)" },
   ];
 
-  // Utility function to capitalize the first letter
   const capitalizeEachWord = (str) => {
-  if (!str || typeof str !== "string") return str;
-  return str
-    .split(" ") // Split the string into an array of words
-    .map((word) => {
-      if (!word) return word; // Handle empty strings or multiple spaces
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-    })
-    .join(" "); // Join the words back into a string
+    if (!str || typeof str !== "string") return str;
+    return str
+      .split(" ")
+      .map((word) => {
+        if (!word) return word;
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(" ");
   };
 
   useEffect(() => {
@@ -241,7 +286,6 @@ export default function AddStudent() {
     fetchCourses();
     fetchBatches();
     fetchCenters();
-    // fetchFeeTemplates();
   }, []);
 
   const fetchCourses = async () => {
@@ -249,7 +293,8 @@ export default function AddStudent() {
       const querySnapshot = await getDocs(collection(db, "Course"));
       setCourses(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     } catch (error) {
-      //console.error("Error fetching courses:", error);
+      console.error("Error fetching courses:", error);
+      toast.error("Failed to fetch courses");
     }
   };
 
@@ -258,7 +303,8 @@ export default function AddStudent() {
       const querySnapshot = await getDocs(collection(db, "Batch"));
       setBatches(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     } catch (error) {
-      //console.error("Error fetching batches:", error);
+      console.error("Error fetching batches:", error);
+      toast.error("Failed to fetch batches");
     }
   };
 
@@ -266,27 +312,33 @@ export default function AddStudent() {
     try {
       const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
       if (instituteSnapshot.empty) {
-        //console.error("No instituteSetup document found");
+        console.error("No instituteSetup document found");
+        toast.error("No institute setup found");
         return;
       }
       const instituteId = "RDJ9wMXGrIUk221MzDxP";
 
       const centerQuery = query(
-        collection(db, "instituteSetup", instituteId, "Center"),
+        collection(db, "Branch"),
         where("isActive", "==", true)
       );
       const centerSnapshot = await getDocs(centerQuery);
       const centersList = centerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setCenters(centersList);
     } catch (error) {
-      //console.error("Error fetching centers:", error);
+      console.error("Error fetching centers:", error);
+      toast.error("Failed to fetch centers");
     }
   };
 
   const handleAddStudent = async (e) => {
     e.preventDefault();
+
+    // await logActivity("INITIATE_ADD_STUDENT", { name: Name, email });
+
     if (!Name.trim() || !email.trim() || !phone.trim()) {
-      alert("Please fill all required fields.");
+      toast.error("Please fill all required fields.");
+      // await logActivity("ADD_STUDENT_FAILED", { name: Name, email, error: "Missing required fields" });
       return;
     }
 
@@ -296,7 +348,8 @@ export default function AddStudent() {
     });
 
     if (installmentTotal !== Number(total)) {
-      alert("Installment total does not match with total amount");
+      toast.error("Installment total does not match with total amount");
+      // await logActivity("ADD_STUDENT_FAILED", { name: Name, email, error: "Installment total mismatch" });
       return;
     }
 
@@ -331,21 +384,26 @@ export default function AddStudent() {
       });
 
       const studentId = studentDocRef.id;
+      await logActivity("Student details added", { studentId, name: Name, email });
 
       try {
         await sendWelcomeEmail({
           toEmail: email,
           fullName: `${capitalizeEachWord(Name)}`
         });
-        alert("Student added successfully! Welcome email sent.");
+        // await logActivity("SEND_WELCOME_EMAIL_SUCCESS", { studentId, email });
+        toast.success("Student added successfully! Welcome email sent.");
       } catch (emailError) {
-        alert("Student added successfully, but welcome email failed to send.");
+        console.error("Error sending welcome email:", emailError);
+        // await logActivity("SEND_WELCOME_EMAIL_FAILED", { studentId, email, error: emailError.message });
+        toast.warn("Student added successfully, but welcome email failed to send.");
       }
 
       navigate("/studentdetails");
     } catch (error) {
       console.error("Error adding student:", error);
-      alert("Error adding student. Please try again.");
+      // await logActivity("ADD_STUDENT_FAILED", { name: Name, email, error: error.message });
+      toast.error("Error adding student. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -489,11 +547,10 @@ export default function AddStudent() {
       )}
 
       <div
-        className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/3 shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
-          } p-6 overflow-y-auto z-50`}
+        className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/3 shadow-lg transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"} p-6 overflow-y-auto z-50`}
       >
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-gray-800">Add Prach</h1>
+          <h1 className="text-2xl font-semibold text-gray-800">Add Student</h1>
           <button
             onClick={toggleSidebar}
             className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2"
@@ -505,608 +562,602 @@ export default function AddStudent() {
         <form onSubmit={handleAddStudent} className="space-y-8">
           {/* Personal Details */}
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-4xl mx-auto mt-8">
-  <h2 className="text-xl font-semibold text-indigo-700 mb-6 border-b-2 border-indigo-300 pb-2">
-    Personal Details
-  </h2>
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-    {/* Name */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Name <span className="text-red-500">*</span>
-      </label>
-      <input
-        type="text"
-        value={Name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Enter your full name"
-        required
-        className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-      />
-    </div>
+            <h2 className="text-xl font-semibold text-indigo-700 mb-6 border-b-2 border-indigo-300 pb-2">
+              Personal Details
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={Name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  required
+                  className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
+                />
+              </div>
 
-    {/* Email */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Email <span className="text-red-500">*</span>
-      </label>
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com"
-        required
-        className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-      />
-    </div>
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  className="mt-1 text-sm text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
+                />
+              </div>
 
-    {/* Phone */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Phone <span className="text-red-500">*</span>
-      </label>
-      <div className="flex mt-1">
-        <select
-          value={countryCode}
-          onChange={(e) => setCountryCode(e.target.value)}
-          className="w-1/3 px-4 py-2 border border-gray-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        >
-          {countryCodes.map((country) => (
-            <option key={country.code} value={country.code}>
-              {country.label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="text"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="Phone Number"
-          required
-          className="w-2/3 px-4 py-2 border border-gray-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-      </div>
-    </div>
+              {/* Phone */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone <span className="text-red-500">*</span>
+                </label>
+                <div className="flex mt-1">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="w-1/3 px-4 py-2 border border-gray-300 rounded-l-lg shadow-sm text-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                  >
+                    {countryCodes.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Phone Number"
+                    required
+                    className="w-2/3 px-4 py-2 border border-gray-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
+                  />
+                </div>
+              </div>
 
-    {/* Date of Birth */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Date of Birth <span className="text-red-500">*</span>
-      </label>
-      <input
-        type="date"
-        value={dateOfBirth}
-        onChange={(e) => setDateOfBirth(e.target.value)}
-        className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-      />
-    </div>
-  </div>
-</div>
-
+              {/* Date of Birth */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date of Birth <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Guardian Details */}
-       <div className="bg-white p-6 rounded-lg shadow-lg max-w-4xl mx-auto mt-8">
-  <h2 className="text-xl font-semibold text-indigo-700 mb-6 border-b-2 border-indigo-300 pb-2">
-    Guardian Details
-  </h2>
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-    {/* Guardian Name */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Name
-      </label>
-      <input
-        type="text"
-        value={guardianDetails.name}
-        onChange={(e) => handleGuardianChange('name', e.target.value)}
-        placeholder="Guardian Name"
-        className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-      />
-    </div>
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-4xl mx-auto mt-8">
+            <h2 className="text-xl font-semibold text-indigo-700 mb-6 border-b-2 border-indigo-300 pb-2">
+              Guardian Details
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Guardian Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={guardianDetails.name}
+                  onChange={(e) => handleGuardianChange('name', e.target.value)}
+                  placeholder="Guardian Name"
+                  className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                />
+              </div>
 
-    {/* Guardian Phone */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Phone
-      </label>
-      <div className="flex mt-1">
-        <select
-          value={guardianCountryCode}
-          onChange={(e) => setGuardianCountryCode(e.target.value)}
-          className="w-1/3 px-4 py-2 border border-gray-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        >
-          {countryCodes.map((country) => (
-            <option key={country.code} value={country.code}>
-              {country.label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="text"
-          value={guardianDetails.phone}
-          onChange={(e) => handleGuardianChange('phone', e.target.value)}
-          placeholder="Guardian Phone"
-          className="w-2/3 px-4 py-2 border border-gray-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-      </div>
-    </div>
+              {/* Guardian Phone */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <span>Phone</span>
+                </label>
+              <div className="flex mt-1">
+                <select
+                  value={guardianCountryCode}
+                  onChange={(e) => setGuardianCountryCode(e.target.value)}
+                  className="w-1/3 px-4 py-2 border border-gray-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                >
+                  {countryCodes.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={guardianDetails.phone}
+                  onChange={(e) => handleGuardianChange('phone', e.target.value)}
+                  placeholder="Guardian Phone"
+                  className="w-2/3 px-4 py-2 border border-gray-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                />
+              </div>
+            </div>
 
-    {/* Guardian Email */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Email
-      </label>
-      <input
-        type="email"
-        value={guardianDetails.email}
-        onChange={(e) => handleGuardianChange('email', e.target.value)}
-        placeholder="Guardian Email"
-        className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-      />
-    </div>
+              {/* Guardian Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={guardianDetails.email}
+                  onChange={(e) => handleGuardianChange('email', e.target.value)}
+                  placeholder="Guardian Email"
+                  className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                />
+              </div>
 
-    {/* Relation */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Relation
-      </label>
-      <input
-        type="text"
-        value={guardianDetails.relation}
-        onChange={(e) => handleGuardianChange('relation', e.target.value)}
-        placeholder="Relation"
-        className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-      />
-    </div>
+              {/* Relation */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Relation
+                </label>
+                <input
+                  type="text"
+                  value={guardianDetails.relation}
+                  onChange={(e) => handleGuardianChange('relation', e.target.value)}
+                  placeholder="Relation"
+                  className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                />
+              </div>
 
-    {/* Occupation */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Occupation
-      </label>
-      <input
-        type="text"
-        value={guardianDetails.occupation}
-        onChange={(e) => handleGuardianChange('occupation', e.target.value)}
-        placeholder="Occupation"
-        className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-      />
-    </div>
-  </div>
-</div>
-
+              {/* Occupation */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Occupation
+                </label>
+                <input
+                  type="text"
+                  value={guardianDetails.occupation}
+                  onChange={(e) => handleGuardianChange('occupation', e.target.value)}
+                  placeholder="Occupation"
+                  className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Address Details */}
-       <div className="bg-white p-6 rounded-lg shadow-lg max-w-4xl mx-auto mt-8">
-  <h2 className="text-xl font-semibold text-indigo-700 mb-6 border-b-2 border-indigo-300 pb-2">
-    Address Details
-  </h2>
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-    {/* Residential Address */}
-    <div>
-      <h3 className="text-lg font-medium text-gray-700 mb-4">
-        Residential Address
-      </h3>
-      <div className="space-y-4">
-        <input
-          type="text"
-          value={address.street}
-          onChange={(e) => setAddress({ ...address, street: e.target.value })}
-          placeholder="Street"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={address.area}
-          onChange={(e) => setAddress({ ...address, area: e.target.value })}
-          placeholder="Area"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={address.city}
-          onChange={(e) => setAddress({ ...address, city: e.target.value })}
-          placeholder="City"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={address.state}
-          onChange={(e) => setAddress({ ...address, state: e.target.value })}
-          placeholder="State"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={address.zip}
-          onChange={(e) => setAddress({ ...address, zip: e.target.value })}
-          placeholder="Zip Code"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={address.country}
-          onChange={(e) => setAddress({ ...address, country: e.target.value })}
-          placeholder="Country"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <label className="flex items-center text-sm text-gray-600 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={copyAddress}
-            onChange={(e) => handleCopyAddress(e.target.checked)}
-            className="mr-2 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-          />
-          Billing same as Residential
-        </label>
-      </div>
-    </div>
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-4xl mx-auto mt-8">
+            <h2 className="text-xl font-semibold text-indigo-700 mb-6 border-b-2 border-indigo-300 pb-2">
+              Address Details
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              {/* Residential Address */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-700 mb-4">
+                  Residential Address
+                </h3>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={address.street}
+                    onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                    placeholder="Street"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                  />
+                  <input
+                    type="text"
+                    value={address.area}
+                    onChange={(e) => setAddress({ ...address, area: e.target.value })}
+                    placeholder="Area"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                  />
+                  <input
+                    type="text"
+                    value={address.city}
+                    onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                    placeholder="City"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                  />
+                <input
+                    type="text"
+                    value={address.state}
+                    onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                    placeholder="State"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                  />
+                  <input
+                    type="text"
+                    value={address.zip}
+                    onChange={(e) => setAddress({ ...address, zip: e.target.value })}
+                    placeholder="Zip Code"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                  />
+                  <input
+                    type="text"
+                    value={address.country}
+                    onChange={(e) => setAddress({ ...address, country: e.target.value })}
+                    placeholder="Country"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                  />
+                  <label className="flex items-center text-sm text-gray-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={copyAddress}
+                      onChange={(e) => handleCopyAddress(e.target.checked)}
+                      className="mr-2 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    Billing same as Residential
+                  </label>
+                </div>
+              </div>
 
-    {/* Billing Address */}
-    <div>
-      <h3 className="text-lg font-medium text-gray-700 mb-4">
-        Billing Address
-      </h3>
-      <div className="space-y-4">
-        <input
-          type="text"
-          value={billingAddress.name}
-          onChange={(e) => setBillingAddress({ ...billingAddress, name: e.target.value })}
-          placeholder="Name"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={billingAddress.street}
-          onChange={(e) => setBillingAddress({ ...billingAddress, street: e.target.value })}
-          placeholder="Street"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={billingAddress.area}
-          onChange={(e) => setBillingAddress({ ...billingAddress, area: e.target.value })}
-          placeholder="Area"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={billingAddress.city}
-          onChange={(e) => setBillingAddress({ ...billingAddress, city: e.target.value })}
-          placeholder="City"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={billingAddress.state}
-          onChange={(e) => setBillingAddress({ ...billingAddress, state: e.target.value })}
-          placeholder="State"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={billingAddress.zip}
-          onChange={(e) => setBillingAddress({ ...billingAddress, zip: e.target.value })}
-          placeholder="Zip Code"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={billingAddress.country}
-          onChange={(e) => setBillingAddress({ ...billingAddress, country: e.target.value })}
-          placeholder="Country"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-        <input
-          type="text"
-          value={billingAddress.gstNo}
-          onChange={(e) => setBillingAddress({ ...billingAddress, gstNo: e.target.value })}
-          placeholder="GST No."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
-        />
-      </div>
-    </div>
-  </div>
-</div>
-
+              {/* Billing Address */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-700 mb-4">
+                  Billing Address
+                </h3>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={billingAddress.name}
+                    onChange={(e) => setBillingAddress({ ...billingAddress, name: e.target.value })}
+                    placeholder="Name"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition"
+                  />
+                  <input
+                    type="text"
+                    value={billingAddress.street}
+                    onChange={(e) => setBillingAddress({ ...billingAddress, street: e.target.value })}
+                    placeholder="Street"
+                    className="w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                  />
+                  <input
+                    type="text"
+                    value={billingAddress.area}
+                    onChange={(e) => setBillingAddress({ ...billingAddress, area: e.target.value })}
+                    placeholder="Area"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                  />
+                  <input
+                    type="text"
+                    value={billingAddress.city}
+                    onChange={(e) => setBillingAddress({ ...billingAddress, city: e.target.value })}
+                    placeholder="City"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:ring-blue-600 transition"
+                  />
+                  <input
+                    type="text"
+                    value={billingAddress.state}
+                    onChange={(e) => setBillingAddress({ ...billingAddress, state: e.target.value })}
+                    placeholder="State"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-blue-600 transition"
+                  />
+                  <input
+                    type="text"
+                    value={billingAddress.zip}
+                    onChange={(e) => setBillingAddress({ ...billingAddress, zip: e.target.value })}
+                    placeholder="Zip Code"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:ring-blue-600 transition"
+                  />
+                  <input
+                    type="text"
+                    value={billingAddress.country}
+                    onChange={(e) => setBillingAddress({ ...billingAddress, country: e.target.value })}
+                    placeholder="Country"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:ring-blue-600 transition"
+                  />
+                  <input
+                    type="text"
+                    value={billingAddress.gstNo}
+                    onChange={(e) => setBillingAddress({ ...billingAddress, gstNo: e.target.value })}
+                    placeholder="GST No."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:ring-blue-600 transition"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Educational Details */}
-         <div className="bg-white shadow-md rounded-lg p-6 ml-6">
-      <h2 className="text-lg font-medium text-gray-700 mb-4 ">Educational Details</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="p-3 text-sm font-medium text-gray-600">Level</th>
-              <th className="p-3 text-sm font-medium text-gray-600">Institute</th>
-              <th className="p-3 text-sm font-medium text-gray-600">Degree</th>
-              <th className="p-3 text-sm font-medium text-gray-600">Specialization</th>
-              <th className="p-3 text-sm font-medium text-gray-600">Grade</th>
-              <th className="p-3 text-sm font-medium text-gray-600">Passing Year</th>
-              <th className="p-3 text-sm font-medium text-gray-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {educationDetails.map((edu, index) => (
-              <tr key={index} className="border-b hover:bg-gray-50">
-                <td className="p-3">
-                  <select
-                    value={edu.level}
-                    onChange={(e) => handleEducationChange(index, 'level', e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="" disabled>
-                      Select Level
-                    </option>
-                    <option value="School">School</option>
-                    <option value="UG">UG</option>
-                    <option value="PG">PG</option>
-                  </select>
-                </td>
-                <td className="p-3">
-                  <input
-                    type="text"
-                    value={edu.institute}
-                    onChange={(e) => handleEducationChange(index, 'institute', e.target.value)}
-                    placeholder="Institute Name"
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </td>
-                <td className="p-3">
-                  <input
-                    type="text"
-                    value={edu.degree}
-                    onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
-                    placeholder="Degree"
-                    required
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </td>
-                <td className="p-3">
-                  <input
-                    type="text"
-                    value={edu.specialization}
-                    onChange={(e) => handleEducationChange(index, 'specialization', e.target.value)}
-                    placeholder="Specialization"
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </td>
-                <td className="p-3">
-                  <input
-                    type="number"
-                    value={edu.grade}
-                    onChange={(e) => handleEducationChange(index, 'grade', e.target.value)}
-                    placeholder="Grade"
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </td>
-                <td className="p-3">
-                  <input
-                    type="number"
-                    value={edu.passingyr}
-                    onChange={(e) => handleEducationChange(index, 'passingyr', e.target.value)}
-                    placeholder="Year"
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </td>
-                <td className="p-3 text-center">
-                  <button
-                    type="button"
-                    onClick={() => deleteEducation(index)}
-                    className="text-red-500 hover:text-red-700"
-                    aria-label="Delete education row"
-                  >
-                    <FontAwesomeIcon icon={faXmark} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <button
-          type="button"
-          onClick={addEducation}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2 mt-2"
-        >
-          Add Education
-        </button>
-      </div>
-    </div>
-
-          {/* Experience Details */}
-     <div className="bg-white shadow-md rounded-lg p-6 ml-5">
-  <h2 className="text-xl font-semibold text-gray-800 mb-6 border-b pb-2 ">Experience Details</h2>
-  <div className="overflow-x-auto">
-    <table className="w-full border-collapse text-left">
-      <thead>
-        <tr className="bg-gray-100">
-          <th className="p-3 text-sm font-medium text-gray-600">Company Name</th>
-          <th className="p-3 text-sm font-medium text-gray-600">Designation</th>
-          <th className="p-3 text-sm font-medium text-gray-600">Salary</th>
-          <th className="p-3 text-sm font-medium text-gray-600">Years</th>
-          <th className="p-3 text-sm font-medium text-gray-600">Description</th>
-          <th className="p-3 text-sm font-medium text-gray-600">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {experienceDetails.map((exp, index) => (
-          <tr key={index} className="border-b hover:bg-blue-50 transition-colors duration-150">
-            <td className="p-3">
-              <input
-                type="text"
-                value={exp.companyName}
-                onChange={(e) => handleExperienceChange(index, 'companyName', e.target.value)}
-                placeholder="Company Name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </td>
-            <td className="p-3">
-              <input
-                type="text"
-                value={exp.designation}
-                onChange={(e) => handleExperienceChange(index, 'designation', e.target.value)}
-                placeholder="Designation"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </td>
-            <td className="p-3">
-              <input
-                type="number"
-                value={exp.salary}
-                onChange={(e) => handleExperienceChange(index, 'salary', e.target.value)}
-                placeholder="Salary"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </td>
-            <td className="p-3">
-              <input
-                type="number"
-                value={exp.years}
-                onChange={(e) => handleExperienceChange(index, 'years', e.target.value)}
-                placeholder="Years"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </td>
-            <td className="p-3">
-              <input
-                type="text"
-                value={exp.description}
-                onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
-                placeholder="Description"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </td>
-            <td className="p-3 text-center">
+          <div className="bg-white shadow-md rounded-lg p-6 ml-6">
+            <h2 className="text-lg font-medium text-gray-700 mb-4">Educational Details</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="p-3 text-sm font-medium text-gray-600">Level</th>
+                    <th className="p-3 text-sm font-medium text-gray-600">Institute</th>
+                    <th className="p-3 text-sm font-medium text-gray-600">Degree</th>
+                    <th className="p-3 text-sm font-medium text-gray-600">Specialization</th>
+                    <th className="p-3 text-sm font-medium text-gray-600">Grade</th>
+                    <th className="p-3 text-sm font-medium text-gray-600">Passing Year</th>
+                    <th className="p-3 text-sm font-medium text-gray-600">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {educationDetails.map((edu, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="p-3">
+                        <select
+                          value={edu.level}
+                          onChange={(e) => handleEducationChange(index, 'level', e.target.value)}
+                          className="w-full px-4 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        >
+                          <option value="" disabled>
+                            Select Level
+                          </option>
+                          <option value="School">School</option>
+                          <option value="UG">UG</option>
+                          <option value="PG">PG</option>
+                        </select>
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="text"
+                          value={edu.institute}
+                          onChange={(e) => handleEducationChange(index, 'institute', e.target.value)}
+                          placeholder="Institute Name"
+                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="text"
+                          value={edu.degree}
+                          onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
+                          placeholder="Degree"
+                          required
+                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="text"
+                          value={edu.specialization}
+                          onChange={(e) => handleEducationChange(index, 'specialization', e.target.value)}
+                          placeholder="Specialization"
+                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="number"
+                          value={edu.grade}
+                          onChange={(e) => handleEducationChange(index, 'grade', e.target.value)}
+                          placeholder="Grade"
+                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="number"
+                          value={edu.passingyr}
+                          onChange={(e) => handleEducationChange(index, 'passingyr', e.target.value)}
+                          placeholder="Year"
+                          className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        />
+                      </td>
+                      <td className="p-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() => deleteEducation(index)}
+                          className="text-red-500 hover:text-red-700"
+                          aria-label="Delete education row"
+                        >
+                          <FontAwesomeIcon icon={faXmark} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
               <button
                 type="button"
-                onClick={() => deleteExperience(index)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-red-600 hover:bg-red-100 transition"
-                aria-label="Delete Experience"
+                onClick={addEducation}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:ring-blue-400 focus:ring-blue-400 focus:ring-2 focus:ring-blue-400 transition"
               >
-                <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
+                Add Education
               </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-    <button
-      type="button"
-      onClick={addExperience}
-      className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2 mt-2"
-    >
-      + Add Experience
-    </button>
-  </div>
-</div>
+            </div>
+          </div>
+
+          {/* Experience Details */}
+          <div className="bg-white shadow-md rounded-lg p-6 bg-white">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6 border-b pb-2">Experience Details</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="p-3 text-sm font-medium text-gray-600">Company Name</th>
+                    <th className="p-3 text-sm font-medium text-gray-600">Designation</th>
+                    <th className="p-3 text-sm font-medium text-gray-600">Salary</th>
+                    <th className="p-3 text-sm font-medium text-gray-600">Years</th>
+                    <th className="p-3 text-sm font-medium text-gray-600">Description</th>
+                    <th className="p-3 text-sm font-medium text-gray-600">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {experienceDetails.map((exp, index) => (
+                    <tr key={index} className="border-b hover:bg-blue-50 transition-colors duration-150">
+                      <td className="p-3">
+                        <input
+                          type="text"
+                          value={exp.companyName}
+                          onChange={(e) => handleExperienceChange(index, 'companyName', e.target.value)}
+                          placeholder="Company Name"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="text"
+                          value={exp.designation}
+                          onChange={(e) => handleExperienceChange(index, 'designation', e.target.value)}
+                          placeholder="Designation"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-400 transition"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="number"
+                          value={exp.salary}
+                          onChange={(e) => handleExperienceChange(index, 'salary', e.target.value)}
+                          placeholder="Salary"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="number"
+                          value={exp.years}
+                          onChange={(e) => handleExperienceChange(index, 'years', e.target.value)}
+                          placeholder="Years"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="text"
+                          value={exp.description}
+                          onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
+                          placeholder="Description"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                        />
+                      </td>
+                      <td className="p-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() => deleteExperience(index)}
+                          className="inline-flex items-center justify-center p-2 rounded-md text-red-600 hover:bg-red-100 transition"
+                          aria-label="Delete Experience"
+                        >
+                          <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <button
+                type="button"
+                onClick={addExperience}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:ring-blue-400 focus:ring-2 focus:ring-blue-400 transition"
+              >
+                + Add Experience
+              </button>
+            </div>
+          </div>
 
           {/* Goal, Status, and Preferred Learning Centers */}
-        <div className="bg-white shadow-md rounded-lg p-6 ml-7">
-  <h2 className="text-xl font-semibold text-gray-800 mb-6 border-b pb-2">Additional Details</h2>
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-    {/* Goal */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Goal</label>
-      <select
-        value={goal}
-        onChange={(e) => setGoal(e.target.value)}
-        className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-      >
-        <option value="" disabled>Select Goal</option>
-        <option value="Upskilling">Upskilling</option>
-        <option value="Career Switch">Career Switch</option>
-        <option value="Placement">Placement</option>
-      </select>
-    </div>
+          <div className="bg-white shadow-md rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6 border-b pb-2">Additional Details</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Goal */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Goal</label>
+                <select
+                  value={goal}
+                  onChange={(e) => setGoal(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                >
+                  <option value="" disabled>Select Goal</option>
+                  <option value="Upskilling">Upskilling</option>
+                  <option value="Career Switch">Career Switch</option>
+                  <option value="Placement">Placement</option>
+                </select>
+              </div>
 
-    {/* Status */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-      <select
-        value={status}
-        onChange={(e) => setStatus(e.target.value)}
-        className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-      >
-        <option value="" disabled>Select Status</option>
-        <option value="enquiry">Enquiry</option>
-        <option value="enrolled">Enrolled</option>
-        <option value="completed">Completed</option>
-        <option value="deferred">Deferred</option>
-      </select>
-    </div>
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-400 focus:ring-2 focus:ring-blue-400 transition"
+                >
+                  <option value="" disabled>Select Status</option>
+                  <option value="enquiry">Enquiry</option>
+                  <option value="enrolled">Enrolled</option>
+                  <option value="completed">Completed</option>
+                  <option value="deferred">Deferred</option>
+                </select>
+              </div>
 
-    {/* Preferred Learning Centers */}
-    <div className="sm:col-span-2">
-      <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Learning Centers</label>
-      <div className="flex gap-3 items-center">
-        <select
-          value={selectedCenter}
-          onChange={(e) => setSelectedCenter(e.target.value)}
-          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-        >
-          <option value="" disabled>Select a Center</option>
-          {centers
-            .filter(center => !preferredCenters.includes(center.id))
-            .map(center => (
-              <option key={center.id} value={center.id}>
-                {center.name}
-              </option>
-            ))}
-        </select>
-        <button
-          type="button"
-          onClick={handleAddCenter}
-          disabled={!selectedCenter}
-          className={`px-5 py-2 rounded-md font-semibold text-white transition duration-200
-            ${selectedCenter ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
-        >
-          Add
-        </button>
-      </div>
-      {preferredCenters.length > 0 && (
-        <div className="mt-4">
-          <p className="text-sm font-medium text-gray-700 mb-1">Selected Centers:</p>
-          <ul className="space-y-2">
-            {preferredCenters.map(centerId => {
-              const center = centers.find(c => c.id === centerId);
-              return (
-                <li key={centerId} className="flex justify-between items-center bg-blue-50 px-4 py-2 rounded-md shadow-sm">
-                  <span className="text-gray-800">{center?.name || "Unknown Center"}</span>
+              {/* Preferred Learning Centers */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Learning Centers</label>
+                <div className="flex gap-3 items-center">
+                  <select
+                    value={selectedCenter}
+                    onChange={(e) => setSelectedCenter(e.target.value)}
+                    className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                  >
+                    <option value="" disabled="">Select a Center</option>
+                    {centers
+                      .filter(center => !preferredCenters.includes(center.id))
+                      .map(center => (
+                        <option key={center.id} value={center.id}>
+                          {center.name}
+                        </option>
+                      ))}
+                  </select>
                   <button
                     type="button"
-                    onClick={() => handleRemoveCenter(centerId)}
-                    className="text-red-600 hover:text-red-800 transition"
-                    aria-label="Remove Center"
+                    onClick={handleAddCenter}
+                    disabled={!selectedCenter}
+                    className={`px-4 py-2 rounded-md font-semibold text-white transition duration-200 ${selectedCenter ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
                   >
-                    <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
+                    Add
                   </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-    </div>
+                </div>
+                {preferredCenters.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-1">Selected Centers:</p>
+                    <ul className="space-y-2">
+                      {preferredCenters.map(centerId => {
+                        const center = centers.find(c => c.id === centerId);
+                        return (
+                          <li key={centerId} className="flex justify-between items-center bg-blue-50 px-4 py-2 rounded-md shadow-sm">
+                            <span className="text-gray-600">{center?.name || "Unknown Center"}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveCenter(centerId)}
+                              className="text-red-600 hover:text-red-800 transition"
+                              aria-label="Remove Center"
+                            >
+                              <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </div>
 
-    {/* Date of Enrollment */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Date of Enrollment</label>
-      <input
-        type="date"
-        value={admissionDate}
-        onChange={(e) => setAdmissionDate(e.target.value)}
-        className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-      />
-    </div>
-  </div>
-</div>
-
+              {/* Date of Enrollment */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Enrollment</label>
+                <input
+                  type="date"
+                  value={admissionDate}
+                  onChange={(e) => setAdmissionDate(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                />
+              </div>
+            </div>
+          </div>
 
           <div className="flex justify-end">
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center gap-2${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+              className={`bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-200 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {isSubmitting ? 'Processing...' : 'Add Student'}
             </button>

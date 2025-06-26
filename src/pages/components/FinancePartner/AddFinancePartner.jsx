@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { runTransaction } from "firebase/firestore";
 
 const countryCodes = [
   { code: "+1", label: "USA (+1)" },
@@ -223,19 +224,47 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
 
   // Activity logging function
   const logActivity = async (action, details) => {
+    if (!user?.email) {
+      console.warn("No user email found, skipping activity log");
+      return;
+    }
+
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Finance Partner",
+      // adminId: adminId || "N/A",
+    };
+
     try {
-      const activityLog = {
-        action,
-        details: { partnerId: partner?.id || null, ...details },
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email || "anonymous",
-        userId: user.uid
-      };
-      await addDoc(collection(db, "activityLogs"), activityLog);
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        logs.push(logEntry);
+
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully:", action);
     } catch (error) {
-      // //console.error("Error logging activity:", error);
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+
 
   useEffect(() => {
     if (!canDisplay) {
@@ -307,11 +336,11 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
       if (partner) {
         await updateDoc(doc(db, "FinancePartner", partner.id), partnerData);
         toast.success("Finance Partner updated successfully!");
-        logActivity("UPDATE PARTNER ", { name: partnerName });
+        logActivity("Finance Partner updated", { name: partnerName });
       } else {
         const docRef = await addDoc(collection(db, "FinancePartner"), partnerData);
         toast.success("Finance Partner added successfully!");
-        logActivity("CREATE PARTNER", { name: partnerName, newPartnerId: docRef.id });
+        logActivity("Finance Partner created", { name: partnerName, newPartnerId: docRef.id });
       }
       resetForm();
       toggleSidebar();
@@ -331,7 +360,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     setTransactionCount(0);
     setNewContact({ name: "", countryCode: "+91", mobile: "", email: "" });
     setNewScheme({ plan: "", total_tenure: "", ratio: "", subvention_rate: "", description: "" });
-    logActivity("RESET_FORM", {});
+    // logActivity("RESET_FORM", {});
   };
 
   const handleAddContact = () => {
@@ -353,7 +382,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     ) {
       setContactPersons([...contactPersons, { ...newContact }]);
       setNewContact({ name: "", countryCode: "+91", mobile: "", email: "" });
-      logActivity("ADD CONTACT", { contactName: newContact.name });
+      logActivity("Contact added", { contactName: newContact.name });
     } else {
       toast.error("Please fill in all contact person details correctly. Mobile number must be 7-15 digits.");
       // logActivity("ADD_CONTACT_FAILED", { reason: "invalid input" });
@@ -380,7 +409,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     ) {
       setScheme([...scheme, { ...newScheme }]);
       setNewScheme({ plan: "", total_tenure: "", ratio: "", subvention_rate: "", description: "" });
-      logActivity("ADD SCHEME", { plan: newScheme.plan });
+      logActivity("Scheme added", { plan: newScheme.plan });
     } else {
       toast.error("Please fill in all scheme details.");
       // logActivity("ADD_SCHEME_FAILED", { reason: "invalid input" });
@@ -400,7 +429,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     }
     const contactName = contactPersons[index].name;
     setContactPersons(contactPersons.filter((_, i) => i !== index));
-    logActivity("REMOVE CONTACT", { contactName });
+    logActivity("Contact removed", { contactName });
   };
 
   const handleRemoveScheme = (index) => {
@@ -416,7 +445,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     }
     const plan = scheme[index].plan;
     setScheme(scheme.filter((_, i) => i !== index));
-    logActivity("REMOVE SCHEME", { plan });
+    logActivity("Scheme removed", { plan });
   };
 
   const handleAddressChange = (field, value) => {
@@ -432,7 +461,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     }
     setAddress((prev) => {
       const newAddress = { ...prev, [field]: value };
-      logActivity("CHANGE ADDRESS", { field, value });
+      logActivity("Address changed", { field, value });
       return newAddress;
     });
   };
@@ -449,7 +478,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
       return;
     }
     setPartnerName(value);
-    logActivity("CHANGE PARTNER NAME", { value });
+    logActivity("Partner name changed", { value });
   };
 
   const handleStatusChange = (value) => {
@@ -464,7 +493,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
       return;
     }
     setStatus(value);
-    logActivity("CHANGE STATUS", { value });
+    logActivity("Status changed", { value });
   };
 
   const handleNewContactChange = (field, value) => {
@@ -483,7 +512,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     }
     setNewContact((prev) => {
       const updated = { ...prev, [field]: value };
-      logActivity("CHANGE NEW CONTACT", { field, value });
+      logActivity("New Contact changed", { field, value });
       return updated;
     });
   };
@@ -501,7 +530,7 @@ const AddFinancePartner = ({ isOpen, toggleSidebar, partner }) => {
     }
     setNewScheme((prev) => {
       const updated = { ...prev, [field]: value };
-      logActivity("CHANGE NEW SCHEME", { field, value });
+      logActivity("New Scheme changed", { field, value });
       return updated;
     });
   };

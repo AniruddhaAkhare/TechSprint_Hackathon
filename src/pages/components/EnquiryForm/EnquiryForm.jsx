@@ -18,6 +18,7 @@ import {
 } from "firebase/firestore";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button } from "@material-tailwind/react";
 import { Select, MenuItem, FormControl } from "@mui/material";
+import { runTransaction } from "firebase/firestore";
 
 import { useAuth } from "../../../context/AuthContext";
 import debounce from "lodash/debounce";
@@ -69,30 +70,70 @@ export default function EnquiryForms() {
   const toggleSidebar = () => setIsOpen((prev) => !prev);
 
   const logActivity = async (action, details) => {
-    if (!user) return;
+    if (!user?.email) return;
+  
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+  
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Enquiry",
+      // adminId: adminId || "N/A",
+    };
+  
     try {
-      const logDocRef = doc(db, "activityLogs", "currentLog");
-      const logEntry = {
-        timestamp: serverTimestamp(),
-        userId: user.uid,
-        userEmail: user.email,
-        action,
-        details,
-      };
-      await updateDoc(logDocRef, {
-        logs: arrayUnion(logEntry),
-        count: increment(1),
-      }).catch(async (err) => {
-        if (err.code === "not-found") {
-          await setDoc(logDocRef, { logs: [logEntry], count: 1 });
-        } else {
-          throw err;
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+  
+        // Ensure logs is an array and contains only valid data
+        if (!Array.isArray(logs)) {
+          logs = [];
         }
+  
+        // Append the new log entry
+        logs.push(logEntry);
+  
+        // Trim to the last 1000 entries if necessary
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+  
+        // Update the document with the new logs array
+        transaction.set(activityLogRef, { logs }, { merge: true });
       });
-    } catch (err) {
-      // //console.error("Error logging activity:", err.message);
+      console.log("Activity logged successfully");
+    } catch (error) {
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+    
+    // const fetchLogs = useCallback(() => {
+    //   if (!isAdmin) return;
+    //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    //   const unsubscribe = onSnapshot(
+    //     q,
+    //     (snapshot) => {
+    //       const allLogs = [];
+    //       snapshot.docs.forEach((doc) => {
+    //         const data = doc.data();
+    //         (data.logs || []).forEach((log) => {
+    //           allLogs.push({ id: doc.id, ...log });
+    //         });
+    //       });
+    //       allLogs.sort(
+    //         (a, b) =>
+    //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+    //       );
+    //       setLogs(allLogs);
+    //     },
+    //   );
+    //   return unsubscribe;
+    // }, [isAdmin]);
 
   const fetchEnquiryCounts = useCallback(async () => {
     try {
@@ -213,7 +254,7 @@ export default function EnquiryForms() {
       const formSnapshot = await getDoc(formRef);
       const formData = formSnapshot.exists() ? formSnapshot.data() : {};
       await deleteDoc(formRef);
-      await logActivity("Deleted enquiry form", { name: formData.name || "Unknown" });
+      await logActivity("Enquiry form deleted", { name: formData.name || "Unknown" });
       setOpenDelete(false);
       setDeleteMessage("Are you sure you want to delete this form? This action cannot be undone.");
     } catch (err) {

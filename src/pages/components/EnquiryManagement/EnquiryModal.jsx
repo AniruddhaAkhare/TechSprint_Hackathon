@@ -117,6 +117,7 @@ const EnquiryModal = ({ isOpen, onRequestClose, courses, branches, Users, availa
   const lostReasonOptions = ["Price", "Location", "Schedule Conflict", "Not Interested", "Other"];
 
   const stageDisplay = {
+    "raw": { name: "Raw", color: "bg-amber-100 text-amber-700" },
     "pre-qualified": { name: "Pre Qualified", color: "bg-blue-100 text-blue-700" },
     "qualified": { name: "Qualified", color: "bg-purple-100 text-purple-700" },
     "negotiation": { name: "Negotiation", color: "bg-yellow-100 text-yellow-700" },

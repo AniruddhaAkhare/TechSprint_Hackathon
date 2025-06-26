@@ -16,6 +16,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { runTransaction } from "firebase/firestore";
 
 const jobTypes = ["Full Time", "Part Time", "Internship", "Contract"];
 const currencies = ["USD", "INR", "EUR", "GBP"];
@@ -78,19 +79,70 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
   }, [user?.uid, user?.email]);
 
   const logActivity = async (action, details) => {
+    if (!user?.email) return;
+  
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+  
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Job Opening",
+      // adminId: adminId || "N/A",
+    };
+  
     try {
-      const activityLog = {
-        action,
-        details: { jobId: job?.id || null, ...details },
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email || "anonymous",
-        userId: user.uid,
-      };
-      await addDoc(collection(db, "activityLogs"), activityLog);
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+  
+        // Ensure logs is an array and contains only valid data
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+  
+        // Append the new log entry
+        logs.push(logEntry);
+  
+        // Trim to the last 1000 entries if necessary
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+  
+        // Update the document with the new logs array
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully");
     } catch (error) {
-      //console.error("Error logging activity:", error);
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+    
+    // const fetchLogs = useCallback(() => {
+    //   if (!isAdmin) return;
+    //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    //   const unsubscribe = onSnapshot(
+    //     q,
+    //     (snapshot) => {
+    //       const allLogs = [];
+    //       snapshot.docs.forEach((doc) => {
+    //         const data = doc.data();
+    //         (data.logs || []).forEach((log) => {
+    //           allLogs.push({ id: doc.id, ...log });
+    //         });
+    //       });
+    //       allLogs.sort(
+    //         (a, b) =>
+    //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+    //       );
+    //       setLogs(allLogs);
+    //     },
+    //   );
+    //   return unsubscribe;
+    // }, [isAdmin]);
 
   const timestampToDateString = (timestamp) => {
     if (timestamp instanceof Timestamp) {
@@ -180,7 +232,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
     setClosingDate("");
     setPostingDate(new Date().toISOString().split("T")[0]);
     setPocs([]);
-    logActivity("RESET_FORM", {});
+    // logActivity("RESET_FORM", {});
   };
 
   const handleAddSkill = () => {
@@ -195,7 +247,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
     if (newSkill.trim() && !skills.includes(newSkill.trim())) {
       setSkills([...skills, newSkill.trim()]);
       setNewSkill("");
-      logActivity("ADD_SKILL", { skill: newSkill });
+      logActivity("skills added", { skill: newSkill });
     }
   };
 
@@ -209,7 +261,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
       return;
     }
     setSkills(skills.filter((s) => s !== skill));
-    logActivity("REMOVE_SKILL", { skill });
+    logActivity("Skill removed", { skill });
   };
 
   const handleSubmit = async (e) => {
@@ -274,12 +326,12 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
         await updateDoc(jobRef, jobData);
         jobId = job.id;
         toast.success("Job opening updated successfully!");
-        logActivity("UPDATE_JOB", { title, jobId, closingDate, postingDate });
+        logActivity("Job Updated", { title, jobId, closingDate, postingDate });
       } else {
         const docRef = await addDoc(collection(db, "JobOpenings"), jobData);
         jobId = docRef.id;
         toast.success("Job opening added successfully!");
-        logActivity("CREATE_JOB", { title, jobId, closingDate, postingDate });
+        logActivity("Job Created", { title, jobId, closingDate, postingDate });
       }
 
       // Update company history
@@ -306,7 +358,7 @@ const AddJobOpening = ({ isOpen, toggleSidebar, job }) => {
 
   const handleClose = () => {
     toggleSidebar();
-    logActivity("CLOSE_SIDEBAR", {});
+    // logActivity("CLOSE_SIDEBAR", {});
   };
 
   if (!canDisplay) return null;

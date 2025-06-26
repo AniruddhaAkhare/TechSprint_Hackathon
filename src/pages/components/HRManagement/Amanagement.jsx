@@ -1,34 +1,36 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import UserOperation from '../../../pages/components/HRManagement/UserOperation';
+import { useNavigate } from 'react-router-dom';
+import UserOperation from '../../../pages/components/HRManagement/EmployeeAttendanceManagement';
 import ARule from '../../../pages/components/HRManagement/ARule';
 import HolidayCalendar from '../../../pages/components/HRManagement/HolidayCalendar';
+import AttendanceDashboard from '../../../pages/components/HRManagement/AttendanceDashboard'; // Corrected import
+
 
 export default function SimpleShiftManagement() {
   const [activeTab, setActiveTab] = useState('User Specific Operations');
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   const tabs = [
     'User Specific Operations',
+    'Attendance Analysis', // Ensure this matches exactly
     'Attendance Rules',
     'Holiday Setup',
   ];
 
-  // Handler for back button
   const handleBack = () => {
-    navigate(-1); // Navigate one step back in history
+    navigate(-1);
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 p-2 ml-[300px] overflow-auto">
+     <div className="flex flex-col min-h-screen bg-gray-50 p-2 fixed inset-0 lg:left-[300px] overflow-auto">
       {/* Header */}
       <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-700 rounded-xl shadow-xl mb-2 z-10">
         <div className="px-3 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <button
-                onClick={handleBack} // Attach handler to back button
+                onClick={handleBack}
                 className="p-2 hover:bg-white/10 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-white" />
@@ -56,7 +58,7 @@ export default function SimpleShiftManagement() {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 bg-white rounded-xl shadow-lg p-8 max-h-[calc(100vh-150px)] overflow-auto">
+      <div className="flex-1 bg-white rounded-xl shadow-lg p-8">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             {activeTab}
@@ -65,6 +67,12 @@ export default function SimpleShiftManagement() {
           {activeTab === 'User Specific Operations' && (
             <div className="animate-fadeIn">
               <UserOperation />
+            </div>
+          )}
+
+          {activeTab === 'Attendance Analysis' && ( // Corrected tab name
+            <div className="animate-fadeIn">
+              <AttendanceDashboard /> 
             </div>
           )}
 

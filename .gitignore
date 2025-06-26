@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+node_modules/
+*.local
+dist
+=======
 # dependencies
 /node_modules
 /.pnp
@@ -32,3 +37,4 @@ Thumbs.db
 ehthumbs.db
 Icon?
 Desktop.ini
+>>>>>>> origin/feature-ignite-aayush

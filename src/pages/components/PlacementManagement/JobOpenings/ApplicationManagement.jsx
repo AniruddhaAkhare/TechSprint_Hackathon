@@ -79,7 +79,7 @@
 //         const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
 //         if (!instituteSnapshot.empty) {
 //           const instituteId = instituteSnapshot.docs[0].id; // Use the first institute document
-//           const snapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
+//           const snapshot = await getDocs(collection(db, "Branch"));
 //           const centerData = snapshot.docs.map((doc) => ({
 //             id: doc.id,
 //             ...doc.data(),
@@ -695,7 +695,7 @@
 //         const instituteSnapshot = await getDocs(collection(db, "instituteSetup"));
 //         if (!instituteSnapshot.empty) {
 //           const instituteId = instituteSnapshot.docs[0].id;
-//           const snapshot = await getDocs(collection(db, "instituteSetup", instituteId, "Center"));
+//           const snapshot = await getDocs(collection(db, "Branch"));
 //           const centerData = snapshot.docs.map((doc) => ({
 //             id: doc.id,
 //             ...doc.data(),
@@ -1237,6 +1237,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { runTransaction } from "firebase/firestore";
 
 const statuses = [
   "Pending",
@@ -1269,20 +1270,71 @@ const ApplicationManagement = ({ jobId }) => {
   const [shareableLink, setShareableLink] = useState("");
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
 
-  const logActivity = async (action, details) => {
-    try {
-      const activityLog = {
-        action,
-        details: { jobId, ...details },
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email || "anonymous",
-        userId: user.uid,
-      };
-      await addDoc(collection(db, "activityLogs"), activityLog);
-    } catch (error) {
-      //console.error("Error logging activity:", error);
-    }
+const logActivity = async (action, details) => {
+  if (!user?.email) return;
+
+  const activityLogRef = doc(db, "activityLogs", "logDocument");
+
+  const logEntry = {
+    action,
+    details,
+    timestamp: new Date().toISOString(),
+    userEmail: user.email,
+    userId: user.uid,
+    section: "Job Opening",
+    // adminId: adminId || "N/A",
   };
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const logDoc = await transaction.get(activityLogRef);
+      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+      // Ensure logs is an array and contains only valid data
+      if (!Array.isArray(logs)) {
+        logs = [];
+      }
+
+      // Append the new log entry
+      logs.push(logEntry);
+
+      // Trim to the last 1000 entries if necessary
+      if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+      }
+
+      // Update the document with the new logs array
+      transaction.set(activityLogRef, { logs }, { merge: true });
+    });
+    console.log("Activity logged successfully");
+  } catch (error) {
+    console.error("Error logging activity:", error);
+    // toast.error("Failed to log activity");
+  }
+};
+  
+  // const fetchLogs = useCallback(() => {
+  //   if (!isAdmin) return;
+  //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+  //   const unsubscribe = onSnapshot(
+  //     q,
+  //     (snapshot) => {
+  //       const allLogs = [];
+  //       snapshot.docs.forEach((doc) => {
+  //         const data = doc.data();
+  //         (data.logs || []).forEach((log) => {
+  //           allLogs.push({ id: doc.id, ...log });
+  //         });
+  //       });
+  //       allLogs.sort(
+  //         (a, b) =>
+  //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+  //       );
+  //       setLogs(allLogs);
+  //     },
+  //   );
+  //   return unsubscribe;
+  // }, [isAdmin]);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -1321,9 +1373,7 @@ const ApplicationManagement = ({ jobId }) => {
         );
         if (!instituteSnapshot.empty) {
           const instituteId = instituteSnapshot.docs[0].id;
-          const snapshot = await getDocs(
-            collection(db, "instituteSetup", instituteId, "Center")
-          );
+          const snapshot = await getDocs(collection(db, "Branch"));
           const centerData = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
@@ -1446,6 +1496,9 @@ const ApplicationManagement = ({ jobId }) => {
           jobId,
           applicationId: docRef.id,
         });
+
+        logActivity("Application created", { studentId, studentName: appData.studentName });
+        logActivity("Placement created", { studentId, jobId, applicationId: docRef.id });
       }
 
       setApplications([...applications, ...newApplications]);
@@ -1549,7 +1602,7 @@ const ApplicationManagement = ({ jobId }) => {
         )
       );
       toast.success("Application updated successfully!");
-      logActivity("UPDATE_APPLICATION", { applicationId: id, updates });
+      logActivity("Application updated", { applicationId: id, updates });
     } catch (err) {
       //console.error("Error updating application:", err);
       toast.error("Failed to update application.");
@@ -1582,12 +1635,9 @@ const ApplicationManagement = ({ jobId }) => {
       );
 
       // Log activity for application and placement deletion
-      logActivity("DELETE_APPLICATION", { applicationId: id });
+      logActivity("Application deleted", { applicationId: id });
       if (deletePromises.length > 0) {
-        logActivity("DELETE_PLACEMENT", {
-          applicationId: id,
-          count: deletePromises.length,
-        });
+        logActivity("Placement deleted", { applicationId: id, count: deletePromises.length });
       }
 
       toast.success(
@@ -1613,7 +1663,7 @@ const ApplicationManagement = ({ jobId }) => {
       return;
     }
     toast.success("Emails sent to selected candidates!");
-    logActivity("SEND_BULK_EMAIL", { applicationIds: selectedApplications });
+    logActivity("Email(Bulk) send", { applicationIds: selectedApplications });
   };
 
   const generateShareableLink = () => {
@@ -1621,7 +1671,7 @@ const ApplicationManagement = ({ jobId }) => {
     setShareableLink(link);
     navigator.clipboard.writeText(link);
     toast.success("Shareable link copied to clipboard!");
-    logActivity("GENERATE_SHAREABLE_LINK", { jobId, link });
+    logActivity("Sharable Link generated", { jobId, link });
   };
 
   const onDragEnd = (result) => {

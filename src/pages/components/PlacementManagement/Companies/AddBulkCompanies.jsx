@@ -7,6 +7,8 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import * as XLSX from "xlsx";
+import { runTransaction } from "firebase/firestore";
+import { useCallback } from "react";
 
 const domains = ["Finance", "IT", "Healthcare", "Education", "Manufacturing", "Retail", "Other"];
 const companyTypes = ["Mid-level", "Startup", "MNC"];
@@ -26,19 +28,70 @@ const AddBulkCompanies = ({ isOpen, toggleSidebar, fetchCompanies }) => {
 
   // Log user activity to Firestore
   const logActivity = async (action, details) => {
+    if (!user?.email) return;
+  
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+  
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Company",
+      // adminId: adminId || "N/A",
+    };
+  
     try {
-      const activityLog = {
-        action,
-        details,
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email || "anonymous",
-        userId: user.uid,
-      };
-      await addDoc(collection(db, "activityLogs"), activityLog);
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+  
+        // Ensure logs is an array and contains only valid data
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+  
+        // Append the new log entry
+        logs.push(logEntry);
+  
+        // Trim to the last 1000 entries if necessary
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+  
+        // Update the document with the new logs array
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully");
     } catch (error) {
-      //console.error("Error logging activity:", error);
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
   };
+    
+    // const fetchLogs = useCallback(() => {
+    //   if (!isAdmin) return;
+    //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    //   const unsubscribe = onSnapshot(
+    //     q,
+    //     (snapshot) => {
+    //       const allLogs = [];
+    //       snapshot.docs.forEach((doc) => {
+    //         const data = doc.data();
+    //         (data.logs || []).forEach((log) => {
+    //           allLogs.push({ id: doc.id, ...log });
+    //         });
+    //       });
+    //       allLogs.sort(
+    //         (a, b) =>
+    //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+    //       );
+    //       setLogs(allLogs);
+    //     },
+    //   );
+    //   return unsubscribe;
+    // }, [isAdmin]);
 
   // Validate email format
   const validateEmail = (email) => {
@@ -87,7 +140,7 @@ const AddBulkCompanies = ({ isOpen, toggleSidebar, fetchCompanies }) => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Companies");
     XLSX.writeFile(wb, "Companies_Template.xlsx");
-    logActivity("DOWNLOAD_TEMPLATE", { template: "Companies_Template.xlsx" });
+    logActivity("template downloaded", { template: "Companies_Template.xlsx" });
   };
 
   // Handle file selection and validation
@@ -98,7 +151,7 @@ const AddBulkCompanies = ({ isOpen, toggleSidebar, fetchCompanies }) => {
       selectedFile.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     ) {
       setFile(selectedFile);
-      logActivity("SELECT_FILE", { fileName: selectedFile.name });
+      // logActivity("SELECT_FILE", { fileName: selectedFile.name });
       toast.info(`Selected file: ${selectedFile.name}`);
     } else {
       console.error("Invalid file type:", selectedFile?.type);
@@ -112,7 +165,7 @@ const AddBulkCompanies = ({ isOpen, toggleSidebar, fetchCompanies }) => {
     if (!canCreate) {
       console.error("Permission denied: User lacks 'create' permission for Companies");
       toast.error("You don't have permission to create companies. Contact your administrator.");
-      logActivity("PERMISSION_DENIED", { action: "CREATE_COMPANY_BULK", userId: user.uid });
+      // logActivity("PERMISSION_DENIED", { action: "CREATE_COMPANY_BULK", userId: user.uid });
       return;
     }
     if (!file) {
@@ -282,7 +335,7 @@ const AddBulkCompanies = ({ isOpen, toggleSidebar, fetchCompanies }) => {
             const docRef = doc(collection(db, "Companies"));
             batch.set(docRef, companyData);
             successCount++;
-            logActivity("CREATE_COMPANY_BULK", { name: name || "Unnamed", companyId: docRef.id });
+            logActivity("Company(Bulk) created", { name: name || "Unnamed", companyId: docRef.id });
           });
 
           // Commit batch if there are valid rows
@@ -329,7 +382,7 @@ const AddBulkCompanies = ({ isOpen, toggleSidebar, fetchCompanies }) => {
   // Close sidebar and log action
   const handleClose = () => {
     toggleSidebar();
-    logActivity("CLOSE_BULK_SIDEBAR", {});
+    // logActivity("CLOSE_BULK_SIDEBAR", {});
   };
 
   if (!canDisplay) return null;

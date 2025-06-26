@@ -7,6 +7,7 @@ import { Pie, Line, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, LineElement, BarElement, CategoryScale, LinearScale, PointElement } from 'chart.js';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { runTransaction } from 'firebase/firestore';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, LineElement, BarElement, CategoryScale, LinearScale, PointElement);
@@ -40,21 +41,70 @@ export default function AttendanceDashboard() {
 
   // Logging function
   const logActivity = async (action, details) => {
-    if (!canView) return;
+    if (!user?.email) return;
+  
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
+  
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Attendance",
+      // adminId: adminId || "N/A",
+    };
+  
     try {
-        const activityLog = {
-            action,
-            details,
-            timestamp: new Date().toISOString(),
-            user: user?.email || 'currentUser@example.com',
-            centerId: filters.centers.join(', ') || 'All',
-            batchId: filters.batches.join(', ') || 'All',
-        };
-        await addDoc(collection(db, 'activityLogs'), activityLog);
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+  
+        // Ensure logs is an array and contains only valid data
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+  
+        // Append the new log entry
+        logs.push(logEntry);
+  
+        // Trim to the last 1000 entries if necessary
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+  
+        // Update the document with the new logs array
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully");
     } catch (error) {
-        //console.error('Error logging activity:', error);
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
     }
-};
+  };
+    
+    // const fetchLogs = useCallback(() => {
+    //   if (!isAdmin) return;
+    //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
+    //   const unsubscribe = onSnapshot(
+    //     q,
+    //     (snapshot) => {
+    //       const allLogs = [];
+    //       snapshot.docs.forEach((doc) => {
+    //         const data = doc.data();
+    //         (data.logs || []).forEach((log) => {
+    //           allLogs.push({ id: doc.id, ...log });
+    //         });
+    //       });
+    //       allLogs.sort(
+    //         (a, b) =>
+    //           (b.timestamp?.toDate() || new Date(0)) - (a.timestamp?.toDate() || new Date(0))
+    //       );
+    //       setLogs(allLogs);
+    //     },
+    //   );
+    //   return unsubscribe;
+    // }, [isAdmin]);
 
   // Fetch centers
   const fetchCenters = async () => {
@@ -64,7 +114,7 @@ export default function AttendanceDashboard() {
       const centersSnapshot = await getDocs(centersCollection);
       const centersData = await Promise.all(
         centersSnapshot.docs.map(async (doc) => {
-          const branchesCollection = collection(db, 'instituteSetup', doc.id, 'Center');
+          const branchesCollection = collection(db, 'Branch');
           const branchesSnapshot = await getDocs(branchesCollection);
           return branchesSnapshot.docs.map((branchDoc) => ({
             id: branchDoc.id,
@@ -326,7 +376,7 @@ export default function AttendanceDashboard() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
     XLSX.writeFile(wb, 'Attendance_Analytics.csv');
-    logActivity('Export CSV', { recordCount: data.length });
+    logActivity('Exported to CSV', { recordCount: data.length });
   };
 
   // Export to PDF
@@ -347,7 +397,7 @@ export default function AttendanceDashboard() {
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
       pdf.save('Attendance_Dashboard.pdf');
-      logActivity('Export PDF', {});
+      logActivity('Exported to PDF', {});
     } catch (error) {
       //console.error('PDF Export Error:', error);
       alert('Failed to export PDF.');
@@ -357,7 +407,7 @@ export default function AttendanceDashboard() {
   // Handle filter changes
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
-    logActivity('Update Filter', { filter: key, value });
+    // logActivity('Update Filter', { filter: key, value });
   };
 
   useEffect(() => {
@@ -437,21 +487,10 @@ export default function AttendanceDashboard() {
     ],
   };
 
-  if (!canView) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8 flex items-center justify-center">
-        <div className="bg-red-100 p-6 rounded-lg shadow-md text-center">
-          <h2 className="text-2xl font-bold text-red-800 mb-4">Access Denied</h2>
-          <p className="text-red-600">You do not have permission to view the Attendance Dashboard.</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 fixed inset-0 left-[300px] overflow-y-auto" ref={dashboardRef}>
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Attendance Analytics Dashboard</h2>
-
+    <div className="flex flex-col space-y-6 pt-4">
+     <h2 className="text-2xl font-bold text-gray-800 mb-6">Attendance Analytics Dashboard</h2>
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

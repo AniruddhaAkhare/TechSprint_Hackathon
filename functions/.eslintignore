@@ -1,0 +1,6 @@
+# Ignore all compiled files
+dist/
+build/
+
+# Ignore your Firebase function entry
+functions/index.cjs

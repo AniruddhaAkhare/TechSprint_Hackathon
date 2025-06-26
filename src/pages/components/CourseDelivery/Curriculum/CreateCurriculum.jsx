@@ -29,10 +29,8 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
           return;
         }
         const instituteId = "RDJ9wMXGrIUk221MzDxP";
-        const centerQuery = query(
-          collection(db, 'instituteSetup', instituteId, 'Center'),
-          where('isActive', '==', true)
-        );
+        const centerQuery =
+          collection(db, 'Branch');
         const centerSnapshot = await getDocs(centerQuery);
         const centersList = centerSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -137,7 +135,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
         }
 
         if (Object.keys(changes).length > 0 && logActivity) {
-          await logActivity('Update Curriculum', {
+          await logActivity('Curriculum updated', {
             // curriculumId: curriculumToEdit.id,
             name: formData.name,
             changes,
@@ -161,7 +159,7 @@ const CreateCurriculum = ({ isOpen, onClose, onSubmit, curriculumToEdit, logActi
         });
 
         if (logActivity) {
-          await logActivity('Create Curriculum', {
+          await logActivity('Curriculum created', {
             // curriculumId: docRef.id,
             name: formData.name,
           });
