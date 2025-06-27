@@ -37,7 +37,13 @@ const countryCodes = [
   { code: "+91", label: "India (+91)" },
 ];
 
-const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availableTags = [] }) => {
+const CompanyModal = ({
+  isOpen,
+  onRequestClose,
+  company,
+  rolePermissions,
+  availableTags = [],
+}) => {
   const [currentSection, setCurrentSection] = useState(1);
   const [isEditing, setIsEditing] = useState(false);
   const [newNote, setNewNote] = useState("");
@@ -64,7 +70,14 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
     companyId: company?.id,
     companyName: company?.name,
   });
-  const [newPOC, setNewPOC] = useState({ name: "", countryCode: "+91", mobile: "", email: "", linkedinProfile: "", designation: "" });
+  const [newPOC, setNewPOC] = useState({
+    name: "",
+    countryCode: "+91",
+    mobile: "",
+    email: "",
+    linkedinProfile: "",
+    designation: "",
+  });
   const [pointsOfContact, setPointsOfContact] = useState([]);
   const { user } = useAuth();
   const [companyData, setCompanyData] = useState("");
@@ -84,7 +97,9 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setUserDisplayName(userData.displayName || user.email || "Unknown User");
+          setUserDisplayName(
+            userData.displayName || user.email || "Unknown User"
+          );
         } else {
           console.warn("User document not found in Users collection");
           setUserDisplayName(user.email || "Unknown User");
@@ -107,9 +122,13 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
         notes: Array.isArray(company.notes) ? company.notes : [],
         tags: Array.isArray(company.tags) ? company.tags : [],
         history: Array.isArray(company.history) ? company.history : [],
-        pointsOfContact: Array.isArray(company.pointsOfContact) ? company.pointsOfContact : [],
+        pointsOfContact: Array.isArray(company.pointsOfContact)
+          ? company.pointsOfContact
+          : [],
       });
-      setPointsOfContact(Array.isArray(company.pointsOfContact) ? company.pointsOfContact : []);
+      setPointsOfContact(
+        Array.isArray(company.pointsOfContact) ? company.pointsOfContact : []
+      );
       setIsEditing(false);
 
       if (!company.id) {
@@ -165,49 +184,49 @@ const CompanyModal = ({ isOpen, onRequestClose, company, rolePermissions, availa
     return format(date, formatString);
   };
 
-const logActivity = async (action, details) => {
-  if (!user?.email) return;
+  const logActivity = async (action, details) => {
+    if (!user?.email) return;
 
-  const activityLogRef = doc(db, "activityLogs", "logDocument");
+    const activityLogRef = doc(db, "activityLogs", "logDocument");
 
-  const logEntry = {
-    action,
-    details,
-    timestamp: new Date().toISOString(),
-    userEmail: user.email,
-    userId: user.uid,
-    section: "Company",
-    // adminId: adminId || "N/A",
+    const logEntry = {
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userEmail: user.email,
+      userId: user.uid,
+      section: "Company",
+      // adminId: adminId || "N/A",
+    };
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const logDoc = await transaction.get(activityLogRef);
+        let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
+
+        // Ensure logs is an array and contains only valid data
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+
+        // Append the new log entry
+        logs.push(logEntry);
+
+        // Trim to the last 1000 entries if necessary
+        if (logs.length > 1000) {
+          logs = logs.slice(-1000);
+        }
+
+        // Update the document with the new logs array
+        transaction.set(activityLogRef, { logs }, { merge: true });
+      });
+      console.log("Activity logged successfully");
+    } catch (error) {
+      console.error("Error logging activity:", error);
+      // toast.error("Failed to log activity");
+    }
   };
 
-  try {
-    await runTransaction(db, async (transaction) => {
-      const logDoc = await transaction.get(activityLogRef);
-      let logs = logDoc.exists() ? logDoc.data().logs || [] : [];
-
-      // Ensure logs is an array and contains only valid data
-      if (!Array.isArray(logs)) {
-        logs = [];
-      }
-
-      // Append the new log entry
-      logs.push(logEntry);
-
-      // Trim to the last 1000 entries if necessary
-      if (logs.length > 1000) {
-        logs = logs.slice(-1000);
-      }
-
-      // Update the document with the new logs array
-      transaction.set(activityLogRef, { logs }, { merge: true });
-    });
-    console.log("Activity logged successfully");
-  } catch (error) {
-    console.error("Error logging activity:", error);
-    // toast.error("Failed to log activity");
-  }
-};
-  
   // const fetchLogs = useCallback(() => {
   //   if (!isAdmin) return;
   //   const q = query(LogsCollectionRef, orderBy("timestamp", "desc"));
@@ -241,18 +260,32 @@ const logActivity = async (action, details) => {
 
   const handleAddJobOpening = async () => {
     if (!newJob.title) {
-      toast.error("Please fill in all required job opening fields (Title, Job Type, Company).");
+      toast.error(
+        "Please fill in all required job opening fields (Title, Job Type, Company)."
+      );
       return;
     }
     if (!canUpdate) {
       toast.error("You don't have permission to update companies");
       return;
     }
+    // Ensure company.id is valid
+    if (!company || !company.id) {
+      toast.error("Company ID is missing. Please select a company.");
+      return;
+    }
 
-    const closingDateObj = newJob.closingDate ? new Date(newJob.closingDate) : null;
-    const postingDateObj = newJob.postingDate ? new Date(newJob.postingDate) : new Date();
+    const closingDateObj = newJob.closingDate
+      ? new Date(newJob.closingDate)
+      : null;
+    const postingDateObj = newJob.postingDate
+      ? new Date(newJob.postingDate)
+      : new Date();
 
-    if ((closingDateObj && isNaN(closingDateObj.getTime())) || isNaN(postingDateObj.getTime())) {
+    if (
+      (closingDateObj && isNaN(closingDateObj.getTime())) ||
+      isNaN(postingDateObj.getTime())
+    ) {
       toast.error("Invalid date format for posting or closing date");
       return;
     }
@@ -267,20 +300,31 @@ const logActivity = async (action, details) => {
       experienceMax: newJob.experienceMax ? Number(newJob.experienceMax) : "",
       salary: newJob.salary || "",
       currency: newJob.currency || "USD",
-      duration: (newJob.jobType === "Internship" || newJob.jobType === "Contract") ? newJob.duration : "",
+      duration:
+        newJob.jobType === "Internship" || newJob.jobType === "Contract"
+          ? newJob.duration
+          : "",
       locationType: newJob.locationType || "",
       city: newJob.city || "",
       location: newJob.location || "",
       description: newJob.description || "",
       skills: newJob.skills || [],
-      poc: newJob.poc && typeof newJob.poc === "object" ? newJob.poc : { name: "", email: "" },
-      status: closingDateObj && closingDateObj < new Date() ? "Inactive" : (newJob.status || "Open"),
+      poc:
+        newJob.poc && typeof newJob.poc === "object"
+          ? newJob.poc
+          : { name: "", email: "" },
+      status:
+        closingDateObj && closingDateObj < new Date()
+          ? "Inactive"
+          : newJob.status || "Open",
       postingDate: Timestamp.fromDate(postingDateObj),
       closingDate: closingDateObj ? Timestamp.fromDate(closingDateObj) : null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
-
+    console.log("Company:", company);
+    console.log("Company ID:", company.id);
+    console.log("Job Data:", jobData);
     try {
       const jobRef = await addDoc(collection(db, "JobOpenings"), jobData);
       const historyEntry = {
@@ -350,7 +394,10 @@ const logActivity = async (action, details) => {
       toast.error("Invalid POC email format");
       return;
     }
-    if (newPOC.linkedinProfile && !validateLinkedInProfile(newPOC.linkedinProfile)) {
+    if (
+      newPOC.linkedinProfile &&
+      !validateLinkedInProfile(newPOC.linkedinProfile)
+    ) {
       toast.error("Invalid LinkedIn profile URL");
       return;
     }
@@ -381,7 +428,14 @@ const logActivity = async (action, details) => {
         }));
       }
       setPointsOfContact(updatedPOCs);
-      setNewPOC({ name: "", countryCode: "+91", mobile: "", email: "", linkedinProfile: "", designation: "" });
+      setNewPOC({
+        name: "",
+        countryCode: "+91",
+        mobile: "",
+        email: "",
+        linkedinProfile: "",
+        designation: "",
+      });
       logActivity("POC added", { pocName: newPOC.name });
       toast.success("Point of contact added successfully!");
     } catch (error) {
@@ -489,25 +543,25 @@ const logActivity = async (action, details) => {
       toast.error("You don't have permission to update job openings");
       return;
     }
-  
+
     // Validate required fields
     // if (!updatedJob.title || !updatedJob.department || !updatedJob.jobType || !updatedJob.location) {
     //   toast.error("Please fill in all required fields: Job Title, Department, Job Type, and Location.");
     //   return;
     // }
-  
+
     try {
       const jobRef = doc(db, "JobOpenings", updatedJob.id);
-      
+
       // Prepare dates for Firestore
-      const postingDate = updatedJob.postingDate 
+      const postingDate = updatedJob.postingDate
         ? Timestamp.fromDate(new Date(updatedJob.postingDate))
         : Timestamp.fromDate(new Date());
-      
-      const closingDate = updatedJob.closingDate 
+
+      const closingDate = updatedJob.closingDate
         ? Timestamp.fromDate(new Date(updatedJob.closingDate))
         : null;
-  
+
       const jobData = {
         title: updatedJob.title,
         department: updatedJob.department,
@@ -515,13 +569,19 @@ const logActivity = async (action, details) => {
         locationType: updatedJob.locationType,
         city: updatedJob.city || "",
         location: updatedJob.location,
-        experienceMin: updatedJob.experienceMin ? Number(updatedJob.experienceMin) : "",
-        experienceMax: updatedJob.experienceMax ? Number(updatedJob.experienceMax) : "",
+        experienceMin: updatedJob.experienceMin
+          ? Number(updatedJob.experienceMin)
+          : "",
+        experienceMax: updatedJob.experienceMax
+          ? Number(updatedJob.experienceMax)
+          : "",
         salary: updatedJob.salary || "",
         currency: updatedJob.currency || "USD",
-        duration: (updatedJob.jobType === "Internship" || updatedJob.jobType === "Contract") 
-          ? updatedJob.duration 
-          : "",
+        duration:
+          updatedJob.jobType === "Internship" ||
+          updatedJob.jobType === "Contract"
+            ? updatedJob.duration
+            : "",
         description: updatedJob.description || "",
         skills: updatedJob.skills || [],
         poc: updatedJob.poc || "",
@@ -530,17 +590,17 @@ const logActivity = async (action, details) => {
         closingDate,
         companyId: company.id,
         companyName: company.name,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       };
-  
+
       await updateDoc(jobRef, jobData);
-  
+
       // Update local state
-      const updatedJobOpenings = jobOpenings.map(job => 
+      const updatedJobOpenings = jobOpenings.map((job) =>
         job.id === updatedJob.id ? { ...job, ...jobData } : job
       );
       setJobOpenings(updatedJobOpenings);
-  
+
       // Add to history
       const historyEntry = {
         action: `Updated job opening: "${updatedJob.title}"`,
@@ -553,12 +613,12 @@ const logActivity = async (action, details) => {
         history: updatedHistory,
         updatedAt: serverTimestamp(),
       });
-  
-      setCompanyData(prev => ({
+
+      setCompanyData((prev) => ({
         ...prev,
         history: updatedHistory,
       }));
-  
+
       toast.success("Job opening updated successfully!");
       return true; // Indicate success
     } catch (error) {
@@ -656,7 +716,11 @@ const logActivity = async (action, details) => {
 
     const updatedNotes = [...companyData.notes, noteObject];
     const historyEntry = {
-      action: `Added ${formatNoteType(noteType).toLowerCase()}: "${noteObject.content.slice(0, 50)}${noteObject.content.length > 50 ? "..." : ""}"`,
+      action: `Added ${formatNoteType(
+        noteType
+      ).toLowerCase()}: "${noteObject.content.slice(0, 50)}${
+        noteObject.content.length > 50 ? "..." : ""
+      }"`,
       performedBy: userDisplayName, // Use fetched displayName
       timestamp: new Date().toISOString(),
     };
@@ -708,7 +772,10 @@ const logActivity = async (action, details) => {
         className="fixed inset-0 mx-auto my-4 max-w-full sm:max-w-3xl w-[95%] sm:w-full bg-white rounded-lg shadow-lg p-4 sm:p-6 overflow-y-auto max-h-[90vh]"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300"
         style={{
-          content: { opacity: isOpen ? 1 : 0, transition: "opacity 0.3s ease-in-out" },
+          content: {
+            opacity: isOpen ? 1 : 0,
+            transition: "opacity 0.3s ease-in-out",
+          },
         }}
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
@@ -716,7 +783,10 @@ const logActivity = async (action, details) => {
             {companyData.name || (isEditing ? "Edit Company" : "View Company")}
           </h2>
         </div>
-        <SectionNav currentSection={currentSection} setCurrentSection={setCurrentSection} />
+        <SectionNav
+          currentSection={currentSection}
+          setCurrentSection={setCurrentSection}
+        />
         <div className="space-y-4 sm:space-y-6">
           {currentSection === 1 && (
             <CompanyDetails
@@ -787,13 +857,17 @@ const logActivity = async (action, details) => {
                     ...company,
                     notes: Array.isArray(company.notes) ? company.notes : [],
                     tags: Array.isArray(company.tags) ? company.tags : [],
-                    history: Array.isArray(company.history) ? company.history : [],
+                    history: Array.isArray(company.history)
+                      ? company.history
+                      : [],
                     pointsOfContact: Array.isArray(company.pointsOfContact)
                       ? company.pointsOfContact
                       : [],
                   });
                   setPointsOfContact(
-                    Array.isArray(company.pointsOfContact) ? company.pointsOfContact : []
+                    Array.isArray(company.pointsOfContact)
+                      ? company.pointsOfContact
+                      : []
                   );
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"

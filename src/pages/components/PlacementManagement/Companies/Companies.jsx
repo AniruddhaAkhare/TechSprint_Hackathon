@@ -121,7 +121,7 @@ export default function Companies() {
           ...doc.data(),
         }));
         setCallSchedules(schedules);
-        await triggerDueReminders(schedules);
+        // await triggerDueReminders(schedules);
       } catch (error) {
         console.error("Error fetching call schedules:", error);
         if (
@@ -760,7 +760,7 @@ const logActivity = async (action, details) => {
             openAddOptions ? "" : "hidden"
           }`}
         >
-          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md border border-gray-100">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-xl border border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Add Company</h2>
             <p className="text-sm text-gray-600 mb-6">Choose how you want to add a company:</p>
             <div className="flex justify-end gap-3">

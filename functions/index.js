@@ -84,3 +84,30 @@ exports.sendEmail = functions.region("us-central1").https.onCall(async (data) =>
     );
   }
 });
+
+
+// exports.setRecruiterClaim = functions.https.onCall(async (data, context) => {
+//   const { email } = data;
+
+//   const userRecord = await admin.auth().getUserByEmail(email);
+//   const uid = userRecord.uid;
+
+
+//   const companiesSnapshot = await admin.firestore().collection('Companies').get();
+//   let isPOC = false;
+
+//   companiesSnapshot.forEach(doc => {
+//     const pocs = doc.data().pointsOfContact || [];
+//     const found = pocs.find(poc => poc.email.toLowerCase() === email.toLowerCase());
+//     if (found) isPOC = true;
+//   });
+
+//   if (!isPOC) throw new functions.https.HttpsError('permission-denied', 'Email not found in POC list.');
+
+  
+//   await admin.auth().setCustomUserClaims(uid, {
+//     role: 'sTRunlCqsvQ8PJRyRuPg' 
+//   });
+
+//   return { success: true, uid };
+// });

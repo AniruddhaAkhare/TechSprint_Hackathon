@@ -97,15 +97,9 @@ import MyShift from './pages/components/HRManagement/myShift.jsx'
 import ShiftDisplay from  './pages/components/HRManagement/ShiftManagement.jsx'
 import EmployeeManagement from './pages/components/HRManagement/Emanagement.jsx'
 import AttendanceManagement from './pages/components/HRManagement/Amanagement.jsx'
-import Activity from './pages/components/Activity/Activities.jsx';             
+import RecruiterLogin from './pages/components/PlacementManagement/JobOpenings/RecruiterLogin.jsx';
+import RecruiterJobOpenings from './pages/components/PlacementManagement/JobOpenings/RecruiterJobOpenings.jsx';
 
-
-import EmployeeAttendanceManagement from  './pages/components/HRManagement/EmployeeAttendanceManagement.jsx'
-import AttendanceEmployee from  './pages/components/HRManagement/AttendanceDashboard.jsx'
-import LeaveManagement from './pages/components/HRManagement/Lmanagement.jsx'
-import MyLeaveSummery from './pages/components/HRManagement/MyLeaveSummery.jsx'
-import LeaveCalendre from './pages/components/HRManagement/LeaveCalendre.jsx'
-import EnrollmentDetails from './pages/components/Enrollment/EnrollmentDetails.jsx';
 export default function App() {
   const { user, rolePermissions, loading } = useAuth();
   const auth = getAuth();
@@ -149,7 +143,8 @@ export default function App() {
                 <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/my-profile" />} />
                 <Route path="/registration-welcome" element={<AfterEmployeeRegistration/>} />
                 <Route path="/employee-registration" element={!user ? <EmployeeRegistrationForm /> : <Navigate to="/my-profile" />} />
-                <Route path="/my-activities" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
+
+                {/* <Route path="/my-activities" element={<ProtectedRoute><Activity /></ProtectedRoute>} /> */}
                 
                 <Route path="/" element={<ProtectedRoute permissionSection="Users"><StaffAndUsers /></ProtectedRoute>} />
 
@@ -279,18 +274,17 @@ export default function App() {
                 <Route path="/employee-profile/:employeeId" element={<EmployeeProfile />} />
                  <Route path="/employeeManagemnet" element={<EmployeeManagement />} />
                 <Route path="/attendanceManagemnet" element={<AttendanceManagement/>} />
-                <Route path="/EmployeeAttendance" element={<EmployeeAttendanceManagement/>} />
+                {/* <Route path="/EmployeeAttendance" element={<EmployeeAttendanceManagement/>} />
                 <Route path="/AttendanceDashboard" element={<AttendanceEmployee/>} />
                 <Route path="/LeaveManagement" element={<LeaveManagement/>} />
                 <Route path="/LeaveSummery" element={<MyLeaveSummery />} />
-                <Route path="/LeaveCalendre" element={< LeaveCalendre />} />
+                <Route path="/LeaveCalendre" element={< LeaveCalendre />} /> */}
                 {/* Placement */}
                 <Route path="/companies" element={<Companies />} />
                 <Route path="/job-openings" element={<JobOpenings />} />
                 <Route path="/recruiter-view/:id" element={<RecruiterView />} />
-
-
-                <Route path="/enrollment/:id" element={<EnrollmentDetails/>}/>
+                <Route path="/recruiter-login" element={<RecruiterLogin />} />
+                <Route path="/recruiter/job-openings" element={<RecruiterJobOpenings />} />
               </Routes>
             </div>
           </div>
