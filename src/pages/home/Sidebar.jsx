@@ -5,7 +5,6 @@ import {
   signOut,
 } from "firebase/auth";
 import {
-  getFirestore,
   doc,
   getDoc,
   collection,

@@ -149,7 +149,6 @@ export default function App() {
                 <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/my-profile" />} />
                 <Route path="/registration-welcome" element={<AfterEmployeeRegistration/>} />
                 <Route path="/employee-registration" element={!user ? <EmployeeRegistrationForm /> : <Navigate to="/my-profile" />} />
-
                 <Route path="/my-activities" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
                 
                 <Route path="/" element={<ProtectedRoute permissionSection="Users"><StaffAndUsers /></ProtectedRoute>} />

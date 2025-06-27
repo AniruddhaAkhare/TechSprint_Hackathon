@@ -182,8 +182,6 @@ export default function StudentDetails() {
       }
     };
 
-
-
     // Fetch Courses
     const coursesQuery = query(collection(db, "Course"));
     const unsubscribeCourses = onSnapshot(coursesQuery, (snapshot) => {
