@@ -1,5 +1,5 @@
 {
-  "name": "ignite",
+  "name": "Teachbot",
   "private": true,
   "version": "0.0.0",
   "homepage": ".",
@@ -47,6 +47,7 @@
     "firestore": "^1.1.6",
     "fortawesome": "^0.0.1-security",
     "framer-motion": "^12.5.0",
+    "html2pdf.js": "^0.13.0",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "lucide-react": "^0.477.0",
@@ -92,6 +93,6 @@
     "globals": "^15.14.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
-    "vite": "^6.3.5"
+    "vite": "^6.3.6"
   }
 }
