@@ -18,7 +18,7 @@ const AITutor = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/ai-tutor", {
+      const res = await axios.post("https://techsprint-hackathon-backend-demo.onrender.com/ai-tutor", {
         message: userMsg.text,
         mode
       });
