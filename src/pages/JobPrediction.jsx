@@ -27,7 +27,7 @@ const JobPrediction = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-  "http://localhost:5000/predict-jobs",
+  "https://techsprint-hackathon-backend-demo.onrender.com/predict-jobs",
   form,
   {
     headers: {
