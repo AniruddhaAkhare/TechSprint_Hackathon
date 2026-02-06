@@ -30,7 +30,7 @@ const ResumeBuilder = () => {
   const buildResume = async () => {
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:5000/build-resume", form);
+      const res = await axios.post("https://techsprint-hackathon-backend-demo.onrender.com/build-resume", form);
       setResume(res.data);
       setAts(null);
       setSkillGap(null);
@@ -45,7 +45,7 @@ const ResumeBuilder = () => {
   const analyzeATS = async () => {
     try {
       setAnalyzing(true);
-      const res = await axios.post("http://localhost:5000/analyze-ats", {
+      const res = await axios.post("https://techsprint-hackathon-backend-demo.onrender.com/analyze-ats", {
         resume,
         preferredRole: form.preferredRole
       });
@@ -61,7 +61,7 @@ const ResumeBuilder = () => {
   const analyzeSkillGap = async () => {
     try {
       setAnalyzing(true);
-      const res = await axios.post("http://localhost:5000/skill-gap", {
+      const res = await axios.post("https://techsprint-hackathon-backend-demo.onrender.com/skill-gap", {
         skills: form.skills,
         preferredRole: form.preferredRole
       });
