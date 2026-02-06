@@ -23,7 +23,7 @@ const QuizGenerator = () => {
       setLoading(true);
 
       const res = await axios.post(
-        "http://localhost:5000/generate-quiz",
+        "https://techsprint-hackathon-backend-demo.onrender.com/generate-quiz",
         form
       );
 
@@ -65,7 +65,7 @@ const QuizGenerator = () => {
         (_, index) => answers[index] || ""
       );
 
-      const res = await axios.post("http://localhost:5000/assess-quiz", {
+      const res = await axios.post("https://techsprint-hackathon-backend-demo.onrender.com/assess-quiz", {
         subject: form.subject,
         quiz: quiz,
         student_answers: studentAnswersArray,
